@@ -1,9 +1,8 @@
-import { useContext, useEffect, useId, useRef, useState, type ReactNode } from 'react';
+import { useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import { BackgroundDetailViewContext } from '@/components/layout/DetailLayout';
-import { useGlobalStatus } from '@/context/GlobalStatusContext';
 import {
   Table,
   TableBody,
@@ -67,8 +66,6 @@ export default function SimpleDataTable<T>({
 }: SimpleDataTableProps<T>) {
   const isBackgroundDetailView = useContext(BackgroundDetailViewContext);
   const detailViewMode = useResolvedDetailViewMode();
-  const { registerLoadingStatus, unregisterLoadingStatus } = useGlobalStatus();
-  const loadingStatusKey = useId();
   const rootRef = useRef<HTMLDivElement | null>(null);
   const footerRef = useRef<HTMLDivElement | null>(null);
   const [tableBodyMaxHeight, setTableBodyMaxHeight] = useState<number | null>(null);
@@ -98,21 +95,6 @@ export default function SimpleDataTable<T>({
     isBackgroundDetailView && detailViewMode.floating && detailViewMode.collapsed !== '2',
   );
   const skeletonRowCount = Math.max(3, Math.min(pageSize || 5, 8));
-
-  useEffect(() => {
-    if (!loading) {
-      unregisterLoadingStatus(loadingStatusKey);
-      return;
-    }
-
-    registerLoadingStatus(loadingStatusKey, loadingMessage);
-  }, [loading, loadingMessage, loadingStatusKey, registerLoadingStatus, unregisterLoadingStatus]);
-
-  useEffect(() => {
-    return () => {
-      unregisterLoadingStatus(loadingStatusKey);
-    };
-  }, [loadingStatusKey, unregisterLoadingStatus]);
 
   const handleSortClick = (columnId: string) => {
     if (!onSortChange) {
