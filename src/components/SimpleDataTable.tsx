@@ -1,8 +1,7 @@
-import { useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SearchableSelect } from '@/components/ui/searchable-select';
-import { BackgroundDetailViewContext } from '@/components/layout/DetailLayout';
 import {
   Table,
   TableBody,
@@ -12,7 +11,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
-import { useResolvedDetailViewMode } from '@/utils/detailViewMode';
 
 export interface SimpleDataTableColumn<T> {
   id: string;
@@ -43,6 +41,8 @@ export interface SimpleDataTableProps<T> {
   sortBy?: string | null;
   sortOrder?: SimpleDataTableSortOrder;
   onSortChange?: (columnId: string, nextOrder: SimpleDataTableSortOrder) => void;
+  alignPaginationToLeft?: boolean;
+  onLoadingChange?: (key: string, loading: boolean, message?: string) => void;
 }
 
 export default function SimpleDataTable<T>({
@@ -63,9 +63,10 @@ export default function SimpleDataTable<T>({
   sortBy = null,
   sortOrder = 'asc',
   onSortChange,
+  alignPaginationToLeft = false,
+  onLoadingChange,
 }: SimpleDataTableProps<T>) {
-  const isBackgroundDetailView = useContext(BackgroundDetailViewContext);
-  const detailViewMode = useResolvedDetailViewMode();
+  const loadingKey = useId();
   const rootRef = useRef<HTMLDivElement | null>(null);
   const footerRef = useRef<HTMLDivElement | null>(null);
   const [tableBodyMaxHeight, setTableBodyMaxHeight] = useState<number | null>(null);
@@ -91,10 +92,17 @@ export default function SimpleDataTable<T>({
   const pageLabel = usesServerPagination && canGoNext
     ? `Page ${safePage + 1}`
     : `Page ${safePage + 1} of ${totalPages}`;
-  const alignPaginationToLeft = Boolean(
-    isBackgroundDetailView && detailViewMode.floating && detailViewMode.collapsed !== '2',
-  );
   const skeletonRowCount = Math.max(3, Math.min(pageSize || 5, 8));
+
+  useEffect(() => {
+    if (!onLoadingChange) {
+      return;
+    }
+    onLoadingChange(loadingKey, loading, loadingMessage);
+    return () => {
+      onLoadingChange(loadingKey, false);
+    };
+  }, [loading, loadingMessage, loadingKey, onLoadingChange]);
 
   const handleSortClick = (columnId: string) => {
     if (!onSortChange) {
