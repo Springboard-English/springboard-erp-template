@@ -1,15 +1,25 @@
 /// <reference types="vite/client" />
 
-// API Configuration based on environment
-const isDevelopment = import.meta.env.DEV;
-const API_BASE_URL =
-    import.meta.env.VITE_BASE_URL ||
-    (isDevelopment
-        ? "https://api.springboard.vn/dev"
-        : "https://api.springboard.vn");
+let _baseURL: string = (() => {
+    if (typeof import.meta !== "undefined" && import.meta.env) {
+        if (import.meta.env.VITE_BASE_URL) {
+            return import.meta.env.VITE_BASE_URL;
+        }
+        if (import.meta.env.DEV) {
+            return "https://api.springboard.vn/dev";
+        }
+    }
+    return "https://api.springboard.vn";
+})();
+
+export function configureApi(options: { baseUrl: string }): void {
+    _baseURL = options.baseUrl;
+}
 
 export const API_CONFIG = {
-    baseURL: API_BASE_URL,
+    get baseURL() {
+        return _baseURL;
+    },
     endpoints: {
         login: "/login/password",
         authenticateGoogle: "/authenticate/google",

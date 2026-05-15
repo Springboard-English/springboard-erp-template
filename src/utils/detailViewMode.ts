@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useLocation } from "react-router-dom";
 
 export const DETAIL_HIDDEN_COLLAPSED_VALUE = "2";
 const RETURN_URL_QUERY_KEY = "returnUrl";
@@ -29,6 +28,20 @@ const DEFAULT_DETAIL_VIEW_MODE: DetailViewModeState = {
     collapsed: "0",
 };
 const inMemoryDetailViewModes = new Map<string, DetailViewModeState>();
+
+function usePathname(): string {
+    const [pathname, setPathname] = useState(() =>
+        typeof window === "undefined" ? "/" : window.location.pathname,
+    );
+
+    useEffect(() => {
+        const handler = () => setPathname(window.location.pathname);
+        window.addEventListener("popstate", handler);
+        return () => window.removeEventListener("popstate", handler);
+    }, []);
+
+    return pathname;
+}
 
 function normalizePathname(pathname: string): string {
     if (!pathname) {
@@ -225,9 +238,9 @@ export function getDetailReturnLocation(
 export function useResolvedDetailViewMode(
     options: DetailViewModeHookOptions = {},
 ): DetailViewModeState {
-    const location = useLocation();
+    const currentPathname = usePathname();
     const enabled = options.enabled ?? true;
-    const pathname = options.pathname ?? location.pathname;
+    const pathname = options.pathname ?? currentPathname;
     const [modeVersion, setModeVersion] = useState(0);
 
     useEffect(() => {
@@ -262,9 +275,9 @@ export function useResolvedDetailViewMode(
 }
 
 export function useDetailViewMode(options: DetailViewModeHookOptions = {}) {
-    const location = useLocation();
+    const currentPathname = usePathname();
     const enabled = options.enabled ?? true;
-    const pathname = options.pathname ?? location.pathname;
+    const pathname = options.pathname ?? currentPathname;
     const resolvedMode = useResolvedDetailViewMode({
         enabled,
         pathname,

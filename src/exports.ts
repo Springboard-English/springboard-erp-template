@@ -1,5 +1,4 @@
-export { default as App } from "./App";
-export type { AppProps, AuthViewMode } from "./App";
+export { configureApi } from "./config/api";
 
 export { default as SignIn } from "./views/SignIn";
 export type { SignInViewProps } from "./views/SignIn";

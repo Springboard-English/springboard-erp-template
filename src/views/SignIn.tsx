@@ -20,6 +20,7 @@ import { loginWithGoogle } from "@/api_calls/UserData";
 export interface SignInViewProps {
   disableCustomTheme?: boolean;
   authNotice?: string;
+  googleClientId?: string;
 }
 
 export default function SignIn(props: SignInViewProps) {
@@ -43,6 +44,11 @@ export default function SignIn(props: SignInViewProps) {
   }, [props.authNotice]);
 
   React.useEffect(() => {
+    const clientId = props.googleClientId || (typeof import.meta !== "undefined" ? import.meta.env?.VITE_GOOGLE_CLIENT_ID : undefined) || "";
+    if (!clientId) {
+      return;
+    }
+
     const script = document.createElement("script");
     script.src = "https://accounts.google.com/gsi/client";
     script.async = true;
@@ -52,13 +58,12 @@ export default function SignIn(props: SignInViewProps) {
     script.onload = () => {
       if (window.google?.accounts?.id) {
         window.google.accounts.id.initialize({
-          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || "",
+          client_id: clientId,
           callback: handleGoogleSuccess,
           use_fedcm_for_prompt: true,
           auto_select: false,
           context: 'signin',
         });
-        // Render the Google Sign-In button
         window.google.accounts.id.renderButton(
           document.getElementById("google-btn"),
           {
@@ -67,7 +72,6 @@ export default function SignIn(props: SignInViewProps) {
             text: "continue_with",
           },
         );
-        // Display the One Tap prompt
         window.google.accounts.id.prompt((notification: any) => {
           if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
             console.log("Google prompt status:", notification.getNotDisplayedReason());
@@ -75,7 +79,7 @@ export default function SignIn(props: SignInViewProps) {
         });
       }
     };
-  }, []);
+  }, [props.googleClientId]);
 
   const handleClickOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
@@ -257,19 +261,23 @@ export default function SignIn(props: SignInViewProps) {
                   Forgot your password?
                 </button>
 
-                <div className="relative py-1">
-                  <Separator />
-                  <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
-                    or continue with
-                  </span>
-                </div>
+                {props.googleClientId && (
+                  <>
+                    <div className="relative py-1">
+                      <Separator />
+                      <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                        or continue with
+                      </span>
+                    </div>
 
-                <div className="rounded-2xl border border-dashed border-border/70 bg-muted/35 p-4">
-                  <div
-                    id="google-btn"
-                    className="flex min-h-10 justify-center"
-                  />
-                </div>
+                    <div className="rounded-2xl border border-dashed border-border/70 bg-muted/35 p-4">
+                      <div
+                        id="google-btn"
+                        className="flex min-h-10 justify-center"
+                      />
+                    </div>
+                  </>
+                )}
               </form>
             </CardContent>
           </Card>
