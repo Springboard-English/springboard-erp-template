@@ -26,7 +26,7 @@ export interface SimpleDataTableColumn<T> {
 
 export type SimpleDataTableSortOrder = 'asc' | 'desc';
 
-interface SimpleDataTableProps<T> {
+export interface SimpleDataTableProps<T> {
   columns: Array<SimpleDataTableColumn<T>>;
   rows: T[];
   rowKey: (row: T) => string;

@@ -11,6 +11,10 @@ export { default as AppTheme } from "./theme/AppTheme";
 export { default as ColorModeSelect } from "./theme/ColorModeSelect";
 
 export { default as ForgotPassword } from "./components/ForgotPassword";
+export { SitemarkIcon } from "./components/CustomIcons";
+export { default as LazyViewFallback } from "./components/LazyViewFallback";
+export { default as PatchRecordDialog } from "./components/PatchRecordDialog";
+export { default as PendingChangesBar } from "./components/PendingChangesBar";
 export { default as StatusBanner } from "./components/StatusBanner";
 export { default as SimpleDataTable } from "./components/SimpleDataTable";
 export { default as FormTableDialog, FormTableRow } from "./components/dialogs/FormTableDialog";
