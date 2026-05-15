@@ -1,7 +1,7 @@
 {
     "name": "@springboard-english/springboard-erp-template",
     "private": false,
-    "version": "0.6.0",
+    "version": "0.6.1",
     "type": "module",
     "repository": {
         "type": "git",
@@ -20,7 +20,8 @@
         ".": {
             "types": "./dist/exports.d.ts",
             "import": "./dist/index.js"
-        }
+        },
+        "./style.css": "./dist/style.css"
     },
     "scripts": {
         "dev": "vite",

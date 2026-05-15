@@ -1,3 +1,5 @@
+import "./index.css";
+
 export { configureApi } from "./config/api";
 
 export { default as SignIn } from "./views/SignIn";
