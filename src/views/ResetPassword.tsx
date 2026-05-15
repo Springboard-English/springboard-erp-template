@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -15,10 +14,14 @@ import ColorModeSelect from '@/theme/ColorModeSelect';
 import StatusBanner from '@/components/StatusBanner';
 import { SitemarkIcon } from '@/components/CustomIcons';
 import { resetPassword } from '@/api_calls/UserData';
-import { SIGN_IN_ROUTE } from '@/routing/navigation';
 
-export default function ResetPassword(props: { disableCustomTheme?: boolean }) {
-  const navigate = useNavigate();
+export interface ResetPasswordViewProps {
+  disableCustomTheme?: boolean;
+  onNavigateToSignIn?: (authNotice?: string) => void;
+  signInPath?: string;
+}
+
+export default function ResetPassword(props: ResetPasswordViewProps) {
   const [token, setToken] = React.useState('');
   const [username, setUsername] = React.useState('');
   const [password, setPassword] = React.useState('');
@@ -71,10 +74,10 @@ export default function ResetPassword(props: { disableCustomTheme?: boolean }) {
         password: password
       });
 
-      navigate(SIGN_IN_ROUTE, {
-        replace: true,
-        state: { authNotice: 'Password reset successful. You can now sign in.' },
-      });
+      props.onNavigateToSignIn?.('Password reset successful. You can now sign in.');
+      if (!props.onNavigateToSignIn && props.signInPath) {
+        window.location.assign(props.signInPath);
+      }
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : 'Failed to reset password. Please try again.'
@@ -178,7 +181,12 @@ export default function ResetPassword(props: { disableCustomTheme?: boolean }) {
                   type="button"
                   className="w-full"
                   variant="outline"
-                  onClick={() => navigate(SIGN_IN_ROUTE)}
+                  onClick={() => {
+                    props.onNavigateToSignIn?.();
+                    if (!props.onNavigateToSignIn && props.signInPath) {
+                      window.location.assign(props.signInPath);
+                    }
+                  }}
                   disabled={isSubmitting}
                 >
                   Back to sign in

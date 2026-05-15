@@ -1,5 +1,4 @@
 import * as React from "react";
-import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -18,9 +17,12 @@ import { SitemarkIcon } from "@/components/CustomIcons";
 import { useAuth } from "@/context/AuthContext";
 import { loginWithGoogle } from "@/api_calls/UserData";
 
-export default function SignIn(props: { disableCustomTheme?: boolean }) {
-  const location = useLocation();
-  const navigate = useNavigate();
+export interface SignInViewProps {
+  disableCustomTheme?: boolean;
+  authNotice?: string;
+}
+
+export default function SignIn(props: SignInViewProps) {
   const { login, setAuthenticatedUser } = useAuth();
   const [username, setUsername] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -33,14 +35,12 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
 
   // Initialize Google Sign-In on mount
   React.useEffect(() => {
-    const state = (location.state as { authNotice?: string } | null) ?? null;
-    if (!state?.authNotice) {
+    if (!props.authNotice) {
       return;
     }
 
-    setLoginSuccessMessage(state.authNotice);
-    navigate(location.pathname, { replace: true, state: null });
-  }, [location.pathname, location.state, navigate]);
+    setLoginSuccessMessage(props.authNotice);
+  }, [props.authNotice]);
 
   React.useEffect(() => {
     const script = document.createElement("script");

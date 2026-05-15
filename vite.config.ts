@@ -13,24 +13,14 @@ export default defineConfig({
     },
   },
   build: {
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          if (!id.includes('node_modules')) {
-            return undefined;
-          }
-
-          if (id.includes('@tanstack/react-query')) {
-            return 'react-query';
-          }
-
-          if (id.includes('react') || id.includes('scheduler')) {
-            return 'react-vendor';
-          }
-
-          return undefined;
-        },
-      },
+    lib: {
+      entry: fileURLToPath(new URL('./src/exports.ts', import.meta.url)),
+      name: 'SpringboardComponents',
+      formats: ['es'],
+      fileName: () => 'index.js',
     },
+    rollupOptions: {
+      external: ['react', 'react-dom'],
+    }
   },
 });

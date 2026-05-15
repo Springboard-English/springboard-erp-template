@@ -1,9 +1,30 @@
 {
-    "private": true,
+    "name": "@Springboard-English/springboard-erp-template",
+    "private": false,
+    "version": "0.1.0",
     "type": "module",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Springboard-English/springboard-erp-template.git"
+    },
+    "publishConfig": {
+        "registry": "https://npm.pkg.github.com"
+    },
+    "files": [
+        "dist"
+    ],
+    "main": "./dist/index.js",
+    "module": "./dist/index.js",
+    "types": "./dist/exports.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/exports.d.ts",
+            "import": "./dist/index.js"
+        }
+    },
     "scripts": {
         "dev": "vite",
-        "build": "vite build",
+        "build": "vite build && tsc -p tsconfig.build.json",
         "preview": "vite preview",
         "lint": "eslint . --ext .ts,.tsx",
         "deploy": "VITE_BASE_URL=https://api.springboard.vn npm run build && gcloud storage rsync ./dist gs://lms.springboard.vn --recursive --delete-unmatched-destination-objects --exclude=\".*index[.]html$\" --cache-control=\"public, max-age=3600\" && gcloud storage cp ./dist/index.html  gs://lms.springboard.vn/index.html --cache-control=\"no-store, max-age=0\""

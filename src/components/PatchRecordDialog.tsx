@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Textarea } from '@/components/ui/textarea';
-import FormTableDialog, { FormTableRow } from '@/components/management/FormTableDialog';
+import FormTableDialog, { FormTableRow } from '@/components/dialogs/FormTableDialog';
 
 export type PatchFieldType = 'text' | 'number' | 'date' | 'datetime' | 'boolean' | 'select';
 

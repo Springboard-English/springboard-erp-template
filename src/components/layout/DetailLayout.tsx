@@ -2,18 +2,14 @@ import {
     createContext,
     useContext,
     useEffect,
-    useMemo,
     type ReactNode,
 } from "react";
 import { ChevronRight, Expand, PanelRight } from "lucide-react";
-import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import {
     DETAIL_HIDDEN_COLLAPSED_VALUE,
-    getDetailReturnLocation,
-    stripDetailViewModeFromPath,
     useDetailViewMode,
     type DetailViewCollapsedState,
 } from "@/utils/detailViewMode";
@@ -39,57 +35,20 @@ const DetailViewContext = createContext<{
 
 export const BackgroundDetailViewContext = createContext<boolean>(false);
 
-function getDefaultReturnPath(pathname: string): string {
-    const classChildMatch = pathname.match(
-        /^\/management\/classes\/[^/]+\/(schedules|sessions|tests|feedbacks)\/[^/]+/,
-    );
-    if (classChildMatch) {
-        const section = classChildMatch[1];
-        const classPath = pathname.match(/^\/management\/classes\/[^/]+/)?.[0];
-        return classPath ? `${classPath}/${section}` : "/management/classes";
-    }
-
-    if (/^\/management\/classes\/[^/]+(?:\/[^/]+)?/.test(pathname)) {
-        return "/management/classes";
-    }
-
-    if (/^\/management\/sessions\/[^/]+/.test(pathname)) {
-        return "/management/sessions";
-    }
-
-    if (/^\/management\/schedules\/[^/]+/.test(pathname)) {
-        return "/management/schedules";
-    }
-
-    if (/^\/management\/tests\/[^/]+/.test(pathname)) {
-        return "/management/tests";
-    }
-
-    if (/^\/management\/feedbacks\/[^/]+/.test(pathname)) {
-        return "/management/feedbacks";
-    }
-
-    return "/management/classes";
-}
-
 export function DetailView({
     children,
     className = "w-full max-w-[1700px] space-y-4",
     isBackground: isBackgroundProp,
+    onCloseFloating,
 }: {
     children: ReactNode;
     className?: string;
     isBackground?: boolean;
+    onCloseFloating?: () => void;
 }) {
     const isBackgroundFromContext = useContext(BackgroundDetailViewContext);
     const isBackground = isBackgroundProp ?? isBackgroundFromContext;
-    const navigate = useNavigate();
-    const location = useLocation();
     const detailViewMode = useDetailViewMode({ enabled: !isBackground });
-    const query = useMemo(
-        () => new URLSearchParams(location.search),
-        [location.search],
-    );
     const floating = isBackground ? false : detailViewMode.floating;
     const collapsed = isBackground ? false : detailViewMode.isCollapsed;
     const hiddenCollapsed = isBackground
@@ -117,24 +76,10 @@ export function DetailView({
     };
 
     const handleCloseFloating = () => {
-        if (isBackground) {
+        if (isBackground || !onCloseFloating) {
             return;
         }
-        const rawReturnUrl = query.get("returnUrl")?.trim();
-        if (rawReturnUrl) {
-            const returnLocation = getDetailReturnLocation(rawReturnUrl);
-            if (returnLocation) {
-                navigate(
-                    `${returnLocation.pathname}${returnLocation.search}${returnLocation.hash}`,
-                    { replace: true },
-                );
-                return;
-            }
-            const returnPath = stripDetailViewModeFromPath(rawReturnUrl);
-            navigate(returnPath, { replace: true });
-            return;
-        }
-        navigate(getDefaultReturnPath(location.pathname), { replace: true });
+        onCloseFloating();
     };
 
     const expandToNormalView = () => {

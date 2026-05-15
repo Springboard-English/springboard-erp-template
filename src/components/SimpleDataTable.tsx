@@ -2,7 +2,7 @@ import { useContext, useEffect, useId, useRef, useState, type ReactNode } from '
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SearchableSelect } from '@/components/ui/searchable-select';
-import { BackgroundDetailViewContext } from '@/components/management/DetailLayout';
+import { BackgroundDetailViewContext } from '@/components/layout/DetailLayout';
 import { useGlobalStatus } from '@/context/GlobalStatusContext';
 import {
   Table,

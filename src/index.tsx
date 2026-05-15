@@ -1,7 +1,6 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import App from './App';
 import { invalidateAllCachedValues } from './utils/queryCache';
@@ -17,20 +16,6 @@ const queryClient = new QueryClient({
     },
   },
 });
-const routerBasename = getRouterBasename();
-
-function getRouterBasename(): string | undefined {
-  const baseUrl = import.meta.env.BASE_URL?.trim();
-
-  if (!baseUrl || baseUrl === '/') {
-    return undefined;
-  }
-
-  return baseUrl.endsWith('/') && baseUrl.length > 1
-    ? baseUrl.slice(0, -1)
-    : baseUrl;
-}
-
 function isReloadNavigation(): boolean {
   const navigationEntry = performance.getEntriesByType('navigation')[0];
   if (navigationEntry && 'type' in navigationEntry) {
@@ -66,9 +51,14 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <BrowserRouter basename={routerBasename}>
-          <App />
-        </BrowserRouter>
+        <App
+          initialView={
+            window.location.pathname.includes('reset_password')
+              ? 'reset-password'
+              : 'sign-in'
+          }
+          authNotice={new URLSearchParams(window.location.search).get('authNotice') ?? undefined}
+        />
       </AuthProvider>
     </QueryClientProvider>
   </React.StrictMode>
