@@ -21,6 +21,10 @@ export default defineConfig({
     },
     rollupOptions: {
       external: ['react', 'react-dom'],
+      output: {
+        assetFileNames: (assetInfo) =>
+          assetInfo.names?.includes('index.css') ? 'style.css' : (assetInfo.names?.[0] ?? 'asset'),
+      },
     }
   },
 });
