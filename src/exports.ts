@@ -1,6 +1,6 @@
 import "./index.css";
 
-export * from "./config/api";
+export { configureApi, API_CONFIG } from "./config/api";
 
 export { default as SignIn } from "./views/SignIn";
 export type { SignInViewProps } from "./views/SignIn";
@@ -45,9 +45,6 @@ export * from "./utils/urlQueryState";
 export * from "./utils/userScopes";
 export * from "./utils/permissions";
 export * from "./utils/conflictErrors";
-export * from "./utils/queryCache";
-export * from "./utils/openSessionLink";
-export * from "./utils/sessionRows";
 
 export {
   DETAIL_HIDDEN_COLLAPSED_VALUE,
