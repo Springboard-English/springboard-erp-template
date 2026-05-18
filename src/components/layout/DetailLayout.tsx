@@ -624,10 +624,12 @@ export function DetailTabs<T extends string>({
         (animate: boolean) => {
             const btn = buttonRefs.current.get(activeTab);
             if (!btn) return false;
+            const width = btn.offsetWidth;
+            if (width <= 0) return false;
             const motionConfig = getDetailLayoutMotionConfig();
             pillApi.start({
                 x: btn.offsetLeft,
-                width: btn.offsetWidth,
+                width,
                 opacity: 1,
                 immediate: !animate,
                 config: {
@@ -641,13 +643,33 @@ export function DetailTabs<T extends string>({
     );
 
     useLayoutEffect(() => {
-        const measured = updatePill(initializedRef.current);
-        if (!measured) {
-            requestAnimationFrame(() => {
-                updatePill(initializedRef.current);
-            });
-        }
+        let frameId = 0;
+        let attempts = 0;
+        const maxAttempts = 8;
+        const measureWithRetry = () => {
+            const measured = updatePill(initializedRef.current);
+            if (!measured && attempts < maxAttempts) {
+                attempts += 1;
+                frameId = requestAnimationFrame(measureWithRetry);
+            }
+        };
+        measureWithRetry();
         initializedRef.current = true;
+        return () => {
+            if (frameId) {
+                cancelAnimationFrame(frameId);
+            }
+        };
+    }, [updatePill]);
+
+    useEffect(() => {
+        const handleResize = () => {
+            updatePill(true);
+        };
+        window.addEventListener("resize", handleResize);
+        return () => {
+            window.removeEventListener("resize", handleResize);
+        };
     }, [updatePill]);
 
     return (
