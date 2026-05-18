@@ -747,7 +747,12 @@ export function DetailTabs<T extends string>({
                             }
                         }}
                         type="button"
-                        onClick={() => onChange(tab.value)}
+                        onClick={() => {
+                            if (tab.value === resolvedActiveTab) {
+                                return;
+                            }
+                            onChange(tab.value);
+                        }}
                         className={cn(
                             "relative z-10 shrink-0 cursor-pointer whitespace-nowrap rounded-xl px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] transition-colors duration-150",
                             resolvedActiveTab === tab.value
