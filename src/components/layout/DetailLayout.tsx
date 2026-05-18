@@ -620,7 +620,6 @@ export function DetailTabs<T extends string>({
     const [pillSpring, pillApi] = useSpring(() => ({
         x: 0,
         width: 0,
-        opacity: 0,
     }));
 
     const updatePill = useCallback(
@@ -634,7 +633,6 @@ export function DetailTabs<T extends string>({
             pillApi.start({
                 x: btn.offsetLeft,
                 width,
-                opacity: 1,
                 immediate: !animate,
                 config: {
                     tension: motionConfig.tabPillSpring.tension,
@@ -733,7 +731,9 @@ export function DetailTabs<T extends string>({
                     style={{
                         transform: pillSpring.x.to((x) => `translateX(${x}px)`),
                         width: pillSpring.width,
-                        opacity: pillSpring.opacity,
+                        opacity: pillSpring.width.to((width) =>
+                            width > 0 ? 1 : 0,
+                        ),
                     }}
                 />
                 {tabs.map((tab) => (
