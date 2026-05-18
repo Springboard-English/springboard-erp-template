@@ -48,6 +48,40 @@ let detailLayoutMotionConfig: DetailLayoutMotionConfig = {
     tabContentFadeOutMs: DETAIL_LAYOUT_MOTION_DEFAULTS.tabContentFadeOutMs,
     tabContentFadeInMs: DETAIL_LAYOUT_MOTION_DEFAULTS.tabContentFadeInMs,
 };
+let detailTabsDebugInstanceCounter = 0;
+
+function shouldDebugDetailTabs(): boolean {
+    if (typeof window === "undefined") {
+        return false;
+    }
+
+    const debugFlag =
+        (window as typeof window & { __DETAIL_TABS_DEBUG__?: unknown })
+            .__DETAIL_TABS_DEBUG__;
+    if (debugFlag) {
+        return true;
+    }
+
+    return new URLSearchParams(window.location.search).get("detailTabsDebug") === "1";
+}
+
+function logDetailTabsDebug(
+    instanceId: number,
+    event: string,
+    payload?: Record<string, unknown>,
+) {
+    if (!shouldDebugDetailTabs()) {
+        return;
+    }
+
+    console.debug(`[DetailTabs:${instanceId}] ${event}`, {
+        path:
+            typeof window === "undefined"
+                ? undefined
+                : `${window.location.pathname}${window.location.search}`,
+        ...payload,
+    });
+}
 
 export function getDetailLayoutMotionConfig(): DetailLayoutMotionConfig {
     return {
@@ -613,6 +647,7 @@ export function DetailTabs<T extends string>({
 }) {
     const buttonRefs = useRef(new Map<T, HTMLButtonElement>());
     const tabListRef = useRef<HTMLDivElement | null>(null);
+    const debugInstanceRef = useRef(++detailTabsDebugInstanceCounter);
     const initializedRef = useRef(false);
     const resolvedActiveTab =
         tabs.find((tab) => tab.value === activeTab)?.value ?? tabs[0]?.value;
@@ -624,12 +659,47 @@ export function DetailTabs<T extends string>({
 
     const updatePill = useCallback(
         (animate: boolean) => {
-            if (!resolvedActiveTab) return false;
+            if (!resolvedActiveTab) {
+                logDetailTabsDebug(debugInstanceRef.current, "updatePill:no-active-tab", {
+                    activeTab,
+                    resolvedActiveTab,
+                    animate,
+                    tabs: tabs.map((tab) => tab.value),
+                });
+                return false;
+            }
             const btn = buttonRefs.current.get(resolvedActiveTab);
-            if (!btn) return false;
+            if (!btn) {
+                logDetailTabsDebug(debugInstanceRef.current, "updatePill:no-button", {
+                    activeTab,
+                    resolvedActiveTab,
+                    animate,
+                    availableButtons: Array.from(buttonRefs.current.keys()),
+                });
+                return false;
+            }
             const width = btn.offsetWidth;
-            if (width <= 0) return false;
+            if (width <= 0) {
+                logDetailTabsDebug(debugInstanceRef.current, "updatePill:zero-width", {
+                    activeTab,
+                    resolvedActiveTab,
+                    animate,
+                    offsetLeft: btn.offsetLeft,
+                    offsetWidth: width,
+                    rect: btn.getBoundingClientRect().toJSON(),
+                });
+                return false;
+            }
             const motionConfig = getDetailLayoutMotionConfig();
+            logDetailTabsDebug(debugInstanceRef.current, "updatePill:start", {
+                activeTab,
+                resolvedActiveTab,
+                animate,
+                offsetLeft: btn.offsetLeft,
+                offsetWidth: width,
+                buttonRect: btn.getBoundingClientRect().toJSON(),
+                tabListRect: tabListRef.current?.getBoundingClientRect().toJSON(),
+            });
             pillApi.start({
                 left: btn.offsetLeft,
                 width,
@@ -642,7 +712,7 @@ export function DetailTabs<T extends string>({
             });
             return true;
         },
-        [pillApi, resolvedActiveTab],
+        [activeTab, pillApi, resolvedActiveTab, tabs],
     );
 
     useLayoutEffect(() => {
@@ -651,6 +721,11 @@ export function DetailTabs<T extends string>({
         const maxAttempts = 8;
         const measureWithRetry = () => {
             const measured = updatePill(initializedRef.current);
+            logDetailTabsDebug(debugInstanceRef.current, "layout-effect:measure", {
+                attempts,
+                measured,
+                initialized: initializedRef.current,
+            });
             if (!measured && attempts < maxAttempts) {
                 attempts += 1;
                 frameId = requestAnimationFrame(measureWithRetry);
@@ -666,7 +741,16 @@ export function DetailTabs<T extends string>({
     }, [updatePill]);
 
     useEffect(() => {
+        logDetailTabsDebug(debugInstanceRef.current, "render-state", {
+            activeTab,
+            resolvedActiveTab,
+            tabs: tabs.map((tab) => tab.value),
+        });
+    }, [activeTab, resolvedActiveTab, tabs]);
+
+    useEffect(() => {
         const handleResize = () => {
+            logDetailTabsDebug(debugInstanceRef.current, "window:resize");
             updatePill(true);
         };
         window.addEventListener("resize", handleResize);
@@ -689,6 +773,7 @@ export function DetailTabs<T extends string>({
         }
 
         const observer = new ResizeObserver(() => {
+            logDetailTabsDebug(debugInstanceRef.current, "resize-observer");
             updatePill(true);
         });
 
@@ -712,6 +797,9 @@ export function DetailTabs<T extends string>({
         let cancelled = false;
         void document.fonts.ready.then(() => {
             if (!cancelled) {
+                logDetailTabsDebug(debugInstanceRef.current, "fonts:ready", {
+                    status: document.fonts.status,
+                });
                 updatePill(true);
             }
         });
@@ -742,12 +830,25 @@ export function DetailTabs<T extends string>({
                         ref={(el) => {
                             if (el) buttonRefs.current.set(tab.value, el);
                             else buttonRefs.current.delete(tab.value);
+                            logDetailTabsDebug(debugInstanceRef.current, "button:ref", {
+                                tabValue: tab.value,
+                                mounted: Boolean(el),
+                                activeTab,
+                                resolvedActiveTab,
+                                offsetLeft: el?.offsetLeft,
+                                offsetWidth: el?.offsetWidth,
+                            });
                             if (el && tab.value === activeTab) {
                                 updatePill(initializedRef.current);
                             }
                         }}
                         type="button"
                         onClick={() => {
+                            logDetailTabsDebug(debugInstanceRef.current, "button:click", {
+                                tabValue: tab.value,
+                                activeTab,
+                                resolvedActiveTab,
+                            });
                             if (tab.value === resolvedActiveTab) {
                                 return;
                             }
