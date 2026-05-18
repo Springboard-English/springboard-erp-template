@@ -623,7 +623,7 @@ export function DetailTabs<T extends string>({
     const updatePill = useCallback(
         (animate: boolean) => {
             const btn = buttonRefs.current.get(activeTab);
-            if (!btn) return;
+            if (!btn) return false;
             const motionConfig = getDetailLayoutMotionConfig();
             pillApi.start({
                 x: btn.offsetLeft,
@@ -635,12 +635,18 @@ export function DetailTabs<T extends string>({
                     friction: motionConfig.tabPillSpring.friction,
                 },
             });
+            return true;
         },
         [activeTab, pillApi],
     );
 
     useLayoutEffect(() => {
-        updatePill(initializedRef.current);
+        const measured = updatePill(initializedRef.current);
+        if (!measured) {
+            requestAnimationFrame(() => {
+                updatePill(initializedRef.current);
+            });
+        }
         initializedRef.current = true;
     }, [updatePill]);
 
@@ -663,6 +669,9 @@ export function DetailTabs<T extends string>({
                         ref={(el) => {
                             if (el) buttonRefs.current.set(tab.value, el);
                             else buttonRefs.current.delete(tab.value);
+                            if (el && tab.value === activeTab) {
+                                updatePill(initializedRef.current);
+                            }
                         }}
                         type="button"
                         onClick={() => onChange(tab.value)}
