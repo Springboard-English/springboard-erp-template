@@ -618,7 +618,7 @@ export function DetailTabs<T extends string>({
         tabs.find((tab) => tab.value === activeTab)?.value ?? tabs[0]?.value;
 
     const [pillSpring, pillApi] = useSpring(() => ({
-        x: 0,
+        left: 0,
         width: 0,
     }));
 
@@ -631,7 +631,7 @@ export function DetailTabs<T extends string>({
             if (width <= 0) return false;
             const motionConfig = getDetailLayoutMotionConfig();
             pillApi.start({
-                x: btn.offsetLeft,
+                left: btn.offsetLeft,
                 width,
                 immediate: !animate,
                 config: {
@@ -729,7 +729,7 @@ export function DetailTabs<T extends string>({
                     aria-hidden="true"
                     className="pointer-events-none absolute left-0 top-0 h-full rounded-xl bg-primary shadow-sm"
                     style={{
-                        transform: pillSpring.x.to((x) => `translateX(${x}px)`),
+                        left: pillSpring.left,
                         width: pillSpring.width,
                         opacity: pillSpring.width.to((width) =>
                             width > 0 ? 1 : 0,
