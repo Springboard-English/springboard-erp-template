@@ -1,9 +1,13 @@
 import {
     createContext,
+    useCallback,
     useContext,
     useEffect,
+    useLayoutEffect,
+    useRef,
     type ReactNode,
 } from "react";
+import { animated, useSpring } from "@react-spring/web";
 import { ChevronRight, Expand, PanelRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
@@ -13,6 +17,77 @@ import {
     useDetailViewMode,
     type DetailViewCollapsedState,
 } from "@/utils/detailViewMode";
+
+export const DETAIL_LAYOUT_MOTION_DEFAULTS = {
+    tabPillSpring: {
+        tension: 300,
+        friction: 26,
+    },
+    tabContentFadeOutMs: 100,
+    tabContentFadeInMs: 200,
+} as const;
+
+export type DetailLayoutMotionConfig = {
+    tabPillSpring: {
+        tension: number;
+        friction: number;
+    };
+    tabContentFadeOutMs: number;
+    tabContentFadeInMs: number;
+};
+
+export type DetailLayoutMotionConfigInput = Partial<{
+    tabPillSpring: Partial<DetailLayoutMotionConfig["tabPillSpring"]>;
+    tabContentFadeOutMs: number;
+    tabContentFadeInMs: number;
+}>;
+
+let detailLayoutMotionConfig: DetailLayoutMotionConfig = {
+    tabPillSpring: { ...DETAIL_LAYOUT_MOTION_DEFAULTS.tabPillSpring },
+    tabContentFadeOutMs: DETAIL_LAYOUT_MOTION_DEFAULTS.tabContentFadeOutMs,
+    tabContentFadeInMs: DETAIL_LAYOUT_MOTION_DEFAULTS.tabContentFadeInMs,
+};
+
+export function getDetailLayoutMotionConfig(): DetailLayoutMotionConfig {
+    return {
+        tabPillSpring: { ...detailLayoutMotionConfig.tabPillSpring },
+        tabContentFadeOutMs: detailLayoutMotionConfig.tabContentFadeOutMs,
+        tabContentFadeInMs: detailLayoutMotionConfig.tabContentFadeInMs,
+    };
+}
+
+export function setDetailLayoutMotionConfig(
+    nextConfig: DetailLayoutMotionConfigInput,
+): DetailLayoutMotionConfig {
+    detailLayoutMotionConfig = {
+        tabPillSpring: {
+            tension:
+                nextConfig.tabPillSpring?.tension ??
+                detailLayoutMotionConfig.tabPillSpring.tension,
+            friction:
+                nextConfig.tabPillSpring?.friction ??
+                detailLayoutMotionConfig.tabPillSpring.friction,
+        },
+        tabContentFadeOutMs:
+            nextConfig.tabContentFadeOutMs ??
+            detailLayoutMotionConfig.tabContentFadeOutMs,
+        tabContentFadeInMs:
+            nextConfig.tabContentFadeInMs ??
+            detailLayoutMotionConfig.tabContentFadeInMs,
+    };
+
+    return getDetailLayoutMotionConfig();
+}
+
+export function resetDetailLayoutMotionConfig(): DetailLayoutMotionConfig {
+    detailLayoutMotionConfig = {
+        tabPillSpring: { ...DETAIL_LAYOUT_MOTION_DEFAULTS.tabPillSpring },
+        tabContentFadeOutMs: DETAIL_LAYOUT_MOTION_DEFAULTS.tabContentFadeOutMs,
+        tabContentFadeInMs: DETAIL_LAYOUT_MOTION_DEFAULTS.tabContentFadeInMs,
+    };
+
+    return getDetailLayoutMotionConfig();
+}
 
 type BreadcrumbItem = {
     label: string;
@@ -229,9 +304,13 @@ export function DetailBreadcrumbs({
                             {item.label}
                         </Button>
                     ) : (
-                        <span className="text-base">{item.label}</span>
+                        <span className="text-base">
+                            {item.label}
+                        </span>
                     )}
-                    <span className="text-muted-foreground">{">"}</span>
+                    <span className="text-muted-foreground">
+                        {">"}
+                    </span>
                 </div>
             ))}
             <h2 className="min-w-0 break-words text-xl font-semibold tracking-tight">
@@ -263,7 +342,9 @@ export function DetailHeader({
                 className,
             )}
         >
-            <div className="min-w-0 flex-1">{breadcrumbs}</div>
+            <div className="min-w-0 flex-1">
+                {breadcrumbs}
+            </div>
             {actions ? (
                 <div className="flex shrink-0 items-center gap-2 self-start">
                     {showExpandAction ? (
@@ -403,7 +484,12 @@ export function DetailFieldsTable({
                 className,
             )}
         >
-            <Table className={cn("min-w-[40rem] table-fixed", tableClassName)}>
+            <Table
+                className={cn(
+                    "min-w-[40rem] table-fixed",
+                    tableClassName,
+                )}
+            >
                 <TableBody>
                     {rows.map((row, index) => (
                         <TableRow
@@ -416,7 +502,8 @@ export function DetailFieldsTable({
                             <TableCell
                                 className={cn(
                                     "border-r border-border/60 px-4 py-3 align-middle text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground",
-                                    labelColumnClassName ?? "w-[220px]",
+                                    labelColumnClassName ??
+                                        "w-[220px]",
                                     row.labelClassName,
                                 )}
                             >
@@ -452,7 +539,9 @@ export function DetailClassLinkValue({
     const normalizedClassKey = classKey?.trim() || "";
     return (
         <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <span className="break-words">{className?.trim() || "-"}</span>
+            <span className="break-words">
+                {className?.trim() || "-"}
+            </span>
             <Button
                 type="button"
                 size="sm"
@@ -505,7 +594,9 @@ export function DetailActionPanel({
             <div className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                 {title}
             </div>
-            <div className="mt-3 flex flex-col gap-2">{children}</div>
+            <div className="mt-3 flex flex-col gap-2">
+                {children}
+            </div>
         </aside>
     );
 }
@@ -519,22 +610,76 @@ export function DetailTabs<T extends string>({
     activeTab: T;
     onChange: (tab: T) => void;
 }) {
+    const containerRef = useRef<HTMLDivElement>(null);
+    const buttonRefs = useRef(new Map<T, HTMLButtonElement>());
+    const initializedRef = useRef(false);
+
+    const [pillSpring, pillApi] = useSpring(() => ({
+        x: 0,
+        width: 0,
+        opacity: 0,
+    }));
+
+    const updatePill = useCallback(
+        (animate: boolean) => {
+            const container = containerRef.current;
+            const btn = buttonRefs.current.get(activeTab);
+            if (!container || !btn) return;
+            const containerRect = container.getBoundingClientRect();
+            const btnRect = btn.getBoundingClientRect();
+            const motionConfig = getDetailLayoutMotionConfig();
+            pillApi.start({
+                x: btnRect.left - containerRect.left,
+                width: btnRect.width,
+                opacity: 1,
+                immediate: !animate,
+                config: {
+                    tension: motionConfig.tabPillSpring.tension,
+                    friction: motionConfig.tabPillSpring.friction,
+                },
+            });
+        },
+        [activeTab, pillApi],
+    );
+
+    useLayoutEffect(() => {
+        updatePill(initializedRef.current);
+        initializedRef.current = true;
+    }, [updatePill]);
+
     return (
-        <div className="overflow-x-auto rounded-2xl border border-border/70 bg-card/70 p-1 drop-shadow-md">
-            <div className="flex min-w-max gap-2">
+        <div
+            ref={containerRef}
+            className="relative overflow-x-auto rounded-2xl border border-border/70 bg-card/70 p-1 drop-shadow-md"
+        >
+            {/* Spring-animated active pill */}
+            <animated.div
+                aria-hidden="true"
+                className="pointer-events-none absolute top-1 h-[calc(100%-8px)] rounded-xl bg-primary shadow-sm"
+                style={{
+                    transform: pillSpring.x.to((x) => `translateX(${x}px)`),
+                    width: pillSpring.width,
+                    opacity: pillSpring.opacity,
+                }}
+            />
+            <div className="relative flex min-w-max gap-2">
                 {tabs.map((tab) => (
                     <button
                         key={tab.value}
+                        ref={(el) => {
+                            if (el) buttonRefs.current.set(tab.value, el);
+                            else buttonRefs.current.delete(tab.value);
+                        }}
                         type="button"
                         onClick={() => onChange(tab.value)}
-                        className={[
-                            "shrink-0 cursor-pointer whitespace-nowrap rounded-xl px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] transition",
+                        className={cn(
+                            "relative z-10 shrink-0 cursor-pointer whitespace-nowrap rounded-xl px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] transition-colors duration-150",
                             activeTab === tab.value
-                                ? "bg-primary text-primary-foreground shadow-sm"
+                                ? "text-primary-foreground"
                                 : tab.hasPendingChanges
-                                  ? "font-bold text-primary hover:bg-primary/10 hover:text-primary"
-                                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
-                        ].join(" ")}
+                                  ? "font-bold text-primary hover:bg-primary/10"
+                                  : "text-muted-foreground hover:text-accent-foreground",
+                        )}
                     >
                         {tab.label}
                     </button>
@@ -559,6 +704,44 @@ export function DetailTabbedSection<T extends string>({
     className?: string;
     contentClassName?: string;
 }) {
+    const prevTabRef = useRef(activeTab);
+    const pendingTabRef = useRef<T | null>(null);
+    const [contentSpring, contentApi] = useSpring(() => ({ opacity: 1 }));
+
+    // Fade out first, then navigate — so content is already at 0 when new children arrive
+    const handleTabChange = useCallback(
+        (nextTab: T) => {
+            if (nextTab === activeTab) return;
+            const motionConfig = getDetailLayoutMotionConfig();
+            pendingTabRef.current = nextTab;
+            void contentApi.start({
+                opacity: 0,
+                config: {
+                    duration: motionConfig.tabContentFadeOutMs,
+                },
+                onRest: ({ cancelled }) => {
+                    if (!cancelled && pendingTabRef.current === nextTab) {
+                        onChange(nextTab);
+                    }
+                },
+            });
+        },
+        [activeTab, contentApi, onChange],
+    );
+
+    // useLayoutEffect runs before paint — content starts invisible, no flash
+    useLayoutEffect(() => {
+        if (prevTabRef.current === activeTab) return;
+        const motionConfig = getDetailLayoutMotionConfig();
+        prevTabRef.current = activeTab;
+        void contentApi.start({
+            opacity: 1,
+            config: {
+                duration: motionConfig.tabContentFadeInMs,
+            },
+        });
+    }, [activeTab, contentApi]);
+
     return (
         <section className={cn("flex min-h-0 flex-col", className)}>
             <div
@@ -568,18 +751,19 @@ export function DetailTabbedSection<T extends string>({
                 <DetailTabs
                     tabs={tabs}
                     activeTab={activeTab}
-                    onChange={onChange}
+                    onChange={handleTabChange}
                 />
             </div>
-            <div
+            <animated.div
                 data-detail-tab-content
+                style={{ opacity: contentSpring.opacity }}
                 className={cn(
                     "mt-4 flex min-h-0 flex-1 flex-col",
                     contentClassName,
                 )}
             >
                 {children}
-            </div>
+            </animated.div>
         </section>
     );
 }
