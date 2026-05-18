@@ -612,6 +612,7 @@ export function DetailTabs<T extends string>({
     onChange: (tab: T) => void;
 }) {
     const buttonRefs = useRef(new Map<T, HTMLButtonElement>());
+    const tabListRef = useRef<HTMLDivElement | null>(null);
     const initializedRef = useRef(false);
     const resolvedActiveTab =
         tabs.find((tab) => tab.value === activeTab)?.value ?? tabs[0]?.value;
@@ -676,9 +677,55 @@ export function DetailTabs<T extends string>({
         };
     }, [updatePill]);
 
+    useEffect(() => {
+        if (typeof ResizeObserver === "undefined") {
+            return;
+        }
+
+        const tabList = tabListRef.current;
+        const activeButton = resolvedActiveTab
+            ? buttonRefs.current.get(resolvedActiveTab)
+            : null;
+        if (!tabList && !activeButton) {
+            return;
+        }
+
+        const observer = new ResizeObserver(() => {
+            updatePill(true);
+        });
+
+        if (tabList) {
+            observer.observe(tabList);
+        }
+        if (activeButton) {
+            observer.observe(activeButton);
+        }
+
+        return () => {
+            observer.disconnect();
+        };
+    }, [resolvedActiveTab, updatePill]);
+
+    useEffect(() => {
+        if (typeof document === "undefined" || !("fonts" in document)) {
+            return;
+        }
+
+        let cancelled = false;
+        void document.fonts.ready.then(() => {
+            if (!cancelled) {
+                updatePill(true);
+            }
+        });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [updatePill]);
+
     return (
         <div className="overflow-x-auto rounded-2xl border border-border/70 bg-card/70 p-1 drop-shadow-md">
-            <div className="relative flex min-w-max gap-2">
+            <div ref={tabListRef} className="relative flex min-w-max gap-2">
                 {/* Spring-animated active pill — inside the flex div so offsetLeft is accurate */}
                 <animated.div
                     aria-hidden="true"
