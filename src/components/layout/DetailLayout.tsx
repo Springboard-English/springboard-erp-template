@@ -8,6 +8,7 @@ import {
     type ReactNode,
 } from "react";
 import { animated, useSpring } from "@react-spring/web";
+
 import { ChevronRight, Expand, PanelRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
@@ -697,44 +698,6 @@ export function DetailTabbedSection<T extends string>({
     className?: string;
     contentClassName?: string;
 }) {
-    const prevTabRef = useRef(activeTab);
-    const pendingTabRef = useRef<T | null>(null);
-    const [contentSpring, contentApi] = useSpring(() => ({ opacity: 1 }));
-
-    // Fade out first, then navigate — so content is already at 0 when new children arrive
-    const handleTabChange = useCallback(
-        (nextTab: T) => {
-            if (nextTab === activeTab) return;
-            const motionConfig = getDetailLayoutMotionConfig();
-            pendingTabRef.current = nextTab;
-            void contentApi.start({
-                opacity: 0,
-                config: {
-                    duration: motionConfig.tabContentFadeOutMs,
-                },
-                onRest: ({ cancelled }) => {
-                    if (!cancelled && pendingTabRef.current === nextTab) {
-                        onChange(nextTab);
-                    }
-                },
-            });
-        },
-        [activeTab, contentApi, onChange],
-    );
-
-    // useLayoutEffect runs before paint — content starts invisible, no flash
-    useLayoutEffect(() => {
-        if (prevTabRef.current === activeTab) return;
-        const motionConfig = getDetailLayoutMotionConfig();
-        prevTabRef.current = activeTab;
-        void contentApi.start({
-            opacity: 1,
-            config: {
-                duration: motionConfig.tabContentFadeInMs,
-            },
-        });
-    }, [activeTab, contentApi]);
-
     return (
         <section className={cn("flex min-h-0 flex-col", className)}>
             <div
@@ -744,19 +707,18 @@ export function DetailTabbedSection<T extends string>({
                 <DetailTabs
                     tabs={tabs}
                     activeTab={activeTab}
-                    onChange={handleTabChange}
+                    onChange={onChange}
                 />
             </div>
-            <animated.div
+            <div
                 data-detail-tab-content
-                style={{ opacity: contentSpring.opacity }}
                 className={cn(
                     "mt-4 flex min-h-0 flex-1 flex-col",
                     contentClassName,
                 )}
             >
                 {children}
-            </animated.div>
+            </div>
         </section>
     );
 }
