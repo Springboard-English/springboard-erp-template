@@ -610,7 +610,6 @@ export function DetailTabs<T extends string>({
     activeTab: T;
     onChange: (tab: T) => void;
 }) {
-    const containerRef = useRef<HTMLDivElement>(null);
     const buttonRefs = useRef(new Map<T, HTMLButtonElement>());
     const initializedRef = useRef(false);
 
@@ -622,15 +621,12 @@ export function DetailTabs<T extends string>({
 
     const updatePill = useCallback(
         (animate: boolean) => {
-            const container = containerRef.current;
             const btn = buttonRefs.current.get(activeTab);
-            if (!container || !btn) return;
-            const containerRect = container.getBoundingClientRect();
-            const btnRect = btn.getBoundingClientRect();
+            if (!btn) return;
             const motionConfig = getDetailLayoutMotionConfig();
             pillApi.start({
-                x: btnRect.left - containerRect.left,
-                width: btnRect.width,
+                x: btn.offsetLeft,
+                width: btn.offsetWidth,
                 opacity: 1,
                 immediate: !animate,
                 config: {
@@ -648,21 +644,18 @@ export function DetailTabs<T extends string>({
     }, [updatePill]);
 
     return (
-        <div
-            ref={containerRef}
-            className="relative overflow-x-auto rounded-2xl border border-border/70 bg-card/70 p-1 drop-shadow-md"
-        >
-            {/* Spring-animated active pill */}
-            <animated.div
-                aria-hidden="true"
-                className="pointer-events-none absolute top-1 h-[calc(100%-8px)] rounded-xl bg-primary shadow-sm"
-                style={{
-                    transform: pillSpring.x.to((x) => `translateX(${x}px)`),
-                    width: pillSpring.width,
-                    opacity: pillSpring.opacity,
-                }}
-            />
+        <div className="overflow-x-auto rounded-2xl border border-border/70 bg-card/70 p-1 drop-shadow-md">
             <div className="relative flex min-w-max gap-2">
+                {/* Spring-animated active pill — inside the flex div so offsetLeft is accurate */}
+                <animated.div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute top-0 h-full rounded-xl bg-primary shadow-sm"
+                    style={{
+                        transform: pillSpring.x.to((x) => `translateX(${x}px)`),
+                        width: pillSpring.width,
+                        opacity: pillSpring.opacity,
+                    }}
+                />
                 {tabs.map((tab) => (
                     <button
                         key={tab.value}
