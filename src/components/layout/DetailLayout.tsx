@@ -638,6 +638,7 @@ export function DetailTabs<T extends string>({
                 config: {
                     tension: motionConfig.tabPillSpring.tension,
                     friction: motionConfig.tabPillSpring.friction,
+                    clamp: true,
                 },
             });
             return true;
