@@ -613,6 +613,8 @@ export function DetailTabs<T extends string>({
 }) {
     const buttonRefs = useRef(new Map<T, HTMLButtonElement>());
     const initializedRef = useRef(false);
+    const resolvedActiveTab =
+        tabs.find((tab) => tab.value === activeTab)?.value ?? tabs[0]?.value;
 
     const [pillSpring, pillApi] = useSpring(() => ({
         x: 0,
@@ -622,7 +624,8 @@ export function DetailTabs<T extends string>({
 
     const updatePill = useCallback(
         (animate: boolean) => {
-            const btn = buttonRefs.current.get(activeTab);
+            if (!resolvedActiveTab) return false;
+            const btn = buttonRefs.current.get(resolvedActiveTab);
             if (!btn) return false;
             const width = btn.offsetWidth;
             if (width <= 0) return false;
@@ -639,7 +642,7 @@ export function DetailTabs<T extends string>({
             });
             return true;
         },
-        [activeTab, pillApi],
+        [pillApi, resolvedActiveTab],
     );
 
     useLayoutEffect(() => {
@@ -699,7 +702,7 @@ export function DetailTabs<T extends string>({
                         onClick={() => onChange(tab.value)}
                         className={cn(
                             "relative z-10 shrink-0 cursor-pointer whitespace-nowrap rounded-xl px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] transition-colors duration-150",
-                            activeTab === tab.value
+                            resolvedActiveTab === tab.value
                                 ? "text-primary-foreground"
                                 : tab.hasPendingChanges
                                   ? "font-bold text-primary hover:bg-primary/10"
