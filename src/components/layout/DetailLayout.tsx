@@ -682,7 +682,7 @@ export function DetailTabs<T extends string>({
                 {/* Spring-animated active pill — inside the flex div so offsetLeft is accurate */}
                 <animated.div
                     aria-hidden="true"
-                    className="pointer-events-none absolute top-0 h-full rounded-xl bg-primary shadow-sm"
+                    className="pointer-events-none absolute left-0 top-0 h-full rounded-xl bg-primary shadow-sm"
                     style={{
                         transform: pillSpring.x.to((x) => `translateX(${x}px)`),
                         width: pillSpring.width,
