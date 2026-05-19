@@ -8,6 +8,15 @@ export { default as ResetPassword } from "./views/ResetPassword";
 export type { ResetPasswordViewProps } from "./views/ResetPassword";
 
 export { AuthProvider, useAuth } from "./context/AuthContext";
+export {
+  PendingChangesProvider,
+  usePendingChanges,
+} from "./context/PendingChangesContext";
+export type {
+  PendingChangesContextValue,
+  PendingSectionRegistration,
+  PendingChangeItem as PendingChangesContextItem,
+} from "./context/PendingChangesContext";
 export { default as AppTheme, useColorMode } from "./theme/AppTheme";
 export { default as ColorModeSelect } from "./theme/ColorModeSelect";
 export { default as ColorModeIconDropdown } from "./theme/ColorModeIconDropdown";
