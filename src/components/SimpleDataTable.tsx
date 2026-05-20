@@ -195,7 +195,7 @@ export default function SimpleDataTable<T>({
               {columns.map((column) => (
                 <TableHead
                   key={column.id}
-                  className={cn('sticky top-0 z-20 bg-card text-center', column.className)}
+                  className={cn('sticky top-0 z-[1] bg-muted/20 text-center', column.className)}
                 >
                   {column.sortable && onSortChange ? (
                     <button
@@ -243,7 +243,7 @@ export default function SimpleDataTable<T>({
               paginatedRows.map((row) => (
                 <TableRow
                   key={rowKey(row)}
-                  className={cn(onRowClick && 'cursor-pointer')}
+                  className={cn('odd:bg-transparent even:bg-muted/20', onRowClick && 'cursor-pointer')}
                   onClick={onRowClick ? () => onRowClick(row) : undefined}
                 >
                   {columns.map((column) => (
