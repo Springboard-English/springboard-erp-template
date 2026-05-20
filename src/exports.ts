@@ -60,6 +60,10 @@ export {
   BackgroundDetailViewContext,
 } from "./components/layout/DetailLayout";
 export { default as ProgressMetricCell } from "./components/cells/ProgressMetricCell";
+export { default as AdvancedFiltersPanel } from "./components/management/AdvancedFiltersPanel";
+export type { AdvancedFiltersPanelProps } from "./components/management/AdvancedFiltersPanel";
+export { default as AdvancedFiltersToggle } from "./components/management/AdvancedFiltersToggle";
+export type { AdvancedFiltersToggleProps } from "./components/management/AdvancedFiltersToggle";
 
 export * from "./utils/formatters";
 export * from "./utils/urlQueryState";
