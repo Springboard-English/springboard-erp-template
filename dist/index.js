@@ -9911,7 +9911,7 @@ function ov({ columns: e, rows: t, rowKey: n, loading: r = !1, loadingMessage: i
 					children: [/* @__PURE__ */ (0, z.jsx)(Fp, { children: /* @__PURE__ */ (0, z.jsx)(Rp, {
 						className: "hover:bg-transparent",
 						children: e.map((e) => /* @__PURE__ */ (0, z.jsx)(zp, {
-							className: J("sticky top-0 z-[1] bg-muted/20 text-center", e.className),
+							className: J("sticky top-0 z-[1] bg-muted/40 text-center", e.className),
 							children: e.sortable && b ? /* @__PURE__ */ (0, z.jsxs)("button", {
 								type: "button",
 								onClick: () => ne(e.id),
@@ -9949,7 +9949,7 @@ function ov({ columns: e, rows: t, rowKey: n, loading: r = !1, loadingMessage: i
 			}),
 			/* @__PURE__ */ (0, z.jsxs)("div", {
 				ref: T,
-				className: J("flex-shrink-0 flex flex-col gap-3 border-t border-border/70 bg-muted/20 px-4 py-3 sm:flex-row sm:items-center", x ? "sm:justify-start" : "sm:justify-between"),
+				className: J("flex-shrink-0 flex flex-col gap-3 border-t border-border/70 bg-muted/40 px-4 py-3 sm:flex-row sm:items-center", x ? "sm:justify-start" : "sm:justify-between"),
 				children: [/* @__PURE__ */ (0, z.jsx)("div", {
 					className: "text-sm text-muted-foreground",
 					children: ee

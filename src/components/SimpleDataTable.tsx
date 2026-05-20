@@ -195,7 +195,7 @@ export default function SimpleDataTable<T>({
               {columns.map((column) => (
                 <TableHead
                   key={column.id}
-                  className={cn('sticky top-0 z-[1] bg-muted/20 text-center', column.className)}
+                  className={cn('sticky top-0 z-[1] bg-muted/40 text-center', column.className)}
                 >
                   {column.sortable && onSortChange ? (
                     <button
@@ -267,7 +267,7 @@ export default function SimpleDataTable<T>({
       <div
         ref={footerRef}
         className={cn(
-          "flex-shrink-0 flex flex-col gap-3 border-t border-border/70 bg-muted/20 px-4 py-3 sm:flex-row sm:items-center",
+          "flex-shrink-0 flex flex-col gap-3 border-t border-border/70 bg-muted/40 px-4 py-3 sm:flex-row sm:items-center",
           alignPaginationToLeft ? "sm:justify-start" : "sm:justify-between",
         )}
       >
