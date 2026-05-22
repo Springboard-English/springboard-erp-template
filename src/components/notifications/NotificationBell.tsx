@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { Bell, X } from "lucide-react";
+import { Bell, RefreshCw, X } from "lucide-react";
 import { Popover as PopoverPrimitive } from "radix-ui";
 import { cn } from "@/lib/utils";
 import { useNotifications } from "@/context/NotificationContext";
 
 export default function NotificationBell() {
-    const { informative, unreadCount, dismiss } = useNotifications();
+    const { informative, unreadCount, isLoading, dismiss, refetch } = useNotifications();
     const [open, setOpen] = useState(false);
 
     const handleOpenChange = (nextOpen: boolean) => {
@@ -44,18 +44,29 @@ export default function NotificationBell() {
                 >
                     <div className="flex items-center justify-between border-b border-border/60 px-4 py-3">
                         <p className="text-sm font-semibold text-foreground">Notifications</p>
-                        {informative.length > 0 && (
+                        <div className="flex items-center gap-2">
+                            {informative.length > 0 && (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        informative.forEach((n) => dismiss(n.appsheet_key));
+                                        setOpen(false);
+                                    }}
+                                    className="text-xs text-muted-foreground transition-colors hover:text-foreground"
+                                >
+                                    Clear all
+                                </button>
+                            )}
                             <button
                                 type="button"
-                                onClick={() => {
-                                    informative.forEach((n) => dismiss(n.appsheet_key));
-                                    setOpen(false);
-                                }}
-                                className="text-xs text-muted-foreground transition-colors hover:text-foreground"
+                                onClick={refetch}
+                                disabled={isLoading}
+                                className="text-muted-foreground transition-colors hover:text-foreground disabled:opacity-40"
+                                aria-label="Refresh notifications"
                             >
-                                Clear all
+                                <RefreshCw className={cn("size-3.5", isLoading && "animate-spin")} />
                             </button>
-                        )}
+                        </div>
                     </div>
 
                     {informative.length === 0 ? (

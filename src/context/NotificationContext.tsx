@@ -4,8 +4,6 @@ import { useAuth } from "./AuthContext";
 import { fetchUserNotifications, dismissNotification } from "../api_calls/notifications";
 import type { UserNotification } from "../api_calls/notifications";
 
-const POLL_INTERVAL_MS = 5 * 60 * 1000;
-
 function isActive(n: UserNotification): boolean {
     const now = Date.now();
     if (n.start_time && new Date(n.start_time).getTime() > now) return false;
@@ -18,6 +16,7 @@ export interface NotificationContextValue {
     urgent: UserNotification[];
     informative: UserNotification[];
     unreadCount: number;
+    isLoading: boolean;
     dismiss: (key: string) => void;
     refetch: () => void;
 }
@@ -28,11 +27,13 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     const { isAuthenticated } = useAuth();
     const [allNotifications, setAllNotifications] = useState<UserNotification[]>([]);
     const [dismissedKeys, setDismissedKeys] = useState<Set<string>>(new Set());
+    const [isLoading, setIsLoading] = useState(false);
     const fetchingRef = useRef(false);
 
     const doFetch = useCallback(async () => {
         if (fetchingRef.current) return;
         fetchingRef.current = true;
+        setIsLoading(true);
         try {
             const data = await fetchUserNotifications();
             setAllNotifications(data);
@@ -40,6 +41,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
             // swallow — don't surface notification fetch errors to UI
         } finally {
             fetchingRef.current = false;
+            setIsLoading(false);
         }
     }, []);
 
@@ -53,17 +55,10 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
             setDismissedKeys(new Set());
             return;
         }
-
         void doFetch();
-        const interval = setInterval(refetch, POLL_INTERVAL_MS);
-        const onFocus = () => { void doFetch(); };
-        window.addEventListener("focus", onFocus);
-
-        return () => {
-            clearInterval(interval);
-            window.removeEventListener("focus", onFocus);
-        };
-    }, [isAuthenticated, doFetch, refetch]);
+    // intentionally runs once on auth state change only — explicit refetch handles the rest
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isAuthenticated]);
 
     const dismiss = useCallback((key: string) => {
         setDismissedKeys((prev) => new Set([...prev, key]));
@@ -81,7 +76,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
     return (
         <NotificationContext.Provider
-            value={{ immediate, urgent, informative, unreadCount, dismiss, refetch }}
+            value={{ immediate, urgent, informative, unreadCount, isLoading, dismiss, refetch }}
         >
             {children}
         </NotificationContext.Provider>
