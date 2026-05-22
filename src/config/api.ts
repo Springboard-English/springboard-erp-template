@@ -41,6 +41,7 @@ export const API_CONFIG = {
         managementRegistrations: "/registrations",
         ownRegistrations: "/users/me/registrations",
         ownAssessments: "/users/me/assessments",
+        ownNotifications: "/users/me/notifications",
         recordings: "/users/me/recordings",
     },
 } as const;
@@ -167,6 +168,10 @@ export function getSessionDetailsEndpoint(sessionKey: string): string {
 
 export function getRegistrationPatchEndpoint(registrationId: string): string {
     return `${API_CONFIG.baseURL}/registrations/${encodeURIComponent(registrationId)}`;
+}
+
+export function getNotificationEndpoint(notificationKey: string): string {
+    return `${API_CONFIG.baseURL}/notifications/${encodeURIComponent(notificationKey)}`;
 }
 
 export function getSessionActionEndpoint(

@@ -100,3 +100,10 @@ export * from "./components/ui/separator";
 export * from "./components/ui/sheet";
 export * from "./components/ui/table";
 export * from "./components/ui/textarea";
+
+export { NotificationProvider, useNotifications } from "./context/NotificationContext";
+export type { NotificationContextValue } from "./context/NotificationContext";
+export type { UserNotification, NotificationPriority } from "./api_calls/notifications";
+export { default as NotificationBell } from "./components/notifications/NotificationBell";
+export { default as ImmediateNotificationDialog } from "./components/notifications/ImmediateNotificationDialog";
+export { default as UrgentNotificationBanner } from "./components/notifications/UrgentNotificationBanner";

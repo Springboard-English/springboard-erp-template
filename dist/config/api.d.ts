@@ -24,6 +24,7 @@ export declare const API_CONFIG: {
         readonly managementRegistrations: "/registrations";
         readonly ownRegistrations: "/users/me/registrations";
         readonly ownAssessments: "/users/me/assessments";
+        readonly ownNotifications: "/users/me/notifications";
         readonly recordings: "/users/me/recordings";
     };
 };
@@ -54,4 +55,5 @@ export declare function getSessionAttendancesEndpoint(sessionKey: string): strin
 export declare function getAttendancePatchEndpoint(attendanceId: string): string;
 export declare function getSessionDetailsEndpoint(sessionKey: string): string;
 export declare function getRegistrationPatchEndpoint(registrationId: string): string;
+export declare function getNotificationEndpoint(notificationKey: string): string;
 export declare function getSessionActionEndpoint(sessionKey: string, action: "join" | "start"): string;
