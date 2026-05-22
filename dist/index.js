@@ -13027,26 +13027,35 @@ function Sw({
   ] });
 }
 function Rb(e) {
-  return !Number.isFinite(e) || e < 0 ? 0 : e;
+  return Number.isFinite(e) ? Math.max(0, e) : 0;
 }
 function Dw({
-  primaryLabel: e,
-  secondaryLabel: t,
-  percent: n
+  topLabel: e,
+  primaryLabel: t,
+  secondaryLabel: n,
+  percent: r,
+  bottomLabel: o,
+  bottomLeftLabel: s,
+  bottomRightLabel: c
 }) {
-  const r = Rb(n), o = r > 100, s = Math.min(100, r);
+  const i = Rb(r), u = i > 100, l = Math.min(100, i);
   return /* @__PURE__ */ a.jsxs("div", { className: "flex min-w-[220px] flex-col gap-1.5", children: [
+    e ? /* @__PURE__ */ a.jsx("div", { className: "truncate text-[11px] text-muted-foreground", children: e }) : null,
     /* @__PURE__ */ a.jsxs("div", { className: "flex items-center justify-between gap-3 text-xs text-muted-foreground", children: [
-      /* @__PURE__ */ a.jsx("span", { className: "truncate", children: e }),
-      t ? /* @__PURE__ */ a.jsx("span", { className: "shrink-0 tabular-nums", children: t }) : null
+      /* @__PURE__ */ a.jsx("span", { className: "truncate", children: t }),
+      n ? /* @__PURE__ */ a.jsx("span", { className: "shrink-0 tabular-nums", children: n }) : null
     ] }),
     /* @__PURE__ */ a.jsx("div", { className: "h-2 overflow-hidden rounded-full bg-muted/70", children: /* @__PURE__ */ a.jsx(
       "div",
       {
-        className: `h-full rounded-full transition-[width] ${o ? "bg-destructive" : "bg-primary"}`,
-        style: { width: `${s}%` }
+        className: `h-full rounded-full transition-[width] ${u ? "bg-destructive" : "bg-primary"}`,
+        style: { width: `${l}%` }
       }
-    ) })
+    ) }),
+    s || c ? /* @__PURE__ */ a.jsxs("div", { className: "flex items-center justify-between gap-3 text-[11px] text-muted-foreground", children: [
+      /* @__PURE__ */ a.jsx("span", { className: "truncate", children: s }),
+      /* @__PURE__ */ a.jsx("span", { className: "truncate text-right", children: c })
+    ] }) : o ? /* @__PURE__ */ a.jsx("div", { className: "truncate text-[11px] text-muted-foreground", children: o }) : null
   ] });
 }
 function kw({

@@ -24,6 +24,8 @@ export { default as ColorModeIconDropdown } from "./theme/ColorModeIconDropdown"
 export { default as ForgotPassword } from "./components/ForgotPassword";
 export { SitemarkIcon } from "./components/CustomIcons";
 export { default as LazyViewFallback } from "./components/LazyViewFallback";
+export { default as MultiSelectDropdown } from "./components/MultiSelectDropdown";
+export type { MultiSelectDropdownProps } from "./components/MultiSelectDropdown";
 export { default as PatchRecordDialog } from "./components/PatchRecordDialog";
 export type { PatchFieldType, PatchFieldOption, PatchFieldConfig } from "./components/PatchRecordDialog";
 export { default as PendingChangesBar } from "./components/PendingChangesBar";
