@@ -44,6 +44,10 @@ export {
 export { default as StatusBanner } from "./components/StatusBanner";
 export { default as SimpleDataTable } from "./components/SimpleDataTable";
 export type { SimpleDataTableColumn, SimpleDataTableSortOrder, SimpleDataTableProps } from "./components/SimpleDataTable";
+export { default as MobileCardList, CardField } from "./components/MobileCardList";
+export type { MobileCardListProps } from "./components/MobileCardList";
+export { default as MobileBottomBar } from "./components/MobileBottomBar";
+export type { MobileBottomBarItem, MobileBottomBarProps } from "./components/MobileBottomBar";
 export { default as FormTableDialog, FormTableRow } from "./components/dialogs/FormTableDialog";
 export {
   DetailView,
@@ -103,6 +107,17 @@ export * from "./components/ui/textarea";
 
 export { NotificationProvider, useNotifications } from "./context/NotificationContext";
 export type { NotificationContextValue } from "./context/NotificationContext";
+export {
+  MobileFABProvider,
+  useMobileFABContext,
+  useMobileFAB,
+  MobileFloatingActionButton,
+} from "./context/MobileFABContext";
+export type {
+  MobileFABConfig,
+  MobileFABContextValue,
+  MobileFloatingActionButtonProps,
+} from "./context/MobileFABContext";
 export type { UserNotification, NotificationPriority } from "./api_calls/notifications";
 export { default as NotificationBell } from "./components/notifications/NotificationBell";
 export { default as ImmediateNotificationDialog } from "./components/notifications/ImmediateNotificationDialog";
