@@ -12604,11 +12604,11 @@ function Zw({
   menuButtonIcon: i,
   className: c
 }) {
-  const l = t.findIndex((d) => d.id === e), u = Ss({
-    leftPct: l >= 0 ? l / t.length * 100 : 0,
-    opacity: l >= 0 ? 1 : 0,
+  const l = t.length, u = t.findIndex((m) => m.id === e), f = Ss({
+    leftPct: u >= 0 && l > 0 ? u / l * 100 : 0,
+    opacity: u >= 0 && l > 0 ? 1 : 0,
     config: { tension: 300, friction: 26 }
-  }), f = "calc(100% - 4rem)";
+  }), d = "calc(100% - 4rem)";
   return /* @__PURE__ */ a.jsx(
     "div",
     {
@@ -12623,35 +12623,35 @@ function Zw({
             "aria-hidden": "true",
             className: "pointer-events-none absolute top-0 h-0.5 rounded-full bg-primary",
             style: {
-              left: u.leftPct.to(
-                (d) => `calc(${f} * ${d / 100})`
+              left: f.leftPct.to(
+                (m) => `calc(${d} * ${m / 100})`
               ),
-              width: u.leftPct.to(
-                () => `calc(${f} / ${t.length})`
+              width: f.leftPct.to(
+                () => l > 0 ? `calc(${d} / ${l})` : "0px"
               ),
-              opacity: u.opacity
+              opacity: f.opacity
             }
           }
         ),
-        t.map((d) => {
-          const m = e === d.id;
+        t.map((m) => {
+          const p = e === m.id;
           return /* @__PURE__ */ a.jsxs(
             "button",
             {
               type: "button",
               className: G(
                 "flex flex-1 flex-col items-center justify-center gap-1 px-1 py-2 transition-colors",
-                m ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                p ? "text-foreground" : "text-muted-foreground hover:text-foreground"
               ),
-              onClick: () => n?.(d.id),
-              "aria-label": d.label,
-              "aria-current": m ? "page" : void 0,
+              onClick: () => n?.(m.id),
+              "aria-label": m.label,
+              "aria-current": p ? "page" : void 0,
               children: [
-                d.icon,
-                /* @__PURE__ */ a.jsx("span", { className: "text-[10px] font-medium leading-none", children: d.label })
+                m.icon,
+                /* @__PURE__ */ a.jsx("span", { className: "text-[10px] font-medium leading-none", children: m.label })
               ]
             },
-            d.id
+            m.id
           );
         }),
         /* @__PURE__ */ a.jsx("div", { className: "w-16 shrink-0 border-l border-border/40", children: /* @__PURE__ */ a.jsxs(
