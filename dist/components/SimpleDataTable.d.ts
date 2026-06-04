@@ -28,5 +28,7 @@ export interface SimpleDataTableProps<T> {
     onSortChange?: (columnId: string, nextOrder: SimpleDataTableSortOrder) => void;
     alignPaginationToLeft?: boolean;
     onLoadingChange?: (key: string, loading: boolean, message?: string) => void;
+    renderRowHoverContent?: (row: T) => ReactNode;
+    rowHoverContentClassName?: string;
 }
-export default function SimpleDataTable<T>({ columns, rows, rowKey, loading, loadingMessage, emptyMessage, page, pageSize, pageSizeOptions, onPageChange, onPageSizeChange, onRowClick, paginationMode, totalRowCount, sortBy, sortOrder, onSortChange, alignPaginationToLeft, onLoadingChange, }: SimpleDataTableProps<T>): import("react/jsx-runtime").JSX.Element;
+export default function SimpleDataTable<T>({ columns, rows, rowKey, loading, loadingMessage, emptyMessage, page, pageSize, pageSizeOptions, onPageChange, onPageSizeChange, onRowClick, paginationMode, totalRowCount, sortBy, sortOrder, onSortChange, alignPaginationToLeft, onLoadingChange, renderRowHoverContent, rowHoverContentClassName, }: SimpleDataTableProps<T>): import("react/jsx-runtime").JSX.Element;
