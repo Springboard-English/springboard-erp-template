@@ -48,6 +48,23 @@ export { default as MobileCardList, CardField } from "./components/MobileCardLis
 export type { MobileCardListProps } from "./components/MobileCardList";
 export { default as MobileBottomBar } from "./components/MobileBottomBar";
 export type { MobileBottomBarItem, MobileBottomBarProps } from "./components/MobileBottomBar";
+export {
+  buildGuides,
+  GuideIconButton,
+  GuideMenuButton,
+  GuidesSidebarContent,
+  parseGuide,
+  UserGuideView,
+} from "./components/guides/UserGuide";
+export type {
+  GuideIconButtonProps,
+  GuideMenuButtonProps,
+  GuideRecord,
+  GuideSection,
+  GuidesSidebarContentProps,
+  RawGuides,
+  UserGuideViewProps,
+} from "./components/guides/UserGuide";
 export { default as FormTableDialog, FormTableRow } from "./components/dialogs/FormTableDialog";
 export {
   DetailView,

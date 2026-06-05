@@ -19,7 +19,7 @@ export default defineConfig({
       fileName: () => 'index.js',
     },
     rollupOptions: {
-      external: ['react', 'react-dom'],
+      external: ['react', 'react-dom', 'react-router-dom'],
       output: {
         assetFileNames: (assetInfo) => assetInfo.name ?? 'asset',
       },
