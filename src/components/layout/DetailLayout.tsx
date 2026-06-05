@@ -305,7 +305,7 @@ export function DetailView({
                             variant="outline"
                             aria-label="Collapse details"
                             onClick={() => applyMode(true, true, false)}
-                            className="absolute right-3 top-3 z-20 h-8 w-8 rounded-full bg-background opacity-100 shadow-md"
+                            className="absolute right-3 top-1/2 z-20 h-8 w-8 -translate-y-1/2 rounded-full border border-border/70 bg-background text-foreground opacity-100 shadow-md"
                         >
                             <ChevronRight className="h-4 w-4" />
                         </Button>
