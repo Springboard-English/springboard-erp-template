@@ -22786,14 +22786,15 @@ function LI({
   children: r,
   className: i,
   contentClassName: o,
-  scrollResetKey: s
+  contentScrollable: s = !1,
+  scrollResetKey: a
 }) {
-  const a = ge(null), l = ge(
-    s
+  const l = ge(null), c = ge(
+    a
   );
   return Mi(() => {
-    s !== void 0 && l.current !== s && (l.current = s, a.current && (a.current.scrollTop = 0));
-  }, [s]), /* @__PURE__ */ d.jsxs("section", { className: Y("flex min-h-0 flex-col", i), children: [
+    a !== void 0 && c.current !== a && (c.current = a, l.current && (l.current.scrollTop = 0));
+  }, [a]), /* @__PURE__ */ d.jsxs("section", { className: Y("flex min-h-0 flex-col", i), children: [
     /* @__PURE__ */ d.jsx(
       "div",
       {
@@ -22812,10 +22813,11 @@ function LI({
     /* @__PURE__ */ d.jsx(
       "div",
       {
-        ref: a,
+        ref: l,
         "data-detail-tab-content": !0,
         className: Y(
           "mt-4 flex min-h-0 flex-1 flex-col",
+          s && "overflow-y-auto overflow-x-hidden pr-1",
           o
         ),
         children: r

@@ -97,7 +97,7 @@ export declare function DetailTabs<T extends string>({ tabs, activeTab, onChange
     activeTab: T;
     onChange: (tab: T) => void;
 }): import("react/jsx-runtime").JSX.Element;
-export declare function DetailTabbedSection<T extends string>({ tabs, activeTab, onChange, children, className, contentClassName, scrollResetKey, }: {
+export declare function DetailTabbedSection<T extends string>({ tabs, activeTab, onChange, children, className, contentClassName, contentScrollable, scrollResetKey, }: {
     tabs: Array<{
         value: T;
         label: ReactNode;
@@ -108,6 +108,7 @@ export declare function DetailTabbedSection<T extends string>({ tabs, activeTab,
     children: ReactNode;
     className?: string;
     contentClassName?: string;
+    contentScrollable?: boolean;
     scrollResetKey?: string | number;
 }): import("react/jsx-runtime").JSX.Element;
 export {};

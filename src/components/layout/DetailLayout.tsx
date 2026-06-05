@@ -878,6 +878,7 @@ export function DetailTabbedSection<T extends string>({
     children,
     className,
     contentClassName,
+    contentScrollable = false,
     scrollResetKey,
 }: {
     tabs: Array<{ value: T; label: ReactNode; hasPendingChanges?: boolean }>;
@@ -886,6 +887,7 @@ export function DetailTabbedSection<T extends string>({
     children: ReactNode;
     className?: string;
     contentClassName?: string;
+    contentScrollable?: boolean;
     scrollResetKey?: string | number;
 }) {
     const contentRef = useRef<HTMLDivElement | null>(null);
@@ -925,6 +927,7 @@ export function DetailTabbedSection<T extends string>({
                 data-detail-tab-content
                 className={cn(
                     "mt-4 flex min-h-0 flex-1 flex-col",
+                    contentScrollable && "overflow-y-auto overflow-x-hidden pr-1",
                     contentClassName,
                 )}
             >
