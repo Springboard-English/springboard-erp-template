@@ -890,9 +890,13 @@ export function DetailTabbedSection<T extends string>({
     contentScrollable?: boolean;
     scrollResetKey?: string | number;
 }) {
+    const detailViewContext = useContext(DetailViewContext);
     const contentRef = useRef<HTMLDivElement | null>(null);
     const previousScrollResetKeyRef = useRef<string | number | undefined>(
         scrollResetKey,
+    );
+    const previousFloatingRef = useRef<boolean | undefined>(
+        detailViewContext?.floating,
     );
 
     useLayoutEffect(() => {
@@ -909,6 +913,18 @@ export function DetailTabbedSection<T extends string>({
             contentRef.current.scrollTop = 0;
         }
     }, [scrollResetKey]);
+
+    useLayoutEffect(() => {
+        const isFloating = detailViewContext?.floating;
+        if (previousFloatingRef.current === isFloating) {
+            return;
+        }
+
+        previousFloatingRef.current = isFloating;
+        if (isFloating && contentRef.current) {
+            contentRef.current.scrollTop = 0;
+        }
+    }, [detailViewContext?.floating]);
 
     return (
         <section className={cn("flex min-h-0 flex-col", className)}>
