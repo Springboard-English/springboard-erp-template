@@ -926,7 +926,7 @@ export function DetailTabbedSection<T extends string>({
                 ref={contentRef}
                 data-detail-tab-content
                 className={cn(
-                    "mt-4 flex min-h-0 flex-1 flex-col",
+                    "mt-4 min-h-0 flex-1",
                     contentScrollable && "overflow-y-auto overflow-x-hidden pr-1",
                     contentClassName,
                 )}

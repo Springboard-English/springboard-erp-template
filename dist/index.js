@@ -22816,7 +22816,7 @@ function LI({
         ref: l,
         "data-detail-tab-content": !0,
         className: Y(
-          "mt-4 flex min-h-0 flex-1 flex-col",
+          "mt-4 min-h-0 flex-1",
           s && "overflow-y-auto overflow-x-hidden pr-1",
           o
         ),
