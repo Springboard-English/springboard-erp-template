@@ -1,6 +1,5 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp } from 'lucide-react';
-import { HoverCard as HoverCardPrimitive } from 'radix-ui';
 import { Button } from '@/components/ui/button';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import {
@@ -44,8 +43,8 @@ export interface SimpleDataTableProps<T> {
   onSortChange?: (columnId: string, nextOrder: SimpleDataTableSortOrder) => void;
   alignPaginationToLeft?: boolean;
   onLoadingChange?: (key: string, loading: boolean, message?: string) => void;
-  renderRowHoverContent?: (row: T) => ReactNode;
-  rowHoverContentClassName?: string;
+  hoveredRow?: T | null;
+  onHoveredRowChange?: (row: T | null) => void;
 }
 
 export default function SimpleDataTable<T>({
@@ -68,8 +67,8 @@ export default function SimpleDataTable<T>({
   onSortChange,
   alignPaginationToLeft = false,
   onLoadingChange,
-  renderRowHoverContent,
-  rowHoverContentClassName,
+  hoveredRow = null,
+  onHoveredRowChange,
 }: SimpleDataTableProps<T>) {
   const loadingKey = useId();
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -117,14 +116,19 @@ export default function SimpleDataTable<T>({
     onSortChange(columnId, nextOrder);
   };
 
+  const hoveredRowKey = hoveredRow ? rowKey(hoveredRow) : null;
+
   const renderTableRow = (row: T) => (
     <TableRow
       key={rowKey(row)}
       className={cn(
         'odd:bg-transparent even:bg-muted/20',
         onRowClick && 'cursor-pointer',
+        hoveredRowKey === rowKey(row) && 'bg-muted/35',
       )}
       onClick={onRowClick ? () => onRowClick(row) : undefined}
+      onMouseEnter={onHoveredRowChange ? () => onHoveredRowChange(row) : undefined}
+      onFocus={onHoveredRowChange ? () => onHoveredRowChange(row) : undefined}
     >
       {columns.map((column) => (
         <TableCell key={column.id} className={column.cellClassName}>
@@ -262,30 +266,7 @@ export default function SimpleDataTable<T>({
                 </TableCell>
               </TableRow>
             ) : (
-              paginatedRows.map((row) => (
-                renderRowHoverContent ? (
-                  <HoverCardPrimitive.Root key={rowKey(row)} openDelay={120} closeDelay={80}>
-                    <HoverCardPrimitive.Trigger asChild>
-                      {renderTableRow(row)}
-                    </HoverCardPrimitive.Trigger>
-                    <HoverCardPrimitive.Portal>
-                      <HoverCardPrimitive.Content
-                        side="right"
-                        align="start"
-                        sideOffset={14}
-                        className={cn(
-                          'z-50 w-[320px] rounded-2xl border border-border/70 bg-card p-4 shadow-[0_24px_60px_-28px_rgba(0,0,0,0.45)]',
-                          rowHoverContentClassName,
-                        )}
-                      >
-                        {renderRowHoverContent(row)}
-                      </HoverCardPrimitive.Content>
-                    </HoverCardPrimitive.Portal>
-                  </HoverCardPrimitive.Root>
-                ) : (
-                  renderTableRow(row)
-                )
-              ))
+              paginatedRows.map((row) => renderTableRow(row))
             )}
           </TableBody>
         </Table>
