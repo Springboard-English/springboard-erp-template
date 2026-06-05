@@ -878,6 +878,7 @@ export function DetailTabbedSection<T extends string>({
     children,
     className,
     contentClassName,
+    scrollResetKey,
 }: {
     tabs: Array<{ value: T; label: ReactNode; hasPendingChanges?: boolean }>;
     activeTab: T;
@@ -885,7 +886,28 @@ export function DetailTabbedSection<T extends string>({
     children: ReactNode;
     className?: string;
     contentClassName?: string;
+    scrollResetKey?: string | number;
 }) {
+    const contentRef = useRef<HTMLDivElement | null>(null);
+    const previousScrollResetKeyRef = useRef<string | number | undefined>(
+        scrollResetKey,
+    );
+
+    useLayoutEffect(() => {
+        if (scrollResetKey === undefined) {
+            return;
+        }
+
+        if (previousScrollResetKeyRef.current === scrollResetKey) {
+            return;
+        }
+
+        previousScrollResetKeyRef.current = scrollResetKey;
+        if (contentRef.current) {
+            contentRef.current.scrollTop = 0;
+        }
+    }, [scrollResetKey]);
+
     return (
         <section className={cn("flex min-h-0 flex-col", className)}>
             <div
@@ -899,6 +921,7 @@ export function DetailTabbedSection<T extends string>({
                 />
             </div>
             <div
+                ref={contentRef}
                 data-detail-tab-content
                 className={cn(
                     "mt-4 flex min-h-0 flex-1 flex-col",
