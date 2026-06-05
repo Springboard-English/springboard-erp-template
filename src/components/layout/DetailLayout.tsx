@@ -281,7 +281,7 @@ export function DetailView({
                                     variant="outline"
                                     aria-label="Expand details panel"
                                     onClick={() => applyMode(true, false)}
-                                    className="absolute -left-4 top-1/2 z-20 h-8 w-8 -translate-y-1/2 rounded-full bg-background opacity-100 shadow-md"
+                                    className="absolute left-3 top-1/2 z-20 h-8 w-8 -translate-y-[calc(100%+0.375rem)] rounded-full border border-border/70 bg-background/95 text-foreground opacity-100 shadow-md backdrop-blur"
                                 >
                                     <ChevronRight className="h-4 w-4 rotate-180" />
                                 </Button>
@@ -291,7 +291,7 @@ export function DetailView({
                                     variant="outline"
                                     aria-label="Fully collapse details"
                                     onClick={() => applyMode(true, true, true)}
-                                    className="absolute -left-4 top-[calc(50%+2.5rem)] z-20 h-8 w-8 -translate-y-1/2 rounded-full bg-background opacity-100 shadow-md"
+                                    className="absolute left-3 top-1/2 z-20 h-8 w-8 translate-y-[0.375rem] rounded-full border border-border/70 bg-background/95 text-foreground opacity-100 shadow-md backdrop-blur"
                                 >
                                     <ChevronRight className="h-4 w-4" />
                                 </Button>
@@ -305,7 +305,7 @@ export function DetailView({
                             variant="outline"
                             aria-label="Collapse details"
                             onClick={() => applyMode(true, true, false)}
-                            className="absolute right-3 top-1/2 z-20 h-8 w-8 -translate-y-1/2 rounded-full border border-border/70 bg-background text-foreground opacity-100 shadow-md"
+                            className="absolute right-3 top-1/2 z-20 h-10 w-10 -translate-y-1/2 rounded-full border border-border/70 bg-background/95 text-foreground opacity-100 shadow-md backdrop-blur"
                         >
                             <ChevronRight className="h-4 w-4" />
                         </Button>
