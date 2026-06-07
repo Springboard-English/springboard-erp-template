@@ -1,11 +1,5 @@
 import * as React from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
@@ -55,7 +49,6 @@ export default function SignIn(props: SignInViewProps) {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isForgotPasswordOpen, setIsForgotPasswordOpen] = React.useState(false);
 
-  // Initialize Google Sign-In on mount
   React.useEffect(() => {
     if (!props.authNotice) {
       return;
@@ -206,28 +199,74 @@ export default function SignIn(props: SignInViewProps) {
 
   return (
     <AppTheme {...props}>
-      <div className="relative flex min-h-screen flex-col overflow-hidden px-4 py-6 sm:px-8">
-        <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.28),transparent_32%),linear-gradient(180deg,rgba(248,250,252,0.96),rgba(255,255,255,1))] dark:bg-[radial-gradient(circle_at_top,_rgba(14,165,233,0.2),transparent_28%),linear-gradient(180deg,rgba(7,14,26,0.98),rgba(16,24,40,1))]" />
-        <div className="pointer-events-none absolute inset-x-0 top-[-10rem] -z-10 mx-auto h-72 w-72 rounded-full bg-sky-300/30 blur-3xl dark:bg-sky-500/10" />
-        <ColorModeSelect className="fixed right-4 top-4 z-20 sm:right-6 sm:top-6" />
+      <div className="relative flex min-h-screen overflow-hidden bg-background">
+        {/* Ambient background blobs */}
+        <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+          <div className="absolute -left-40 -top-40 h-[600px] w-[600px] rounded-full bg-primary/5 blur-[120px]" />
+          <div className="absolute -bottom-40 right-0 h-[500px] w-[500px] rounded-full bg-primary/4 blur-[100px]" />
+          <div className="absolute left-1/3 top-1/2 h-[300px] w-[300px] -translate-y-1/2 rounded-full bg-sky-500/4 blur-[80px] dark:bg-sky-400/4" />
+        </div>
 
-        <div className="mx-auto flex w-full max-w-md flex-1 items-center">
-          <Card className="w-full border-border/70 bg-card/90 py-0 shadow-[0_24px_70px_-35px_rgba(0,0,0,0.55)] backdrop-blur">
-            <CardHeader className="gap-5 px-6 pt-6 sm:px-8 sm:pt-8">
-              <div className="flex justify-center sm:justify-start">
-                <SitemarkIcon />
-              </div>
-              <div className="space-y-2">
-                <CardTitle className="text-3xl tracking-tight">Sign in</CardTitle>
-              </div>
-            </CardHeader>
+        {/* Left branding panel — desktop only */}
+        <div className="relative hidden flex-col justify-between overflow-hidden border-r border-border/30 bg-card/20 p-12 backdrop-blur-sm lg:flex lg:w-[42%] xl:w-[38%]">
+          <div className="pointer-events-none absolute inset-0 -z-10">
+            <div className="absolute -left-16 -top-16 h-72 w-72 rounded-full bg-primary/8 blur-3xl" />
+            <div className="absolute bottom-0 right-0 h-56 w-56 rounded-full bg-primary/6 blur-3xl" />
+          </div>
 
-            <CardContent className="space-y-5 px-6 pb-6 sm:px-8 sm:pb-8">
-              <form
-                className="space-y-4"
-                onSubmit={handleSubmit}
-                noValidate
-              >
+          <SitemarkIcon />
+
+          <div className="space-y-5">
+            <div className="space-y-3">
+              <p className="text-[2.75rem] font-bold leading-[1.15] tracking-tight text-foreground">
+                Learn.<br />
+                <span className="text-primary">Grow.</span><br />
+                Succeed.
+              </p>
+              <p className="max-w-[26ch] text-base leading-relaxed text-muted-foreground">
+                Your personalized English learning journey, all in one place.
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              {["Students", "Teachers", "Management"].map((label) => (
+                <span
+                  key={label}
+                  className="rounded-full border border-border/60 bg-muted/50 px-3 py-1 text-xs font-medium text-muted-foreground"
+                >
+                  {label}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <p className="text-xs text-muted-foreground/60">© 2026 Springboard English</p>
+        </div>
+
+        {/* Right form section */}
+        <div className="relative flex flex-1 flex-col">
+          {/* Top-right controls */}
+          <div className="absolute right-4 top-4 z-20 sm:right-6 sm:top-6">
+            <ColorModeSelect />
+          </div>
+
+          <div className="flex flex-1 flex-col items-center justify-center px-5 py-16 sm:px-10">
+            {/* Mobile logo */}
+            <div className="mb-10 lg:hidden">
+              <SitemarkIcon />
+            </div>
+
+            <div className="w-full max-w-[360px]">
+              {/* Heading */}
+              <div className="mb-8 space-y-1.5">
+                <h1 className="text-3xl font-bold tracking-tight">Sign in</h1>
+                <p className="text-sm text-muted-foreground">
+                  Welcome back — enter your credentials to continue.
+                </p>
+              </div>
+
+              {/* Form */}
+              <form className="space-y-5" onSubmit={handleSubmit} noValidate>
                 {loginError && (
                   <StatusBanner variant="error">{loginError}</StatusBanner>
                 )}
@@ -293,12 +332,21 @@ export default function SignIn(props: SignInViewProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="password">
-                    <span className="inline-flex items-center gap-1">
-                      <span>Password</span>
-                      <span className="text-destructive" aria-hidden="true">*</span>
-                    </span>
-                  </Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="password">
+                      <span className="inline-flex items-center gap-1">
+                        <span>Password</span>
+                        <span className="text-destructive" aria-hidden="true">*</span>
+                      </span>
+                    </Label>
+                    <button
+                      type="button"
+                      onClick={handleClickOpen}
+                      className="text-xs font-medium text-primary transition hover:text-primary/75"
+                    >
+                      Forgot password?
+                    </button>
+                  </div>
                   <Input
                     aria-invalid={Boolean(passwordErrorMessage)}
                     name="password"
@@ -321,56 +369,51 @@ export default function SignIn(props: SignInViewProps) {
                   )}
                 </div>
 
-                <Button type="submit" className="w-full" disabled={isSubmitting}>
+                <Button
+                  type="submit"
+                  className="w-full"
+                  size="lg"
+                  disabled={isSubmitting}
+                >
                   {isSubmitting ? "Signing in..." : "Sign in"}
                 </Button>
-
-                <button
-                  type="button"
-                  onClick={handleClickOpen}
-                  className="mx-auto block text-sm font-medium text-primary transition hover:text-primary/80"
-                >
-                  Forgot your password?
-                </button>
 
                 {props.googleClientId && (
                   <>
                     <div className="relative py-1">
                       <Separator />
-                      <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                      <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-background px-2 text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
                         or continue with
                       </span>
                     </div>
 
                     <div className="rounded-2xl border border-dashed border-border/70 bg-muted/35 p-4">
-                      <div
-                        id="google-btn"
-                        className="flex min-h-10 justify-center"
-                      />
+                      <div id="google-btn" className="flex min-h-10 justify-center" />
                     </div>
                   </>
                 )}
               </form>
-            </CardContent>
-          </Card>
+
+              {/* Footer */}
+              <div className="mt-8 space-y-2 text-center">
+                <a
+                  href="https://docs.google.com/document/d/1vueS_dzdvDkBex5BLe_F03GEFLzjtoiFbNi0VJa2_gE/edit?tab=t.0"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex text-xs font-medium text-muted-foreground/70 transition hover:text-muted-foreground"
+                >
+                  Hướng dẫn sử dụng / User Guide
+                </a>
+                <p className="text-xs text-muted-foreground/50 lg:hidden">© 2026 Springboard English</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         <ForgotPassword
           open={isForgotPasswordOpen}
           handleClose={handleClose}
         />
-
-        <div className="space-y-3 pt-6 text-center">
-          <a
-            href="https://docs.google.com/document/d/1vueS_dzdvDkBex5BLe_F03GEFLzjtoiFbNi0VJa2_gE/edit?tab=t.0"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex text-sm font-medium text-muted-foreground transition hover:text-foreground"
-          >
-            Hướng dẫn sử dụng / User Guide
-          </a>
-          <p className="text-sm text-muted-foreground">© 2026 Springboard English</p>
-        </div>
       </div>
     </AppTheme>
   );
