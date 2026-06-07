@@ -16,19 +16,40 @@ import ColorModeSelect from "@/theme/ColorModeSelect";
 import { SitemarkIcon } from "@/components/CustomIcons";
 import { useAuth } from "@/context/AuthContext";
 import { loginWithGoogle } from "@/api_calls/UserData";
+import { SearchableSelect, type SearchableSelectOption } from "@/components/ui/searchable-select";
+
+const DEFAULT_ACCOUNT_TYPE_OPTIONS: SearchableSelectOption[] = [
+  { value: "employee", label: "Employee" },
+  { value: "student", label: "Student" },
+];
 
 export interface SignInViewProps {
   disableCustomTheme?: boolean;
   authNotice?: string;
   googleClientId?: string;
+  accountTypeOverride?: string;
+  accountTypeOptions?: SearchableSelectOption[];
+  accountTypeLabel?: string;
 }
 
 export default function SignIn(props: SignInViewProps) {
   const { login, setAuthenticatedUser } = useAuth();
+  const accountTypeOptions = React.useMemo(
+    () => (props.accountTypeOptions && props.accountTypeOptions.length > 0
+      ? props.accountTypeOptions
+      : DEFAULT_ACCOUNT_TYPE_OPTIONS),
+    [props.accountTypeOptions],
+  );
+  const resolvedAccountTypeOverride = props.accountTypeOverride?.trim() || "";
+  const shouldShowAccountTypeSelector = !resolvedAccountTypeOverride;
   const [username, setUsername] = React.useState("");
   const [password, setPassword] = React.useState("");
+  const [accountType, setAccountType] = React.useState(
+    resolvedAccountTypeOverride || accountTypeOptions[0]?.value || "",
+  );
   const [usernameErrorMessage, setUsernameErrorMessage] = React.useState("");
   const [passwordErrorMessage, setPasswordErrorMessage] = React.useState("");
+  const [accountTypeErrorMessage, setAccountTypeErrorMessage] = React.useState("");
   const [loginError, setLoginError] = React.useState("");
   const [loginSuccessMessage, setLoginSuccessMessage] = React.useState("");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -42,6 +63,11 @@ export default function SignIn(props: SignInViewProps) {
 
     setLoginSuccessMessage(props.authNotice);
   }, [props.authNotice]);
+
+  React.useEffect(() => {
+    setAccountType(resolvedAccountTypeOverride || accountTypeOptions[0]?.value || "");
+    setAccountTypeErrorMessage("");
+  }, [accountTypeOptions, resolvedAccountTypeOverride]);
 
   React.useEffect(() => {
     const clientId = props.googleClientId || (typeof import.meta !== "undefined" ? import.meta.env?.VITE_GOOGLE_CLIENT_ID : undefined) || "";
@@ -91,13 +117,19 @@ export default function SignIn(props: SignInViewProps) {
     setIsForgotPasswordOpen(false);
   };
 
+  const getSelectedAccountType = () => resolvedAccountTypeOverride || accountType;
+
   const handleGoogleSuccess = async (response: any) => {
+    if (!validateInputs({ includeCredentials: false })) {
+      return;
+    }
+
     setIsSubmitting(true);
     setLoginError("");
     setLoginSuccessMessage("");
 
     try {
-      const userInfo = await loginWithGoogle(response.credential);
+      const userInfo = await loginWithGoogle(response.credential, getSelectedAccountType());
       setAuthenticatedUser(userInfo);
     } catch (error) {
       setLoginError(
@@ -121,7 +153,11 @@ export default function SignIn(props: SignInViewProps) {
     setLoginError("");
 
     try {
-      await login({ username: username.trim(), password });
+      await login({
+        username: username.trim(),
+        password,
+        account_type: getSelectedAccountType(),
+      });
     } catch (error) {
       const message = error instanceof Error ? error.message : "";
       if (message.includes("401") || message.includes("400")) {
@@ -139,21 +175,30 @@ export default function SignIn(props: SignInViewProps) {
     }
   };
 
-  const validateInputs = () => {
+  const validateInputs = ({ includeCredentials = true }: { includeCredentials?: boolean } = {}) => {
     let isValid = true;
 
-    if (!username.trim()) {
-      setUsernameErrorMessage("Please enter your username.");
+    if (shouldShowAccountTypeSelector && !accountType) {
+      setAccountTypeErrorMessage("Please select an account type.");
       isValid = false;
     } else {
-      setUsernameErrorMessage("");
+      setAccountTypeErrorMessage("");
     }
 
-    if (!password) {
-      setPasswordErrorMessage("Password is required.");
-      isValid = false;
-    } else {
-      setPasswordErrorMessage("");
+    if (includeCredentials) {
+      if (!username.trim()) {
+        setUsernameErrorMessage("Please enter your username.");
+        isValid = false;
+      } else {
+        setUsernameErrorMessage("");
+      }
+
+      if (!password) {
+        setPasswordErrorMessage("Password is required.");
+        isValid = false;
+      } else {
+        setPasswordErrorMessage("");
+      }
     }
 
     return isValid;
@@ -188,6 +233,33 @@ export default function SignIn(props: SignInViewProps) {
                 )}
                 {loginSuccessMessage && (
                   <StatusBanner variant="success">{loginSuccessMessage}</StatusBanner>
+                )}
+
+                {shouldShowAccountTypeSelector && (
+                  <div className="space-y-2">
+                    <Label htmlFor="account-type">
+                      <span className="inline-flex items-center gap-1">
+                        <span>{props.accountTypeLabel || "Account type"}</span>
+                        <span className="text-destructive" aria-hidden="true">*</span>
+                      </span>
+                    </Label>
+                    <SearchableSelect
+                      id="account-type"
+                      value={accountType}
+                      options={accountTypeOptions}
+                      placeholder="Select account type"
+                      disabled={isSubmitting}
+                      onValueChange={(value) => {
+                        setAccountType(value);
+                        if (accountTypeErrorMessage) {
+                          setAccountTypeErrorMessage("");
+                        }
+                      }}
+                    />
+                    {accountTypeErrorMessage && (
+                      <p className="text-sm text-destructive">{accountTypeErrorMessage}</p>
+                    )}
+                  </div>
                 )}
 
                 <div className="space-y-2">

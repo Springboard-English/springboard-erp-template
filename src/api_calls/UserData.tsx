@@ -38,10 +38,12 @@ import { fetchWithRefresh, fetchWithRetryAfter } from "./fetchWithRefresh";
 export interface LoginCredentials {
     username: string;
     password: string;
+    account_type?: string;
 }
 
 export interface GoogleLoginRequest {
     credential: string; // JWT from Google
+    account_type?: string;
 }
 
 export interface UserInfo {
@@ -912,8 +914,13 @@ export async function login(
     formData.append("grant_type", "password");
     formData.append("username", credentials.username);
     formData.append("password", credentials.password);
+    const loginUrl = new URL(getEndpoint("login"), window.location.origin);
 
-    const response = await fetchWithRetryAfter(getEndpoint("login"), {
+    if (credentials.account_type) {
+        loginUrl.searchParams.append("account_type", credentials.account_type);
+    }
+
+    const response = await fetchWithRetryAfter(loginUrl.toString(), {
         method: "POST",
         headers: {
             "Content-Type": "application/x-www-form-urlencoded",
@@ -934,11 +941,15 @@ export async function login(
 
 export async function loginWithGoogle(
     credential: string,
+    accountType?: string,
 ): Promise<LoginResponse> {
     // Send Google JWT credential to backend as query parameter
     // Backend will verify the token and set cookies
     const params = new URLSearchParams();
     params.append("credential", credential);
+    if (accountType) {
+        params.append("account_type", accountType);
+    }
 
     const response = await fetchWithRefresh(
         `${getEndpoint("authenticateGoogle")}?${params.toString()}`,
