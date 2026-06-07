@@ -9159,7 +9159,7 @@ function BN(e) {
             A && /* @__PURE__ */ d.jsx(rr, { variant: "error", children: A }),
             j && /* @__PURE__ */ d.jsx(rr, { variant: "success", children: j }),
             o && /* @__PURE__ */ d.jsxs("div", { className: "space-y-2", children: [
-              /* @__PURE__ */ d.jsx(qt, { htmlFor: "account-type", children: /* @__PURE__ */ d.jsxs("span", { className: "inline-flex items-center gap-1", children: [
+              /* @__PURE__ */ d.jsx(qt, { htmlFor: "account-type", className: "font-mono text-xs font-semibold uppercase tracking-wider text-muted-foreground", children: /* @__PURE__ */ d.jsxs("span", { className: "inline-flex items-center gap-1", children: [
                 /* @__PURE__ */ d.jsx("span", { children: e.accountTypeLabel || "Account type" }),
                 /* @__PURE__ */ d.jsx("span", { className: "text-destructive", "aria-hidden": "true", children: "*" })
               ] }) }),
@@ -9171,6 +9171,7 @@ function BN(e) {
                   options: r,
                   placeholder: "Select account type",
                   disabled: E,
+                  className: "font-medium",
                   onValueChange: (S) => {
                     u(S), y && x("");
                   }
@@ -9179,7 +9180,7 @@ function BN(e) {
               y && /* @__PURE__ */ d.jsx("p", { className: "text-sm text-destructive", children: y })
             ] }),
             /* @__PURE__ */ d.jsxs("div", { className: "space-y-2", children: [
-              /* @__PURE__ */ d.jsx(qt, { htmlFor: "username", children: /* @__PURE__ */ d.jsxs("span", { className: "inline-flex items-center gap-1", children: [
+              /* @__PURE__ */ d.jsx(qt, { htmlFor: "username", className: "font-mono text-xs font-semibold uppercase tracking-wider text-muted-foreground", children: /* @__PURE__ */ d.jsxs("span", { className: "inline-flex items-center gap-1", children: [
                 /* @__PURE__ */ d.jsx("span", { children: "Username" }),
                 /* @__PURE__ */ d.jsx("span", { className: "text-destructive", "aria-hidden": "true", children: "*" })
               ] }) }),
@@ -9205,7 +9206,7 @@ function BN(e) {
             ] }),
             /* @__PURE__ */ d.jsxs("div", { className: "space-y-2", children: [
               /* @__PURE__ */ d.jsxs("div", { className: "flex items-center justify-between", children: [
-                /* @__PURE__ */ d.jsx(qt, { htmlFor: "password", children: /* @__PURE__ */ d.jsxs("span", { className: "inline-flex items-center gap-1", children: [
+                /* @__PURE__ */ d.jsx(qt, { htmlFor: "password", className: "font-mono text-xs font-semibold uppercase tracking-wider text-muted-foreground", children: /* @__PURE__ */ d.jsxs("span", { className: "inline-flex items-center gap-1", children: [
                   /* @__PURE__ */ d.jsx("span", { children: "Password" }),
                   /* @__PURE__ */ d.jsx("span", { className: "text-destructive", "aria-hidden": "true", children: "*" })
                 ] }) }),

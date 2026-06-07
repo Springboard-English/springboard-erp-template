@@ -276,7 +276,7 @@ export default function SignIn(props: SignInViewProps) {
 
                 {shouldShowAccountTypeSelector && (
                   <div className="space-y-2">
-                    <Label htmlFor="account-type">
+                    <Label htmlFor="account-type" className="font-mono text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       <span className="inline-flex items-center gap-1">
                         <span>{props.accountTypeLabel || "Account type"}</span>
                         <span className="text-destructive" aria-hidden="true">*</span>
@@ -288,6 +288,7 @@ export default function SignIn(props: SignInViewProps) {
                       options={accountTypeOptions}
                       placeholder="Select account type"
                       disabled={isSubmitting}
+                      className="font-medium"
                       onValueChange={(value) => {
                         setAccountType(value);
                         if (accountTypeErrorMessage) {
@@ -302,7 +303,7 @@ export default function SignIn(props: SignInViewProps) {
                 )}
 
                 <div className="space-y-2">
-                  <Label htmlFor="username">
+                  <Label htmlFor="username" className="font-mono text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     <span className="inline-flex items-center gap-1">
                       <span>Username</span>
                       <span className="text-destructive" aria-hidden="true">*</span>
@@ -333,7 +334,7 @@ export default function SignIn(props: SignInViewProps) {
 
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="password">
+                    <Label htmlFor="password" className="font-mono text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       <span className="inline-flex items-center gap-1">
                         <span>Password</span>
                         <span className="text-destructive" aria-hidden="true">*</span>
