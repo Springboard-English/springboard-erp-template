@@ -9124,27 +9124,14 @@ function BN(e) {
         /* @__PURE__ */ d.jsx("div", { className: "absolute bottom-0 right-0 h-56 w-56 rounded-full bg-primary/6 blur-3xl" })
       ] }),
       /* @__PURE__ */ d.jsx(ts, {}),
-      /* @__PURE__ */ d.jsxs("div", { className: "space-y-5", children: [
-        /* @__PURE__ */ d.jsxs("div", { className: "space-y-3", children: [
-          /* @__PURE__ */ d.jsxs("p", { className: "text-[2.75rem] font-bold leading-[1.15] tracking-tight text-foreground", children: [
-            "Learn.",
-            /* @__PURE__ */ d.jsx("br", {}),
-            /* @__PURE__ */ d.jsx("span", { className: "text-primary", children: "Grow." }),
-            /* @__PURE__ */ d.jsx("br", {}),
-            "Succeed."
-          ] }),
-          /* @__PURE__ */ d.jsx("p", { className: "max-w-[26ch] text-base leading-relaxed text-muted-foreground", children: "Your personalized English learning journey, all in one place." })
-        ] }),
-        /* @__PURE__ */ d.jsx("div", { className: "flex gap-3", children: ["Students", "Teachers", "Management"].map((S) => /* @__PURE__ */ d.jsx(
-          "span",
-          {
-            className: "rounded-full border border-border/60 bg-muted/50 px-3 py-1 text-xs font-medium text-muted-foreground",
-            children: S
-          },
-          S
-        )) })
-      ] }),
-      /* @__PURE__ */ d.jsx("p", { className: "text-xs text-muted-foreground/60", children: "© 2026 Springboard English" })
+      /* @__PURE__ */ d.jsxs("div", { className: "space-y-4", children: [
+        /* @__PURE__ */ d.jsx("p", { className: "font-mono text-xs font-semibold uppercase tracking-[0.24em] text-primary/80", children: "Learning Portal" }),
+        /* @__PURE__ */ d.jsxs("p", { className: "text-[2.75rem] font-bold leading-[1.15] tracking-tight text-foreground", children: [
+          "Lớp học",
+          /* @__PURE__ */ d.jsx("br", {}),
+          /* @__PURE__ */ d.jsx("span", { className: "text-primary", children: "Nhà Xuân" })
+        ] })
+      ] })
     ] }),
     /* @__PURE__ */ d.jsxs("div", { className: "relative flex flex-1 flex-col", children: [
       /* @__PURE__ */ d.jsx("div", { className: "absolute right-4 top-4 z-20 sm:right-6 sm:top-6", children: /* @__PURE__ */ d.jsx(th, {}) }),
@@ -9257,19 +9244,16 @@ function BN(e) {
               /* @__PURE__ */ d.jsx("div", { className: "rounded-2xl border border-dashed border-border/70 bg-muted/35 p-4", children: /* @__PURE__ */ d.jsx("div", { id: "google-btn", className: "flex min-h-10 justify-center" }) })
             ] })
           ] }),
-          /* @__PURE__ */ d.jsxs("div", { className: "mt-8 space-y-2 text-center", children: [
-            /* @__PURE__ */ d.jsx(
-              "a",
-              {
-                href: "https://docs.google.com/document/d/1vueS_dzdvDkBex5BLe_F03GEFLzjtoiFbNi0VJa2_gE/edit?tab=t.0",
-                target: "_blank",
-                rel: "noopener noreferrer",
-                className: "inline-flex text-xs font-medium text-muted-foreground/70 transition hover:text-muted-foreground",
-                children: "Hướng dẫn sử dụng / User Guide"
-              }
-            ),
-            /* @__PURE__ */ d.jsx("p", { className: "text-xs text-muted-foreground/50 lg:hidden", children: "© 2026 Springboard English" })
-          ] })
+          /* @__PURE__ */ d.jsx("div", { className: "mt-8 space-y-2 text-center", children: /* @__PURE__ */ d.jsx(
+            "a",
+            {
+              href: "https://docs.google.com/document/d/1vueS_dzdvDkBex5BLe_F03GEFLzjtoiFbNi0VJa2_gE/edit?tab=t.0",
+              target: "_blank",
+              rel: "noopener noreferrer",
+              className: "inline-flex text-xs font-medium text-muted-foreground/70 transition hover:text-muted-foreground",
+              children: "Hướng dẫn sử dụng / User Guide"
+            }
+          ) })
         ] })
       ] })
     ] }),

@@ -216,31 +216,15 @@ export default function SignIn(props: SignInViewProps) {
 
           <SitemarkIcon />
 
-          <div className="space-y-5">
-            <div className="space-y-3">
-              <p className="text-[2.75rem] font-bold leading-[1.15] tracking-tight text-foreground">
-                Learn.<br />
-                <span className="text-primary">Grow.</span><br />
-                Succeed.
-              </p>
-              <p className="max-w-[26ch] text-base leading-relaxed text-muted-foreground">
-                Your personalized English learning journey, all in one place.
-              </p>
-            </div>
-
-            <div className="flex gap-3">
-              {["Students", "Teachers", "Management"].map((label) => (
-                <span
-                  key={label}
-                  className="rounded-full border border-border/60 bg-muted/50 px-3 py-1 text-xs font-medium text-muted-foreground"
-                >
-                  {label}
-                </span>
-              ))}
-            </div>
+          <div className="space-y-4">
+            <p className="font-mono text-xs font-semibold uppercase tracking-[0.24em] text-primary/80">
+              Learning Portal
+            </p>
+            <p className="text-[2.75rem] font-bold leading-[1.15] tracking-tight text-foreground">
+              Lớp học<br />
+              <span className="text-primary">Nhà Xuân</span>
+            </p>
           </div>
-
-          <p className="text-xs text-muted-foreground/60">© 2026 Springboard English</p>
         </div>
 
         {/* Right form section */}
@@ -405,7 +389,6 @@ export default function SignIn(props: SignInViewProps) {
                 >
                   Hướng dẫn sử dụng / User Guide
                 </a>
-                <p className="text-xs text-muted-foreground/50 lg:hidden">© 2026 Springboard English</p>
               </div>
             </div>
           </div>
