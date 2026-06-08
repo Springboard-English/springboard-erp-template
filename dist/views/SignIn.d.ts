@@ -6,5 +6,10 @@ export interface SignInViewProps {
     accountTypeOverride?: string;
     accountTypeOptions?: SearchableSelectOption[];
     accountTypeLabel?: string;
+    heroEyebrowText?: string;
+    heroTitleText?: string;
+    heroTitleAccentText?: string;
+    formTitle?: string;
+    formDescription?: string;
 }
 export default function SignIn(props: SignInViewProps): import("react/jsx-runtime").JSX.Element;

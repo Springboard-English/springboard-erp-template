@@ -24,6 +24,11 @@ export interface SignInViewProps {
   accountTypeOverride?: string;
   accountTypeOptions?: SearchableSelectOption[];
   accountTypeLabel?: string;
+  heroEyebrowText?: string;
+  heroTitleText?: string;
+  heroTitleAccentText?: string;
+  formTitle?: string;
+  formDescription?: string;
 }
 
 export default function SignIn(props: SignInViewProps) {
@@ -36,6 +41,11 @@ export default function SignIn(props: SignInViewProps) {
   );
   const resolvedAccountTypeOverride = props.accountTypeOverride?.trim() || "";
   const shouldShowAccountTypeSelector = !resolvedAccountTypeOverride;
+  const heroEyebrowText = props.heroEyebrowText?.trim() || "Learning Portal";
+  const heroTitleText = props.heroTitleText?.trim() || "Lớp học";
+  const heroTitleAccentText = props.heroTitleAccentText?.trim() || "Nhà Xuân";
+  const formTitle = props.formTitle?.trim() || "Sign in";
+  const formDescription = props.formDescription?.trim() || "Welcome back — enter your credentials to continue.";
   const [username, setUsername] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [accountType, setAccountType] = React.useState(
@@ -218,11 +228,11 @@ export default function SignIn(props: SignInViewProps) {
 
           <div className="space-y-4">
             <p className="font-mono text-xs font-semibold uppercase tracking-[0.24em] text-primary/80">
-              Learning Portal
+              {heroEyebrowText}
             </p>
             <p className="text-[2.75rem] font-bold leading-[1.15] tracking-tight text-foreground">
-              Lớp học<br />
-              <span className="text-primary">Nhà Xuân</span>
+              {heroTitleText}<br />
+              <span className="text-primary">{heroTitleAccentText}</span>
             </p>
           </div>
         </div>
@@ -243,9 +253,9 @@ export default function SignIn(props: SignInViewProps) {
             <div className="w-full max-w-[360px]">
               {/* Heading */}
               <div className="mb-8 space-y-1.5">
-                <h1 className="text-3xl font-bold tracking-tight">Sign in</h1>
+                <h1 className="text-3xl font-bold tracking-tight">{formTitle}</h1>
                 <p className="text-sm text-muted-foreground">
-                  Welcome back — enter your credentials to continue.
+                  {formDescription}
                 </p>
               </div>
 
@@ -259,30 +269,40 @@ export default function SignIn(props: SignInViewProps) {
                 )}
 
                 {shouldShowAccountTypeSelector && (
-                  <div className="space-y-2">
-                    <Label htmlFor="account-type" className="font-mono text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      <span className="inline-flex items-center gap-1">
-                        <span>{props.accountTypeLabel || "Account type"}</span>
-                        <span className="text-destructive" aria-hidden="true">*</span>
-                      </span>
-                    </Label>
-                    <SearchableSelect
-                      id="account-type"
-                      value={accountType}
-                      options={accountTypeOptions}
-                      placeholder="Select account type"
-                      disabled={isSubmitting}
-                      className="font-medium"
-                      onValueChange={(value) => {
-                        setAccountType(value);
-                        if (accountTypeErrorMessage) {
-                          setAccountTypeErrorMessage("");
-                        }
-                      }}
-                    />
-                    {accountTypeErrorMessage && (
-                      <p className="text-sm text-destructive">{accountTypeErrorMessage}</p>
-                    )}
+                  <div className="space-y-3 rounded-2xl border border-primary/20 bg-primary/[0.06] p-4 shadow-sm shadow-primary/5">
+                    <div className="space-y-1">
+                      <p className="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+                        Choose sign-in mode
+                      </p>
+                      <p className="text-sm font-medium text-foreground">
+                        The selected {props.accountTypeLabel?.toLowerCase() || "account type"} applies to password sign-in and Google sign-in.
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="account-type" className="font-mono text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        <span className="inline-flex items-center gap-1">
+                          <span>{props.accountTypeLabel || "Account type"}</span>
+                          <span className="text-destructive" aria-hidden="true">*</span>
+                        </span>
+                      </Label>
+                      <SearchableSelect
+                        id="account-type"
+                        value={accountType}
+                        options={accountTypeOptions}
+                        placeholder="Select account type"
+                        disabled={isSubmitting}
+                        className="font-medium"
+                        onValueChange={(value) => {
+                          setAccountType(value);
+                          if (accountTypeErrorMessage) {
+                            setAccountTypeErrorMessage("");
+                          }
+                        }}
+                      />
+                      {accountTypeErrorMessage && (
+                        <p className="text-sm text-destructive">{accountTypeErrorMessage}</p>
+                      )}
+                    </div>
                   </div>
                 )}
 
@@ -356,11 +376,11 @@ export default function SignIn(props: SignInViewProps) {
 
                 <Button
                   type="submit"
-                  className="w-full"
+                  className="h-12 w-full rounded-xl text-base font-semibold shadow-lg shadow-primary/20 transition-transform hover:-translate-y-0.5 hover:shadow-primary/30 disabled:translate-y-0 disabled:shadow-none"
                   size="lg"
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? "Signing in..." : "Sign in"}
+                  {isSubmitting ? "Signing in..." : "Sign in with password"}
                 </Button>
 
                 {props.googleClientId && (
@@ -368,11 +388,14 @@ export default function SignIn(props: SignInViewProps) {
                     <div className="relative py-1">
                       <Separator />
                       <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-background px-2 text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
-                        or continue with
+                        or use Google
                       </span>
                     </div>
 
                     <div className="rounded-2xl border border-dashed border-border/70 bg-muted/35 p-4">
+                      <p className="mb-3 text-center text-xs font-medium text-muted-foreground">
+                        Google sign-in uses the selected {props.accountTypeLabel?.toLowerCase() || "account type"} above.
+                      </p>
                       <div id="google-btn" className="flex min-h-10 justify-center" />
                     </div>
                   </>
