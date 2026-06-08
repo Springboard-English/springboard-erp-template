@@ -121,6 +121,7 @@ export default function SignIn(props: SignInViewProps) {
   };
 
   const getSelectedAccountType = () => resolvedAccountTypeOverride || accountType;
+  const selectedAccountTypeLabel = accountTypeOptions.find((option) => option.value === getSelectedAccountType())?.label;
 
   const handleGoogleSuccess = async (response: any) => {
     if (!validateInputs({ includeCredentials: false })) {
@@ -253,7 +254,14 @@ export default function SignIn(props: SignInViewProps) {
             <div className="w-full max-w-[360px]">
               {/* Heading */}
               <div className="mb-8 space-y-1.5">
-                <h1 className="text-3xl font-bold tracking-tight">{formTitle}</h1>
+                <h1 className="text-3xl font-bold tracking-tight">
+                  {formTitle}
+                  {selectedAccountTypeLabel ? (
+                    <span className="block text-lg font-medium text-primary">
+                      as {selectedAccountTypeLabel}
+                    </span>
+                  ) : null}
+                </h1>
                 <p className="text-sm text-muted-foreground">
                   {formDescription}
                 </p>
@@ -269,40 +277,30 @@ export default function SignIn(props: SignInViewProps) {
                 )}
 
                 {shouldShowAccountTypeSelector && (
-                  <div className="space-y-3 rounded-2xl border border-primary/20 bg-primary/[0.06] p-4 shadow-sm shadow-primary/5">
-                    <div className="space-y-1">
-                      <p className="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-primary">
-                        Choose sign-in mode
-                      </p>
-                      <p className="text-sm font-medium text-foreground">
-                        The selected {props.accountTypeLabel?.toLowerCase() || "account type"} applies to password sign-in and Google sign-in.
-                      </p>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="account-type" className="font-mono text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                        <span className="inline-flex items-center gap-1">
-                          <span>{props.accountTypeLabel || "Account type"}</span>
-                          <span className="text-destructive" aria-hidden="true">*</span>
-                        </span>
-                      </Label>
-                      <SearchableSelect
-                        id="account-type"
-                        value={accountType}
-                        options={accountTypeOptions}
-                        placeholder="Select account type"
-                        disabled={isSubmitting}
-                        className="font-medium"
-                        onValueChange={(value) => {
-                          setAccountType(value);
-                          if (accountTypeErrorMessage) {
-                            setAccountTypeErrorMessage("");
-                          }
-                        }}
-                      />
-                      {accountTypeErrorMessage && (
-                        <p className="text-sm text-destructive">{accountTypeErrorMessage}</p>
-                      )}
-                    </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="account-type" className="font-mono text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      <span className="inline-flex items-center gap-1">
+                        <span>{props.accountTypeLabel || "Account type"}</span>
+                        <span className="text-destructive" aria-hidden="true">*</span>
+                      </span>
+                    </Label>
+                    <SearchableSelect
+                      id="account-type"
+                      value={accountType}
+                      options={accountTypeOptions}
+                      placeholder="Select account type"
+                      disabled={isSubmitting}
+                      className="font-medium"
+                      onValueChange={(value) => {
+                        setAccountType(value);
+                        if (accountTypeErrorMessage) {
+                          setAccountTypeErrorMessage("");
+                        }
+                      }}
+                    />
+                    {accountTypeErrorMessage && (
+                      <p className="text-sm text-destructive">{accountTypeErrorMessage}</p>
+                    )}
                   </div>
                 )}
 
@@ -376,7 +374,7 @@ export default function SignIn(props: SignInViewProps) {
 
                 <Button
                   type="submit"
-                  className="h-12 w-full rounded-xl text-base font-semibold shadow-lg shadow-primary/20 transition-transform hover:-translate-y-0.5 hover:shadow-primary/30 disabled:translate-y-0 disabled:shadow-none"
+                  className="h-12 w-full rounded-xl bg-primary text-base font-semibold text-primary-foreground shadow-[0_14px_30px_-14px_color-mix(in_oklab,var(--primary)_65%,transparent)] transition-all hover:scale-[1.01] hover:bg-primary/92 hover:shadow-[0_18px_36px_-16px_color-mix(in_oklab,var(--primary)_72%,transparent)] disabled:scale-100 disabled:bg-primary disabled:shadow-none"
                   size="lg"
                   disabled={isSubmitting}
                 >
@@ -388,14 +386,11 @@ export default function SignIn(props: SignInViewProps) {
                     <div className="relative py-1">
                       <Separator />
                       <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-background px-2 text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
-                        or use Google
+                        or
                       </span>
                     </div>
 
                     <div className="rounded-2xl border border-dashed border-border/70 bg-muted/35 p-4">
-                      <p className="mb-3 text-center text-xs font-medium text-muted-foreground">
-                        Google sign-in uses the selected {props.accountTypeLabel?.toLowerCase() || "account type"} above.
-                      </p>
                       <div id="google-btn" className="flex min-h-10 justify-center" />
                     </div>
                   </>
