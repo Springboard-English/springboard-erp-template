@@ -39,6 +39,10 @@ export default function SignIn(props: SignInViewProps) {
       : DEFAULT_ACCOUNT_TYPE_OPTIONS),
     [props.accountTypeOptions],
   );
+  const accountTypeOptionsKey = React.useMemo(
+    () => accountTypeOptions.map((option) => `${option.value}:${option.label}`).join("|"),
+    [accountTypeOptions],
+  );
   const resolvedAccountTypeOverride = props.accountTypeOverride?.trim() || "";
   const shouldShowAccountTypeSelector = !resolvedAccountTypeOverride;
   const heroEyebrowText = props.heroEyebrowText?.trim() || "Learning Portal";
@@ -68,9 +72,24 @@ export default function SignIn(props: SignInViewProps) {
   }, [props.authNotice]);
 
   React.useEffect(() => {
-    setAccountType(resolvedAccountTypeOverride || accountTypeOptions[0]?.value || "");
+    if (resolvedAccountTypeOverride) {
+      setAccountType(resolvedAccountTypeOverride);
+      setAccountTypeErrorMessage("");
+      return;
+    }
+
+    setAccountType((currentAccountType) => {
+      if (
+        currentAccountType &&
+        accountTypeOptions.some((option) => option.value === currentAccountType)
+      ) {
+        return currentAccountType;
+      }
+
+      return accountTypeOptions[0]?.value || "";
+    });
     setAccountTypeErrorMessage("");
-  }, [accountTypeOptions, resolvedAccountTypeOverride]);
+  }, [accountTypeOptions, accountTypeOptionsKey, resolvedAccountTypeOverride]);
 
   React.useEffect(() => {
     const clientId = props.googleClientId || (typeof import.meta !== "undefined" ? import.meta.env?.VITE_GOOGLE_CLIENT_ID : undefined) || "";
