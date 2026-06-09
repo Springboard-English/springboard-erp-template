@@ -254,17 +254,37 @@ export default function SignIn(props: SignInViewProps) {
             <div className="w-full max-w-[360px]">
               {/* Heading */}
               <div className="mb-8 space-y-1.5">
-                <h1 className="text-3xl font-bold tracking-tight">
-                  {formTitle}
-                  {selectedAccountTypeLabel ? (
-                    <span className="block text-lg font-medium text-primary">
-                      as {selectedAccountTypeLabel}
+                <h1 className="flex flex-wrap items-center gap-x-3 gap-y-2 text-3xl font-bold tracking-tight">
+                  <span>{formTitle}</span>
+                  <span className="text-lg font-medium text-primary">as</span>
+                  {shouldShowAccountTypeSelector ? (
+                    <SearchableSelect
+                      id="account-type"
+                      value={accountType}
+                      options={accountTypeOptions}
+                      placeholder="Select account type"
+                      disabled={isSubmitting}
+                      className="h-11 w-auto min-w-[11rem] rounded-xl border-primary/25 bg-primary/5 px-4 text-base font-semibold text-primary"
+                      contentClassName="w-[14rem]"
+                      onValueChange={(value) => {
+                        setAccountType(value);
+                        if (accountTypeErrorMessage) {
+                          setAccountTypeErrorMessage("");
+                        }
+                      }}
+                    />
+                  ) : selectedAccountTypeLabel ? (
+                    <span className="text-lg font-medium text-primary">
+                      {selectedAccountTypeLabel}
                     </span>
                   ) : null}
                 </h1>
                 <p className="text-sm text-muted-foreground">
                   {formDescription}
                 </p>
+                {accountTypeErrorMessage && (
+                  <p className="text-sm text-destructive">{accountTypeErrorMessage}</p>
+                )}
               </div>
 
               {/* Form */}
@@ -275,35 +295,6 @@ export default function SignIn(props: SignInViewProps) {
                 {loginSuccessMessage && (
                   <StatusBanner variant="success">{loginSuccessMessage}</StatusBanner>
                 )}
-
-                {shouldShowAccountTypeSelector && (
-                  <div className="space-y-2">
-                    <Label htmlFor="account-type" className="font-mono text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      <span className="inline-flex items-center gap-1">
-                        <span>{props.accountTypeLabel || "Account type"}</span>
-                        <span className="text-destructive" aria-hidden="true">*</span>
-                      </span>
-                    </Label>
-                    <SearchableSelect
-                      id="account-type"
-                      value={accountType}
-                      options={accountTypeOptions}
-                      placeholder="Select account type"
-                      disabled={isSubmitting}
-                      className="font-medium"
-                      onValueChange={(value) => {
-                        setAccountType(value);
-                        if (accountTypeErrorMessage) {
-                          setAccountTypeErrorMessage("");
-                        }
-                      }}
-                    />
-                    {accountTypeErrorMessage && (
-                      <p className="text-sm text-destructive">{accountTypeErrorMessage}</p>
-                    )}
-                  </div>
-                )}
-
                 <div className="space-y-2">
                   <Label htmlFor="username" className="font-mono text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     <span className="inline-flex items-center gap-1">
