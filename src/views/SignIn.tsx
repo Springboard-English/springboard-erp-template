@@ -62,6 +62,7 @@ export default function SignIn(props: SignInViewProps) {
   const [loginSuccessMessage, setLoginSuccessMessage] = React.useState("");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isForgotPasswordOpen, setIsForgotPasswordOpen] = React.useState(false);
+  const selectedAccountTypeRef = React.useRef(accountType);
 
   React.useEffect(() => {
     if (!props.authNotice) {
@@ -90,6 +91,10 @@ export default function SignIn(props: SignInViewProps) {
     });
     setAccountTypeErrorMessage("");
   }, [accountTypeOptions, accountTypeOptionsKey, resolvedAccountTypeOverride]);
+
+  React.useEffect(() => {
+    selectedAccountTypeRef.current = resolvedAccountTypeOverride || accountType;
+  }, [accountType, resolvedAccountTypeOverride]);
 
   React.useEffect(() => {
     const clientId = props.googleClientId || (typeof import.meta !== "undefined" ? import.meta.env?.VITE_GOOGLE_CLIENT_ID : undefined) || "";
@@ -139,7 +144,7 @@ export default function SignIn(props: SignInViewProps) {
     setIsForgotPasswordOpen(false);
   };
 
-  const getSelectedAccountType = () => resolvedAccountTypeOverride || accountType;
+  const getSelectedAccountType = () => selectedAccountTypeRef.current;
   const selectedAccountTypeLabel = accountTypeOptions.find((option) => option.value === getSelectedAccountType())?.label;
 
   const handleGoogleSuccess = async (response: any) => {
