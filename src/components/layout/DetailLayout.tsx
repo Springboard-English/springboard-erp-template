@@ -267,7 +267,6 @@ export function DetailView({
                     }
                     className={cn(
                         className,
-                        contentScrollable && "overflow-y-auto overflow-x-hidden pr-1",
                         floating
                             ? collapsed
                                 ? hiddenCollapsed
@@ -315,7 +314,16 @@ export function DetailView({
                             <ChevronRight className="h-4 w-4" />
                         </Button>
                     ) : null}
-                    {children}
+                    <div
+                        className={cn(
+                            "min-h-0",
+                            floating && !hiddenCollapsed && "h-full",
+                            contentScrollable &&
+                                "overflow-y-auto overflow-x-hidden pr-1",
+                        )}
+                    >
+                        {children}
+                    </div>
                 </div>
             </section>
         </DetailViewContext.Provider>
