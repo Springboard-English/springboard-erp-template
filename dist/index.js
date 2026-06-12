@@ -12253,7 +12253,7 @@ function $N({
       "div",
       {
         className: H(
-          "fixed bottom-3 left-3 right-3 z-[35] transform-gpu transition-all md:bottom-6 md:left-[calc(18rem+1.5rem)] md:right-6",
+          "fixed bottom-[calc(4rem+0.75rem)] left-3 right-3 z-[35] transform-gpu transition-all md:bottom-6 md:left-[calc(18rem+1.5rem)] md:right-6",
           A ? "translate-y-0 opacity-100 pointer-events-auto" : "translate-y-6 opacity-0 pointer-events-none"
         ),
         style: { transitionDuration: `${p}ms` },
