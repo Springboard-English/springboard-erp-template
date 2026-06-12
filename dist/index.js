@@ -22451,13 +22451,16 @@ function pI({
   rows: e,
   className: t,
   tableClassName: n,
-  labelColumnClassName: r
+  labelColumnClassName: r,
+  scrollable: i = !1,
+  scrollContainerClassName: o
 }) {
   return /* @__PURE__ */ d.jsx(
     "div",
     {
       className: H(
         "overflow-hidden rounded-2xl border border-border/70 bg-card shadow-[0_18px_40px_-28px_rgba(0,0,0,0.35)]",
+        i && "min-h-0",
         t
       ),
       children: /* @__PURE__ */ d.jsx(
@@ -22467,13 +22470,17 @@ function pI({
             "w-full table-fixed",
             n
           ),
-          containerClassName: "overflow-x-hidden",
-          children: /* @__PURE__ */ d.jsx(Hi, { children: e.map((i, o) => /* @__PURE__ */ d.jsxs(
+          containerClassName: H(
+            "overflow-x-auto",
+            i && "h-full max-h-full overflow-y-auto",
+            o
+          ),
+          children: /* @__PURE__ */ d.jsx(Hi, { children: e.map((s, a) => /* @__PURE__ */ d.jsxs(
             Jt,
             {
               className: H(
                 "block border-b border-border/60 hover:bg-transparent md:table-row",
-                i.rowClassName
+                s.rowClassName
               ),
               children: [
                 /* @__PURE__ */ d.jsx(
@@ -22482,9 +22489,9 @@ function pI({
                     className: H(
                       "block w-full border-border/60 px-4 pt-4 pb-2 align-top text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground md:table-cell md:border-r md:px-4 md:py-3 md:align-middle",
                       r ?? "md:w-[220px]",
-                      i.labelClassName
+                      s.labelClassName
                     ),
-                    children: i.label
+                    children: s.label
                   }
                 ),
                 /* @__PURE__ */ d.jsx(
@@ -22492,14 +22499,14 @@ function pI({
                   {
                     className: H(
                       "block w-full px-4 pt-0 pb-4 text-sm md:table-cell md:px-4 md:py-3 md:align-middle",
-                      i.valueClassName
+                      s.valueClassName
                     ),
-                    children: i.value
+                    children: s.value
                   }
                 )
               ]
             },
-            i.key ?? `detail-row-${o}`
+            s.key ?? `detail-row-${a}`
           )) })
         }
       )

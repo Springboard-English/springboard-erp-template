@@ -504,6 +504,8 @@ export function DetailFieldsTable({
     className,
     tableClassName,
     labelColumnClassName,
+    scrollable = false,
+    scrollContainerClassName,
 }: {
     rows: Array<{
         label: ReactNode;
@@ -516,11 +518,14 @@ export function DetailFieldsTable({
     className?: string;
     tableClassName?: string;
     labelColumnClassName?: string;
+    scrollable?: boolean;
+    scrollContainerClassName?: string;
 }) {
     return (
         <div
             className={cn(
                 "overflow-hidden rounded-2xl border border-border/70 bg-card shadow-[0_18px_40px_-28px_rgba(0,0,0,0.35)]",
+                scrollable && "min-h-0",
                 className,
             )}
         >
@@ -529,7 +534,11 @@ export function DetailFieldsTable({
                     "w-full table-fixed",
                     tableClassName,
                 )}
-                containerClassName="overflow-x-hidden"
+                containerClassName={cn(
+                    "overflow-x-auto",
+                    scrollable && "h-full max-h-full overflow-y-auto",
+                    scrollContainerClassName,
+                )}
             >
                 <TableBody>
                     {rows.map((row, index) => (

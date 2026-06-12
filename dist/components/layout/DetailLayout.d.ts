@@ -61,7 +61,7 @@ export declare function DetailTextBlock({ label, value, }: {
     label: string;
     value?: string | null;
 }): import("react/jsx-runtime").JSX.Element;
-export declare function DetailFieldsTable({ rows, className, tableClassName, labelColumnClassName, }: {
+export declare function DetailFieldsTable({ rows, className, tableClassName, labelColumnClassName, scrollable, scrollContainerClassName, }: {
     rows: Array<{
         label: ReactNode;
         value: ReactNode;
@@ -73,6 +73,8 @@ export declare function DetailFieldsTable({ rows, className, tableClassName, lab
     className?: string;
     tableClassName?: string;
     labelColumnClassName?: string;
+    scrollable?: boolean;
+    scrollContainerClassName?: string;
 }): import("react/jsx-runtime").JSX.Element;
 export declare function DetailClassLinkValue({ className, classKey, onOpenClass, buttonLabel, }: {
     className?: string | null;
