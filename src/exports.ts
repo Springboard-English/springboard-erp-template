@@ -65,7 +65,9 @@ export type {
   RawGuides,
   UserGuideViewProps,
 } from "./components/guides/UserGuide";
+export { default as BaseFormDialog } from "./components/dialogs/BaseFormDialog";
 export { default as FormTableDialog, FormTableRow } from "./components/dialogs/FormTableDialog";
+export { default as FormTableSection } from "./components/dialogs/FormTableSection";
 export {
   DetailView,
   DetailHeader,

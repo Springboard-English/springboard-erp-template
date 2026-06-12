@@ -521,24 +521,25 @@ export function DetailFieldsTable({
         >
             <Table
                 className={cn(
-                    "min-w-[40rem] table-fixed",
+                    "w-full table-fixed",
                     tableClassName,
                 )}
+                containerClassName="overflow-x-hidden"
             >
                 <TableBody>
                     {rows.map((row, index) => (
                         <TableRow
                             key={row.key ?? `detail-row-${index}`}
                             className={cn(
-                                "hover:bg-transparent",
+                                "block border-b border-border/60 hover:bg-transparent md:table-row",
                                 row.rowClassName,
                             )}
                         >
                             <TableCell
                                 className={cn(
-                                    "border-r border-border/60 px-4 py-3 align-middle text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground",
+                                    "block w-full border-border/60 px-4 pt-4 pb-2 align-top text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground md:table-cell md:border-r md:px-4 md:py-3 md:align-middle",
                                     labelColumnClassName ??
-                                        "w-[220px]",
+                                        "md:w-[220px]",
                                     row.labelClassName,
                                 )}
                             >
@@ -546,7 +547,7 @@ export function DetailFieldsTable({
                             </TableCell>
                             <TableCell
                                 className={cn(
-                                    "px-4 py-3 align-middle text-sm",
+                                    "block w-full px-4 pt-0 pb-4 text-sm md:table-cell md:px-4 md:py-3 md:align-middle",
                                     row.valueClassName,
                                 )}
                             >
