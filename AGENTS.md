@@ -8,6 +8,4 @@ Shared mobile behavior should be solved in shared components, not patched per vi
 
 Code base should be strieve to be explicit, and ask further questions when required. No guessing.
 
-`dist` is a build artifact for release publishing and should not be committed. GitHub release publishing builds it in CI.
-
 Both a build and a npx tsc should be used as verification after implementation.
