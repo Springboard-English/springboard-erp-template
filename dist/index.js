@@ -22197,67 +22197,69 @@ function cI({
   children: e,
   className: t = "w-full max-w-[1700px] space-y-4",
   isBackground: n,
-  onCloseFloating: r
+  contentScrollable: r = !1,
+  onCloseFloating: i
 }) {
-  const i = lt(iN), o = n ?? i, s = eN({ enabled: !o }), a = o ? !1 : s.floating, l = o ? !1 : s.isCollapsed, c = o ? !1 : s.hiddenCollapsed, f = (p, g, y = !1) => {
-    if (o)
+  const o = lt(iN), s = n ?? o, a = eN({ enabled: !s }), l = s ? !1 : a.floating, c = s ? !1 : a.isCollapsed, f = s ? !1 : a.hiddenCollapsed, u = (g, y, x = !1) => {
+    if (s)
       return;
-    const x = g ? y ? ol : "1" : "0";
-    s.setMode({
-      floating: p,
-      collapsed: x
+    const A = y ? x ? ol : "1" : "0";
+    a.setMode({
+      floating: g,
+      collapsed: A
     });
-  }, u = () => {
-    o || !r || r();
   }, m = () => {
-    f(!1, !1, !1);
+    s || !i || i();
   }, h = () => {
-    f(!0, !1, !1);
+    u(!1, !1, !1);
+  }, p = () => {
+    u(!0, !1, !1);
   };
   return de(() => {
-    if (typeof document > "u" || !a)
+    if (typeof document > "u" || !l)
       return;
-    const p = document.body.style.overflow;
+    const g = document.body.style.overflow;
     return document.body.style.overflow = "hidden", () => {
-      document.body.style.overflow = p;
+      document.body.style.overflow = g;
     };
-  }, [a]), /* @__PURE__ */ d.jsx(
+  }, [l]), /* @__PURE__ */ d.jsx(
     al.Provider,
     {
       value: {
-        floating: a,
-        collapsed: l,
-        hiddenCollapsed: c,
-        isBackground: o,
-        expandToNormalView: m,
-        switchToFloatingView: h
+        floating: l,
+        collapsed: c,
+        hiddenCollapsed: f,
+        isBackground: s,
+        contentScrollable: r,
+        expandToNormalView: h,
+        switchToFloatingView: p
       },
       children: /* @__PURE__ */ d.jsxs(
         "section",
         {
           className: H(
-            a ? "fixed inset-0 z-50" : "w-full",
-            a && c ? "pointer-events-none" : "",
-            a && l && !c ? "pointer-events-none" : ""
+            l ? "fixed inset-0 z-50" : "w-full",
+            l && f ? "pointer-events-none" : "",
+            l && c && !f ? "pointer-events-none" : ""
           ),
           children: [
-            a && !l ? /* @__PURE__ */ d.jsx(
+            l && !c ? /* @__PURE__ */ d.jsx(
               "button",
               {
                 type: "button",
                 "aria-label": "Close details",
-                onClick: u,
+                onClick: m,
                 className: "absolute inset-0 bg-background/45 backdrop-blur-md"
               }
             ) : null,
-            a && c ? /* @__PURE__ */ d.jsx(
+            l && f ? /* @__PURE__ */ d.jsx(
               me,
               {
                 type: "button",
                 size: "sm",
                 variant: "outline",
                 "aria-label": "Restore details panel",
-                onClick: () => f(!0, !0, !1),
+                onClick: () => u(!0, !0, !1),
                 className: "pointer-events-auto absolute right-0 top-1/2 z-20 h-28 w-7 -translate-y-1/2 rounded-l-md rounded-r-none border-r-0 bg-background text-[10px] font-semibold uppercase tracking-[0.14em] shadow-md [writing-mode:vertical-rl]",
                 children: "Details"
               }
@@ -22265,13 +22267,14 @@ function cI({
             /* @__PURE__ */ d.jsxs(
               "div",
               {
-                "data-floating-collapsed": a && l ? "true" : "false",
+                "data-floating-collapsed": l && c ? "true" : "false",
                 className: H(
                   t,
-                  a ? l ? c ? "floating-detail pointer-events-none absolute right-0 top-1/2 z-10 w-[44dvw] min-w-[34rem] max-w-[70rem] -translate-y-1/2 translate-x-[calc(100%-20px)] !h-[76dvh] overflow-hidden rounded-2xl border border-border/70 bg-background p-4 shadow-2xl" : "floating-detail pointer-events-auto absolute right-3 top-1/2 z-10 w-[44dvw] min-w-[34rem] max-w-[70rem] -translate-y-1/2 !h-[76dvh] overflow-visible rounded-2xl border border-border/70 bg-background p-4 shadow-2xl" : "floating-detail absolute left-1/2 top-1/2 z-10 w-[85dvw] -translate-x-1/2 -translate-y-1/2 !h-[76dvh] overflow-hidden rounded-2xl border border-border/70 bg-background p-4 shadow-2xl" : ""
+                  r && "overflow-y-auto overflow-x-hidden pr-1",
+                  l ? c ? f ? "floating-detail pointer-events-none absolute right-0 top-1/2 z-10 w-[44dvw] min-w-[34rem] max-w-[70rem] -translate-y-1/2 translate-x-[calc(100%-20px)] !h-[76dvh] overflow-hidden rounded-2xl border border-border/70 bg-background p-4 shadow-2xl" : "floating-detail pointer-events-auto absolute right-3 top-1/2 z-10 w-[44dvw] min-w-[34rem] max-w-[70rem] -translate-y-1/2 !h-[76dvh] overflow-visible rounded-2xl border border-border/70 bg-background p-4 shadow-2xl" : "floating-detail absolute left-1/2 top-1/2 z-10 w-[85dvw] -translate-x-1/2 -translate-y-1/2 !h-[76dvh] overflow-hidden rounded-2xl border border-border/70 bg-background p-4 shadow-2xl" : ""
                 ),
                 children: [
-                  a && l ? c ? null : /* @__PURE__ */ d.jsxs(d.Fragment, { children: [
+                  l && c ? f ? null : /* @__PURE__ */ d.jsxs(d.Fragment, { children: [
                     /* @__PURE__ */ d.jsx(
                       me,
                       {
@@ -22279,7 +22282,7 @@ function cI({
                         size: "icon",
                         variant: "outline",
                         "aria-label": "Expand details panel",
-                        onClick: () => f(!0, !1),
+                        onClick: () => u(!0, !1),
                         className: "absolute left-3 top-1/2 z-20 h-8 w-8 -translate-y-[calc(100%+0.375rem)] rounded-full border border-border/70 bg-background/95 text-foreground opacity-100 shadow-md backdrop-blur",
                         children: /* @__PURE__ */ d.jsx(It, { className: "h-4 w-4 rotate-180" })
                       }
@@ -22291,20 +22294,20 @@ function cI({
                         size: "icon",
                         variant: "outline",
                         "aria-label": "Fully collapse details",
-                        onClick: () => f(!0, !0, !0),
+                        onClick: () => u(!0, !0, !0),
                         className: "absolute left-3 top-1/2 z-20 h-8 w-8 translate-y-[0.375rem] rounded-full border border-border/70 bg-background/95 text-foreground opacity-100 shadow-md backdrop-blur",
                         children: /* @__PURE__ */ d.jsx(It, { className: "h-4 w-4" })
                       }
                     )
                   ] }) : null,
-                  a && !l ? /* @__PURE__ */ d.jsx(
+                  l && !c ? /* @__PURE__ */ d.jsx(
                     me,
                     {
                       type: "button",
                       size: "icon",
                       variant: "outline",
                       "aria-label": "Collapse details",
-                      onClick: () => f(!0, !0, !1),
+                      onClick: () => u(!0, !0, !1),
                       className: "absolute right-3 top-1/2 z-20 h-10 w-10 -translate-y-1/2 rounded-full border border-border/70 bg-background/95 text-foreground opacity-100 shadow-md backdrop-blur",
                       children: /* @__PURE__ */ d.jsx(It, { className: "h-4 w-4" })
                     }
@@ -22715,19 +22718,19 @@ function yI({
   children: r,
   className: i,
   contentClassName: o,
-  contentScrollable: s = !1,
+  contentScrollable: s,
   scrollResetKey: a
 }) {
-  const l = lt(al), c = pe(null), f = pe(
+  const l = lt(al), c = s ?? l?.contentScrollable ?? !1, f = pe(null), u = pe(
     a
-  ), u = pe(
+  ), m = pe(
     l?.floating
   );
   return $n(() => {
-    a !== void 0 && f.current !== a && (f.current = a, c.current && (c.current.scrollTop = 0));
+    a !== void 0 && u.current !== a && (u.current = a, f.current && (f.current.scrollTop = 0));
   }, [a]), $n(() => {
-    const m = l?.floating;
-    u.current !== m && (u.current = m, m && c.current && (c.current.scrollTop = 0));
+    const h = l?.floating;
+    m.current !== h && (m.current = h, h && f.current && (f.current.scrollTop = 0));
   }, [l?.floating]), /* @__PURE__ */ d.jsxs("section", { className: H("flex min-h-0 flex-col", i), children: [
     /* @__PURE__ */ d.jsx(
       "div",
@@ -22747,11 +22750,11 @@ function yI({
     /* @__PURE__ */ d.jsx(
       "div",
       {
-        ref: c,
+        ref: f,
         "data-detail-tab-content": !0,
         className: H(
           "mt-4 min-h-0 flex-1",
-          s && "overflow-y-auto overflow-x-hidden pr-1",
+          c && "overflow-y-auto overflow-x-hidden pr-1",
           o
         ),
         children: r

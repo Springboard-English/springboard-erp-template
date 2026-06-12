@@ -139,6 +139,7 @@ const DetailViewContext = createContext<{
     collapsed: boolean;
     hiddenCollapsed: boolean;
     isBackground?: boolean;
+    contentScrollable?: boolean;
     expandToNormalView: () => void;
     switchToFloatingView: () => void;
 } | null>(null);
@@ -149,11 +150,13 @@ export function DetailView({
     children,
     className = "w-full max-w-[1700px] space-y-4",
     isBackground: isBackgroundProp,
+    contentScrollable = false,
     onCloseFloating,
 }: {
     children: ReactNode;
     className?: string;
     isBackground?: boolean;
+    contentScrollable?: boolean;
     onCloseFloating?: () => void;
 }) {
     const isBackgroundFromContext = useContext(BackgroundDetailViewContext);
@@ -224,6 +227,7 @@ export function DetailView({
                 collapsed,
                 hiddenCollapsed,
                 isBackground,
+                contentScrollable,
                 expandToNormalView,
                 switchToFloatingView,
             }}
@@ -263,6 +267,7 @@ export function DetailView({
                     }
                     className={cn(
                         className,
+                        contentScrollable && "overflow-y-auto overflow-x-hidden pr-1",
                         floating
                             ? collapsed
                                 ? hiddenCollapsed
@@ -879,7 +884,7 @@ export function DetailTabbedSection<T extends string>({
     children,
     className,
     contentClassName,
-    contentScrollable = false,
+    contentScrollable,
     scrollResetKey,
 }: {
     tabs: Array<{ value: T; label: ReactNode; hasPendingChanges?: boolean }>;
@@ -892,6 +897,8 @@ export function DetailTabbedSection<T extends string>({
     scrollResetKey?: string | number;
 }) {
     const detailViewContext = useContext(DetailViewContext);
+    const resolvedContentScrollable =
+        contentScrollable ?? detailViewContext?.contentScrollable ?? false;
     const contentRef = useRef<HTMLDivElement | null>(null);
     const previousScrollResetKeyRef = useRef<string | number | undefined>(
         scrollResetKey,
@@ -944,7 +951,8 @@ export function DetailTabbedSection<T extends string>({
                 data-detail-tab-content
                 className={cn(
                     "mt-4 min-h-0 flex-1",
-                    contentScrollable && "overflow-y-auto overflow-x-hidden pr-1",
+                    resolvedContentScrollable &&
+                        "overflow-y-auto overflow-x-hidden pr-1",
                     contentClassName,
                 )}
             >

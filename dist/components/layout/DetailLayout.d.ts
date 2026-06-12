@@ -32,10 +32,11 @@ type DetailStat = {
     value: ReactNode;
 };
 export declare const BackgroundDetailViewContext: import("react").Context<boolean>;
-export declare function DetailView({ children, className, isBackground: isBackgroundProp, onCloseFloating, }: {
+export declare function DetailView({ children, className, isBackground: isBackgroundProp, contentScrollable, onCloseFloating, }: {
     children: ReactNode;
     className?: string;
     isBackground?: boolean;
+    contentScrollable?: boolean;
     onCloseFloating?: () => void;
 }): import("react/jsx-runtime").JSX.Element;
 export declare function DetailBreadcrumbs({ items, current, }: {
