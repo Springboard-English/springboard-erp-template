@@ -39,7 +39,7 @@ export default function BaseFormDialog({
         <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && !saving && onClose()}>
             <DialogContent
                 showCloseButton={!saving}
-                className="!fixed !top-1/2 !left-1/2 !-translate-x-1/2 !-translate-y-1/2 !w-[calc(100%-1rem)] max-h-[calc(100svh-1rem)] !max-w-none sm:!w-[78vw] sm:max-h-[90vh] sm:!max-w-4xl flex flex-col overflow-hidden border-0 bg-card p-0 shadow-xl"
+                className="!fixed !top-1/2 !left-1/2 !-translate-x-1/2 !-translate-y-1/2 !w-[calc(100%-1rem)] max-h-[calc(100svh-1rem)] !max-w-none sm:!w-[80vw] sm:max-h-[90vh] sm:!max-w-none flex flex-col overflow-hidden border-0 bg-card p-0 shadow-xl"
             >
                 <DialogHeader className="shrink-0 border-b border-border/60 px-4 py-3 text-left sm:px-5 sm:py-3.5">
                     <DialogTitle>{title}</DialogTitle>
