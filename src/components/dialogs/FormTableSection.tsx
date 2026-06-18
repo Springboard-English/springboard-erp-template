@@ -7,7 +7,7 @@ type FormTableSectionProps = {
 };
 
 type FormTableRowProps = {
-    label: string;
+    label?: string;
     required?: boolean;
     helperText?: string;
     children: ReactNode;
@@ -16,22 +16,24 @@ type FormTableRowProps = {
     fullWidth?: boolean;
 };
 
-export function FormTableRow({ label, required = false, helperText, children, className, align = 'center', fullWidth = false }: FormTableRowProps) {
+export function FormTableRow({ label = '', required = false, helperText, children, className, align = 'center', fullWidth = false }: FormTableRowProps) {
     if (fullWidth) {
         return (
             <TableRow className={cn('block border-b border-border/60 hover:bg-transparent md:table-row', className)}>
                 <TableCell colSpan={2} className="block w-full px-3 py-3 md:table-cell">
-                    <div className="mb-2 space-y-1">
-                        <div className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                            <span>{label}</span>
-                            {required && (
-                                <span className="text-destructive" aria-hidden="true">
-                                    *
-                                </span>
-                            )}
+                    {label && (
+                        <div className="mb-2 space-y-1">
+                            <div className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                                <span>{label}</span>
+                                {required && (
+                                    <span className="text-destructive" aria-hidden="true">
+                                        *
+                                    </span>
+                                )}
+                            </div>
+                            {helperText && <p className="text-xs normal-case leading-5 text-muted-foreground">{helperText}</p>}
                         </div>
-                        {helperText && <p className="text-xs normal-case leading-5 text-muted-foreground">{helperText}</p>}
-                    </div>
+                    )}
                     {children}
                 </TableCell>
             </TableRow>
