@@ -20,7 +20,7 @@ export function FormTableRow({ label, required = false, helperText, children, cl
         <TableRow className={cn('block border-b border-border/60 hover:bg-transparent md:table-row', className)}>
             <TableCell
                 className={cn(
-                    'block w-full px-3 pt-3 pb-1.5 align-top text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground md:table-cell md:w-[160px] md:px-3 md:py-2.5 md:text-center',
+                    'block w-full px-3 pt-3 pb-1.5 align-top text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground md:table-cell md:w-[160px] md:px-3 md:py-2.5',
                     align === 'center' ? 'md:align-middle' : 'md:align-top',
                 )}
             >
