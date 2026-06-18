@@ -39,21 +39,21 @@ export default function BaseFormDialog({
         <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && !saving && onClose()}>
             <DialogContent
                 showCloseButton={!saving}
-                className="!fixed !top-1/2 !left-1/2 !-translate-x-1/2 !-translate-y-1/2 !w-[80vw] max-h-[92vh] !max-w-none flex flex-col overflow-hidden border-0 bg-card p-0 shadow-none"
+                className="!fixed !top-1/2 !left-1/2 !-translate-x-1/2 !-translate-y-1/2 !w-[calc(100%-1rem)] max-h-[calc(100svh-1rem)] !max-w-none sm:!w-[78vw] sm:max-h-[90vh] sm:!max-w-4xl flex flex-col overflow-hidden border-0 bg-card p-0 shadow-xl"
             >
-                <DialogHeader className="border-b border-border/60 px-6 py-4 text-left">
+                <DialogHeader className="shrink-0 border-b border-border/60 px-4 py-3 text-left sm:px-5 sm:py-3.5">
                     <DialogTitle>{title}</DialogTitle>
                     {description && <DialogDescription>{description}</DialogDescription>}
                 </DialogHeader>
 
-                <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
-                    <div className="flex min-h-full flex-col justify-center gap-4">
+                <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3 sm:px-4 sm:py-4">
+                    <div className="flex min-h-full flex-col justify-center gap-3">
                         {error && <StatusBanner variant="error">{error}</StatusBanner>}
                         {children}
                     </div>
                 </div>
 
-                <DialogFooter className="border-t border-border/60 px-6 py-4" showCloseButton={false}>
+                <DialogFooter className="shrink-0 border-t border-border/60 px-4 py-3 sm:px-5 sm:py-3.5" showCloseButton={false}>
                     <Button type="button" variant="outline" onClick={onClose} disabled={saving}>
                         Cancel
                     </Button>
