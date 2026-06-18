@@ -499,6 +499,28 @@ export function DetailTextBlock({
     );
 }
 
+type DetailFieldsTableFieldRow = {
+    type?: "field";
+    label: ReactNode;
+    value: ReactNode;
+    key?: string;
+    rowClassName?: string;
+    labelClassName?: string;
+    valueClassName?: string;
+};
+
+type DetailFieldsTableSectionRow = {
+    type: "section";
+    section: ReactNode;
+    key?: string;
+    rowClassName?: string;
+    sectionClassName?: string;
+};
+
+export type DetailFieldsTableRow =
+    | DetailFieldsTableFieldRow
+    | DetailFieldsTableSectionRow;
+
 export function DetailFieldsTable({
     rows,
     className,
@@ -507,14 +529,7 @@ export function DetailFieldsTable({
     scrollable = false,
     scrollContainerClassName,
 }: {
-    rows: Array<{
-        label: ReactNode;
-        value: ReactNode;
-        key?: string;
-        rowClassName?: string;
-        labelClassName?: string;
-        valueClassName?: string;
-    }>;
+    rows: DetailFieldsTableRow[];
     className?: string;
     tableClassName?: string;
     labelColumnClassName?: string;
@@ -541,34 +556,60 @@ export function DetailFieldsTable({
                 )}
             >
                 <TableBody>
-                    {rows.map((row, index) => (
-                        <TableRow
-                            key={row.key ?? `detail-row-${index}`}
-                            className={cn(
-                                "block border-b border-border/60 hover:bg-transparent md:table-row",
-                                row.rowClassName,
-                            )}
-                        >
-                            <TableCell
+                    {rows.map((row, index) => {
+                        const key = row.key ?? `detail-row-${index}`;
+
+                        if (row.type === "section") {
+                            return (
+                                <TableRow
+                                    key={key}
+                                    className={cn(
+                                        "border-b border-border/60 bg-muted/20 hover:bg-muted/20",
+                                        row.rowClassName,
+                                    )}
+                                >
+                                    <TableCell
+                                        colSpan={2}
+                                        className={cn(
+                                            "px-4 py-3 text-xs font-bold uppercase tracking-[0.18em] text-foreground",
+                                            row.sectionClassName,
+                                        )}
+                                    >
+                                        {row.section}
+                                    </TableCell>
+                                </TableRow>
+                            );
+                        }
+
+                        return (
+                            <TableRow
+                                key={key}
                                 className={cn(
-                                    "block w-full border-border/60 px-4 pt-4 pb-2 align-top text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground md:table-cell md:border-r md:px-4 md:py-3 md:align-middle",
-                                    labelColumnClassName ??
-                                        "md:w-[220px]",
-                                    row.labelClassName,
+                                    "block border-b border-border/60 hover:bg-transparent md:table-row",
+                                    row.rowClassName,
                                 )}
                             >
-                                {row.label}
-                            </TableCell>
-                            <TableCell
-                                className={cn(
-                                    "block w-full px-4 pt-0 pb-4 text-sm md:table-cell md:px-4 md:py-3 md:align-middle",
-                                    row.valueClassName,
-                                )}
-                            >
-                                {row.value}
-                            </TableCell>
-                        </TableRow>
-                    ))}
+                                <TableCell
+                                    className={cn(
+                                        "block w-full border-border/60 px-4 pt-4 pb-2 align-top text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground md:table-cell md:border-r md:px-4 md:py-3 md:align-middle",
+                                        labelColumnClassName ??
+                                            "md:w-[220px]",
+                                        row.labelClassName,
+                                    )}
+                                >
+                                    {row.label}
+                                </TableCell>
+                                <TableCell
+                                    className={cn(
+                                        "block w-full px-4 pt-0 pb-4 text-sm md:table-cell md:px-4 md:py-3 md:align-middle",
+                                        row.valueClassName,
+                                    )}
+                                >
+                                    {row.value}
+                                </TableCell>
+                            </TableRow>
+                        );
+                    })}
                 </TableBody>
             </Table>
         </div>

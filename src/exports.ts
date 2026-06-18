@@ -77,6 +77,7 @@ export {
   DetailCard,
   DetailTextBlock,
   DetailFieldsTable,
+  type DetailFieldsTableRow,
   DetailClassLinkValue,
   DetailClassHeaderLabel,
   DetailActionPanel,

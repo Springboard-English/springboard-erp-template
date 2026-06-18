@@ -61,15 +61,25 @@ export declare function DetailTextBlock({ label, value, }: {
     label: string;
     value?: string | null;
 }): import("react/jsx-runtime").JSX.Element;
+type DetailFieldsTableFieldRow = {
+    type?: "field";
+    label: ReactNode;
+    value: ReactNode;
+    key?: string;
+    rowClassName?: string;
+    labelClassName?: string;
+    valueClassName?: string;
+};
+type DetailFieldsTableSectionRow = {
+    type: "section";
+    section: ReactNode;
+    key?: string;
+    rowClassName?: string;
+    sectionClassName?: string;
+};
+export type DetailFieldsTableRow = DetailFieldsTableFieldRow | DetailFieldsTableSectionRow;
 export declare function DetailFieldsTable({ rows, className, tableClassName, labelColumnClassName, scrollable, scrollContainerClassName, }: {
-    rows: Array<{
-        label: ReactNode;
-        value: ReactNode;
-        key?: string;
-        rowClassName?: string;
-        labelClassName?: string;
-        valueClassName?: string;
-    }>;
+    rows: DetailFieldsTableRow[];
     className?: string;
     tableClassName?: string;
     labelColumnClassName?: string;

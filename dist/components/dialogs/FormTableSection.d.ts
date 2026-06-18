@@ -3,13 +3,14 @@ type FormTableSectionProps = {
     children: ReactNode;
 };
 type FormTableRowProps = {
-    label: string;
+    label?: string;
     required?: boolean;
     helperText?: string;
     children: ReactNode;
     className?: string;
     align?: 'center' | 'start';
+    fullWidth?: boolean;
 };
-export declare function FormTableRow({ label, required, helperText, children, className, align }: FormTableRowProps): import("react/jsx-runtime").JSX.Element;
+export declare function FormTableRow({ label, required, helperText, children, className, align, fullWidth }: FormTableRowProps): import("react/jsx-runtime").JSX.Element;
 export default function FormTableSection({ children }: FormTableSectionProps): import("react/jsx-runtime").JSX.Element;
 export {};
