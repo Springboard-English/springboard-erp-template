@@ -24,6 +24,7 @@ export type {
 export { default as AppTheme, useColorMode } from "./theme/AppTheme";
 export { default as ColorModeSelect } from "./theme/ColorModeSelect";
 export { default as ColorModeIconDropdown } from "./theme/ColorModeIconDropdown";
+export { default as LocaleSelect } from "./theme/LocaleSelect";
 
 export { default as ForgotPassword } from "./components/ForgotPassword";
 export { SitemarkIcon } from "./components/CustomIcons";

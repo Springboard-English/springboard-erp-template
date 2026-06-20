@@ -51,7 +51,7 @@ void clearBrowserCachesOnReload();
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <I18nProvider>
+      <I18nProvider storageKey="springboard_locale">
         <AuthProvider>
           <SignIn />
         </AuthProvider>

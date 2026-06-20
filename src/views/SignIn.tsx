@@ -7,6 +7,7 @@ import ForgotPassword from "@/components/ForgotPassword";
 import StatusBanner from "@/components/StatusBanner";
 import AppTheme from "@/theme/AppTheme";
 import ColorModeSelect from "@/theme/ColorModeSelect";
+import LocaleSelect from "@/theme/LocaleSelect";
 import { SitemarkIcon } from "@/components/CustomIcons";
 import { useAuth } from "@/context/AuthContext";
 import { useI18n } from "@/context/I18nContext";
@@ -267,7 +268,8 @@ export default function SignIn(props: SignInViewProps) {
         {/* Right form section */}
         <div className="relative flex flex-1 flex-col">
           {/* Top-right controls */}
-          <div className="absolute right-4 top-4 z-20 sm:right-6 sm:top-6">
+          <div className="absolute right-4 top-4 z-20 flex items-center gap-2 sm:right-6 sm:top-6">
+            <LocaleSelect />
             <ColorModeSelect />
           </div>
 
