@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { Plus } from "lucide-react";
+import { useI18n } from "@/context/I18nContext";
 import { cn } from "../lib/utils";
 
 export interface MobileFABConfig {
@@ -43,7 +44,7 @@ export function useMobileFABContext() {
   return useContext(MobileFABContext);
 }
 
-export function useMobileFAB(onClick: (() => void) | null, label = "Create") {
+export function useMobileFAB(onClick: (() => void) | null, label?: string) {
   const { setFAB } = useContext(MobileFABContext);
   const onClickRef = useRef<(() => void) | null>(null);
   onClickRef.current = onClick;
@@ -71,6 +72,7 @@ export function MobileFloatingActionButton({
   icon,
 }: MobileFloatingActionButtonProps) {
   const { fab } = useMobileFABContext();
+  const { t } = useI18n();
 
   if (!fab) {
     return null;
@@ -84,7 +86,7 @@ export function MobileFloatingActionButton({
         className,
       )}
       onClick={fab.onClick}
-      aria-label={fab.label ?? "Create"}
+      aria-label={fab.label ?? t("common.create")}
     >
       {icon ?? <Plus className="size-6" />}
     </button>

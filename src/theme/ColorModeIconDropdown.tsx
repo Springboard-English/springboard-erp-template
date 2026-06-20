@@ -10,6 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useI18n } from '@/context/I18nContext';
 import { cn } from '@/lib/utils';
 import { useColorMode } from './AppTheme';
 
@@ -17,6 +18,7 @@ export default function ColorModeIconDropdown(
   props: React.ComponentProps<typeof Button>,
 ) {
   const { mode, systemMode, setMode } = useColorMode();
+  const { t } = useI18n();
   const { className, ...buttonProps } = props;
 
   const resolvedMode = (systemMode || mode) as 'light' | 'dark';
@@ -32,14 +34,14 @@ export default function ColorModeIconDropdown(
           variant="ghost"
           size="icon"
           className={cn('rounded-full', className)}
-          aria-label="Toggle color mode"
+          aria-label={t('theme.toggle')}
           {...buttonProps}
         >
           {icon}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-44">
-        <DropdownMenuLabel>Appearance</DropdownMenuLabel>
+        <DropdownMenuLabel>{t('theme.appearance')}</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuRadioGroup
           value={mode}
@@ -47,15 +49,15 @@ export default function ColorModeIconDropdown(
         >
           <DropdownMenuRadioItem value="system">
             <Monitor className="mr-2 size-4" />
-            System
+            {t('theme.system')}
           </DropdownMenuRadioItem>
           <DropdownMenuRadioItem value="light">
             <Sun className="mr-2 size-4" />
-            Light
+            {t('theme.light')}
           </DropdownMenuRadioItem>
           <DropdownMenuRadioItem value="dark">
             <Moon className="mr-2 size-4" />
-            Dark
+            {t('theme.dark')}
           </DropdownMenuRadioItem>
         </DropdownMenuRadioGroup>
       </DropdownMenuContent>

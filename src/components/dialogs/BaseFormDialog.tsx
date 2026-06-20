@@ -37,6 +37,7 @@ export default function BaseFormDialog({
     children,
 }: BaseFormDialogProps) {
     const { t } = useI18n();
+    const resolvedSubmitLabel = submitLabel || t('common.create');
     return (
         <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && !saving && onClose()}>
             <DialogContent
@@ -60,7 +61,7 @@ export default function BaseFormDialog({
                         {t('common.cancel')}
                     </Button>
                     <Button type="button" onClick={() => void onSubmit()} disabled={saving || submitDisabled}>
-                        {submitLabel}
+                        {resolvedSubmitLabel}
                     </Button>
                 </DialogFooter>
             </DialogContent>

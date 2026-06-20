@@ -6,7 +6,7 @@ export { default as ResetPassword } from "./views/ResetPassword";
 export type { ResetPasswordViewProps } from "./views/ResetPassword";
 export { AuthProvider, useAuth } from "./context/AuthContext";
 export { I18nProvider, useI18n } from "./context/I18nContext";
-export { ENGLISH_MESSAGES } from "./i18n/messages";
+export { ENGLISH_MESSAGES, VIETNAMESE_MESSAGES } from "./i18n/messages";
 export type { TemplateMessages } from "./context/I18nContext";
 export type { TemplateI18nKey } from "./i18n/messages";
 export { PendingChangesProvider, usePendingChanges, } from "./context/PendingChangesContext";

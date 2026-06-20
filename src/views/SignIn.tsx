@@ -14,11 +14,6 @@ import { useI18n } from "@/context/I18nContext";
 import { loginWithGoogle } from "@/api_calls/UserData";
 import { SearchableSelect, type SearchableSelectOption } from "@/components/ui/searchable-select";
 
-const DEFAULT_ACCOUNT_TYPE_OPTIONS: SearchableSelectOption[] = [
-  { value: "employee", label: "Employee" },
-  { value: "student", label: "Student" },
-];
-
 export interface SignInViewProps {
   disableCustomTheme?: boolean;
   authNotice?: string;
@@ -37,11 +32,18 @@ export interface SignInViewProps {
 export default function SignIn(props: SignInViewProps) {
   const { t } = useI18n();
   const { login, setAuthenticatedUser } = useAuth();
+  const defaultAccountTypeOptions = React.useMemo<SearchableSelectOption[]>(
+    () => [
+      { value: "employee", label: t("signIn.accountType.employee") },
+      { value: "student", label: t("signIn.accountType.student") },
+    ],
+    [t],
+  );
   const accountTypeOptions = React.useMemo(
     () => (props.accountTypeOptions && props.accountTypeOptions.length > 0
       ? props.accountTypeOptions
-      : DEFAULT_ACCOUNT_TYPE_OPTIONS),
-    [props.accountTypeOptions],
+      : defaultAccountTypeOptions),
+    [defaultAccountTypeOptions, props.accountTypeOptions],
   );
   const accountTypeOptionsKey = React.useMemo(
     () => accountTypeOptions.map((option) => `${option.value}:${option.label}`).join("|"),
@@ -50,8 +52,8 @@ export default function SignIn(props: SignInViewProps) {
   const resolvedAccountTypeOverride = props.accountTypeOverride?.trim() || "";
   const shouldShowAccountTypeSelector = !resolvedAccountTypeOverride;
   const heroEyebrowText = props.heroEyebrowText?.trim() || t("signIn.learningPortal");
-  const heroTitleText = props.heroTitleText?.trim() || "Lớp học";
-  const heroTitleAccentText = props.heroTitleAccentText?.trim() || "Nhà Xuân";
+  const heroTitleText = props.heroTitleText?.trim() || t("signIn.heroTitle");
+  const heroTitleAccentText = props.heroTitleAccentText?.trim() || t("signIn.heroAccent");
   const formTitle = props.formTitle?.trim() || t("signIn.formTitle");
   const formDescription = props.formDescription?.trim() || t("signIn.formDescription");
   const [username, setUsername] = React.useState("");
@@ -287,9 +289,9 @@ export default function SignIn(props: SignInViewProps) {
             <div className="w-full max-w-[360px]">
               {/* Heading */}
               <div className="mb-8 space-y-1.5">
-                <h1 className="flex flex-wrap items-center gap-x-3 gap-y-2 text-3xl font-bold tracking-tight">
-                  <span>{formTitle}</span>
-                  <span className="text-lg font-medium text-primary">as</span>
+                <h1 className="text-3xl font-bold tracking-tight">{formTitle}</h1>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-lg font-medium text-primary">
+                  <span>{t("signIn.as")}</span>
                   {shouldShowAccountTypeSelector ? (
                     <SearchableSelect
                       id="account-type"
@@ -297,7 +299,7 @@ export default function SignIn(props: SignInViewProps) {
                       options={accountTypeOptions}
                       placeholder={t("signIn.selectAccountType")}
                       disabled={isSubmitting}
-                      className="h-11 w-auto min-w-[11rem] rounded-xl border-primary/25 bg-primary/5 px-4 text-base font-semibold text-primary"
+                      className="h-11 w-auto min-w-[11rem] max-w-full rounded-xl border-primary/25 bg-primary/5 px-4 text-base font-semibold text-primary"
                       contentClassName="w-[14rem]"
                       onValueChange={(value) => {
                         setAccountType(value);
@@ -307,11 +309,9 @@ export default function SignIn(props: SignInViewProps) {
                       }}
                     />
                   ) : selectedAccountTypeLabel ? (
-                    <span className="text-lg font-medium text-primary">
-                      {selectedAccountTypeLabel}
-                    </span>
+                    <span>{selectedAccountTypeLabel}</span>
                   ) : null}
-                </h1>
+                </div>
                 <p className="text-sm text-muted-foreground">
                   {formDescription}
                 </p>

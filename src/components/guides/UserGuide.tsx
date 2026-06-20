@@ -5,6 +5,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import remarkGfm from "remark-gfm";
 
 import { useAuth } from "@/context/AuthContext";
+import { useI18n } from "@/context/I18nContext";
 import { cn } from "@/lib/utils";
 
 import { Button } from "../ui/button";
@@ -220,6 +221,7 @@ function SectionMarkdown({
   subHeadingIds: string[];
   onImageClick?: (image: GuideImagePreview) => void;
 }) {
+  const { t } = useI18n();
   let subHeadingCursor = 0;
 
   return (
@@ -314,7 +316,7 @@ function SectionMarkdown({
               className="mt-4 block w-full rounded-xl border border-border/50 bg-muted/15 p-1.5 text-left transition-colors hover:bg-muted/30"
             >
               <img src={resolvedSrc} alt={resolvedAlt} className="max-h-[28rem] w-full rounded-lg object-contain" />
-              <span className="mt-2 block text-xs text-muted-foreground">Click to expand</span>
+              <span className="mt-2 block text-xs text-muted-foreground">{t("guides.clickToExpand")}</span>
             </button>
           );
         },
@@ -332,11 +334,12 @@ function GuideImageDialog({
   image: GuideImagePreview | null;
   onClose: () => void;
 }) {
+  const { t } = useI18n();
   return (
     <Dialog open={Boolean(image)} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="flex w-[94vw] max-w-none flex-col overflow-hidden border-border/70 bg-card p-0 sm:max-w-[94vw]">
         <DialogHeader className="border-b border-border/70 px-6 py-4 text-left">
-          <DialogTitle>{image?.alt?.trim() || "Image Preview"}</DialogTitle>
+          <DialogTitle>{image?.alt?.trim() || t("guides.imagePreview")}</DialogTitle>
         </DialogHeader>
         {image ? (
           <div className="p-3">
@@ -349,6 +352,7 @@ function GuideImageDialog({
 }
 
 function GuideHero({ guide }: { guide: GuideRecord }) {
+  const { t } = useI18n();
   const totalWords = guide.sections.reduce((acc, section) => acc + section.markdown.split(/\s+/).length, 0);
   const readMinutes = Math.max(1, Math.round(totalWords / 200));
   const accent = getGuideAccent(guide.slug);
@@ -361,18 +365,18 @@ function GuideHero({ guide }: { guide: GuideRecord }) {
       <div className="relative">
         <div className="mb-3 flex items-center gap-1.5">
           <BookOpenText className="size-3.5 text-primary/70" />
-          <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">User Guide</span>
+          <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{t("guides.userGuide")}</span>
         </div>
         <h1 className="text-2xl font-bold text-foreground">{guide.title}</h1>
         {guide.description ? <p className="mt-3 max-w-3xl text-sm leading-7 text-foreground/75">{guide.description}</p> : null}
         <div className="mt-4 flex items-center gap-5">
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Hash className="size-3" />
-            <span>{guide.sections.length} {guide.sections.length === 1 ? "section" : "sections"}</span>
+            <span>{t(`guides.section.${guide.sections.length === 1 ? "one" : "other"}`, undefined, { count: guide.sections.length })}</span>
           </div>
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Clock className="size-3" />
-            <span>{readMinutes} min read</span>
+            <span>{t("guides.readMinutes", undefined, { count: readMinutes })}</span>
           </div>
         </div>
       </div>
@@ -381,12 +385,18 @@ function GuideHero({ guide }: { guide: GuideRecord }) {
 }
 
 function GuidesEmptyState({ guidesDirectoryLabel = "src/content/guides" }: { guidesDirectoryLabel?: string }) {
+  const { t } = useI18n();
   return (
     <div className="rounded-2xl border border-border/70 bg-card p-10 text-center shadow-[0_4px_20px_-8px_rgba(0,0,0,0.12)]">
       <BookOpenText className="mx-auto mb-3 size-9 text-muted-foreground/30" />
-      <p className="text-sm font-semibold text-foreground/70">No guides found</p>
+      <p className="text-sm font-semibold text-foreground/70">{t("guides.emptyTitle")}</p>
       <p className="mt-1.5 text-xs text-muted-foreground">
-        Add <code className="rounded-md bg-muted px-1.5 py-0.5">*.md</code> files to{" "}
+        {t("guides.emptyDescriptionPrefix")}
+        {" "}
+        <code className="rounded-md bg-muted px-1.5 py-0.5">*.md</code>
+        {" "}
+        {t("guides.emptyDescriptionMiddle")}
+        {" "}
         <code className="rounded-md bg-muted px-1.5 py-0.5">{guidesDirectoryLabel}</code>
       </p>
     </div>
@@ -457,6 +467,7 @@ export function UserGuideView({ rawGuides, guidesDirectoryLabel }: UserGuideView
 }
 
 export function GuidesSidebarContent({ rawGuides, collapsed }: GuidesSidebarContentProps) {
+  const { t } = useI18n();
   const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
   const [sidebarView, setSidebarView] = useState<"files" | "toc">("files");
   const [sectionProgress, setSectionProgress] = useState<Record<string, number>>({});
@@ -576,14 +587,14 @@ export function GuidesSidebarContent({ rawGuides, collapsed }: GuidesSidebarCont
     <div className="space-y-4">
       <div className={cn("flex items-center gap-2 px-2", collapsed && "justify-center")}>
         <BookOpenText className="size-4 text-muted-foreground" />
-        {!collapsed ? <span className="text-sm font-semibold text-foreground">Guides</span> : null}
+        {!collapsed ? <span className="text-sm font-semibold text-foreground">{t("guides.label")}</span> : null}
       </div>
 
       {(sidebarView === "files" || collapsed) && (
         <div className="space-y-1.5">
           {!collapsed ? (
             <div className="px-2 pb-1">
-              <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">All files</span>
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">{t("guides.allFiles")}</span>
             </div>
           ) : null}
 
@@ -629,7 +640,7 @@ export function GuidesSidebarContent({ rawGuides, collapsed }: GuidesSidebarCont
                     </div>
 
                     <div className="relative mt-1 text-[11px] text-muted-foreground/60">
-                      {guide.sections.length} {guide.sections.length === 1 ? "section" : "sections"}
+                      {t(`guides.section.${guide.sections.length === 1 ? "one" : "other"}`, undefined, { count: guide.sections.length })}
                     </div>
                   </button>
                 );
@@ -647,12 +658,12 @@ export function GuidesSidebarContent({ rawGuides, collapsed }: GuidesSidebarCont
             className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
           >
             <ArrowLeft className="size-3.5" />
-            All guides
+            {t("guides.allGuides")}
           </button>
 
           <div className="flex items-center gap-1.5 px-2">
             <ListTree className="size-3 text-muted-foreground/60" />
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Contents</span>
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">{t("guides.contents")}</span>
           </div>
 
           <div className="space-y-1">
@@ -763,14 +774,15 @@ export function GuideIconButton({
   guideRoute,
   fallbackRoute,
   fallbackUnauthenticatedRoute,
-  openLabel = "Open guides",
-  closeLabel = "Close guides",
+  openLabel,
+  closeLabel,
   onAfterNavigate,
   className,
   variant = "ghost",
   size = "icon-sm",
   ...props
 }: GuideIconButtonProps) {
+  const { t } = useI18n();
   const { handleNavigate, inGuidesView } = useGuideRouteNavigation({
     guideRoute,
     fallbackRoute,
@@ -785,8 +797,8 @@ export function GuideIconButton({
       size={size}
       className={cn("rounded-full", className)}
       aria-current={inGuidesView ? "page" : undefined}
-      aria-label={inGuidesView ? closeLabel : openLabel}
-      title={inGuidesView ? closeLabel : openLabel}
+      aria-label={inGuidesView ? closeLabel ?? t("guides.close") : openLabel ?? t("guides.open")}
+      title={inGuidesView ? closeLabel ?? t("guides.close") : openLabel ?? t("guides.open")}
       onClick={handleNavigate}
       {...props}
     >
@@ -799,13 +811,14 @@ export function GuideMenuButton({
   guideRoute,
   fallbackRoute,
   fallbackUnauthenticatedRoute,
-  openLabel = "User guide",
-  closeLabel = "Close guides",
+  openLabel,
+  closeLabel,
   onAfterNavigate,
   className,
   type = "button",
   ...props
 }: GuideMenuButtonProps) {
+  const { t } = useI18n();
   const { handleNavigate, inGuidesView } = useGuideRouteNavigation({
     guideRoute,
     fallbackRoute,
@@ -825,7 +838,7 @@ export function GuideMenuButton({
       {...props}
     >
       <BookOpenText className="size-4 text-muted-foreground" />
-      {inGuidesView ? closeLabel : openLabel}
+      {inGuidesView ? closeLabel ?? t("guides.close") : openLabel ?? t("guides.menuOpen")}
     </button>
   );
 }

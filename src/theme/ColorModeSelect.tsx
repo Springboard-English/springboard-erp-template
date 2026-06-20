@@ -7,6 +7,7 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useI18n } from '@/context/I18nContext';
 import { cn } from '@/lib/utils';
 import { useColorMode } from './AppTheme';
 
@@ -14,12 +15,13 @@ export default function ColorModeSelect(
   props: React.ComponentProps<typeof Button>,
 ) {
   const { mode, setMode } = useColorMode();
+  const { t } = useI18n();
 
   const { className, ...buttonProps } = props;
   const modeLabels: Record<'system' | 'light' | 'dark', string> = {
-    system: 'System',
-    light: 'Light',
-    dark: 'Dark',
+    system: t('theme.system'),
+    light: t('theme.light'),
+    dark: t('theme.dark'),
   };
   const modeIcons = {
     system: <Monitor className="size-4" />,
@@ -51,15 +53,15 @@ export default function ColorModeSelect(
         >
           <DropdownMenuRadioItem value="system">
             <Monitor className="mr-2 size-4" />
-            System
+            {t('theme.system')}
           </DropdownMenuRadioItem>
           <DropdownMenuRadioItem value="light">
             <Sun className="mr-2 size-4" />
-            Light
+            {t('theme.light')}
           </DropdownMenuRadioItem>
           <DropdownMenuRadioItem value="dark">
             <Moon className="mr-2 size-4" />
-            Dark
+            {t('theme.dark')}
           </DropdownMenuRadioItem>
         </DropdownMenuRadioGroup>
       </DropdownMenuContent>

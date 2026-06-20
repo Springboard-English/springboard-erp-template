@@ -1,34 +1,42 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { createInstance } from "i18next";
 import { I18nextProvider, initReactI18next, useTranslation } from "react-i18next";
-import { ENGLISH_MESSAGES, type TemplateI18nKey } from "@/i18n/messages";
+import { ENGLISH_MESSAGES, VIETNAMESE_MESSAGES, type TemplateI18nKey } from "@/i18n/messages";
 
 export type TemplateMessages = Partial<Record<TemplateI18nKey | string, string>>;
 export type TemplateLocaleResources = Record<string, TemplateMessages>;
 
 type TranslationValues = Record<string, string | number>;
 
+const BUILT_IN_MESSAGES_BY_LOCALE: TemplateLocaleResources = {
+  en: ENGLISH_MESSAGES,
+  vi: VIETNAMESE_MESSAGES,
+};
+
 function createI18nInstance(locale: string, messagesByLocale?: TemplateLocaleResources) {
   const instance = createInstance();
-  const resources = Object.entries(messagesByLocale ?? {}).reduce<Record<string, { translation: TemplateMessages }>>(
-    (acc, [resourceLocale, resourceMessages]) => {
-      acc[resourceLocale] = {
-        translation: resourceLocale === "en"
-          ? { ...ENGLISH_MESSAGES, ...resourceMessages }
-          : resourceMessages,
-      };
-      return acc;
-    },
-    {
-      en: {
-        translation: ENGLISH_MESSAGES,
+  const localeKeys = Array.from(new Set([
+    ...Object.keys(BUILT_IN_MESSAGES_BY_LOCALE),
+    ...Object.keys(messagesByLocale ?? {}),
+    locale,
+  ]));
+  const resources = localeKeys.reduce<Record<string, { translation: TemplateMessages }>>((acc, resourceLocale) => {
+    acc[resourceLocale] = {
+      translation: {
+        ...ENGLISH_MESSAGES,
+        ...(BUILT_IN_MESSAGES_BY_LOCALE[resourceLocale] ?? {}),
+        ...(messagesByLocale?.[resourceLocale] ?? {}),
       },
-    },
-  );
+    };
+    return acc;
+  }, {});
 
   if (!resources[locale]) {
     resources[locale] = {
-      translation: locale === "en" ? ENGLISH_MESSAGES : {},
+      translation: {
+        ...ENGLISH_MESSAGES,
+        ...(BUILT_IN_MESSAGES_BY_LOCALE[locale] ?? {}),
+      },
     };
   }
 
