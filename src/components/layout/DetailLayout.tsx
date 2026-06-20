@@ -13,6 +13,7 @@ import { ChevronRight, Expand, PanelRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/context/I18nContext";
 import {
     DETAIL_HIDDEN_COLLAPSED_VALUE,
     useDetailViewMode,
@@ -159,6 +160,7 @@ export function DetailView({
     contentScrollable?: boolean;
     onCloseFloating?: () => void;
 }) {
+    const { t } = useI18n();
     const isBackgroundFromContext = useContext(BackgroundDetailViewContext);
     const isBackground = isBackgroundProp ?? isBackgroundFromContext;
     const detailViewMode = useDetailViewMode({ enabled: !isBackground });
@@ -244,7 +246,7 @@ export function DetailView({
                 {floating && !collapsed ? (
                     <button
                         type="button"
-                        aria-label="Close details"
+                        aria-label={t("detail.close")}
                         onClick={handleCloseFloating}
                         className="absolute inset-0 bg-background/45 backdrop-blur-md"
                     />
@@ -254,11 +256,11 @@ export function DetailView({
                         type="button"
                         size="sm"
                         variant="outline"
-                        aria-label="Restore details panel"
+                        aria-label={t("detail.restorePanel")}
                         onClick={() => applyMode(true, true, false)}
                         className="pointer-events-auto absolute right-0 top-1/2 z-20 h-28 w-7 -translate-y-1/2 rounded-l-md rounded-r-none border-r-0 bg-background text-[10px] font-semibold uppercase tracking-[0.14em] shadow-md [writing-mode:vertical-rl]"
                     >
-                        Details
+                        {t("detail.details")}
                     </Button>
                 ) : null}
                 <div
@@ -284,7 +286,7 @@ export function DetailView({
                                     type="button"
                                     size="icon"
                                     variant="outline"
-                                    aria-label="Expand details panel"
+                                    aria-label={t("detail.expandPanel")}
                                     onClick={() => applyMode(true, false)}
                                     className="absolute left-3 top-1/2 z-20 h-8 w-8 -translate-y-[calc(100%+0.375rem)] rounded-full border border-border/70 bg-background/95 text-foreground opacity-100 shadow-md backdrop-blur"
                                 >
@@ -294,7 +296,7 @@ export function DetailView({
                                     type="button"
                                     size="icon"
                                     variant="outline"
-                                    aria-label="Fully collapse details"
+                                    aria-label={t("detail.fullyCollapse")}
                                     onClick={() => applyMode(true, true, true)}
                                     className="absolute left-3 top-1/2 z-20 h-8 w-8 translate-y-[0.375rem] rounded-full border border-border/70 bg-background/95 text-foreground opacity-100 shadow-md backdrop-blur"
                                 >
@@ -308,7 +310,7 @@ export function DetailView({
                             type="button"
                             size="icon"
                             variant="outline"
-                            aria-label="Collapse details"
+                            aria-label={t("detail.collapse")}
                             onClick={() => applyMode(true, true, false)}
                             className="absolute right-3 top-1/2 z-20 h-10 w-10 -translate-y-1/2 rounded-full border border-border/70 bg-background/95 text-foreground opacity-100 shadow-md backdrop-blur"
                         >
@@ -369,6 +371,7 @@ export function DetailHeader({
     actions?: ReactNode;
     className?: string;
 }) {
+    const { t } = useI18n();
     const detailViewContext = useContext(DetailViewContext);
     const showExpandAction =
         detailViewContext?.floating && !detailViewContext.collapsed;
@@ -397,7 +400,7 @@ export function DetailHeader({
                             }
                         >
                             <Expand className="mr-2 h-4 w-4" />
-                            Expand View
+                            {t("detail.expandView")}
                         </Button>
                     ) : null}
                     {showFloatingAction ? (
@@ -410,7 +413,7 @@ export function DetailHeader({
                             }
                         >
                             <PanelRight className="mr-2 h-4 w-4" />
-                            Floating View
+                            {t("detail.floatingView")}
                         </Button>
                     ) : null}
                     {actions}
@@ -427,7 +430,7 @@ export function DetailHeader({
                             }
                         >
                             <Expand className="mr-2 h-4 w-4" />
-                            Expand View
+                            {t("detail.expandView")}
                         </Button>
                     ) : null}
                     {showFloatingAction ? (
@@ -440,7 +443,7 @@ export function DetailHeader({
                             }
                         >
                             <PanelRight className="mr-2 h-4 w-4" />
-                            Floating View
+                            {t("detail.floatingView")}
                         </Button>
                     ) : null}
                 </div>
@@ -620,14 +623,16 @@ export function DetailClassLinkValue({
     className,
     classKey,
     onOpenClass,
-    buttonLabel = "Open class",
+    buttonLabel,
 }: {
     className?: string | null;
     classKey?: string | null;
     onOpenClass: () => void;
     buttonLabel?: string;
 }) {
+    const { t } = useI18n();
     const normalizedClassKey = classKey?.trim() || "";
+    const resolvedButtonLabel = buttonLabel ?? t("detail.openClass");
     return (
         <div className="flex min-w-0 flex-wrap items-center gap-2">
             <span className="break-words">
@@ -640,14 +645,14 @@ export function DetailClassLinkValue({
                 onClick={onOpenClass}
                 disabled={!normalizedClassKey}
             >
-                {buttonLabel}
+                {resolvedButtonLabel}
             </Button>
         </div>
     );
 }
 
 export function DetailClassHeaderLabel({
-    label = "Class",
+    label,
     classKey,
     onOpenClass,
 }: {
@@ -655,10 +660,12 @@ export function DetailClassHeaderLabel({
     classKey?: string | null;
     onOpenClass: () => void;
 }) {
+    const { t } = useI18n();
     const normalizedClassKey = classKey?.trim() || "";
+    const resolvedLabel = label ?? t("detail.class");
     return (
         <span className="inline-flex items-center gap-1">
-            <span>{label}</span>
+            <span>{resolvedLabel}</span>
             <Button
                 type="button"
                 size="icon"

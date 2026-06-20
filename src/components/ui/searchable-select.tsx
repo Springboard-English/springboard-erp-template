@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Check, ChevronDown, Search } from 'lucide-react';
 import { Popover as PopoverPrimitive } from 'radix-ui';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/context/I18nContext';
 
 export interface SearchableSelectOption {
   value: string;
@@ -27,17 +28,21 @@ export function SearchableSelect({
   id,
   value,
   options,
-  placeholder = 'Select option',
-  searchPlaceholder = 'Search...',
-  emptyMessage = 'No options found.',
+  placeholder,
+  searchPlaceholder,
+  emptyMessage,
   disabled = false,
   className,
   contentClassName,
   onValueChange,
 }: SearchableSelectProps) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const normalizedValue = String(value ?? '');
+  const resolvedPlaceholder = placeholder ?? t('searchableSelect.placeholder');
+  const resolvedSearchPlaceholder = searchPlaceholder ?? t('common.search');
+  const resolvedEmptyMessage = emptyMessage ?? t('searchableSelect.empty');
 
   const selectedOption = useMemo(
     () => options.find((option) => option.value === normalizedValue),
@@ -78,7 +83,7 @@ export function SearchableSelect({
           onClick={(event) => event.stopPropagation()}
         >
           <span className={cn('min-w-0 flex-1 truncate text-left', !selectedOption && 'text-muted-foreground')}>
-            {selectedOption?.label ?? placeholder}
+            {selectedOption?.label ?? resolvedPlaceholder}
           </span>
           <ChevronDown className="ml-2 size-4 shrink-0 text-muted-foreground" />
         </button>
@@ -105,7 +110,7 @@ export function SearchableSelect({
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder={searchPlaceholder}
+              placeholder={resolvedSearchPlaceholder}
               className={cn(
                 'h-8 w-full rounded-md border border-input bg-background pr-2 pl-8 text-sm shadow-xs outline-none transition',
                 'focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50',
@@ -120,7 +125,7 @@ export function SearchableSelect({
             onWheelCapture={(event) => event.stopPropagation()}
           >
             {filteredOptions.length === 0 ? (
-              <div className="px-2 py-1.5 text-sm text-muted-foreground">{emptyMessage}</div>
+              <div className="px-2 py-1.5 text-sm text-muted-foreground">{resolvedEmptyMessage}</div>
             ) : (
               filteredOptions.map((option) => {
                 const isSelected = option.value === normalizedValue;

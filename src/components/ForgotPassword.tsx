@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { getEndpoint } from '../config/api';
 import { fetchWithRefresh } from '../api_calls/fetchWithRefresh';
 import StatusBanner from './StatusBanner';
+import { useI18n } from '@/context/I18nContext';
 
 interface ForgotPasswordProps {
   open: boolean;
@@ -20,6 +21,7 @@ interface ForgotPasswordProps {
 }
 
 export default function ForgotPassword({ open, handleClose }: ForgotPasswordProps) {
+  const { t } = useI18n();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [errorMessage, setErrorMessage] = React.useState('');
 
@@ -41,7 +43,7 @@ export default function ForgotPassword({ open, handleClose }: ForgotPasswordProp
     const username = data.get('username');
 
     if (!username || typeof username !== 'string') {
-      setErrorMessage('Username is required.');
+      setErrorMessage(t('forgotPassword.usernameRequired'));
       return;
     }
 
@@ -68,7 +70,7 @@ export default function ForgotPassword({ open, handleClose }: ForgotPasswordProp
       closeDialog();
     } catch (error) {
       setErrorMessage(
-        error instanceof Error ? error.message : 'Failed to request password reset. Please try again.'
+        error instanceof Error ? error.message : t('forgotPassword.error')
       );
     } finally {
       setIsSubmitting(false);
@@ -87,10 +89,9 @@ export default function ForgotPassword({ open, handleClose }: ForgotPasswordProp
           }}
         >
           <DialogHeader className="border-b border-border/70 px-6 py-4 text-left">
-            <DialogTitle>Reset password</DialogTitle>
+            <DialogTitle>{t('forgotPassword.title')}</DialogTitle>
             <DialogDescription>
-              Enter your account&apos;s username, and we&apos;ll send you a link to
-              reset your password.
+              {t('forgotPassword.description')}
             </DialogDescription>
           </DialogHeader>
 
@@ -103,7 +104,7 @@ export default function ForgotPassword({ open, handleClose }: ForgotPasswordProp
               <div className="space-y-2">
                 <Label htmlFor="forgot-password-username">
                   <span className="inline-flex items-center gap-1">
-                    <span>Username</span>
+                    <span>{t('forgotPassword.username')}</span>
                     <span className="text-destructive" aria-hidden="true">*</span>
                   </span>
                 </Label>
@@ -112,7 +113,7 @@ export default function ForgotPassword({ open, handleClose }: ForgotPasswordProp
                   required
                   id="forgot-password-username"
                   name="username"
-                  placeholder="username"
+                  placeholder={t('forgotPassword.usernamePlaceholder')}
                   type="text"
                   disabled={isSubmitting}
                 />
@@ -127,10 +128,10 @@ export default function ForgotPassword({ open, handleClose }: ForgotPasswordProp
               onClick={closeDialog}
               disabled={isSubmitting}
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Sending...' : 'Continue'}
+              {isSubmitting ? t('forgotPassword.submitting') : t('forgotPassword.submit')}
             </Button>
           </DialogFooter>
         </form>

@@ -14,6 +14,7 @@ import ColorModeSelect from '@/theme/ColorModeSelect';
 import StatusBanner from '@/components/StatusBanner';
 import { SitemarkIcon } from '@/components/CustomIcons';
 import { resetPassword } from '@/api_calls/UserData';
+import { useI18n } from '@/context/I18nContext';
 
 export interface ResetPasswordViewProps {
   disableCustomTheme?: boolean;
@@ -22,6 +23,7 @@ export interface ResetPasswordViewProps {
 }
 
 export default function ResetPassword(props: ResetPasswordViewProps) {
+  const { t } = useI18n();
   const [token, setToken] = React.useState('');
   const [username, setUsername] = React.useState('');
   const [password, setPassword] = React.useState('');
@@ -41,27 +43,27 @@ export default function ResetPassword(props: ResetPasswordViewProps) {
     setErrorMessage('');
 
     if (!token.trim()) {
-      setErrorMessage('Reset token is required.');
+      setErrorMessage(t('resetPassword.tokenRequired'));
       return;
     }
 
     if (!username.trim()) {
-      setErrorMessage('Username is required.');
+      setErrorMessage(t('resetPassword.usernameRequired'));
       return;
     }
 
     if (!password) {
-      setErrorMessage('New password is required.');
+      setErrorMessage(t('resetPassword.passwordRequired'));
       return;
     }
 
     if (!confirmPassword) {
-      setErrorMessage('Please confirm your new password.');
+      setErrorMessage(t('resetPassword.confirmRequired'));
       return;
     }
 
     if (password !== confirmPassword) {
-      setErrorMessage('Passwords do not match.');
+      setErrorMessage(t('resetPassword.passwordMismatch'));
       return;
     }
 
@@ -74,13 +76,13 @@ export default function ResetPassword(props: ResetPasswordViewProps) {
         password: password
       });
 
-      props.onNavigateToSignIn?.('Password reset successful. You can now sign in.');
+      props.onNavigateToSignIn?.(t('resetPassword.success'));
       if (!props.onNavigateToSignIn && props.signInPath) {
         window.location.assign(props.signInPath);
       }
     } catch (error) {
       setErrorMessage(
-        error instanceof Error ? error.message : 'Failed to reset password. Please try again.'
+        error instanceof Error ? error.message : t('resetPassword.error')
       );
     } finally {
       setIsSubmitting(false);
@@ -101,9 +103,9 @@ export default function ResetPassword(props: ResetPasswordViewProps) {
                 <SitemarkIcon />
               </div>
               <div className="space-y-2">
-                <CardTitle className="text-3xl tracking-tight">Reset password</CardTitle>
+                <CardTitle className="text-3xl tracking-tight">{t('resetPassword.title')}</CardTitle>
                 <CardDescription className="text-sm leading-6">
-                  Set a new password for your account using the reset link you received.
+                  {t('resetPassword.description')}
                 </CardDescription>
               </div>
             </CardHeader>
@@ -120,7 +122,7 @@ export default function ResetPassword(props: ResetPasswordViewProps) {
                 <div className="space-y-2">
                   <Label htmlFor="username">
                     <span className="inline-flex items-center gap-1">
-                      <span>Username</span>
+                      <span>{t('resetPassword.username')}</span>
                       <span className="text-destructive" aria-hidden="true">*</span>
                     </span>
                   </Label>
@@ -139,7 +141,7 @@ export default function ResetPassword(props: ResetPasswordViewProps) {
                 <div className="space-y-2">
                   <Label htmlFor="new-password">
                     <span className="inline-flex items-center gap-1">
-                      <span>New password</span>
+                      <span>{t('resetPassword.newPassword')}</span>
                       <span className="text-destructive" aria-hidden="true">*</span>
                     </span>
                   </Label>
@@ -158,7 +160,7 @@ export default function ResetPassword(props: ResetPasswordViewProps) {
                 <div className="space-y-2">
                   <Label htmlFor="confirm-password">
                     <span className="inline-flex items-center gap-1">
-                      <span>Confirm new password</span>
+                      <span>{t('resetPassword.confirmPassword')}</span>
                       <span className="text-destructive" aria-hidden="true">*</span>
                     </span>
                   </Label>
@@ -175,7 +177,7 @@ export default function ResetPassword(props: ResetPasswordViewProps) {
                 </div>
 
                 <Button type="submit" className="w-full" disabled={isSubmitting}>
-                  {isSubmitting ? 'Resetting password...' : 'Reset password'}
+                  {isSubmitting ? t('resetPassword.submitting') : t('resetPassword.submit')}
                 </Button>
                 <Button
                   type="button"
@@ -189,7 +191,7 @@ export default function ResetPassword(props: ResetPasswordViewProps) {
                   }}
                   disabled={isSubmitting}
                 >
-                  Back to sign in
+                  {t('resetPassword.backToSignIn')}
                 </Button>
               </form>
             </CardContent>

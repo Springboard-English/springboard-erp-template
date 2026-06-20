@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import BaseFormDialog from '@/components/dialogs/BaseFormDialog';
 import FormTableSection, { FormTableRow } from '@/components/dialogs/FormTableSection';
+import { useI18n } from '@/context/I18nContext';
 
 type FormTableDialogProps = {
     open: boolean;
@@ -21,12 +22,13 @@ export default function FormTableDialog({
     title,
     description,
     error,
-    submitLabel = 'Create',
+    submitLabel,
     submitDisabled = false,
     onClose,
     onSubmit,
     children,
 }: FormTableDialogProps) {
+    const { t } = useI18n();
     return (
         <BaseFormDialog
             open={open}
@@ -34,7 +36,7 @@ export default function FormTableDialog({
             title={title}
             description={description}
             error={error}
-            submitLabel={submitLabel}
+            submitLabel={submitLabel ?? t('common.create')}
             submitDisabled={submitDisabled}
             onClose={onClose}
             onSubmit={onSubmit}

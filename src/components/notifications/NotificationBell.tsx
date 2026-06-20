@@ -3,8 +3,10 @@ import { Bell, RefreshCw, X } from "lucide-react";
 import { Popover as PopoverPrimitive } from "radix-ui";
 import { cn } from "@/lib/utils";
 import { useNotifications } from "@/context/NotificationContext";
+import { useI18n } from "@/context/I18nContext";
 
 export default function NotificationBell() {
+    const { t } = useI18n();
     const { informative, unreadCount, isLoading, dismiss, refetch } = useNotifications();
     const [open, setOpen] = useState(false);
 
@@ -21,7 +23,9 @@ export default function NotificationBell() {
                 <button
                     type="button"
                     className="relative flex h-8 w-8 items-center justify-center rounded-md border border-border/70 bg-muted/45 text-foreground transition-colors hover:bg-muted"
-                    aria-label={`Notifications${unreadCount > 0 ? `, ${unreadCount} unread` : ""}`}
+                    aria-label={t("notificationBell.ariaLabel", undefined, {
+                        suffix: unreadCount > 0 ? t("notificationBell.unreadSuffix", undefined, { count: unreadCount }) : "",
+                    })}
                 >
                     <Bell className="size-4" />
                     {unreadCount > 0 && (
@@ -43,7 +47,7 @@ export default function NotificationBell() {
                     )}
                 >
                     <div className="flex items-center justify-between border-b border-border/60 px-4 py-3">
-                        <p className="text-sm font-semibold text-foreground">Notifications</p>
+                        <p className="text-sm font-semibold text-foreground">{t("notificationBell.title")}</p>
                         <div className="flex items-center gap-2">
                             {informative.length > 0 && (
                                 <button
@@ -54,7 +58,7 @@ export default function NotificationBell() {
                                     }}
                                     className="text-xs text-muted-foreground transition-colors hover:text-foreground"
                                 >
-                                    Clear all
+                                    {t("common.clearAll")}
                                 </button>
                             )}
                             <button
@@ -62,7 +66,7 @@ export default function NotificationBell() {
                                 onClick={refetch}
                                 disabled={isLoading}
                                 className="text-muted-foreground transition-colors hover:text-foreground disabled:opacity-40"
-                                aria-label="Refresh notifications"
+                                aria-label={t("notificationBell.refresh")}
                             >
                                 <RefreshCw className={cn("size-3.5", isLoading && "animate-spin")} />
                             </button>
@@ -71,7 +75,7 @@ export default function NotificationBell() {
 
                     {informative.length === 0 ? (
                         <div className="px-4 py-8 text-center text-sm text-muted-foreground">
-                            No new notifications
+                            {t("notificationBell.empty")}
                         </div>
                     ) : (
                         <ul className="max-h-80 divide-y divide-border/50 overflow-y-auto">
@@ -91,7 +95,7 @@ export default function NotificationBell() {
                                         type="button"
                                         onClick={() => dismiss(n.appsheet_key)}
                                         className="mt-0.5 shrink-0 text-muted-foreground transition-colors hover:text-foreground"
-                                        aria-label="Dismiss"
+                                        aria-label={t("notificationBell.dismiss")}
                                     >
                                         <X className="size-3.5" />
                                     </button>

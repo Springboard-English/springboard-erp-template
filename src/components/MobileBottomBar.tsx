@@ -2,6 +2,7 @@ import { animated, useSpring } from "@react-spring/web";
 import type { ReactNode } from "react";
 import { User } from "lucide-react";
 import { cn } from "../lib/utils";
+import { useI18n } from "@/context/I18nContext";
 
 export interface MobileBottomBarItem {
   id: string;
@@ -25,11 +26,14 @@ export default function MobileBottomBar({
   items,
   onTabSelect,
   onMenuOpen,
-  menuButtonLabel = "Menu",
-  menuButtonAriaLabel = "Open menu",
+  menuButtonLabel,
+  menuButtonAriaLabel,
   menuButtonIcon,
   className,
 }: MobileBottomBarProps) {
+  const { t } = useI18n();
+  const resolvedMenuButtonLabel = menuButtonLabel ?? t("mobileBottomBar.menu");
+  const resolvedMenuButtonAriaLabel = menuButtonAriaLabel ?? t("mobileBottomBar.openMenu");
   const itemCount = items.length;
   const activeIndex = items.findIndex((item) => item.id === activeTab);
   const indicatorSpring = useSpring({
@@ -90,11 +94,11 @@ export default function MobileBottomBar({
             type="button"
             className="flex h-full w-full flex-col items-center justify-center gap-1 px-1 py-2 text-muted-foreground transition-colors hover:text-foreground"
             onClick={onMenuOpen}
-            aria-label={menuButtonAriaLabel}
+            aria-label={resolvedMenuButtonAriaLabel}
           >
             {menuButtonIcon ?? <User className="size-5" />}
             <span className="text-[10px] font-medium leading-none">
-              {menuButtonLabel}
+              {resolvedMenuButtonLabel}
             </span>
           </button>
         </div>

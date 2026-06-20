@@ -3,6 +3,7 @@ import { Input } from '@/components/ui/input';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Textarea } from '@/components/ui/textarea';
 import FormTableDialog, { FormTableRow } from '@/components/dialogs/FormTableDialog';
+import { useI18n } from '@/context/I18nContext';
 
 export type PatchFieldType = 'text' | 'number' | 'date' | 'datetime' | 'boolean' | 'select';
 
@@ -82,6 +83,7 @@ export default function PatchRecordDialog({
   onClose,
   onSubmit,
 }: PatchRecordDialogProps) {
+  const { t } = useI18n();
   const [rows, setRows] = useState<PatchFormRow[]>([]);
 
   useEffect(() => {
@@ -141,9 +143,9 @@ export default function PatchRecordDialog({
       open={open}
       saving={saving}
       title={title}
-      description="Only modified fields will be included in the update request."
+      description={t('patchRecord.description')}
       error={error}
-      submitLabel="Save"
+      submitLabel={t('common.save')}
       onClose={onClose}
       onSubmit={handleSubmit}
     >
@@ -167,7 +169,7 @@ export default function PatchRecordDialog({
                   onChange={(event) => handleValueChange(row.key, event.target.checked)}
                   className="size-4 rounded border-input accent-primary"
                 />
-                <span>{Boolean(row.value) ? 'Enabled' : 'Disabled'}</span>
+                <span>{Boolean(row.value) ? t('patchRecord.enabled') : t('patchRecord.disabled')}</span>
               </label>
             ) : row.type === 'select' ? (
               <SearchableSelect
@@ -175,11 +177,11 @@ export default function PatchRecordDialog({
                 onValueChange={(value) => handleValueChange(row.key, value)}
                 disabled={row.readOnly}
                 options={[
-                  { value: '', label: `-- ${row.label} --` },
+                  { value: '', label: t('patchRecord.placeholder', undefined, { label: row.label }) },
                   ...(row.options ?? []).map((option) => ({ value: option.value, label: option.label })),
                 ]}
-                placeholder={`-- ${row.label} --`}
-                searchPlaceholder={`Search ${row.label.toLowerCase()}...`}
+                placeholder={t('patchRecord.placeholder', undefined, { label: row.label })}
+                searchPlaceholder={t('patchRecord.searchField', undefined, { label: row.label.toLowerCase() })}
               />
             ) : isMultiline ? (
               <Textarea

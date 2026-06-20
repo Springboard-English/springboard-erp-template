@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/context/I18nContext";
 
 export interface PendingChangeItem {
   section?: string;
@@ -68,6 +69,7 @@ export default function PendingChangesBar({
   barTransitionMs = PENDING_CHANGES_BAR_DEFAULT_BAR_TRANSITION_MS,
   chevronTransitionMs = PENDING_CHANGES_BAR_DEFAULT_CHEVRON_TRANSITION_MS,
 }: PendingChangesBarProps) {
+  const { t } = useI18n();
   const [isUnsavedOpen, setIsUnsavedOpen] = useState(false);
   const show = pendingCount > 0;
 
@@ -82,7 +84,7 @@ export default function PendingChangesBar({
   const groupedPendingItems = useMemo(() => {
     const groups = new Map<string, PendingChangeItem[]>();
     (pendingItems ?? []).forEach((item) => {
-      const sectionName = item.section?.trim() || "General";
+      const sectionName = item.section?.trim() || t("pendingChanges.generalSection");
       const current = groups.get(sectionName) ?? [];
       current.push(item);
       groups.set(sectionName, current);
@@ -119,7 +121,9 @@ export default function PendingChangesBar({
   }
 
   const countLabel =
-    pendingCount === 1 ? "1 unsaved change" : `${pendingCount} unsaved changes`;
+    pendingCount === 1
+      ? t("pendingChanges.count.one")
+      : t("pendingChanges.count.other", undefined, { count: pendingCount });
 
   return createPortal(
     <div
@@ -248,7 +252,7 @@ export default function PendingChangesBar({
               ) : (
                 <Save className="size-4" />
               )}
-              {saving ? "Saving…" : saveLabel}
+              {saving ? t("pendingChanges.saving") : saveLabel}
             </Button>
           </div>
         </div>

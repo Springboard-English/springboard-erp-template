@@ -2,6 +2,7 @@ import * as Popover from "@radix-ui/react-popover";
 import { type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/context/I18nContext";
 
 export interface AdvancedFiltersPanelProps {
   open: boolean;
@@ -24,6 +25,7 @@ export default function AdvancedFiltersPanel({
   className,
   gridClassName,
 }: AdvancedFiltersPanelProps) {
+  const { t } = useI18n();
   return (
     <Popover.Root open={open} onOpenChange={onOpenChange}>
       <Popover.Trigger asChild>{trigger}</Popover.Trigger>
@@ -48,7 +50,7 @@ export default function AdvancedFiltersPanel({
           >
             <div className="mb-3 flex items-center gap-2.5">
               <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/50">
-                Filters
+                {t("common.filters")}
               </span>
               <div className="h-px flex-1 bg-border/40" />
             </div>
@@ -64,12 +66,12 @@ export default function AdvancedFiltersPanel({
               <div className="mt-4 flex items-center justify-end gap-2 border-t border-border/30 pt-3">
                 {onClear && (
                   <Button type="button" size="sm" variant="ghost" onClick={onClear}>
-                    Clear all
+                    {t("common.clearAll")}
                   </Button>
                 )}
                 {onApply && (
                   <Button type="button" size="sm" onClick={onApply}>
-                    Apply filters
+                    {t("common.applyFilters")}
                   </Button>
                 )}
               </div>

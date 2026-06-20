@@ -9,6 +9,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import StatusBanner from '@/components/StatusBanner';
+import { useI18n } from '@/context/I18nContext';
 
 type BaseFormDialogProps = {
     open: boolean;
@@ -35,6 +36,7 @@ export default function BaseFormDialog({
     onSubmit,
     children,
 }: BaseFormDialogProps) {
+    const { t } = useI18n();
     return (
         <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && !saving && onClose()}>
             <DialogContent
@@ -55,7 +57,7 @@ export default function BaseFormDialog({
 
                 <DialogFooter className="shrink-0 border-t border-border/60 px-4 py-3 sm:px-5 sm:py-3.5" showCloseButton={false}>
                     <Button type="button" variant="outline" onClick={onClose} disabled={saving}>
-                        Cancel
+                        {t('common.cancel')}
                     </Button>
                     <Button type="button" onClick={() => void onSubmit()} disabled={saving || submitDisabled}>
                         {submitLabel}

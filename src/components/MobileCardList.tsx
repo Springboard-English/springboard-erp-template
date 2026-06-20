@@ -1,6 +1,7 @@
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { cn } from "../lib/utils";
+import { useI18n } from "@/context/I18nContext";
 
 export function CardField({
   label,
@@ -64,7 +65,7 @@ export default function MobileCardList<T>({
   rowKey,
   renderCard,
   loading = false,
-  emptyMessage = "No results found.",
+  emptyMessage,
   page = 0,
   pageSize = 25,
   onPageChange,
@@ -77,6 +78,8 @@ export default function MobileCardList<T>({
   resetKey,
   className,
 }: MobileCardListProps<T>) {
+  const { t } = useI18n();
+  const resolvedEmptyMessage = emptyMessage ?? t("mobileCardList.empty");
   const [accumulatedRows, setAccumulatedRows] = useState<T[]>([]);
   const accumulatedMapRef = useRef<Map<string | number, T>>(new Map());
   const rowKeyRef = useRef(rowKey);
@@ -284,7 +287,7 @@ export default function MobileCardList<T>({
     return (
       <div className={cn("md:hidden", className)}>
         <div className="rounded-2xl border border-dashed border-border/70 bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">
-          {emptyMessage}
+            {resolvedEmptyMessage}
         </div>
       </div>
     );

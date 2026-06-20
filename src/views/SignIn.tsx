@@ -9,6 +9,7 @@ import AppTheme from "@/theme/AppTheme";
 import ColorModeSelect from "@/theme/ColorModeSelect";
 import { SitemarkIcon } from "@/components/CustomIcons";
 import { useAuth } from "@/context/AuthContext";
+import { useI18n } from "@/context/I18nContext";
 import { loginWithGoogle } from "@/api_calls/UserData";
 import { SearchableSelect, type SearchableSelectOption } from "@/components/ui/searchable-select";
 
@@ -32,6 +33,7 @@ export interface SignInViewProps {
 }
 
 export default function SignIn(props: SignInViewProps) {
+  const { t } = useI18n();
   const { login, setAuthenticatedUser } = useAuth();
   const accountTypeOptions = React.useMemo(
     () => (props.accountTypeOptions && props.accountTypeOptions.length > 0
@@ -45,11 +47,11 @@ export default function SignIn(props: SignInViewProps) {
   );
   const resolvedAccountTypeOverride = props.accountTypeOverride?.trim() || "";
   const shouldShowAccountTypeSelector = !resolvedAccountTypeOverride;
-  const heroEyebrowText = props.heroEyebrowText?.trim() || "Learning Portal";
+  const heroEyebrowText = props.heroEyebrowText?.trim() || t("signIn.learningPortal");
   const heroTitleText = props.heroTitleText?.trim() || "Lớp học";
   const heroTitleAccentText = props.heroTitleAccentText?.trim() || "Nhà Xuân";
-  const formTitle = props.formTitle?.trim() || "Sign in";
-  const formDescription = props.formDescription?.trim() || "Welcome back — enter your credentials to continue.";
+  const formTitle = props.formTitle?.trim() || t("signIn.formTitle");
+  const formDescription = props.formDescription?.trim() || t("signIn.formDescription");
   const [username, setUsername] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [accountType, setAccountType] = React.useState(
@@ -163,7 +165,7 @@ export default function SignIn(props: SignInViewProps) {
       setLoginError(
         error instanceof Error
           ? error.message
-          : "Google sign-in failed. Please try again.",
+          : t("signIn.googleError"),
       );
     } finally {
       setIsSubmitting(false);
@@ -189,14 +191,14 @@ export default function SignIn(props: SignInViewProps) {
     } catch (error) {
       const message = error instanceof Error ? error.message : "";
       if (message.includes("401") || message.includes("400")) {
-        setLoginError("Invalid username or password.");
+        setLoginError(t("signIn.invalidCredentials"));
         return;
       }
 
       setLoginError(
         error instanceof Error
           ? error.message
-          : "Login failed. Please try again.",
+          : t("signIn.loginFailed"),
       );
     } finally {
       setIsSubmitting(false);
@@ -207,7 +209,7 @@ export default function SignIn(props: SignInViewProps) {
     let isValid = true;
 
     if (shouldShowAccountTypeSelector && !accountType) {
-      setAccountTypeErrorMessage("Please select an account type.");
+      setAccountTypeErrorMessage(t("signIn.selectAccountTypeError"));
       isValid = false;
     } else {
       setAccountTypeErrorMessage("");
@@ -215,14 +217,14 @@ export default function SignIn(props: SignInViewProps) {
 
     if (includeCredentials) {
       if (!username.trim()) {
-        setUsernameErrorMessage("Please enter your username.");
+        setUsernameErrorMessage(t("signIn.enterUsername"));
         isValid = false;
       } else {
         setUsernameErrorMessage("");
       }
 
       if (!password) {
-        setPasswordErrorMessage("Password is required.");
+        setPasswordErrorMessage(t("signIn.passwordRequired"));
         isValid = false;
       } else {
         setPasswordErrorMessage("");
@@ -286,7 +288,7 @@ export default function SignIn(props: SignInViewProps) {
                       id="account-type"
                       value={accountType}
                       options={accountTypeOptions}
-                      placeholder="Select account type"
+                      placeholder={t("signIn.selectAccountType")}
                       disabled={isSubmitting}
                       className="h-11 w-auto min-w-[11rem] rounded-xl border-primary/25 bg-primary/5 px-4 text-base font-semibold text-primary"
                       contentClassName="w-[14rem]"
@@ -322,7 +324,7 @@ export default function SignIn(props: SignInViewProps) {
                 <div className="space-y-2">
                   <Label htmlFor="username" className="font-mono text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     <span className="inline-flex items-center gap-1">
-                      <span>Username</span>
+                      <span>{t("signIn.username")}</span>
                       <span className="text-destructive" aria-hidden="true">*</span>
                     </span>
                   </Label>
@@ -331,7 +333,7 @@ export default function SignIn(props: SignInViewProps) {
                     id="username"
                     type="text"
                     name="username"
-                    placeholder="username"
+                    placeholder={t("signIn.usernamePlaceholder")}
                     autoComplete="username"
                     autoFocus
                     required
@@ -353,7 +355,7 @@ export default function SignIn(props: SignInViewProps) {
                   <div className="flex items-center justify-between">
                     <Label htmlFor="password" className="font-mono text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       <span className="inline-flex items-center gap-1">
-                        <span>Password</span>
+                        <span>{t("signIn.password")}</span>
                         <span className="text-destructive" aria-hidden="true">*</span>
                       </span>
                     </Label>
@@ -362,7 +364,7 @@ export default function SignIn(props: SignInViewProps) {
                       onClick={handleClickOpen}
                       className="text-xs font-medium text-primary transition hover:text-primary/75"
                     >
-                      Forgot password?
+                      {t("signIn.forgotPassword")}
                     </button>
                   </div>
                   <Input
@@ -393,7 +395,7 @@ export default function SignIn(props: SignInViewProps) {
                   size="lg"
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? "Signing in..." : "Sign in with password"}
+                  {isSubmitting ? t("signIn.signingIn") : t("signIn.passwordSubmit")}
                 </Button>
 
                 {props.googleClientId && (
@@ -401,7 +403,7 @@ export default function SignIn(props: SignInViewProps) {
                     <div className="relative py-1">
                       <Separator />
                       <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-background px-2 text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
-                        or
+                        {t("signIn.or")}
                       </span>
                     </div>
 
@@ -420,7 +422,7 @@ export default function SignIn(props: SignInViewProps) {
                   rel="noopener noreferrer"
                   className="inline-flex text-xs font-medium text-muted-foreground/70 transition hover:text-muted-foreground"
                 >
-                  Hướng dẫn sử dụng / User Guide
+                  {t("signIn.guideLink")}
                 </a>
               </div>
             </div>

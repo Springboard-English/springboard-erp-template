@@ -11,6 +11,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/context/I18nContext';
 
 export interface SimpleDataTableColumn<T> {
   id: string;
@@ -52,8 +53,8 @@ export default function SimpleDataTable<T>({
   rows,
   rowKey,
   loading = false,
-  loadingMessage = 'Loading...',
-  emptyMessage = 'No records found.',
+  loadingMessage,
+  emptyMessage,
   page,
   pageSize,
   pageSizeOptions = [10, 25, 50],
@@ -70,6 +71,9 @@ export default function SimpleDataTable<T>({
   hoveredRow = null,
   onHoveredRowChange,
 }: SimpleDataTableProps<T>) {
+  const { t } = useI18n();
+  const resolvedLoadingMessage = loadingMessage ?? t('simpleDataTable.loading');
+  const resolvedEmptyMessage = emptyMessage ?? t('simpleDataTable.empty');
   const loadingKey = useId();
   const rootRef = useRef<HTMLDivElement | null>(null);
   const footerRef = useRef<HTMLDivElement | null>(null);
@@ -89,24 +93,24 @@ export default function SimpleDataTable<T>({
   const canGoPrevious = safePage > 0;
   const canGoNext = endIndex < totalRows;
   const showingResultsLabel = endIndex === 0
-    ? 'No results'
+    ? t('simpleDataTable.noResults')
     : usesServerPagination && canGoNext
-      ? `Showing ${startIndex + 1}-${endIndex}`
-      : `Showing ${startIndex + 1}-${endIndex} of ${totalRows}`;
+      ? t('simpleDataTable.showingRangePartial', undefined, { start: startIndex + 1, end: endIndex })
+      : t('simpleDataTable.showingRange', undefined, { start: startIndex + 1, end: endIndex, total: totalRows });
   const pageLabel = usesServerPagination && canGoNext
-    ? `Page ${safePage + 1}`
-    : `Page ${safePage + 1} of ${totalPages}`;
+    ? t('simpleDataTable.pagePartial', undefined, { page: safePage + 1 })
+    : t('simpleDataTable.page', undefined, { page: safePage + 1, totalPages });
   const skeletonRowCount = Math.max(3, Math.min(pageSize || 5, 8));
 
   useEffect(() => {
     if (!onLoadingChange) {
       return;
     }
-    onLoadingChange(loadingKey, loading, loadingMessage);
+    onLoadingChange(loadingKey, loading, resolvedLoadingMessage);
     return () => {
       onLoadingChange(loadingKey, false);
     };
-  }, [loading, loadingMessage, loadingKey, onLoadingChange]);
+  }, [loading, resolvedLoadingMessage, loadingKey, onLoadingChange]);
 
   const handleSortClick = (columnId: string) => {
     if (!onSortChange) {
@@ -262,7 +266,7 @@ export default function SimpleDataTable<T>({
                   colSpan={columns.length}
                   className="py-10 text-center text-sm text-muted-foreground"
                 >
-                  {emptyMessage}
+                  {resolvedEmptyMessage}
                 </TableCell>
               </TableRow>
             ) : (
@@ -274,7 +278,7 @@ export default function SimpleDataTable<T>({
 
       {loading && (
         <div className="sr-only" aria-live="polite">
-          {loadingMessage}
+          {resolvedLoadingMessage}
         </div>
       )}
 
@@ -291,13 +295,13 @@ export default function SimpleDataTable<T>({
 
         <div className={cn("flex flex-col gap-3 sm:flex-row sm:items-center", alignPaginationToLeft ? "sm:ml-4" : "")}>
           <label className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span>Rows</span>
+            <span>{t('simpleDataTable.rows')}</span>
             <SearchableSelect
               value={pageSize}
               onValueChange={(value) => onPageSizeChange(Number(value))}
               options={pageSizeOptions.map((option) => ({ value: String(option), label: String(option) }))}
               className="h-9"
-              searchPlaceholder="Search rows..."
+              searchPlaceholder={t('simpleDataTable.searchRows')}
             />
           </label>
 
@@ -310,7 +314,7 @@ export default function SimpleDataTable<T>({
               disabled={!canGoPrevious}
             >
               <ChevronLeft className="size-4" />
-              Previous
+              {t('simpleDataTable.previous')}
             </Button>
             <span className="min-w-20 text-center text-sm text-muted-foreground">
               {pageLabel}
@@ -322,7 +326,7 @@ export default function SimpleDataTable<T>({
               onClick={() => onPageChange(safePage + 1)}
               disabled={!canGoNext}
             >
-              Next
+              {t('simpleDataTable.next')}
               <ChevronRight className="size-4" />
             </Button>
           </div>

@@ -6,6 +6,7 @@ import {
 import { SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/context/I18nContext";
 
 export interface AdvancedFiltersToggleProps {
   open: boolean;
@@ -25,6 +26,7 @@ const AdvancedFiltersToggle = forwardRef<
   onClick,
   ...buttonProps
 }, ref) {
+  const { t } = useI18n();
   const hasActive = activeCount > 0;
 
   const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
@@ -44,7 +46,7 @@ const AdvancedFiltersToggle = forwardRef<
       {...buttonProps}
     >
       <SlidersHorizontal className="size-4" />
-      Filters
+      {t("common.filters")}
       {hasActive && (
         <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-semibold leading-none text-primary-foreground">
           {activeCount}

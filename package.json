@@ -1,7 +1,7 @@
 {
     "name": "@springboard-english/springboard-erp-template",
     "private": false,
-    "version": "1.4.33",
+    "version": "1.4.34",
     "type": "module",
     "repository": {
         "type": "git",
@@ -36,11 +36,13 @@
         "class-variance-authority": "^0.7.1",
         "clsx": "latest",
         "dayjs": "latest",
+        "i18next": "^26.3.1",
         "jose": "^6.2.1",
         "lucide-react": "^1.7.0",
         "radix-ui": "^1.4.3",
         "react": "latest",
         "react-dom": "latest",
+        "react-i18next": "^17.0.8",
         "react-markdown": "^10.1.0",
         "react-router-dom": "latest",
         "remark-gfm": "^4.0.1",

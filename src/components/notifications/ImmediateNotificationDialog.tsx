@@ -2,8 +2,10 @@ import { Bell } from "lucide-react";
 import { Dialog as DialogPrimitive } from "radix-ui";
 import { useNotifications } from "@/context/NotificationContext";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/context/I18nContext";
 
 export default function ImmediateNotificationDialog() {
+    const { t } = useI18n();
     const { immediate, dismiss } = useNotifications();
     const current = immediate[0] ?? null;
 
@@ -26,7 +28,7 @@ export default function ImmediateNotificationDialog() {
 
                         {immediate.length > 1 && (
                             <p className="mb-1 text-xs text-muted-foreground">
-                                {immediate.length} notices
+                                {t("notification.immediateCount", undefined, { count: immediate.length })}
                             </p>
                         )}
 
@@ -43,7 +45,7 @@ export default function ImmediateNotificationDialog() {
 
                     <div className="flex justify-center border-t border-border/60 px-6 py-4">
                         <Button onClick={() => dismiss(current.appsheet_key)}>
-                            Acknowledge
+                            {t("notification.acknowledge")}
                         </Button>
                     </div>
                 </DialogPrimitive.Content>

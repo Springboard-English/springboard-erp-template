@@ -1,7 +1,9 @@
 import { AlertTriangle, X } from "lucide-react";
 import { useNotifications } from "@/context/NotificationContext";
+import { useI18n } from "@/context/I18nContext";
 
 export default function UrgentNotificationBanner() {
+    const { t } = useI18n();
     const { urgent, dismiss } = useNotifications();
 
     if (urgent.length === 0) return null;
@@ -25,7 +27,7 @@ export default function UrgentNotificationBanner() {
                         type="button"
                         onClick={() => dismiss(n.appsheet_key)}
                         className="mt-0.5 shrink-0 opacity-60 transition-opacity hover:opacity-100"
-                        aria-label="Dismiss notification"
+                        aria-label={t("notification.dismiss")}
                     >
                         <X className="size-4" />
                     </button>
