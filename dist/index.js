@@ -11005,10 +11005,10 @@ function MP(e) {
       ] })
     ] }),
     /* @__PURE__ */ f.jsxs("div", { className: "relative flex flex-1 flex-col", children: [
-      /* @__PURE__ */ f.jsxs("div", { className: "absolute right-4 top-4 z-20 flex items-center gap-2 sm:right-6 sm:top-6", children: [
+      /* @__PURE__ */ f.jsx("div", { className: "absolute right-4 top-4 z-20 flex items-center gap-2 sm:right-6 sm:top-6", children: e.headerChildren ?? /* @__PURE__ */ f.jsxs(f.Fragment, { children: [
         /* @__PURE__ */ f.jsx(V1, {}),
         /* @__PURE__ */ f.jsx(tp, {})
-      ] }),
+      ] }) }),
       /* @__PURE__ */ f.jsxs("div", { className: "flex flex-1 flex-col items-center justify-center px-5 py-16 sm:px-10", children: [
         /* @__PURE__ */ f.jsx("div", { className: "mb-10 lg:hidden", children: /* @__PURE__ */ f.jsx(Os, {}) }),
         /* @__PURE__ */ f.jsxs("div", { className: "w-full max-w-[360px]", children: [
