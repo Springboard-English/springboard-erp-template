@@ -73,6 +73,22 @@ export type {
 export { default as BaseFormDialog } from "./components/dialogs/BaseFormDialog";
 export { default as FormTableDialog, FormTableRow } from "./components/dialogs/FormTableDialog";
 export { default as FormTableSection } from "./components/dialogs/FormTableSection";
+export { default as QuestionBuilder } from "./components/question-builder/QuestionBuilder";
+export type { QuestionBuilderProps } from "./components/question-builder/QuestionBuilder";
+export { default as QuestionList } from "./components/question-builder/QuestionList";
+export type {
+  QuestionBuilderOption,
+  QuestionBuilderQuestion,
+  QuestionBuilderSectionNavItem,
+  QuestionBuilderSection,
+  QuestionBuilderInputQuestion,
+  QuestionBuilderTextareaQuestion,
+  QuestionBuilderSelectQuestion,
+  QuestionBuilderReadonlyQuestion,
+  QuestionBuilderRadioGroupQuestion,
+  QuestionBuilderCheckboxGroupQuestion,
+  QuestionBuilderCustomQuestion,
+} from "./components/question-builder/types";
 export {
   DetailView,
   DetailHeader,
