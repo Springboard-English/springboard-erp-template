@@ -36,6 +36,7 @@ export { buildGuides, GuideIconButton, GuideMenuButton, GuidesSidebarContent, pa
 export type { GuideIconButtonProps, GuideMenuButtonProps, GuideRecord, GuideSection, GuidesSidebarContentProps, RawGuides, UserGuideViewProps, } from "./components/guides/UserGuide";
 export { default as BaseFormDialog } from "./components/dialogs/BaseFormDialog";
 export { default as FormTableDialog, FormTableRow } from "./components/dialogs/FormTableDialog";
+export type { FormTableDialogTab } from "./components/dialogs/FormTableDialog";
 export { default as FormTableSection } from "./components/dialogs/FormTableSection";
 export { default as QuestionBuilder } from "./components/question-builder/QuestionBuilder";
 export type { QuestionBuilderProps } from "./components/question-builder/QuestionBuilder";

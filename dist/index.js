@@ -11788,10 +11788,11 @@ function wA({
   submitDisabled: s = !1,
   onClose: a,
   onSubmit: c,
-  children: l
+  children: l,
+  subHeader: d
 }) {
-  const { t: d } = me(), u = o || d("common.create");
-  return /* @__PURE__ */ f.jsx(Ja, { open: e, onOpenChange: (p) => !p && !t && a(), children: /* @__PURE__ */ f.jsxs(
+  const { t: u } = me(), p = o || u("common.create");
+  return /* @__PURE__ */ f.jsx(Ja, { open: e, onOpenChange: (h) => !h && !t && a(), children: /* @__PURE__ */ f.jsxs(
     qa,
     {
       showCloseButton: !t,
@@ -11801,15 +11802,16 @@ function wA({
           /* @__PURE__ */ f.jsx(Xa, { children: n }),
           r && /* @__PURE__ */ f.jsx(qh, { children: r })
         ] }),
+        d && /* @__PURE__ */ f.jsx("div", { className: "shrink-0 border-b border-border/60", children: d }),
         /* @__PURE__ */ f.jsx("div", { className: "min-h-0 flex-1 overflow-y-auto px-3 py-3 sm:px-4 sm:py-4", children: /* @__PURE__ */ f.jsxs("div", { className: "flex min-h-full flex-col justify-center gap-3", children: [
           i && /* @__PURE__ */ f.jsx(pr, { variant: "error", children: i }),
           l
         ] }) }),
         /* @__PURE__ */ f.jsxs(Jh, { className: "shrink-0 border-t border-border/60 px-4 py-3 sm:px-5 sm:py-3.5", showCloseButton: !1, children: [
-          /* @__PURE__ */ f.jsx(pe, { type: "button", variant: "outline", onClick: a, disabled: t, children: d("common.cancel") }),
+          /* @__PURE__ */ f.jsx(pe, { type: "button", variant: "outline", onClick: a, disabled: t, children: u("common.cancel") }),
           /* @__PURE__ */ f.jsx(pe, { type: "button", onClick: () => {
             c();
-          }, disabled: t || s, children: u })
+          }, disabled: t || s, children: p })
         ] })
       ]
     }
@@ -11915,7 +11917,7 @@ function WP({
   );
 }
 function AA({ label: e = "", required: t = !1, helperText: n, children: r, className: i, align: o = "center", fullWidth: s = !1 }) {
-  return s ? /* @__PURE__ */ f.jsx(kt, { className: H("block border-b border-border/60 hover:bg-transparent md:table-row", i), children: /* @__PURE__ */ f.jsxs(ft, { colSpan: 2, className: "block w-full px-3 py-3 md:table-cell", children: [
+  return s ? /* @__PURE__ */ f.jsx(kt, { className: H("block border-b border-border/60 transition-colors hover:bg-accent/20 md:table-row", i), children: /* @__PURE__ */ f.jsxs(ft, { colSpan: 2, className: "block w-full px-3 py-3 md:table-cell", children: [
     e && /* @__PURE__ */ f.jsxs("div", { className: "mb-2 space-y-1", children: [
       /* @__PURE__ */ f.jsxs("div", { className: "inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground", children: [
         /* @__PURE__ */ f.jsx("span", { children: e }),
@@ -11924,7 +11926,7 @@ function AA({ label: e = "", required: t = !1, helperText: n, children: r, class
       n && /* @__PURE__ */ f.jsx("p", { className: "text-xs normal-case leading-5 text-muted-foreground", children: n })
     ] }),
     r
-  ] }) }) : /* @__PURE__ */ f.jsxs(kt, { className: H("block border-b border-border/60 hover:bg-transparent md:table-row", i), children: [
+  ] }) }) : /* @__PURE__ */ f.jsxs(kt, { className: H("block border-b border-border/60 transition-colors hover:bg-accent/20 md:table-row", i), children: [
     /* @__PURE__ */ f.jsx(
       ft,
       {
@@ -11966,9 +11968,26 @@ function EA({
   submitDisabled: s = !1,
   onClose: a,
   onSubmit: c,
-  children: l
+  children: l,
+  tabs: d
 }) {
-  const { t: d } = me();
+  const { t: u } = me(), [p, h] = xe(0);
+  ce(() => {
+    e || h(0);
+  }, [e]);
+  const m = d && d.length > 1 ? /* @__PURE__ */ f.jsx("div", { className: "flex gap-1 px-4 py-2 sm:px-5", children: d.map((x, b) => /* @__PURE__ */ f.jsx(
+    "button",
+    {
+      type: "button",
+      onClick: () => h(b),
+      className: H(
+        "rounded-md px-3 py-1.5 text-xs font-semibold uppercase tracking-wider transition-colors",
+        b === p ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+      ),
+      children: x.label
+    },
+    x.label
+  )) }) : void 0, g = d ? d[p]?.content : l;
   return /* @__PURE__ */ f.jsx(
     wA,
     {
@@ -11977,11 +11996,12 @@ function EA({
       title: n,
       description: r,
       error: i,
-      submitLabel: o ?? d("common.create"),
+      submitLabel: o ?? u("common.create"),
       submitDisabled: s,
       onClose: a,
       onSubmit: c,
-      children: /* @__PURE__ */ f.jsx(kA, { children: l })
+      subHeader: m,
+      children: /* @__PURE__ */ f.jsx(kA, { children: g })
     }
   );
 }

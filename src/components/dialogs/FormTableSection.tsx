@@ -19,7 +19,7 @@ type FormTableRowProps = {
 export function FormTableRow({ label = '', required = false, helperText, children, className, align = 'center', fullWidth = false }: FormTableRowProps) {
     if (fullWidth) {
         return (
-            <TableRow className={cn('block border-b border-border/60 hover:bg-transparent md:table-row', className)}>
+            <TableRow className={cn('block border-b border-border/60 transition-colors hover:bg-accent/20 md:table-row', className)}>
                 <TableCell colSpan={2} className="block w-full px-3 py-3 md:table-cell">
                     {label && (
                         <div className="mb-2 space-y-1">
@@ -41,7 +41,7 @@ export function FormTableRow({ label = '', required = false, helperText, childre
     }
 
     return (
-        <TableRow className={cn('block border-b border-border/60 hover:bg-transparent md:table-row', className)}>
+        <TableRow className={cn('block border-b border-border/60 transition-colors hover:bg-accent/20 md:table-row', className)}>
             <TableCell
                 className={cn(
                     'block w-full px-3 pt-3 pb-1.5 align-top text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground md:table-cell md:w-[160px] md:px-3 md:py-2.5',

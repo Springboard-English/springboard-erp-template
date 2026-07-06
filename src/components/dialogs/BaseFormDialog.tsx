@@ -22,6 +22,7 @@ type BaseFormDialogProps = {
     onClose: () => void;
     onSubmit: () => void | Promise<void>;
     children: ReactNode;
+    subHeader?: ReactNode;
 };
 
 export default function BaseFormDialog({
@@ -35,6 +36,7 @@ export default function BaseFormDialog({
     onClose,
     onSubmit,
     children,
+    subHeader,
 }: BaseFormDialogProps) {
     const { t } = useI18n();
     const resolvedSubmitLabel = submitLabel || t('common.create');
@@ -48,6 +50,12 @@ export default function BaseFormDialog({
                     <DialogTitle>{title}</DialogTitle>
                     {description && <DialogDescription>{description}</DialogDescription>}
                 </DialogHeader>
+
+                {subHeader && (
+                    <div className="shrink-0 border-b border-border/60">
+                        {subHeader}
+                    </div>
+                )}
 
                 <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3 sm:px-4 sm:py-4">
                     <div className="flex min-h-full flex-col justify-center gap-3">
