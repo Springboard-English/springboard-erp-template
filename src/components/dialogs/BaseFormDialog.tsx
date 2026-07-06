@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import StatusBanner from '@/components/StatusBanner';
 import { useI18n } from '@/context/I18nContext';
+import { cn } from '@/lib/utils';
 
 type BaseFormDialogProps = {
     open: boolean;
@@ -46,16 +47,16 @@ export default function BaseFormDialog({
                 showCloseButton={!saving}
                 className="!fixed !top-1/2 !left-1/2 !-translate-x-1/2 !-translate-y-1/2 !w-[calc(100%-1rem)] max-h-[calc(100svh-1rem)] !max-w-none sm:!w-[80vw] sm:max-h-[90vh] sm:!max-w-none flex flex-col overflow-hidden border-0 bg-card p-0 shadow-xl"
             >
-                <DialogHeader className="shrink-0 border-b border-border/60 px-4 py-3 text-left sm:px-5 sm:py-3.5">
-                    <DialogTitle>{title}</DialogTitle>
+                <DialogHeader
+                    className={cn(
+                        'shrink-0 border-b border-border/60 px-4 text-left sm:px-5',
+                        subHeader ? 'pb-0 pt-3 sm:pt-3.5' : 'py-3 sm:py-3.5',
+                    )}
+                >
+                    <DialogTitle className={subHeader ? 'mb-3' : undefined}>{title}</DialogTitle>
                     {description && <DialogDescription>{description}</DialogDescription>}
+                    {subHeader}
                 </DialogHeader>
-
-                {subHeader && (
-                    <div className="shrink-0 border-b border-border/60">
-                        {subHeader}
-                    </div>
-                )}
 
                 <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3 sm:px-4 sm:py-4">
                     <div className="flex min-h-full flex-col justify-center gap-3">

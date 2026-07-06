@@ -46,17 +46,17 @@ export default function FormTableDialog({
     }, [open]);
 
     const tabBar = tabs && tabs.length > 1 ? (
-        <div className="flex gap-1 px-4 py-2 sm:px-5">
+        <div className="-mx-4 flex gap-1 border-t border-border/40 px-3 py-2 sm:-mx-5 sm:px-4">
             {tabs.map((tab, i) => (
                 <button
                     key={tab.label}
                     type="button"
                     onClick={() => setActiveTab(i)}
                     className={cn(
-                        'rounded-md px-3 py-1.5 text-xs font-semibold uppercase tracking-wider transition-colors',
+                        'rounded-md px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-widest transition-all',
                         i === activeTab
-                            ? 'bg-accent text-accent-foreground'
-                            : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+                            ? 'bg-primary text-primary-foreground shadow-sm'
+                            : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
                     )}
                 >
                     {tab.label}

@@ -11798,11 +11798,20 @@ function wA({
       showCloseButton: !t,
       className: "!fixed !top-1/2 !left-1/2 !-translate-x-1/2 !-translate-y-1/2 !w-[calc(100%-1rem)] max-h-[calc(100svh-1rem)] !max-w-none sm:!w-[80vw] sm:max-h-[90vh] sm:!max-w-none flex flex-col overflow-hidden border-0 bg-card p-0 shadow-xl",
       children: [
-        /* @__PURE__ */ f.jsxs(Ka, { className: "shrink-0 border-b border-border/60 px-4 py-3 text-left sm:px-5 sm:py-3.5", children: [
-          /* @__PURE__ */ f.jsx(Xa, { children: n }),
-          r && /* @__PURE__ */ f.jsx(qh, { children: r })
-        ] }),
-        d && /* @__PURE__ */ f.jsx("div", { className: "shrink-0 border-b border-border/60", children: d }),
+        /* @__PURE__ */ f.jsxs(
+          Ka,
+          {
+            className: H(
+              "shrink-0 border-b border-border/60 px-4 text-left sm:px-5",
+              d ? "pb-0 pt-3 sm:pt-3.5" : "py-3 sm:py-3.5"
+            ),
+            children: [
+              /* @__PURE__ */ f.jsx(Xa, { className: d ? "mb-3" : void 0, children: n }),
+              r && /* @__PURE__ */ f.jsx(qh, { children: r }),
+              d
+            ]
+          }
+        ),
         /* @__PURE__ */ f.jsx("div", { className: "min-h-0 flex-1 overflow-y-auto px-3 py-3 sm:px-4 sm:py-4", children: /* @__PURE__ */ f.jsxs("div", { className: "flex min-h-full flex-col justify-center gap-3", children: [
           i && /* @__PURE__ */ f.jsx(pr, { variant: "error", children: i }),
           l
@@ -11975,14 +11984,14 @@ function EA({
   ce(() => {
     e || h(0);
   }, [e]);
-  const m = d && d.length > 1 ? /* @__PURE__ */ f.jsx("div", { className: "flex gap-1 px-4 py-2 sm:px-5", children: d.map((x, b) => /* @__PURE__ */ f.jsx(
+  const m = d && d.length > 1 ? /* @__PURE__ */ f.jsx("div", { className: "-mx-4 flex gap-1 border-t border-border/40 px-3 py-2 sm:-mx-5 sm:px-4", children: d.map((x, b) => /* @__PURE__ */ f.jsx(
     "button",
     {
       type: "button",
       onClick: () => h(b),
       className: H(
-        "rounded-md px-3 py-1.5 text-xs font-semibold uppercase tracking-wider transition-colors",
-        b === p ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+        "rounded-md px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-widest transition-all",
+        b === p ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
       ),
       children: x.label
     },
