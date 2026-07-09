@@ -60,7 +60,10 @@ export default function BaseFormDialog({
                     {subHeader}
                 </DialogHeader>
 
-                <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3 sm:px-4 sm:py-4">
+                <div className={cn(
+                    'flex-1 overflow-y-auto px-3 py-3 sm:px-4 sm:py-4',
+                    subHeader ? 'min-h-[300px]' : 'min-h-0',
+                )}>
                     <div className="flex min-h-full flex-col justify-center gap-3">
                         {error && <StatusBanner variant="error">{error}</StatusBanner>}
                         {children}

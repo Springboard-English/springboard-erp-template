@@ -11813,7 +11813,10 @@ function wA({
             ]
           }
         ),
-        /* @__PURE__ */ d.jsx("div", { className: "min-h-0 flex-1 overflow-y-auto px-3 py-3 sm:px-4 sm:py-4", children: /* @__PURE__ */ d.jsxs("div", { className: "flex min-h-full flex-col justify-center gap-3", children: [
+        /* @__PURE__ */ d.jsx("div", { className: H(
+          "flex-1 overflow-y-auto px-3 py-3 sm:px-4 sm:py-4",
+          u ? "min-h-[300px]" : "min-h-0"
+        ), children: /* @__PURE__ */ d.jsxs("div", { className: "flex min-h-full flex-col justify-center gap-3", children: [
           i && /* @__PURE__ */ d.jsx(pr, { variant: "error", children: i }),
           f
         ] }) }),
