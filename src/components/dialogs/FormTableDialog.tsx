@@ -7,6 +7,10 @@ import { cn } from '@/lib/utils';
 export type FormTableDialogTab = {
     label: string;
     content: ReactNode;
+    /** Skip the FormTableSection wrapper — use for tabs with custom table layouts */
+    raw?: boolean;
+    /** Show a completion checkmark on the tab pill */
+    complete?: boolean;
 };
 
 type FormTableDialogProps = {
@@ -17,6 +21,7 @@ type FormTableDialogProps = {
     error?: string | null;
     submitLabel?: string;
     submitDisabled?: boolean;
+    submitDisabledReason?: string;
     onClose: () => void;
     onSubmit: () => void | Promise<void>;
     children?: ReactNode;
@@ -31,6 +36,7 @@ export default function FormTableDialog({
     error,
     submitLabel,
     submitDisabled = false,
+    submitDisabledReason,
     onClose,
     onSubmit,
     children,
@@ -53,21 +59,27 @@ export default function FormTableDialog({
                     type="button"
                     onClick={() => setActiveTab(i)}
                     className={cn(
-                        'rounded-md px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-widest transition-all',
+                        'inline-flex items-center gap-1.5 rounded-md px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-widest transition-all',
                         i === activeTab
                             ? 'bg-primary text-primary-foreground shadow-sm'
                             : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
                     )}
                 >
                     {tab.label}
+                    {tab.complete && (
+                        <span className={cn(
+                            'text-[10px] font-bold leading-none',
+                            i === activeTab ? 'text-primary-foreground/70' : 'text-emerald-500',
+                        )}>✓</span>
+                    )}
                 </button>
             ))}
         </div>
     ) : undefined;
 
-    const content = tabs
-        ? tabs[activeTab]?.content
-        : children;
+    const currentTab = tabs?.[activeTab];
+    const content = currentTab?.content ?? children;
+    const isRaw = currentTab?.raw ?? false;
 
     return (
         <BaseFormDialog
@@ -78,11 +90,12 @@ export default function FormTableDialog({
             error={error}
             submitLabel={submitLabel ?? t('common.create')}
             submitDisabled={submitDisabled}
+            submitDisabledReason={submitDisabledReason}
             onClose={onClose}
             onSubmit={onSubmit}
             subHeader={tabBar}
         >
-            <FormTableSection>{content}</FormTableSection>
+            {isRaw ? content : <FormTableSection>{content}</FormTableSection>}
         </BaseFormDialog>
     );
 }

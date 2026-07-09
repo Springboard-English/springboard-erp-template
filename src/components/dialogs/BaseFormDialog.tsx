@@ -20,6 +20,7 @@ type BaseFormDialogProps = {
     error?: string | null;
     submitLabel?: string;
     submitDisabled?: boolean;
+    submitDisabledReason?: string;
     onClose: () => void;
     onSubmit: () => void | Promise<void>;
     children: ReactNode;
@@ -34,6 +35,7 @@ export default function BaseFormDialog({
     error,
     submitLabel = 'Create',
     submitDisabled = false,
+    submitDisabledReason,
     onClose,
     onSubmit,
     children,
@@ -66,6 +68,11 @@ export default function BaseFormDialog({
                 </div>
 
                 <DialogFooter className="shrink-0 border-t border-border/60 px-4 py-3 sm:px-5 sm:py-3.5" showCloseButton={false}>
+                    {submitDisabledReason && submitDisabled && (
+                        <p className="mr-auto max-w-[50%] text-xs text-muted-foreground/80">
+                            {submitDisabledReason}
+                        </p>
+                    )}
                     <Button type="button" variant="outline" onClick={onClose} disabled={saving}>
                         {t('common.cancel')}
                     </Button>
