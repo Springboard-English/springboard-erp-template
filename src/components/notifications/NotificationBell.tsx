@@ -4,13 +4,13 @@ import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useNotifications } from "@/context/NotificationContext";
 import { useI18n } from "@/context/I18nContext";
+import {
+    getNotificationPriorityKind,
+    shouldMarkNotificationReadOnView,
+} from "@/api_calls/notifications";
 
 function formatPriority(priority: string | null) {
-    const normalized = (priority ?? "").trim().toUpperCase();
-    if (normalized === "IMMEDIATE") return "immediate";
-    if (normalized === "URGENT") return "urgent";
-    if (normalized === "INFORMATIVE") return "informative";
-    return "notice";
+    return getNotificationPriorityKind(priority);
 }
 
 function priorityBadgeClass(priority: string | null) {
@@ -40,7 +40,7 @@ interface NotificationBellProps {
 
 export default function NotificationBell({ viewAllPath }: NotificationBellProps) {
     const { t } = useI18n();
-    const { immediate, urgent, informative, unreadCount, isLoading, dismiss, refetch } =
+    const { immediate, urgent, informative, unreadCount, isLoading, dismiss, markSeen, refetch } =
         useNotifications();
     const [open, setOpen] = useState(false);
     const rootRef = useRef<HTMLDivElement>(null);
@@ -60,6 +60,13 @@ export default function NotificationBell({ viewAllPath }: NotificationBellProps)
         document.addEventListener("mousedown", handlePointerDown);
         return () => document.removeEventListener("mousedown", handlePointerDown);
     }, [open]);
+
+    useEffect(() => {
+        if (!open) return;
+        informative
+            .filter((notification) => shouldMarkNotificationReadOnView(notification))
+            .forEach((notification) => markSeen(notification.appsheet_key));
+    }, [informative, markSeen, open]);
 
     return (
         <div ref={rootRef} className="relative">

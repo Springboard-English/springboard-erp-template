@@ -1,7 +1,10 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useAuth } from "./AuthContext";
-import { fetchUserNotifications, markNotificationRead } from "../api_calls/notifications";
+import {
+    fetchUserNotifications,
+    markNotificationRead,
+} from "../api_calls/notifications";
 import type { UserNotification } from "../api_calls/notifications";
 
 function isActive(n: UserNotification): boolean {
@@ -18,6 +21,7 @@ export interface NotificationContextValue {
     unreadCount: number;
     isLoading: boolean;
     dismiss: (key: string) => void;
+    markSeen: (key: string) => void;
     refetch: () => void;
 }
 
@@ -27,6 +31,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     const { isAuthenticated } = useAuth();
     const [allNotifications, setAllNotifications] = useState<UserNotification[]>([]);
     const [dismissedKeys, setDismissedKeys] = useState<Set<string>>(new Set());
+    const [readKeys, setReadKeys] = useState<Set<string>>(new Set());
     const [isLoading, setIsLoading] = useState(false);
     const fetchingRef = useRef(false);
 
@@ -53,6 +58,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         if (!isAuthenticated) {
             setAllNotifications([]);
             setDismissedKeys(new Set());
+            setReadKeys(new Set());
             return;
         }
         void doFetch();
@@ -60,16 +66,25 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isAuthenticated]);
 
-    const dismiss = useCallback((appsheetKey: string) => {
-        setDismissedKeys((prev) => new Set([...prev, appsheetKey]));
+    const markSeen = useCallback((appsheetKey: string) => {
+        setReadKeys((prev) => new Set([...prev, appsheetKey]));
         const notification = allNotifications.find((n) => n.appsheet_key === appsheetKey);
         if (notification?.users_notification_key) {
             void markNotificationRead(notification.users_notification_key);
         }
     }, [allNotifications]);
 
+    const dismiss = useCallback((appsheetKey: string) => {
+        setDismissedKeys((prev) => new Set([...prev, appsheetKey]));
+        markSeen(appsheetKey);
+    }, [markSeen]);
+
     const activeVisible = allNotifications.filter(
-        (n) => isActive(n) && !dismissedKeys.has(n.appsheet_key) && n.read_status !== true,
+        (n) =>
+            isActive(n) &&
+            !dismissedKeys.has(n.appsheet_key) &&
+            n.read_status !== true &&
+            !readKeys.has(n.appsheet_key),
     );
 
     const immediate = activeVisible.filter((n) => n.priority === "IMMEDIATE");
@@ -79,7 +94,16 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
     return (
         <NotificationContext.Provider
-            value={{ immediate, urgent, informative, unreadCount, isLoading, dismiss, refetch }}
+            value={{
+                immediate,
+                urgent,
+                informative,
+                unreadCount,
+                isLoading,
+                dismiss,
+                markSeen,
+                refetch,
+            }}
         >
             {children}
         </NotificationContext.Provider>

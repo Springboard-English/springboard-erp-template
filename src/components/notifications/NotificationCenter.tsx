@@ -1,7 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Bell, CheckCheck, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { fetchUserNotifications, markNotificationRead } from "@/api_calls/notifications";
+import {
+    fetchUserNotifications,
+    getNotificationPriorityKind,
+    markNotificationRead,
+    shouldMarkNotificationReadOnView,
+} from "@/api_calls/notifications";
 import type { UserNotification } from "@/api_calls/notifications";
 import { useAuth } from "@/context/AuthContext";
 
@@ -14,10 +19,10 @@ function priorityBadgeClass(priority: string | null) {
 }
 
 function formatPriorityLabel(priority: string | null): string {
-    const normalized = (priority ?? "").trim().toUpperCase();
-    if (normalized === "IMMEDIATE") return "Immediate";
-    if (normalized === "URGENT") return "Urgent";
-    if (normalized === "INFORMATIVE") return "Informative";
+    const normalized = getNotificationPriorityKind(priority);
+    if (normalized === "immediate") return "Immediate";
+    if (normalized === "urgent") return "Urgent";
+    if (normalized === "informative") return "Informative";
     return priority ?? "Notice";
 }
 
@@ -62,6 +67,22 @@ export default function NotificationCenter() {
         if (!isAuthenticated) return;
         void load();
     }, [isAuthenticated, load]);
+
+    useEffect(() => {
+        notifications.forEach((notification) => {
+            if (
+                !shouldMarkNotificationReadOnView(notification) ||
+                !notification.users_notification_key ||
+                readKeys.has(notification.appsheet_key) ||
+                notification.read_status === true
+            ) {
+                return;
+            }
+
+            setReadKeys((prev) => new Set([...prev, notification.appsheet_key]));
+            void markNotificationRead(notification.users_notification_key);
+        });
+    }, [notifications, readKeys]);
 
     const markRead = (n: UserNotification) => {
         if (!n.users_notification_key || readKeys.has(n.appsheet_key) || n.read_status === true)
@@ -184,7 +205,9 @@ export default function NotificationCenter() {
                                         )}
                                     </div>
                                 </div>
-                                {!read && n.users_notification_key && (
+                                {!read &&
+                                    !shouldMarkNotificationReadOnView(n) &&
+                                    n.users_notification_key && (
                                     <button
                                         type="button"
                                         onClick={() => markRead(n)}

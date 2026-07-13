@@ -2,6 +2,7 @@ import { API_CONFIG } from "../config/api";
 import { fetchWithRefresh } from "./fetchWithRefresh";
 
 export type NotificationPriority = "IMMEDIATE" | "URGENT" | "INFORMATIVE";
+export type NotificationPriorityKind = "immediate" | "urgent" | "informative" | "notice";
 
 export interface UserNotification {
     appsheet_key: string;
@@ -16,6 +17,67 @@ export interface UserNotification {
     sender_key: string | null;
     read_status: boolean | null;
     read_at: string | null;
+}
+
+export function getNotificationPriorityKind(
+    priority: NotificationPriority | string | null | undefined,
+): NotificationPriorityKind {
+    const normalized = (priority ?? "").trim().toUpperCase();
+    if (normalized === "IMMEDIATE") return "immediate";
+    if (normalized === "URGENT") return "urgent";
+    if (normalized === "INFORMATIVE") return "informative";
+    return "notice";
+}
+
+export function isImmediateNotification(
+    notificationOrPriority:
+        | Pick<UserNotification, "priority">
+        | NotificationPriority
+        | string
+        | null
+        | undefined,
+): boolean {
+    const priority =
+        typeof notificationOrPriority === "object" && notificationOrPriority !== null
+            ? notificationOrPriority.priority
+            : notificationOrPriority;
+    return getNotificationPriorityKind(priority) === "immediate";
+}
+
+export function isUrgentNotification(
+    notificationOrPriority:
+        | Pick<UserNotification, "priority">
+        | NotificationPriority
+        | string
+        | null
+        | undefined,
+): boolean {
+    const priority =
+        typeof notificationOrPriority === "object" && notificationOrPriority !== null
+            ? notificationOrPriority.priority
+            : notificationOrPriority;
+    return getNotificationPriorityKind(priority) === "urgent";
+}
+
+export function isInformativeNotification(
+    notificationOrPriority:
+        | Pick<UserNotification, "priority">
+        | NotificationPriority
+        | string
+        | null
+        | undefined,
+): boolean {
+    const priority =
+        typeof notificationOrPriority === "object" && notificationOrPriority !== null
+            ? notificationOrPriority.priority
+            : notificationOrPriority;
+    return getNotificationPriorityKind(priority) === "informative";
+}
+
+export function shouldMarkNotificationReadOnView(
+    notification: Pick<UserNotification, "priority">,
+): boolean {
+    return isInformativeNotification(notification);
 }
 
 function toUserNotification(raw: unknown): UserNotification | null {
