@@ -80,6 +80,7 @@ export default function MobileCardList<T>({
 }: MobileCardListProps<T>) {
   const { t } = useI18n();
   const resolvedEmptyMessage = emptyMessage ?? t("mobileCardList.empty");
+  const resolvedEndOfContentMessage = t("mobileCardList.endOfContent");
   const [accumulatedRows, setAccumulatedRows] = useState<T[]>([]);
   const accumulatedMapRef = useRef<Map<string | number, T>>(new Map());
   const rowKeyRef = useRef(rowKey);
@@ -272,6 +273,11 @@ export default function MobileCardList<T>({
       ? rows.slice(page * pageSize, (page + 1) * pageSize)
       : rows;
   const activeRows = infiniteScroll ? displayRowsForInfinite : standardDisplayRows;
+  const showEndOfContent =
+    infiniteScroll &&
+    !loading &&
+    activeRows.length > 0 &&
+    (onLoadMore ? !hasMore : visibleCount >= rows.length);
 
   if (loading && activeRows.length === 0) {
     return (
@@ -305,6 +311,11 @@ export default function MobileCardList<T>({
           {loading ? (
             <div className="flex justify-center py-4">
               <Loader2 className="size-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : null}
+          {showEndOfContent ? (
+            <div className="py-3 text-center text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              {resolvedEndOfContentMessage}
             </div>
           ) : null}
         </>

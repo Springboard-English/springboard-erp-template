@@ -36,3 +36,17 @@ jobs:
         run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Notify consumer repos
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.DISPATCH_TOKEN }}
+          VERSION: ${{ github.event.release.tag_name || 'latest' }}
+        run: |
+          for repo in erp-crm erp-hrm lms.springboard.vn; do
+            gh api repos/Springboard-English/$repo/dispatches \
+              --method POST \
+              -f event_type=template-published \
+              -f "client_payload[version]=$VERSION" || \
+              echo "Warning: dispatch to $repo failed (repo may not have the workflow yet)"
+          done
