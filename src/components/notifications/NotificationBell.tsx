@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState, useEffect } from "react";
 import { Bell, ExternalLink, RefreshCw, X } from "lucide-react";
+import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useNotifications } from "@/context/NotificationContext";
 import { useI18n } from "@/context/I18nContext";
@@ -170,14 +171,14 @@ export default function NotificationBell({ viewAllPath }: NotificationBellProps)
 
                     {viewAllPath && (
                         <div className="border-t border-border/60 px-4 py-2.5">
-                            <a
-                                href={viewAllPath}
+                            <Link
+                                to={viewAllPath}
                                 onClick={() => setOpen(false)}
                                 className="flex w-full items-center justify-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
                             >
                                 {t("common.viewAll", "View all notifications")}
                                 <ExternalLink className="size-3" />
-                            </a>
+                            </Link>
                         </div>
                     )}
                 </div>
