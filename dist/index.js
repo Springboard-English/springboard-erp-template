@@ -25950,6 +25950,7 @@ function JR() {
                   "Sent: ",
                   ui(g.created_at)
                 ] }),
+                g.sender_key === null && /* @__PURE__ */ d.jsx("span", { className: "italic", children: "Anonymous" }),
                 g.start_time && /* @__PURE__ */ d.jsxs("span", { children: [
                   "From: ",
                   ui(g.start_time)

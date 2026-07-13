@@ -170,6 +170,9 @@ export default function NotificationCenter() {
                                         {n.created_at && (
                                             <span>Sent: {formatTimestamp(n.created_at)}</span>
                                         )}
+                                        {n.sender_key === null && (
+                                            <span className="italic">Anonymous</span>
+                                        )}
                                         {n.start_time && (
                                             <span>From: {formatTimestamp(n.start_time)}</span>
                                         )}
