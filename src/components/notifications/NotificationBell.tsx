@@ -93,16 +93,6 @@ export default function NotificationBell({ viewAllPath }: NotificationBellProps)
                             {t("notificationBell.title")}
                         </p>
                         <div className="flex items-center gap-2">
-                            {viewAllPath && (
-                                <a
-                                    href={viewAllPath}
-                                    onClick={() => setOpen(false)}
-                                    className="flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
-                                >
-                                    {t("common.viewAll", "View all")}
-                                    <ExternalLink className="size-3" />
-                                </a>
-                            )}
                             {allNotifications.length > 0 && (
                                 <button
                                     type="button"
@@ -178,7 +168,7 @@ export default function NotificationBell({ viewAllPath }: NotificationBellProps)
                         </ul>
                     )}
 
-                    {viewAllPath && allNotifications.length > 0 && (
+                    {viewAllPath && (
                         <div className="border-t border-border/60 px-4 py-2.5">
                             <a
                                 href={viewAllPath}
