@@ -40,7 +40,7 @@ function toUserNotification(raw: unknown): UserNotification | null {
 }
 
 export async function fetchUserNotifications(activeOnly = true): Promise<UserNotification[]> {
-    const url = new URL(`${API_CONFIG.baseURL}/users/me/notifications`);
+    const url = new URL(`${API_CONFIG.baseURL}/v2/users/me/notifications`);
     if (!activeOnly) url.searchParams.set("active_only", "false");
     url.searchParams.set("page_size", "100");
     const response = await fetchWithRefresh(url.toString(), {
@@ -65,7 +65,7 @@ export async function fetchUserNotifications(activeOnly = true): Promise<UserNot
 export async function markNotificationRead(usersNotificationKey: string): Promise<void> {
     try {
         await fetchWithRefresh(
-            `${API_CONFIG.baseURL}/users/me/notifications/${encodeURIComponent(usersNotificationKey)}`,
+            `${API_CONFIG.baseURL}/v2/users/me/notifications/${encodeURIComponent(usersNotificationKey)}`,
             {
                 method: "PATCH",
                 headers: { Accept: "application/json", "Content-Type": "application/json" },

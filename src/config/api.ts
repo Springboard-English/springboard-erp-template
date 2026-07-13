@@ -46,10 +46,27 @@ export const API_CONFIG = {
     },
 } as const;
 
+const UNVERSIONED_ENDPOINTS: ReadonlySet<keyof typeof API_CONFIG.endpoints> = new Set([
+    "login",
+    "authenticateGoogle",
+    "refresh",
+    "logout",
+    "resetPassword",
+    "resetPasswordAuthorised",
+]);
+
+function v2(path: string): string {
+    return `${API_CONFIG.baseURL}/v2${path}`;
+}
+
 export function getEndpoint(
     endpoint: keyof typeof API_CONFIG.endpoints,
 ): string {
-    return `${API_CONFIG.baseURL}${API_CONFIG.endpoints[endpoint]}`;
+    const path = API_CONFIG.endpoints[endpoint];
+    if (UNVERSIONED_ENDPOINTS.has(endpoint)) {
+        return `${API_CONFIG.baseURL}${path}`;
+    }
+    return `${API_CONFIG.baseURL}/v2${path}`;
 }
 
 export function getInlineEndpoint(
@@ -59,11 +76,11 @@ export function getInlineEndpoint(
 }
 
 export function getClassSchedulesEndpoint(appsheetKey: string): string {
-    return `${API_CONFIG.baseURL}/classes/${encodeURIComponent(appsheetKey)}/schedules`;
+    return v2(`/classes/${encodeURIComponent(appsheetKey)}/schedules`);
 }
 
 export function getScheduleDetailsEndpoint(scheduleKey: string): string {
-    return `${API_CONFIG.baseURL}/schedules/${encodeURIComponent(scheduleKey)}`;
+    return v2(`/schedules/${encodeURIComponent(scheduleKey)}`);
 }
 
 export function getSchedulePatchEndpoint(scheduleKey: string): string {
@@ -71,7 +88,7 @@ export function getSchedulePatchEndpoint(scheduleKey: string): string {
 }
 
 export function getClassDetailsEndpoint(classKey: string): string {
-    return `${API_CONFIG.baseURL}/classes/${encodeURIComponent(classKey)}`;
+    return v2(`/classes/${encodeURIComponent(classKey)}`);
 }
 
 export function getClassPatchEndpoint(classKey: string): string {
@@ -79,104 +96,104 @@ export function getClassPatchEndpoint(classKey: string): string {
 }
 
 export function getClassSessionsEndpoint(appsheetKey: string): string {
-    return `${API_CONFIG.baseURL}/classes/${encodeURIComponent(appsheetKey)}/sessions`;
+    return v2(`/classes/${encodeURIComponent(appsheetKey)}/sessions`);
 }
 
 export function getClassFeedbacksEndpoint(appsheetKey: string): string {
-    return `${API_CONFIG.baseURL}/classes/${encodeURIComponent(appsheetKey)}/feedbacks`;
+    return v2(`/classes/${encodeURIComponent(appsheetKey)}/feedbacks`);
 }
 
 export function getClassTestsEndpoint(appsheetKey: string): string {
-    return `${API_CONFIG.baseURL}/classes/${encodeURIComponent(appsheetKey)}/tests`;
+    return v2(`/classes/${encodeURIComponent(appsheetKey)}/tests`);
 }
 
 export function getTestDetailsEndpoint(testKey: string): string {
-    return `${API_CONFIG.baseURL}/tests/${encodeURIComponent(testKey)}`;
+    return v2(`/tests/${encodeURIComponent(testKey)}`);
 }
 
 export function getTestAssessmentsEndpoint(testKey: string): string {
-    return `${API_CONFIG.baseURL}/tests/${encodeURIComponent(testKey)}/assessments`;
+    return v2(`/tests/${encodeURIComponent(testKey)}/assessments`);
 }
 
 export function getTestAssessmentPdfEndpoint(
     testKey: string,
     assessmentId: string,
 ): string {
-    return `${API_CONFIG.baseURL}/tests/${encodeURIComponent(testKey)}/assessments/${encodeURIComponent(assessmentId)}/pdf`;
+    return v2(`/tests/${encodeURIComponent(testKey)}/assessments/${encodeURIComponent(assessmentId)}/pdf`);
 }
 
 export function getTestSessionsEndpoint(testKey: string): string {
-    return `${API_CONFIG.baseURL}/tests/${encodeURIComponent(testKey)}/sessions`;
+    return v2(`/tests/${encodeURIComponent(testKey)}/sessions`);
 }
 
 export function getTestSessionDetailsEndpoint(
     testKey: string,
     testSessionId: string,
 ): string {
-    return `${API_CONFIG.baseURL}/tests/${encodeURIComponent(testKey)}/sessions/${encodeURIComponent(testSessionId)}`;
+    return v2(`/tests/${encodeURIComponent(testKey)}/sessions/${encodeURIComponent(testSessionId)}`);
 }
 
 export function getTestSectionsEndpoint(testKey: string): string {
-    return `${API_CONFIG.baseURL}/tests/${encodeURIComponent(testKey)}/sections`;
+    return v2(`/tests/${encodeURIComponent(testKey)}/sections`);
 }
 
 export function getTestSectionDetailsEndpoint(
     testKey: string,
     sectionId: string,
 ): string {
-    return `${API_CONFIG.baseURL}/tests/${encodeURIComponent(testKey)}/sections/${encodeURIComponent(sectionId)}`;
+    return v2(`/tests/${encodeURIComponent(testKey)}/sections/${encodeURIComponent(sectionId)}`);
 }
 
 export function getAssessmentsEndpoint(): string {
-    return `${API_CONFIG.baseURL}/assessments`;
+    return v2(`/assessments`);
 }
 
 export function getAssessmentDetailsEndpoint(assessmentId: string): string {
-    return `${API_CONFIG.baseURL}/assessments/${encodeURIComponent(assessmentId)}`;
+    return v2(`/assessments/${encodeURIComponent(assessmentId)}`);
 }
 
 export function getAssessmentSectionsEndpoint(assessmentId: string): string {
-    return `${API_CONFIG.baseURL}/assessments/${encodeURIComponent(assessmentId)}/sections`;
+    return v2(`/assessments/${encodeURIComponent(assessmentId)}/sections`);
 }
 
 export function getAssessmentSectionDetailsEndpoint(
     assessmentId: string,
     sectionId: string,
 ): string {
-    return `${API_CONFIG.baseURL}/assessments/${encodeURIComponent(assessmentId)}/sections/${encodeURIComponent(sectionId)}`;
+    return v2(`/assessments/${encodeURIComponent(assessmentId)}/sections/${encodeURIComponent(sectionId)}`);
 }
 
 export function getFeedbackDetailsEndpoint(appsheetKey: string): string {
-    return `${API_CONFIG.baseURL}/feedbacks/${encodeURIComponent(appsheetKey)}`;
+    return v2(`/feedbacks/${encodeURIComponent(appsheetKey)}`);
 }
 
 export function getClassRegistrationsEndpoint(appsheetKey: string): string {
-    return `${API_CONFIG.baseURL}/classes/${encodeURIComponent(appsheetKey)}/registrations`;
+    return v2(`/classes/${encodeURIComponent(appsheetKey)}/registrations`);
 }
 
 export function getSessionAttendancesEndpoint(sessionKey: string): string {
-    return `${API_CONFIG.baseURL}/sessions/${encodeURIComponent(sessionKey)}/attendances`;
+    return v2(`/sessions/${encodeURIComponent(sessionKey)}/attendances`);
 }
 
 export function getAttendancePatchEndpoint(attendanceId: string): string {
-    return `${API_CONFIG.baseURL}/attendances/${encodeURIComponent(attendanceId)}`;
+    return v2(`/attendances/${encodeURIComponent(attendanceId)}`);
 }
 
 export function getSessionDetailsEndpoint(sessionKey: string): string {
-    return `${API_CONFIG.baseURL}/sessions/${encodeURIComponent(sessionKey)}`;
+    return v2(`/sessions/${encodeURIComponent(sessionKey)}`);
 }
 
 export function getRegistrationPatchEndpoint(registrationId: string): string {
-    return `${API_CONFIG.baseURL}/registrations/${encodeURIComponent(registrationId)}`;
+    return v2(`/registrations/${encodeURIComponent(registrationId)}`);
 }
 
 export function getNotificationEndpoint(notificationKey: string): string {
-    return `${API_CONFIG.baseURL}/notifications/${encodeURIComponent(notificationKey)}`;
+    return v2(`/notifications/${encodeURIComponent(notificationKey)}`);
 }
 
 export function getSessionActionEndpoint(
     sessionKey: string,
     action: "join" | "start",
 ): string {
-    return `${API_CONFIG.baseURL}/sessions/${encodeURIComponent(sessionKey)}/${action}`;
+    return v2(`/sessions/${encodeURIComponent(sessionKey)}/${action}`);
 }
