@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useAuth } from "./AuthContext";
-import { fetchUserNotifications, dismissNotification } from "../api_calls/notifications";
+import { fetchUserNotifications, markNotificationRead } from "../api_calls/notifications";
 import type { UserNotification } from "../api_calls/notifications";
 
 function isActive(n: UserNotification): boolean {
@@ -60,13 +60,16 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isAuthenticated]);
 
-    const dismiss = useCallback((key: string) => {
-        setDismissedKeys((prev) => new Set([...prev, key]));
-        void dismissNotification(key);
-    }, []);
+    const dismiss = useCallback((appsheetKey: string) => {
+        setDismissedKeys((prev) => new Set([...prev, appsheetKey]));
+        const notification = allNotifications.find((n) => n.appsheet_key === appsheetKey);
+        if (notification?.users_notification_key) {
+            void markNotificationRead(notification.users_notification_key);
+        }
+    }, [allNotifications]);
 
     const activeVisible = allNotifications.filter(
-        (n) => isActive(n) && !dismissedKeys.has(n.appsheet_key),
+        (n) => isActive(n) && !dismissedKeys.has(n.appsheet_key) && n.read_status !== true,
     );
 
     const immediate = activeVisible.filter((n) => n.priority === "IMMEDIATE");

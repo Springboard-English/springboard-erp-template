@@ -71,6 +71,8 @@ export type { NotificationContextValue } from "./context/NotificationContext";
 export { MobileFABProvider, useMobileFABContext, useMobileFAB, MobileFloatingActionButton, } from "./context/MobileFABContext";
 export type { MobileFABConfig, MobileFABContextValue, MobileFloatingActionButtonProps, } from "./context/MobileFABContext";
 export type { UserNotification, NotificationPriority } from "./api_calls/notifications";
+export { fetchUserNotifications, markNotificationRead } from "./api_calls/notifications";
 export { default as NotificationBell } from "./components/notifications/NotificationBell";
+export { default as NotificationCenter } from "./components/notifications/NotificationCenter";
 export { default as ImmediateNotificationDialog } from "./components/notifications/ImmediateNotificationDialog";
 export { default as UrgentNotificationBanner } from "./components/notifications/UrgentNotificationBanner";
