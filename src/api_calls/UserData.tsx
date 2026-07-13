@@ -100,6 +100,11 @@ function getCurrentUserPayload(data: unknown): unknown {
 
     const record = data as Record<string, unknown>;
 
+    // v2 ApiEnvelope: { attributes: {...}, objects: [user] }
+    if (Array.isArray(record.objects) && record.objects.length > 0) {
+        return record.objects[0];
+    }
+
     if (record.user) {
         return record.user;
     }
@@ -654,13 +659,19 @@ function getArrayPayload<T = unknown>(data: unknown, legacyKey?: string): T[] {
         return data as T[];
     }
 
-    if (
-        legacyKey &&
-        data &&
-        typeof data === "object" &&
-        Array.isArray((data as Record<string, unknown>)[legacyKey])
-    ) {
-        return (data as Record<string, T[]>)[legacyKey];
+    if (!data || typeof data !== "object") {
+        return [];
+    }
+
+    const record = data as Record<string, unknown>;
+
+    // v2 ApiEnvelope: { attributes: {...}, objects: [...] }
+    if (Array.isArray(record.objects)) {
+        return record.objects as T[];
+    }
+
+    if (legacyKey && Array.isArray(record[legacyKey])) {
+        return record[legacyKey] as T[];
     }
 
     return [];
