@@ -1,11 +1,17 @@
-All views are under src/views.
+# AGENTS.md
 
-All views should reuse as much available components as possible, and prefer to alter the shared components before creating a view-specific solution.
+React + TypeScript component library (`@springboard-english/springboard-erp-template`) providing shared UI, auth, and data building blocks for Springboard's ERP apps. Built with Vite (library mode) + Tailwind v4; see `README.md` for full stack/repo details.
 
-All views should stay consistent with each other. Use ManagementClassDetails as the reference shape and interaction pattern.
+## Layout
 
-Shared mobile behavior should be solved in shared components, not patched per view. Avoid horizontal scrolling for core detail or form content when a stacked mobile layout is possible.
+- `src/exports.ts` — public API surface and build entry; anything consumers import must be re-exported here.
+- `src/views/` — full pages. `src/components/` — shared components (`ui/` primitives, `layout/` detail scaffolds, `management/`, `dialogs/`, `question-builder/`, `notifications/`, `guides/`).
+- `src/context/`, `src/api_calls/`, `src/auth/`, `src/config/`, `src/utils/`, `src/theme/`, `src/i18n/`.
 
-Code base should be strieve to be explicit, and ask further questions when required. No guessing.
+## Rules
 
-Both a build and a npx tsc should be used as verification after implementation.
+- Reuse existing components before writing view-specific solutions; alter shared components rather than patching per view.
+- Solve shared mobile behavior in shared components, not per-view patches. Avoid horizontal scroll for core detail/form content when a stacked mobile layout works.
+- Be explicit; ask clarifying questions rather than guessing.
+- After any implementation, verify with both `npm run build` and `npx tsc` (no emit).
+- Remember: a component not exported from `src/exports.ts` is invisible to consumers.
