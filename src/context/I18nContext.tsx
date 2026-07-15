@@ -45,6 +45,11 @@ function createI18nInstance(locale: string, messagesByLocale?: TemplateLocaleRes
     fallbackLng: "en",
     interpolation: {
       escapeValue: false,
+      // Messages author placeholders with single braces ("{page}") rather than
+      // i18next's default double braces, so match that here — otherwise values
+      // never interpolate and the raw "{page}" template leaks into the UI.
+      prefix: "{",
+      suffix: "}",
     },
     resources,
   });

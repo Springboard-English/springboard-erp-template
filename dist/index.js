@@ -9665,7 +9665,12 @@ function Y1(e, t) {
     lng: e,
     fallbackLng: "en",
     interpolation: {
-      escapeValue: !1
+      escapeValue: !1,
+      // Messages author placeholders with single braces ("{page}") rather than
+      // i18next's default double braces, so match that here — otherwise values
+      // never interpolate and the raw "{page}" template leaks into the UI.
+      prefix: "{",
+      suffix: "}"
     },
     resources: i
   }), n;
