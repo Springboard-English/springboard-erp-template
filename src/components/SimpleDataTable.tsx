@@ -24,10 +24,37 @@ export interface SimpleDataTableColumn<T> {
 
 export type SimpleDataTableSortOrder = 'asc' | 'desc';
 
+export interface SimpleDataTableClassNames {
+  /** Outer container (border, radius, background, shadow). */
+  root?: string;
+  /** Scrollable table viewport. */
+  scroll?: string;
+  /** Header row. */
+  headRow?: string;
+  /** Each header cell (merged after per-column className). */
+  headCell?: string;
+  /** The sortable header button. */
+  sortButton?: string;
+  /** Each body row (merged after per-row state classes). */
+  row?: string;
+  /** Each body cell (merged after per-column cellClassName). */
+  cell?: string;
+  /** The empty-state cell. */
+  emptyCell?: string;
+  /** Footer / pagination bar. */
+  footer?: string;
+  /** "Showing x–y of z" label. */
+  showingLabel?: string;
+}
+
 export interface SimpleDataTableProps<T> {
   columns: Array<SimpleDataTableColumn<T>>;
   rows: T[];
   rowKey: (row: T) => string;
+  /** Convenience alias for `classNames.root`. */
+  className?: string;
+  /** Granular restyling slots for the table chrome. */
+  classNames?: SimpleDataTableClassNames;
   loading?: boolean;
   loadingMessage?: string;
   emptyMessage?: string;
@@ -52,6 +79,8 @@ export default function SimpleDataTable<T>({
   columns,
   rows,
   rowKey,
+  className,
+  classNames,
   loading = false,
   loadingMessage,
   emptyMessage,
@@ -129,13 +158,14 @@ export default function SimpleDataTable<T>({
         'odd:bg-transparent even:bg-muted/20',
         onRowClick && 'cursor-pointer',
         hoveredRowKey === rowKey(row) && 'bg-muted/35',
+        classNames?.row,
       )}
       onClick={onRowClick ? () => onRowClick(row) : undefined}
       onMouseEnter={onHoveredRowChange ? () => onHoveredRowChange(row) : undefined}
       onFocus={onHoveredRowChange ? () => onHoveredRowChange(row) : undefined}
     >
       {columns.map((column) => (
-        <TableCell key={column.id} className={column.cellClassName}>
+        <TableCell key={column.id} className={cn(column.cellClassName, classNames?.cell)}>
           {column.render(row)}
         </TableCell>
       ))}
@@ -213,25 +243,29 @@ export default function SimpleDataTable<T>({
   return (
     <div
       ref={rootRef}
-      className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-border/70 bg-card shadow-[0_18px_40px_-28px_rgba(0,0,0,0.35)]"
+      className={cn(
+        "flex min-h-0 flex-col overflow-hidden rounded-2xl border border-border/70 bg-card shadow-[0_18px_40px_-28px_rgba(0,0,0,0.35)]",
+        className,
+        classNames?.root,
+      )}
     >
       <div
-        className="min-h-0 overflow-auto"
+        className={cn("min-h-0 overflow-auto", classNames?.scroll)}
         style={tableBodyMaxHeight ? { maxHeight: `${tableBodyMaxHeight}px` } : undefined}
       >
         <Table containerClassName="overflow-x-visible">
           <TableHeader>
-            <TableRow className="hover:bg-transparent">
+            <TableRow className={cn("hover:bg-transparent", classNames?.headRow)}>
               {columns.map((column) => (
                 <TableHead
                   key={column.id}
-                  className={cn('sticky top-0 z-[1] bg-card text-center', column.className)}
+                  className={cn('sticky top-0 z-[1] bg-card text-center', column.className, classNames?.headCell)}
                 >
                   {column.sortable && onSortChange ? (
                     <button
                       type="button"
                       onClick={() => handleSortClick(column.id)}
-                      className="inline-flex w-full cursor-pointer items-center justify-center gap-1 text-center text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground"
+                      className={cn("inline-flex w-full cursor-pointer items-center justify-center gap-1 text-center text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground", classNames?.sortButton)}
                     >
                       <span>{column.header}</span>
                       {sortBy === column.id ? (
@@ -264,7 +298,7 @@ export default function SimpleDataTable<T>({
               <TableRow className="hover:bg-transparent">
                 <TableCell
                   colSpan={columns.length}
-                  className="py-10 text-center text-sm text-muted-foreground"
+                  className={cn("py-10 text-center text-sm text-muted-foreground", classNames?.emptyCell)}
                 >
                   {resolvedEmptyMessage}
                 </TableCell>
@@ -287,9 +321,10 @@ export default function SimpleDataTable<T>({
         className={cn(
           "flex-shrink-0 flex flex-col gap-3 border-t border-border/70 bg-card px-4 py-3 sm:flex-row sm:items-center",
           alignPaginationToLeft ? "sm:justify-start" : "sm:justify-between",
+          classNames?.footer,
         )}
       >
-        <div className="text-sm text-muted-foreground">
+        <div className={cn("text-sm text-muted-foreground", classNames?.showingLabel)}>
           {showingResultsLabel}
         </div>
 

@@ -47,8 +47,12 @@ export {
   PENDING_CHANGES_BAR_DEFAULT_CHEVRON_TRANSITION_MS,
 } from "./components/PendingChangesBar";
 export { default as StatusBanner } from "./components/StatusBanner";
+export { default as DashboardLayout } from "./components/layout/DashboardLayout";
+export type { DashboardLayoutProps, DashboardNavItem, DashboardLayoutClassNames } from "./components/layout/DashboardLayout";
+export { default as AppHeader } from "./components/layout/AppHeader";
+export type { AppHeaderProps } from "./components/layout/AppHeader";
 export { default as SimpleDataTable } from "./components/SimpleDataTable";
-export type { SimpleDataTableColumn, SimpleDataTableSortOrder, SimpleDataTableProps } from "./components/SimpleDataTable";
+export type { SimpleDataTableColumn, SimpleDataTableSortOrder, SimpleDataTableProps, SimpleDataTableClassNames } from "./components/SimpleDataTable";
 export { default as MobileCardList, CardField } from "./components/MobileCardList";
 export type { MobileCardListProps } from "./components/MobileCardList";
 export { default as MobileBottomBar } from "./components/MobileBottomBar";
@@ -107,6 +111,7 @@ export {
   DetailTabbedSection,
   BackgroundDetailViewContext,
 } from "./components/layout/DetailLayout";
+export type { DetailTabsClassNames } from "./components/layout/DetailLayout";
 export { default as ProgressMetricCell } from "./components/cells/ProgressMetricCell";
 export { default as AdvancedFiltersPanel } from "./components/management/AdvancedFiltersPanel";
 export type { AdvancedFiltersPanelProps } from "./components/management/AdvancedFiltersPanel";

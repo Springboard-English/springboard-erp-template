@@ -699,14 +699,26 @@ export function DetailActionPanel({
     );
 }
 
+export interface DetailTabsClassNames {
+    root?: string;
+    list?: string;
+    pill?: string;
+    tab?: string;
+    tabActive?: string;
+}
+
 export function DetailTabs<T extends string>({
     tabs,
     activeTab,
     onChange,
+    className,
+    classNames,
 }: {
     tabs: Array<{ value: T; label: ReactNode; hasPendingChanges?: boolean }>;
     activeTab: T;
     onChange: (tab: T) => void;
+    className?: string;
+    classNames?: DetailTabsClassNames;
 }) {
     const buttonRefs = useRef(new Map<T, HTMLButtonElement>());
     const tabListRef = useRef<HTMLDivElement | null>(null);
@@ -873,12 +885,12 @@ export function DetailTabs<T extends string>({
     }, [updatePill]);
 
     return (
-        <div className="overflow-x-auto rounded-2xl border border-border/70 bg-card/70 p-1 drop-shadow-md">
-            <div ref={tabListRef} className="relative flex min-w-max gap-2">
+        <div className={cn("overflow-x-auto rounded-2xl border border-border/70 bg-card/70 p-1 drop-shadow-md", className, classNames?.root)}>
+            <div ref={tabListRef} className={cn("relative flex min-w-max gap-2", classNames?.list)}>
                 {/* Spring-animated active pill — inside the flex div so offsetLeft is accurate */}
                 <animated.div
                     aria-hidden="true"
-                    className="pointer-events-none absolute left-0 top-0 h-full rounded-xl bg-primary shadow-sm"
+                    className={cn("pointer-events-none absolute left-0 top-0 h-full rounded-xl bg-primary shadow-sm", classNames?.pill)}
                     style={{
                         left: pillSpring.left,
                         width: pillSpring.width,
@@ -924,6 +936,8 @@ export function DetailTabs<T extends string>({
                                 : tab.hasPendingChanges
                                   ? "font-bold text-primary hover:bg-primary/10"
                                   : "text-muted-foreground hover:text-accent-foreground",
+                            classNames?.tab,
+                            resolvedActiveTab === tab.value && classNames?.tabActive,
                         )}
                     >
                         {tab.label}
