@@ -1,3 +1,4 @@
+import type { SearchableSelectLoadParams, SearchableSelectPage } from "../components/ui/searchable-select";
 export interface LoginCredentials {
     username: string;
     password: string;
@@ -284,6 +285,17 @@ export interface PaginatedResult<T> {
     limit: number;
     offset: number;
 }
+/**
+ * Cursor-paginated result mirroring the v2 API envelope
+ * `{ objects: [...], attributes: { page_size, cursor, next_cursor } }`.
+ * `nextCursor` is `null` on the final page.
+ */
+export interface CursorPaginatedResult<T> {
+    items: T[];
+    pageSize: number;
+    cursor: string | null;
+    nextCursor: string | null;
+}
 export declare function login(credentials: LoginCredentials): Promise<LoginResponse>;
 export declare function loginWithGoogle(credential: string, accountType?: string): Promise<LoginResponse>;
 export declare function logout(): Promise<void>;
@@ -310,11 +322,33 @@ export declare function fetchManagementSessions(limit?: number, offset?: number,
     taKey?: string;
     order?: "asc" | "desc";
 }): Promise<Session[]>;
-export declare function fetchInlineSessionOptions(classKey: string, limit?: number): Promise<InlineOption[]>;
-export declare function fetchInlineClassOptions(groupKey: string, limit?: number): Promise<InlineOption[]>;
-export declare function fetchInlineSessionClassOptions(limit?: number): Promise<InlineOption[]>;
-export declare function fetchInlineGroupOptions(limit?: number): Promise<InlineOption[]>;
-export declare function fetchInlineEmployeeOptions(limit?: number): Promise<InlineOption[]>;
+/** Default page size for cursor-paginated option lookups. */
+export declare const DEFAULT_OPTION_PAGE_SIZE = 25;
+export interface InlineOptionPageParams {
+    /** Search query, forwarded to the backend as `q`. */
+    q?: string;
+    /** Cursor for the page to fetch; `null`/omitted requests the first page. */
+    cursor?: string | null;
+    /** Page size, forwarded to the backend as `page_size`. */
+    pageSize?: number;
+    /** Aborts the request when the caller no longer needs the result. */
+    signal?: AbortSignal;
+}
+export declare function fetchInlineSessionOptions(classKey: string, params?: InlineOptionPageParams): Promise<CursorPaginatedResult<InlineOption>>;
+export declare function fetchInlineClassOptions(groupKey: string, params?: InlineOptionPageParams): Promise<CursorPaginatedResult<InlineOption>>;
+export declare function fetchInlineSessionClassOptions(params?: InlineOptionPageParams): Promise<CursorPaginatedResult<InlineOption>>;
+export declare function fetchInlineGroupOptions(params?: InlineOptionPageParams): Promise<CursorPaginatedResult<InlineOption>>;
+export declare function fetchInlineEmployeeOptions(params?: InlineOptionPageParams): Promise<CursorPaginatedResult<InlineOption>>;
+/**
+ * Adapts a cursor-paginated option fetcher into the `loadOptions` prop expected
+ * by `SearchableSelect`, mapping `InlineOption` -> `{ value, label }`.
+ *
+ * @example
+ *   <SearchableSelect
+ *     loadOptions={createInlineOptionLoader((p) => fetchInlineEmployeeOptions(p))}
+ *   />
+ */
+export declare function createInlineOptionLoader(fetchPage: (params: InlineOptionPageParams) => Promise<CursorPaginatedResult<InlineOption>>): (params: SearchableSelectLoadParams) => Promise<SearchableSelectPage>;
 export declare function fetchAccountOptions(limit?: number, offset?: number, q?: string, filters?: {
     classKey?: string;
     day?: string;
@@ -397,8 +431,8 @@ export declare function createManagementAssessmentSection(assessmentId: string, 
 export declare function patchManagementAssessmentSection(assessmentId: string, sectionId: string, payload: PatchAssessmentSectionRequest): Promise<AssessmentSection>;
 export declare function deleteManagementAssessmentSection(assessmentId: string, sectionId: string): Promise<void>;
 export declare function fetchManagementTestFeedbacks(testKey: string): Promise<TestFeedback[]>;
-export declare function fetchInlineAvailableRegistrationOptions(classKey: string, limit?: number): Promise<InlineOption[]>;
-export declare function fetchInlineSessionRegistrationOptions(sessionKey: string, limit?: number): Promise<InlineOption[]>;
+export declare function fetchInlineAvailableRegistrationOptions(classKey: string, params?: InlineOptionPageParams): Promise<CursorPaginatedResult<InlineOption>>;
+export declare function fetchInlineSessionRegistrationOptions(sessionKey: string, params?: InlineOptionPageParams): Promise<CursorPaginatedResult<InlineOption>>;
 export declare function fetchManagementClasses(limit?: number, offset?: number, q?: string, groupKey?: string, status?: string): Promise<ManagementClass[]>;
 export declare function fetchManagementClassDetails(classKey: string): Promise<ManagementClass>;
 export declare function fetchManagementFeedbacks(limit?: number, offset?: number, classKey?: string, begin?: string, end?: string): Promise<ClassFeedback[]>;

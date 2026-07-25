@@ -34,6 +34,10 @@ import {
 } from "../auth/userStorage";
 import { toBackendTimeValue, toBackendTimestamp } from "../utils/formatters";
 import { fetchWithRefresh, fetchWithRetryAfter } from "./fetchWithRefresh";
+import type {
+    SearchableSelectLoadParams,
+    SearchableSelectPage,
+} from "../components/ui/searchable-select";
 
 export interface LoginCredentials {
     username: string;
@@ -411,6 +415,18 @@ export interface PaginatedResult<T> {
     offset: number;
 }
 
+/**
+ * Cursor-paginated result mirroring the v2 API envelope
+ * `{ objects: [...], attributes: { page_size, cursor, next_cursor } }`.
+ * `nextCursor` is `null` on the final page.
+ */
+export interface CursorPaginatedResult<T> {
+    items: T[];
+    pageSize: number;
+    cursor: string | null;
+    nextCursor: string | null;
+}
+
 function toManagementClass(raw: unknown): ManagementClass | null {
     if (!raw || typeof raw !== "object") {
         return null;
@@ -755,6 +771,30 @@ function getPaginatedArrayPayload<T = unknown>(
             getNumericValue(payload.offset) ??
             getNumericValue(pagination?.offset) ??
             0,
+    };
+}
+
+function getCursorPaginatedArrayPayload<T = unknown>(
+    data: unknown,
+    legacyKey?: string,
+): CursorPaginatedResult<T> {
+    // Unwrap an optional `{ data: ... }` envelope before reading attributes.
+    const outer = getObjectPayload(data);
+    const payload =
+        outer && getObjectPayload(outer.data) ? getObjectPayload(outer.data)! : outer;
+
+    const items = getArrayPayload<T>(payload ?? data, legacyKey);
+    const attributes = getObjectPayload(payload?.attributes);
+
+    return {
+        items,
+        pageSize: getNumericValue(attributes?.page_size) ?? items.length,
+        cursor:
+            typeof attributes?.cursor === "string" ? attributes.cursor : null,
+        nextCursor:
+            typeof attributes?.next_cursor === "string"
+                ? attributes.next_cursor
+                : null,
     };
 }
 
@@ -1206,141 +1246,159 @@ export async function fetchManagementSessions(
         .filter((item): item is Session => item !== null);
 }
 
-export async function fetchInlineSessionOptions(
+/** Default page size for cursor-paginated option lookups. */
+export const DEFAULT_OPTION_PAGE_SIZE = 25;
+
+export interface InlineOptionPageParams {
+    /** Search query, forwarded to the backend as `q`. */
+    q?: string;
+    /** Cursor for the page to fetch; `null`/omitted requests the first page. */
+    cursor?: string | null;
+    /** Page size, forwarded to the backend as `page_size`. */
+    pageSize?: number;
+    /** Aborts the request when the caller no longer needs the result. */
+    signal?: AbortSignal;
+}
+
+/**
+ * Shared cursor/page_size fetch for the `/inline` option endpoints. Sends
+ * `page_size`, `cursor` (page 2+) and `q`, plus any endpoint-specific filters,
+ * and parses the `{ objects, attributes: { next_cursor } }` envelope.
+ */
+async function fetchInlineOptionPage(
+    endpoint: Parameters<typeof getInlineEndpoint>[0],
+    errorLabel: string,
+    legacyKey: string,
+    params: InlineOptionPageParams,
+    extraParams?: Record<string, string | undefined>,
+    mapItem: (raw: unknown) => InlineOption | null = toInlineOption,
+): Promise<CursorPaginatedResult<InlineOption>> {
+    const url = new URL(getInlineEndpoint(endpoint));
+    url.searchParams.append(
+        "page_size",
+        String(params.pageSize ?? DEFAULT_OPTION_PAGE_SIZE),
+    );
+    if (params.cursor?.trim()) {
+        url.searchParams.append("cursor", params.cursor.trim());
+    }
+    if (params.q?.trim()) {
+        url.searchParams.append("q", params.q.trim());
+    }
+    for (const [key, value] of Object.entries(extraParams ?? {})) {
+        if (value?.trim()) {
+            url.searchParams.append(key, value.trim());
+        }
+    }
+
+    const response = await fetchWithRefresh(url.toString(), {
+        method: "GET",
+        headers: {
+            Accept: "application/json",
+        },
+        credentials: "include",
+        signal: params.signal,
+    });
+
+    if (!response.ok) {
+        throw new Error(
+            `${errorLabel}: ${response.status} ${response.statusText}`,
+        );
+    }
+
+    const data = await response.json();
+    const parsed = getCursorPaginatedArrayPayload(data, legacyKey);
+    return {
+        ...parsed,
+        items: parsed.items
+            .map((item) => mapItem(item))
+            .filter((item): item is InlineOption => item !== null),
+    };
+}
+
+export function fetchInlineSessionOptions(
     classKey: string,
-    limit = -1,
-): Promise<InlineOption[]> {
-    const url = new URL(getInlineEndpoint("managementSessions"));
-    url.searchParams.append("class_key", classKey);
-    url.searchParams.append("limit", String(limit));
-
-    const response = await fetchWithRefresh(url.toString(), {
-        method: "GET",
-        headers: {
-            Accept: "application/json",
-        },
-        credentials: "include",
-    });
-
-    if (!response.ok) {
-        throw new Error(
-            `Failed to fetch inline session options: ${response.status} ${response.statusText}`,
-        );
-    }
-
-    const data = await response.json();
-    return getArrayPayload(data, "sessions")
-        .map((item) => toInlineOption(item))
-        .filter((item): item is InlineOption => item !== null);
+    params: InlineOptionPageParams = {},
+): Promise<CursorPaginatedResult<InlineOption>> {
+    return fetchInlineOptionPage(
+        "managementSessions",
+        "Failed to fetch inline session options",
+        "sessions",
+        params,
+        { class_key: classKey },
+    );
 }
 
-export async function fetchInlineClassOptions(
+export function fetchInlineClassOptions(
     groupKey: string,
-    limit = -1,
-): Promise<InlineOption[]> {
-    const url = new URL(getInlineEndpoint("managementClasses"));
-    url.searchParams.append("group_key", groupKey);
-    url.searchParams.append("group", groupKey);
-    url.searchParams.append("limit", String(limit));
-
-    const response = await fetchWithRefresh(url.toString(), {
-        method: "GET",
-        headers: {
-            Accept: "application/json",
-        },
-        credentials: "include",
-    });
-
-    if (!response.ok) {
-        throw new Error(
-            `Failed to fetch inline class options: ${response.status} ${response.statusText}`,
-        );
-    }
-
-    const data = await response.json();
-    return getArrayPayload(data, "classes")
-        .map((item) => toInlineOption(item))
-        .filter((item): item is InlineOption => item !== null);
+    params: InlineOptionPageParams = {},
+): Promise<CursorPaginatedResult<InlineOption>> {
+    return fetchInlineOptionPage(
+        "managementClasses",
+        "Failed to fetch inline class options",
+        "classes",
+        params,
+        { group_key: groupKey, group: groupKey },
+    );
 }
 
-export async function fetchInlineSessionClassOptions(
-    limit = -1,
-): Promise<InlineOption[]> {
-    const url = new URL(getInlineEndpoint("managementClasses"));
-    url.searchParams.append("limit", String(limit));
-
-    const response = await fetchWithRefresh(url.toString(), {
-        method: "GET",
-        headers: {
-            Accept: "application/json",
-        },
-        credentials: "include",
-    });
-
-    if (!response.ok) {
-        throw new Error(
-            `Failed to fetch inline session class options: ${response.status} ${response.statusText}`,
-        );
-    }
-
-    const data = await response.json();
-    return getArrayPayload(data, "classes")
-        .map((item) => toInlineOption(item))
-        .filter((item): item is InlineOption => item !== null);
+export function fetchInlineSessionClassOptions(
+    params: InlineOptionPageParams = {},
+): Promise<CursorPaginatedResult<InlineOption>> {
+    return fetchInlineOptionPage(
+        "managementClasses",
+        "Failed to fetch inline session class options",
+        "classes",
+        params,
+    );
 }
 
-export async function fetchInlineGroupOptions(
-    limit = -1,
-): Promise<InlineOption[]> {
-    const url = new URL(getInlineEndpoint("managementGroups"));
-    url.searchParams.append("limit", String(limit));
-
-    const response = await fetchWithRefresh(url.toString(), {
-        method: "GET",
-        headers: {
-            Accept: "application/json",
-        },
-        credentials: "include",
-    });
-
-    if (!response.ok) {
-        throw new Error(
-            `Failed to fetch inline group options: ${response.status} ${response.statusText}`,
-        );
-    }
-
-    const data = await response.json();
-    return getArrayPayload(data, "groups")
-        .map((item) => toInlineOption(item))
-        .filter((item): item is InlineOption => item !== null);
+export function fetchInlineGroupOptions(
+    params: InlineOptionPageParams = {},
+): Promise<CursorPaginatedResult<InlineOption>> {
+    return fetchInlineOptionPage(
+        "managementGroups",
+        "Failed to fetch inline group options",
+        "groups",
+        params,
+    );
 }
 
-export async function fetchInlineEmployeeOptions(
-    limit = -1,
-): Promise<InlineOption[]> {
-    const url = new URL(getInlineEndpoint("managementUsers"));
-    url.searchParams.append("limit", String(limit));
-    url.searchParams.append("account_type", "employee");
-    url.searchParams.append("active", "True");
+export function fetchInlineEmployeeOptions(
+    params: InlineOptionPageParams = {},
+): Promise<CursorPaginatedResult<InlineOption>> {
+    return fetchInlineOptionPage(
+        "managementUsers",
+        "Failed to fetch inline employee options",
+        "users",
+        params,
+        { account_type: "employee", active: "True" },
+    );
+}
 
-    const response = await fetchWithRefresh(url.toString(), {
-        method: "GET",
-        headers: {
-            Accept: "application/json",
-        },
-        credentials: "include",
-    });
-
-    if (!response.ok) {
-        throw new Error(
-            `Failed to fetch inline employee options: ${response.status} ${response.statusText}`,
-        );
-    }
-
-    const data = await response.json();
-    return getArrayPayload(data, "users")
-        .map((item) => toInlineOption(item))
-        .filter((item): item is InlineOption => item !== null);
+/**
+ * Adapts a cursor-paginated option fetcher into the `loadOptions` prop expected
+ * by `SearchableSelect`, mapping `InlineOption` -> `{ value, label }`.
+ *
+ * @example
+ *   <SearchableSelect
+ *     loadOptions={createInlineOptionLoader((p) => fetchInlineEmployeeOptions(p))}
+ *   />
+ */
+export function createInlineOptionLoader(
+    fetchPage: (
+        params: InlineOptionPageParams,
+    ) => Promise<CursorPaginatedResult<InlineOption>>,
+): (params: SearchableSelectLoadParams) => Promise<SearchableSelectPage> {
+    return async ({ query, cursor, pageSize, signal }) => {
+        const page = await fetchPage({ q: query, cursor, pageSize, signal });
+        return {
+            options: page.items.map((item) => ({
+                value: item.value,
+                label: item.name,
+            })),
+            nextCursor: page.nextCursor,
+        };
+    };
 }
 
 export async function fetchAccountOptions(
@@ -2481,65 +2539,42 @@ export async function fetchManagementTestFeedbacks(
     return fetchManagementTestAssessments(testKey);
 }
 
-export async function fetchInlineAvailableRegistrationOptions(
+export function fetchInlineAvailableRegistrationOptions(
     classKey: string,
-    limit = -1,
-): Promise<InlineOption[]> {
-    const url = new URL(getInlineEndpoint("managementRegistrations"));
-    url.searchParams.append("class_key", classKey);
-    url.searchParams.append("limit", String(limit));
-
-    const response = await fetchWithRefresh(url.toString(), {
-        method: "GET",
-        headers: {
-            Accept: "application/json",
-        },
-        credentials: "include",
-    });
-
-    if (!response.ok) {
-        throw new Error(
-            `Failed to fetch available registration options: ${response.status} ${response.statusText}`,
-        );
-    }
-
-    const data = await response.json();
-    return getArrayPayload(data, "registrations")
-        .map((item) => toRegistrationInlineOption(item))
-        .filter((item): item is InlineOption => item !== null);
+    params: InlineOptionPageParams = {},
+): Promise<CursorPaginatedResult<InlineOption>> {
+    return fetchInlineOptionPage(
+        "managementRegistrations",
+        "Failed to fetch available registration options",
+        "registrations",
+        params,
+        { class_key: classKey },
+        toRegistrationInlineOption,
+    );
 }
 
-export async function fetchInlineSessionRegistrationOptions(
+export function fetchInlineSessionRegistrationOptions(
     sessionKey: string,
-    limit = -1,
-): Promise<InlineOption[]> {
+    params: InlineOptionPageParams = {},
+): Promise<CursorPaginatedResult<InlineOption>> {
     const normalizedSessionKey = sessionKey.trim();
     if (!normalizedSessionKey) {
-        return [];
+        return Promise.resolve({
+            items: [],
+            pageSize: 0,
+            cursor: null,
+            nextCursor: null,
+        });
     }
 
-    const url = new URL(getInlineEndpoint("managementRegistrations"));
-    url.searchParams.append("session_key", normalizedSessionKey);
-    url.searchParams.append("limit", String(limit));
-
-    const response = await fetchWithRefresh(url.toString(), {
-        method: "GET",
-        headers: {
-            Accept: "application/json",
-        },
-        credentials: "include",
-    });
-
-    if (!response.ok) {
-        throw new Error(
-            `Failed to fetch session registration options: ${response.status} ${response.statusText}`,
-        );
-    }
-
-    const data = await response.json();
-    return getArrayPayload(data, "registrations")
-        .map((item) => toRegistrationInlineOption(item))
-        .filter((item): item is InlineOption => item !== null);
+    return fetchInlineOptionPage(
+        "managementRegistrations",
+        "Failed to fetch session registration options",
+        "registrations",
+        params,
+        { session_key: normalizedSessionKey },
+        toRegistrationInlineOption,
+    );
 }
 
 export async function fetchManagementClasses(
