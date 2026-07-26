@@ -107,6 +107,13 @@ export function SearchableSelect({
   // Bumps on every reset so in-flight responses from a stale query are ignored.
   const requestIdRef = useRef(0);
   const abortRef = useRef<AbortController | null>(null);
+  // Keep the latest loadOptions / t without making them fetch-effect dependencies.
+  // useI18n returns a fresh `t` every render, and consumers may pass an inline
+  // loadOptions — depending on either would re-run the fetch effect forever.
+  const loadOptionsRef = useRef(loadOptions);
+  loadOptionsRef.current = loadOptions;
+  const tRef = useRef(t);
+  tRef.current = t;
 
   const staticSelectedOption = useMemo(
     () => options.find((option) => option.value === normalizedValue),
@@ -145,7 +152,8 @@ export function SearchableSelect({
 
   const runFetch = useCallback(
     async (cursor: string | null, mode: 'reset' | 'more') => {
-      if (!loadOptions) {
+      const load = loadOptionsRef.current;
+      if (!load) {
         return;
       }
       abortRef.current?.abort();
@@ -161,7 +169,7 @@ export function SearchableSelect({
       setError(null);
 
       try {
-        const page = await loadOptions({
+        const page = await load({
           query: debouncedQuery,
           cursor,
           pageSize,
@@ -179,7 +187,7 @@ export function SearchableSelect({
           return;
         }
         setError(
-          fetchError instanceof Error ? fetchError.message : t('searchableSelect.error'),
+          fetchError instanceof Error ? fetchError.message : tRef.current('searchableSelect.error'),
         );
       } finally {
         if (requestId === requestIdRef.current) {
@@ -188,7 +196,7 @@ export function SearchableSelect({
         }
       }
     },
-    [debouncedQuery, loadOptions, pageSize, t],
+    [debouncedQuery, pageSize],
   );
 
   // Fetch the first page whenever the popover is open and the (debounced) query changes.
