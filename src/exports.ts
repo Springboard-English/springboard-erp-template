@@ -47,6 +47,8 @@ export {
   PENDING_CHANGES_BAR_DEFAULT_CHEVRON_TRANSITION_MS,
 } from "./components/PendingChangesBar";
 export { default as StatusBanner } from "./components/StatusBanner";
+export { default as BuildTag } from "./components/BuildTag";
+export type { BuildTagProps } from "./components/BuildTag";
 export { default as DashboardLayout } from "./components/layout/DashboardLayout";
 export type { DashboardLayoutProps, DashboardNavItem, DashboardLayoutClassNames } from "./components/layout/DashboardLayout";
 export { default as AppHeader } from "./components/layout/AppHeader";
