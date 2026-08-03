@@ -69,16 +69,51 @@ GitHub Actions is **already in use and already trusted across repo boundaries**:
   all three; on `template-published`, installs the new template version and opens
   a PR via `peter-evans/create-pull-request`.
 
-So the org already has: Actions enabled, a `DISPATCH_TOKEN` secret, GitHub
-Packages auth working in CI, and a bot-PR pattern. **We are adding a workflow to
+So Actions is enabled and the workflow files exist. **We are adding a workflow to
 an existing setup, not introducing CI.**
+
+### …except that chain does not currently work (verified 2026-08-03)
+
+An earlier draft of this document claimed the org already had a working
+`DISPATCH_TOKEN` and GitHub Packages auth in CI. Cutting the v1.8.2 release to
+exercise the chain end to end disproved both halves:
+
+1. **The dispatch never fires.** `secrets.DISPATCH_TOKEN` is unset, so `gh api`
+   exits immediately with "set the GH_TOKEN environment variable". The step was
+   written as `gh api ... || echo "Warning: ..."`, so it swallowed the error and
+   **reported success while notifying nobody** — which is why this went unnoticed
+   for months. That `|| echo` has since been replaced with an explicit failure.
+2. **Even when dispatched, the consumer install fails.** Sending the dispatch by
+   hand with a valid token produced a run that failed on `npm install
+   @springboard-english/springboard-erp-template@latest`:
+
+   ```
+   npm error 403 Forbidden - GET https://npm.pkg.github.com/@springboard-english%2fspringboard-erp-template
+   npm error 403 Permission installation not allowed to Read organization package
+   ```
+
+   A repo's own `secrets.GITHUB_TOKEN` cannot read a package published by a
+   *different* repository. This is a GitHub Packages restriction, not a
+   misconfiguration of the workflow.
+
+**Two fixes, both requiring admin rights this document's author does not have:**
+
+- *Preferred, no PAT needed* — on the package page (Packages →
+  springboard-erp-template → Package settings → Manage Actions access), add
+  `erp-crm`, `erp-hrm` and `lms.springboard.vn` with **Read**. This fixes (2)
+  permanently and keeps `secrets.GITHUB_TOKEN` as the only credential.
+- *For (1)* — add a `DISPATCH_TOKEN` repo secret on this repository: a PAT with
+  `repo` scope, which is what `repository_dispatch` to another repo requires.
+
+Until both are done, the template must be bumped in each consumer by hand
+(`npm install @springboard-english/springboard-erp-template@latest`). **This is a
+prerequisite for the deploy automation proposed below** — an auto-deploy that
+builds against a template the runner cannot install would fail on every run.
 
 One useful finding while checking this: `.npmrc` is gitignored and **has never
 been committed** in any of the three frontends (`git log --all -- .npmrc` is
 empty everywhere). The warning in `erp-hrm/AGENTS.md` that it is "tracked in git
-[with] a live GitHub PAT" is **stale and should be corrected** — CI can use
-`secrets.GITHUB_TOKEN` via `setup-node`'s `registry-url`, exactly as the two
-existing workflows already do.
+[with] a live GitHub PAT" is **stale and should be corrected**.
 
 ## 2. Options
 

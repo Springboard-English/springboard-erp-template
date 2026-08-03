@@ -43,10 +43,30 @@ jobs:
           GH_TOKEN: ${{ secrets.DISPATCH_TOKEN }}
           VERSION: ${{ github.event.release.tag_name || 'latest' }}
         run: |
+          # Fail loudly rather than `|| echo`. The previous version swallowed
+          # every dispatch error, so an unset DISPATCH_TOKEN reported success
+          # while notifying nobody — which is exactly how this went unnoticed.
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::error::DISPATCH_TOKEN is not set — consumer repos cannot be notified."
+            echo "Set a repo secret DISPATCH_TOKEN (PAT with 'repo' scope) on this repository."
+            exit 1
+          fi
+
+          failed=""
           for repo in erp-crm erp-hrm lms.springboard.vn; do
-            gh api repos/Springboard-English/$repo/dispatches \
+            if gh api repos/Springboard-English/$repo/dispatches \
               --method POST \
               -f event_type=template-published \
-              -f "client_payload[version]=$VERSION" || \
-              echo "Warning: dispatch to $repo failed (repo may not have the workflow yet)"
+              -f "client_payload[version]=$VERSION"; then
+              echo "Dispatched template-published ($VERSION) to $repo"
+            else
+              echo "::error::dispatch to $repo failed"
+              failed="$failed $repo"
+            fi
+          done
+
+          if [ -n "$failed" ]; then
+            echo "::error::consumer repos not notified:$failed"
+            exit 1
+          fi
           done
