@@ -1,0 +1,19 @@
+# Normalise every text file to LF in the repository and check it out as LF
+# everywhere. Without this, a file authored on Windows is stored with CRLF and
+# then diffs whole-file against its LF twin: `src/theme/AppTheme.tsx` reads as
+# 112 lines changed against the identical file in springboard-erp-template,
+# purely because of line endings. That noise hides real drift in review.
+* text=auto eol=lf
+
+# Binaries git must not touch.
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.webp binary
+*.woff binary
+*.woff2 binary
+*.ttf  binary
+*.pdf  binary
+*.tgz  binary
