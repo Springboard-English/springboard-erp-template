@@ -26,6 +26,8 @@ export { default as PendingChangesBar } from "./components/PendingChangesBar";
 export type { PendingChangesBarProps, PendingChangeItem } from "./components/PendingChangesBar";
 export { PENDING_CHANGES_BAR_DEFAULT_SAVE_LABEL, PENDING_CHANGES_BAR_DEFAULT_CANCEL_LABEL, PENDING_CHANGES_BAR_DEFAULT_VIEW_UNSAVED_LABEL, PENDING_CHANGES_BAR_DEFAULT_PENDING_KEY_LABEL, PENDING_CHANGES_BAR_DEFAULT_PENDING_VALUE_LABEL, PENDING_CHANGES_BAR_DEFAULT_EXPAND_MAX_HEIGHT, PENDING_CHANGES_BAR_DEFAULT_SPRING_CONFIG, PENDING_CHANGES_BAR_DEFAULT_BAR_TRANSITION_MS, PENDING_CHANGES_BAR_DEFAULT_CHEVRON_TRANSITION_MS, } from "./components/PendingChangesBar";
 export { default as StatusBanner } from "./components/StatusBanner";
+export { default as BuildTag } from "./components/BuildTag";
+export type { BuildTagProps } from "./components/BuildTag";
 export { default as DashboardLayout } from "./components/layout/DashboardLayout";
 export type { DashboardLayoutProps, DashboardNavItem, DashboardLayoutClassNames } from "./components/layout/DashboardLayout";
 export { default as AppHeader } from "./components/layout/AppHeader";

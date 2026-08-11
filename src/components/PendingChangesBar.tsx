@@ -128,7 +128,11 @@ export default function PendingChangesBar({
   return createPortal(
     <div
       className={cn(
-        "fixed bottom-[calc(4rem+0.75rem)] left-3 right-3 z-[35] transform-gpu transition-all md:bottom-6 md:left-[calc(18rem+1.5rem)] md:right-6",
+        // Layer scale (see DetailLayout): app chrome ≤ 40, the floating detail
+        // panel 50, this bar 55, modals/popovers 60. The bar has to clear the
+        // floating panel — the edits it saves are made *inside* that panel, so
+        // at the old z-35 it sat under the panel's backdrop and was unreachable.
+        "fixed bottom-[calc(4rem+0.75rem)] left-3 right-3 z-[55] transform-gpu transition-all md:bottom-6 md:left-[calc(18rem+1.5rem)] md:right-6",
         show
           ? "translate-y-0 opacity-100 pointer-events-auto"
           : "translate-y-6 opacity-0 pointer-events-none",

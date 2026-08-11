@@ -9765,7 +9765,7 @@ function K1({
     {
       "data-slot": "dialog-overlay",
       className: L(
-        "fixed inset-0 z-50 bg-black/50 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0",
+        "fixed inset-0 z-[60] bg-black/50 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0",
         e
       ),
       ...t
@@ -9786,7 +9786,7 @@ function nl({
       {
         "data-slot": "dialog-content",
         className: L(
-          "fixed top-[50%] left-[50%] z-50 grid max-h-[calc(100vh-1rem)] w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border bg-background p-6 shadow-lg duration-200 outline-none data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 sm:max-w-lg",
+          "fixed top-[50%] left-[50%] z-[60] grid max-h-[calc(100vh-1rem)] w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border bg-background p-6 shadow-lg duration-200 outline-none data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 sm:max-w-lg",
           e
         ),
         ...r,
@@ -10184,7 +10184,7 @@ function go({
       "data-slot": "dropdown-menu-content",
       sideOffset: t,
       className: L(
-        "z-50 max-h-(--radix-dropdown-menu-content-available-height) min-w-[8rem] origin-(--radix-dropdown-menu-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
+        "z-[60] max-h-(--radix-dropdown-menu-content-available-height) min-w-[8rem] origin-(--radix-dropdown-menu-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
         e
       ),
       ...n
@@ -10355,7 +10355,7 @@ function eR({
     {
       "data-slot": "dropdown-menu-sub-content",
       className: L(
-        "z-50 min-w-[8rem] origin-(--radix-dropdown-menu-content-transform-origin) overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-lg data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
+        "z-[60] min-w-[8rem] origin-(--radix-dropdown-menu-content-transform-origin) overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-lg data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
         e
       ),
       ...t
@@ -11093,7 +11093,7 @@ function bo({
         sideOffset: 4,
         align: "start",
         className: L(
-          "z-50 w-(--radix-popover-trigger-width) min-w-[12rem] max-h-[min(18rem,var(--radix-popover-content-available-height))] overflow-hidden rounded-md border border-border bg-popover p-2 text-popover-foreground shadow-md",
+          "z-[60] w-(--radix-popover-trigger-width) min-w-[12rem] max-h-[min(18rem,var(--radix-popover-content-available-height))] overflow-hidden rounded-md border border-border bg-popover p-2 text-popover-foreground shadow-md",
           "data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
           "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",
           "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
@@ -14463,7 +14463,11 @@ function AR({
       "div",
       {
         className: L(
-          "fixed bottom-[calc(4rem+0.75rem)] left-3 right-3 z-[35] transform-gpu transition-all md:bottom-6 md:left-[calc(18rem+1.5rem)] md:right-6",
+          // Layer scale (see DetailLayout): app chrome ≤ 40, the floating detail
+          // panel 50, this bar 55, modals/popovers 60. The bar has to clear the
+          // floating panel — the edits it saves are made *inside* that panel, so
+          // at the old z-35 it sat under the panel's backdrop and was unreachable.
+          "fixed bottom-[calc(4rem+0.75rem)] left-3 right-3 z-[55] transform-gpu transition-all md:bottom-6 md:left-[calc(18rem+1.5rem)] md:right-6",
           w ? "translate-y-0 opacity-100 pointer-events-auto" : "translate-y-6 opacity-0 pointer-events-none"
         ),
         style: { transitionDuration: `${m}ms` },
@@ -14589,6 +14593,21 @@ function AR({
       }
     ),
     document.body
+  );
+}
+function kR({ commit: e, hidden: t = !1, className: n }) {
+  const r = e?.trim();
+  return t || !r ? null : /* @__PURE__ */ u.jsx(
+    "p",
+    {
+      className: L(
+        "truncate font-mono text-[10px] leading-none text-muted-foreground/60",
+        n
+      ),
+      title: `Build ${r}`,
+      "data-testid": "build-tag",
+      children: r
+    }
   );
 }
 function kE({
@@ -14877,13 +14896,13 @@ function jE({
     ) : null
   ] });
 }
-function kR({
+function ER({
   disableCustomTheme: e,
   ...t
 }) {
   return /* @__PURE__ */ u.jsx(sl, { disableCustomTheme: e, children: /* @__PURE__ */ u.jsx(jE, { ...t }) });
 }
-function ER({
+function CR({
   status: e,
   statusTone: t = "default",
   children: n,
@@ -14904,7 +14923,7 @@ function ER({
     n
   ] });
 }
-function CR({
+function SR({
   columns: e,
   rows: t,
   rowKey: n,
@@ -15102,7 +15121,7 @@ function CR({
     }
   );
 }
-function SR({
+function jR({
   label: e,
   value: t,
   className: n
@@ -15124,7 +15143,7 @@ function cs() {
     ] }, t)) })
   ] });
 }
-function jR({
+function NR({
   rows: e,
   rowKey: t,
   renderCard: n,
@@ -24166,7 +24185,7 @@ function aP({ guidesDirectoryLabel: e = "src/content/guides" }) {
     ] })
   ] });
 }
-function NR({ rawGuides: e, guidesDirectoryLabel: t }) {
+function MR({ rawGuides: e, guidesDirectoryLabel: t }) {
   const n = rP(), [r, i] = ae(null), o = rg(e), { selectedGuide: s } = ig(o);
   return s ? /* @__PURE__ */ u.jsxs("section", { className: "min-w-0 space-y-5", children: [
     /* @__PURE__ */ u.jsx("div", { className: "sticky top-0 z-10 -mx-4 md:-mx-6", children: /* @__PURE__ */ u.jsx("div", { className: "h-[3px] w-full bg-border/30", children: /* @__PURE__ */ u.jsx(
@@ -24213,7 +24232,7 @@ function NR({ rawGuides: e, guidesDirectoryLabel: t }) {
     /* @__PURE__ */ u.jsx(oP, { image: r, onClose: () => i(null) })
   ] }) : /* @__PURE__ */ u.jsx(aP, { guidesDirectoryLabel: t });
 }
-function MR({ rawGuides: e, collapsed: t }) {
+function IR({ rawGuides: e, collapsed: t }) {
   const { t: n } = ye(), [r, i] = ae(null), [o, s] = ae("files"), [a, c] = ae({}), [l, f] = ae(null), d = rg(e), { selectedGuide: p, setSelectedGuide: h } = ig(d);
   return re(() => {
     let m = 0, g = !1;
@@ -24401,7 +24420,7 @@ function og({
     }), r?.();
   }, inGuidesView: a };
 }
-function IR({
+function PR({
   guideRoute: e,
   fallbackRoute: t,
   fallbackUnauthenticatedRoute: n,
@@ -24435,7 +24454,7 @@ function IR({
     }
   );
 }
-function PR({
+function RR({
   guideRoute: e,
   fallbackRoute: t,
   fallbackUnauthenticatedRoute: n,
@@ -24758,7 +24777,7 @@ function dP({
     ] })
   ] }) });
 }
-function RR({
+function DR({
   header: e,
   sections: t,
   missingFields: n,
@@ -24957,7 +24976,7 @@ function xP(e) {
 function bP(e) {
   return gP(e);
 }
-function DR(e) {
+function OR(e) {
   const t = ug(bP(e));
   return t ? {
     pathname: t.pathname,
@@ -25039,7 +25058,7 @@ function kP() {
   };
 }
 const Ql = It(null), EP = It(!1);
-function OR({
+function TR({
   children: e,
   className: t = "w-full max-w-[1700px] space-y-4",
   isBackground: n,
@@ -25084,6 +25103,8 @@ function OR({
         "section",
         {
           className: L(
+            // 50 on the layer scale: above app chrome, below
+            // PendingChangesBar (55) and modals/popovers (60).
             l ? "fixed inset-0 z-50" : "w-full",
             l && d ? "pointer-events-none" : "",
             l && f && !d ? "pointer-events-none" : ""
@@ -25168,7 +25189,7 @@ function OR({
     }
   );
 }
-function TR({
+function zR({
   items: e,
   current: t
 }) {
@@ -25190,7 +25211,7 @@ function TR({
     /* @__PURE__ */ u.jsx("h2", { className: "min-w-0 break-words text-xl font-semibold tracking-tight", children: t })
   ] });
 }
-function zR({
+function BR({
   breadcrumbs: e,
   actions: t,
   className: n
@@ -25266,13 +25287,13 @@ function zR({
     }
   );
 }
-function BR({
+function LR({
   children: e,
   className: t = "grid gap-4 rounded-3xl border border-border/70 bg-card p-5 shadow-[0_20px_50px_-30px_rgba(0,0,0,0.45)] md:grid-cols-4"
 }) {
   return /* @__PURE__ */ u.jsx("div", { className: t, children: e });
 }
-function LR({ label: e, value: t }) {
+function FR({ label: e, value: t }) {
   return /* @__PURE__ */ u.jsxs("div", { className: "space-y-1", children: [
     /* @__PURE__ */ u.jsx("div", { className: "text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground", children: e }),
     /* @__PURE__ */ u.jsx("div", { className: "text-sm font-medium", children: t })
@@ -25284,7 +25305,7 @@ function CP({
 }) {
   return /* @__PURE__ */ u.jsx("section", { className: t, children: e });
 }
-function FR({
+function GR({
   label: e,
   value: t
 }) {
@@ -25293,7 +25314,7 @@ function FR({
     /* @__PURE__ */ u.jsx("p", { className: "mt-2 whitespace-pre-wrap break-words text-sm leading-6", children: t?.trim() || "-" })
   ] });
 }
-function GR({
+function YR({
   rows: e,
   className: t,
   tableClassName: n,
@@ -25382,7 +25403,7 @@ function GR({
     }
   );
 }
-function YR({
+function HR({
   className: e,
   classKey: t,
   onOpenClass: n,
@@ -25404,7 +25425,7 @@ function YR({
     )
   ] });
 }
-function HR({
+function UR({
   label: e,
   classKey: t,
   onOpenClass: n
@@ -25426,7 +25447,7 @@ function HR({
     )
   ] });
 }
-function UR({
+function QR({
   title: e,
   children: t
 }) {
@@ -25591,7 +25612,7 @@ function SP({
     ))
   ] }) });
 }
-function QR({
+function ZR({
   tabs: e,
   activeTab: t,
   onChange: n,
@@ -25645,7 +25666,7 @@ function QR({
 function jP(e) {
   return Number.isFinite(e) ? Math.max(0, e) : 0;
 }
-function ZR({
+function VR({
   topLabel: e,
   primaryLabel: t,
   secondaryLabel: n,
@@ -25674,7 +25695,7 @@ function ZR({
     ] }) : i ? /* @__PURE__ */ u.jsx("div", { className: "truncate text-[11px] text-muted-foreground", children: i }) : null
   ] });
 }
-function VR({
+function WR({
   open: e,
   onOpenChange: t,
   trigger: n,
@@ -25733,7 +25754,7 @@ function VR({
     ) })
   ] });
 }
-const WR = Ki(function({
+const JR = Ki(function({
   open: t,
   onToggle: n,
   activeCount: r = 0,
@@ -25761,21 +25782,21 @@ const WR = Ki(function({
     }
   );
 });
-function JR(e, t, n = "") {
+function qR(e, t, n = "") {
   return e.get(t) ?? n;
 }
-function qR(e, t, n, r = 0) {
+function KR(e, t, n, r = 0) {
   const i = e.get(t);
   if (!i)
     return n;
   const o = Number.parseInt(i, 10);
   return Number.isNaN(o) || o < r ? n : o;
 }
-function KR(e, t, n) {
+function XR(e, t, n) {
   const r = e.get(t);
   return r === "1" ? !0 : r === "0" ? !1 : n;
 }
-function XR(e, t) {
+function _R(e, t) {
   const n = new URLSearchParams(e);
   return Object.entries(t).forEach(([r, i]) => {
     if (i == null || i === "" || i === !1) {
@@ -25789,25 +25810,25 @@ function XR(e, t) {
     n.set(r, String(i));
   }), n;
 }
-function _R(e) {
+function $R(e) {
   if (!(e instanceof Error))
     return !1;
   const t = e.message.toLowerCase();
   return t.includes("403") || t.includes("forbidden") || t.includes("insufficient permission") || t.includes("insufficient permissions");
 }
 const NP = "edited_at is older than the current value. refresh data and retry with a newer edited_at";
-function $R(e) {
+function eD(e) {
   return e instanceof Error ? e.message.toLowerCase().includes(NP) : !1;
 }
-function eD({ ...e }) {
+function tD({ ...e }) {
   return /* @__PURE__ */ u.jsx(Sa, { "data-slot": "sheet", ...e });
 }
-function tD({
+function nD({
   ...e
 }) {
   return /* @__PURE__ */ u.jsx(qd, { "data-slot": "sheet-trigger", ...e });
 }
-function nD({
+function rD({
   ...e
 }) {
   return /* @__PURE__ */ u.jsx(Or, { "data-slot": "sheet-close", ...e });
@@ -25826,14 +25847,14 @@ function IP({
     {
       "data-slot": "sheet-overlay",
       className: L(
-        "fixed inset-0 z-50 bg-black/50 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0",
+        "fixed inset-0 z-[60] bg-black/50 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0",
         e
       ),
       ...t
     }
   );
 }
-function rD({
+function iD({
   className: e,
   children: t,
   side: n = "right",
@@ -25848,7 +25869,7 @@ function rD({
       {
         "data-slot": "sheet-content",
         className: L(
-          "fixed z-50 flex flex-col gap-4 bg-background shadow-lg transition ease-in-out data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:animate-in data-[state=open]:duration-500",
+          "fixed z-[60] flex flex-col gap-4 bg-background shadow-lg transition ease-in-out data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:animate-in data-[state=open]:duration-500",
           n === "right" && "inset-y-0 right-0 h-full w-3/4 border-l data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:max-w-sm",
           n === "left" && "inset-y-0 left-0 h-full w-3/4 border-r data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left sm:max-w-sm",
           n === "top" && "inset-x-0 top-0 h-auto border-b data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top",
@@ -25867,7 +25888,7 @@ function rD({
     )
   ] });
 }
-function iD({ className: e, ...t }) {
+function oD({ className: e, ...t }) {
   return /* @__PURE__ */ u.jsx(
     "div",
     {
@@ -25877,7 +25898,7 @@ function iD({ className: e, ...t }) {
     }
   );
 }
-function oD({ className: e, ...t }) {
+function sD({ className: e, ...t }) {
   return /* @__PURE__ */ u.jsx(
     "div",
     {
@@ -25887,7 +25908,7 @@ function oD({ className: e, ...t }) {
     }
   );
 }
-function sD({
+function aD({
   className: e,
   ...t
 }) {
@@ -25900,7 +25921,7 @@ function sD({
     }
   );
 }
-function aD({
+function lD({
   className: e,
   ...t
 }) {
@@ -25917,11 +25938,11 @@ function Xr(e) {
   const t = (e ?? "").trim().toUpperCase();
   return t === "IMMEDIATE" ? "immediate" : t === "URGENT" ? "urgent" : t === "INFORMATIVE" ? "informative" : "notice";
 }
-function lD(e) {
+function cD(e) {
   const t = typeof e == "object" && e !== null ? e.priority : e;
   return Xr(t) === "immediate";
 }
-function cD(e) {
+function uD(e) {
   const t = typeof e == "object" && e !== null ? e.priority : e;
   return Xr(t) === "urgent";
 }
@@ -25982,7 +26003,7 @@ function DP(e) {
   return !(e.start_time && new Date(e.start_time).getTime() > t || e.end_time && new Date(e.end_time).getTime() < t);
 }
 const pg = It(null);
-function uD({ children: e }) {
+function dD({ children: e }) {
   const { isAuthenticated: t } = xo(), [n, r] = ae([]), [i, o] = ae(/* @__PURE__ */ new Set()), [s, a] = ae(/* @__PURE__ */ new Set()), [c, l] = ae(!1), f = de(!1), d = Pe(async () => {
     if (!f.current) {
       f.current = !0, l(!0);
@@ -26040,7 +26061,7 @@ const Vl = It({
   setFAB: () => {
   }
 });
-function dD({ children: e }) {
+function fD({ children: e }) {
   const [t, n] = ae(null), r = Pe(
     (i) => n(i),
     []
@@ -26050,7 +26071,7 @@ function dD({ children: e }) {
 function OP() {
   return _e(Vl);
 }
-function fD(e, t) {
+function hD(e, t) {
   const { setFAB: n } = _e(Vl), r = de(null);
   r.current = e;
   const i = !!e;
@@ -26062,7 +26083,7 @@ function fD(e, t) {
     return n({ onClick: () => r.current?.(), label: t }), () => n(null);
   }, [i, t, n]);
 }
-function hD({
+function pD({
   className: e,
   icon: t
 }) {
@@ -26100,7 +26121,7 @@ function zP(e) {
     return null;
   }
 }
-function pD({ viewAllPath: e }) {
+function mD({ viewAllPath: e }) {
   const { t } = ye(), { immediate: n, urgent: r, informative: i, unreadCount: o, isLoading: s, dismiss: a, markSeen: c, refetch: l } = Zl(), [f, d] = ae(!1), p = de(null), h = we(
     () => [...n, ...r, ...i],
     [n, r, i]
@@ -26134,7 +26155,7 @@ function pD({ viewAllPath: e }) {
       "div",
       {
         className: L(
-          "animate-in fade-in-0 slide-in-from-top-2 absolute right-0 top-10 z-50 w-[min(92vw,30rem)] overflow-hidden rounded-xl border border-border bg-popover text-popover-foreground shadow-xl duration-150"
+          "animate-in fade-in-0 slide-in-from-top-2 absolute right-0 top-10 z-[60] w-[min(92vw,30rem)] overflow-hidden rounded-xl border border-border bg-popover text-popover-foreground shadow-xl duration-150"
         ),
         children: [
           /* @__PURE__ */ u.jsxs("div", { className: "flex items-center justify-between border-b border-border/70 px-4 py-3", children: [
@@ -26238,7 +26259,7 @@ function gi(e) {
     return "-";
   }
 }
-function mD() {
+function gD() {
   const { isAuthenticated: e } = xo(), [t, n] = ae([]), [r, i] = ae(!1), [o, s] = ae(null), [a, c] = ae(/* @__PURE__ */ new Set()), l = de(!1), f = Pe(async () => {
     if (!l.current) {
       l.current = !0, i(!0), s(null);
@@ -26373,16 +26394,16 @@ function mD() {
     }) })
   ] });
 }
-function gD() {
+function xD() {
   const { t: e } = ye(), { immediate: t, dismiss: n } = Zl(), r = t[0] ?? null;
   return r ? /* @__PURE__ */ u.jsx(Sa, { open: !0, children: /* @__PURE__ */ u.jsxs(ja, { children: [
-    /* @__PURE__ */ u.jsx(Na, { className: "fixed inset-0 z-50 bg-black/40 backdrop-blur-sm data-[state=open]:animate-in data-[state=open]:fade-in-0" }),
+    /* @__PURE__ */ u.jsx(Na, { className: "fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm data-[state=open]:animate-in data-[state=open]:fade-in-0" }),
     /* @__PURE__ */ u.jsxs(
       Ma,
       {
         onEscapeKeyDown: (i) => i.preventDefault(),
         onInteractOutside: (i) => i.preventDefault(),
-        className: "fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl border border-border bg-background shadow-2xl outline-none data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
+        className: "fixed left-1/2 top-1/2 z-[60] w-full max-w-md -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl border border-border bg-background shadow-2xl outline-none data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
         "aria-describedby": r.description ? "immediate-desc" : void 0,
         children: [
           /* @__PURE__ */ u.jsxs("div", { className: "flex flex-col items-center px-8 py-10 text-center", children: [
@@ -26397,7 +26418,7 @@ function gD() {
     )
   ] }) }) : null;
 }
-function xD() {
+function bD() {
   const { t: e } = ye(), { urgent: t, dismiss: n } = Zl();
   return t.length === 0 ? null : /* @__PURE__ */ u.jsx("div", { className: "space-y-2", children: t.map((r) => /* @__PURE__ */ u.jsxs(
     "div",
@@ -26427,39 +26448,40 @@ function xD() {
 }
 export {
   sr as API_CONFIG,
-  VR as AdvancedFiltersPanel,
-  WR as AdvancedFiltersToggle,
-  ER as AppHeader,
+  WR as AdvancedFiltersPanel,
+  JR as AdvancedFiltersToggle,
+  CR as AppHeader,
   sl as AppTheme,
   lR as AuthProvider,
   EP as BackgroundDetailViewContext,
   HA as BaseFormDialog,
+  kR as BuildTag,
   me as Button,
   RA as Card,
   uR as CardAction,
   zA as CardContent,
   TA as CardDescription,
-  SR as CardField,
+  jR as CardField,
   dR as CardFooter,
   DA as CardHeader,
   OA as CardTitle,
   mR as ColorModeIconDropdown,
   up as ColorModeSelect,
   Hl as DETAIL_HIDDEN_COLLAPSED_VALUE,
-  kR as DashboardLayout,
-  UR as DetailActionPanel,
-  TR as DetailBreadcrumbs,
+  ER as DashboardLayout,
+  QR as DetailActionPanel,
+  zR as DetailBreadcrumbs,
   CP as DetailCard,
-  HR as DetailClassHeaderLabel,
-  YR as DetailClassLinkValue,
-  GR as DetailFieldsTable,
-  zR as DetailHeader,
-  BR as DetailSummaryGrid,
-  LR as DetailSummaryItem,
-  QR as DetailTabbedSection,
+  UR as DetailClassHeaderLabel,
+  HR as DetailClassLinkValue,
+  YR as DetailFieldsTable,
+  BR as DetailHeader,
+  LR as DetailSummaryGrid,
+  FR as DetailSummaryItem,
+  ZR as DetailTabbedSection,
   SP as DetailTabs,
-  FR as DetailTextBlock,
-  OR as DetailView,
+  GR as DetailTextBlock,
+  TR as DetailView,
   tl as Dialog,
   VP as DialogClose,
   nl as DialogContent,
@@ -26490,23 +26512,23 @@ export {
   ZA as FormTableDialog,
   UA as FormTableRow,
   QA as FormTableSection,
-  IR as GuideIconButton,
-  PR as GuideMenuButton,
-  MR as GuidesSidebarContent,
+  PR as GuideIconButton,
+  RR as GuideMenuButton,
+  IR as GuidesSidebarContent,
   QP as I18nProvider,
-  gD as ImmediateNotificationDialog,
+  xD as ImmediateNotificationDialog,
   Ht as Input,
   In as Label,
   FA as LazyViewFallback,
   pA as LocaleSelect,
   kE as MobileBottomBar,
-  jR as MobileCardList,
-  dD as MobileFABProvider,
-  hD as MobileFloatingActionButton,
+  NR as MobileCardList,
+  fD as MobileFABProvider,
+  pD as MobileFloatingActionButton,
   bR as MultiSelectDropdown,
-  pD as NotificationBell,
-  mD as NotificationCenter,
-  uD as NotificationProvider,
+  mD as NotificationBell,
+  gD as NotificationCenter,
+  dD as NotificationProvider,
   wE as PENDING_CHANGES_BAR_DEFAULT_BAR_TRANSITION_MS,
   mE as PENDING_CHANGES_BAR_DEFAULT_CANCEL_LABEL,
   AE as PENDING_CHANGES_BAR_DEFAULT_CHEVRON_TRANSITION_MS,
@@ -26519,22 +26541,22 @@ export {
   wR as PatchRecordDialog,
   AR as PendingChangesBar,
   hR as PendingChangesProvider,
-  ZR as ProgressMetricCell,
-  RR as QuestionBuilder,
+  VR as ProgressMetricCell,
+  DR as QuestionBuilder,
   cP as QuestionList,
   fR as ResetPassword,
   bo as SearchableSelect,
   t0 as Separator,
-  eD as Sheet,
-  nD as SheetClose,
-  rD as SheetContent,
-  aD as SheetDescription,
-  oD as SheetFooter,
-  iD as SheetHeader,
-  sD as SheetTitle,
-  tD as SheetTrigger,
+  tD as Sheet,
+  rD as SheetClose,
+  iD as SheetContent,
+  lD as SheetDescription,
+  sD as SheetFooter,
+  oD as SheetHeader,
+  aD as SheetTitle,
+  nD as SheetTrigger,
   cR as SignIn,
-  CR as SimpleDataTable,
+  SR as SimpleDataTable,
   Qs as SitemarkIcon,
   wr as StatusBanner,
   yo as Table,
@@ -26546,8 +26568,8 @@ export {
   gp as TableHeader,
   St as TableRow,
   mp as Textarea,
-  xD as UrgentNotificationBanner,
-  NR as UserGuideView,
+  bD as UrgentNotificationBanner,
+  MR as UserGuideView,
   W1 as VIETNAMESE_MESSAGES,
   tP as buildGuides,
   e0 as buttonVariants,
@@ -26556,20 +26578,20 @@ export {
   hg as fetchUserNotifications,
   tR as formatDate,
   nR as formatUserTimestamp,
-  DR as getDetailReturnLocation,
+  OR as getDetailReturnLocation,
   Xr as getNotificationPriorityKind,
-  KR as getQueryBoolean,
-  qR as getQueryNumber,
-  JR as getQueryParam,
+  XR as getQueryBoolean,
+  KR as getQueryNumber,
+  qR as getQueryParam,
   aR as getTextareaRows,
   cl as getUserScopes,
   GA as hasAnyUserScope,
   gR as hasUserScope,
-  lD as isImmediateNotification,
+  cD as isImmediateNotification,
   PP as isInformativeNotification,
-  $R as isOutdatedEditedAtConflictError,
-  _R as isPermissionDeniedError,
-  cD as isUrgentNotification,
+  eD as isOutdatedEditedAtConflictError,
+  $R as isPermissionDeniedError,
+  uD as isUrgentNotification,
   ba as markNotificationRead,
   eP as parseGuide,
   fg as readStoredDetailViewMode,
@@ -26581,12 +26603,12 @@ export {
   rR as toBackendTimestamp,
   oR as toDateTimeLocalValue,
   bP as toDetailReturnUrl,
-  XR as updateSearchParams,
+  _R as updateSearchParams,
   xo as useAuth,
   cp as useColorMode,
   vP as useDetailViewMode,
   ye as useI18n,
-  fD as useMobileFAB,
+  hD as useMobileFAB,
   OP as useMobileFABContext,
   Zl as useNotifications,
   pR as usePendingChanges,

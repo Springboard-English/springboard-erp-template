@@ -236,6 +236,8 @@ export function DetailView({
         >
             <section
                 className={cn(
+                    // 50 on the layer scale: above app chrome, below
+                    // PendingChangesBar (55) and modals/popovers (60).
                     floating ? "fixed inset-0 z-50" : "w-full",
                     floating && hiddenCollapsed ? "pointer-events-none" : "",
                     floating && collapsed && !hiddenCollapsed

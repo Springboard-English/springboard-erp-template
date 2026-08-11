@@ -93,7 +93,7 @@ export default function NotificationBell({ viewAllPath }: NotificationBellProps)
             {open && (
                 <div
                     className={cn(
-                        "animate-in fade-in-0 slide-in-from-top-2 absolute right-0 top-10 z-50 w-[min(92vw,30rem)] overflow-hidden rounded-xl border border-border bg-popover text-popover-foreground shadow-xl duration-150",
+                        "animate-in fade-in-0 slide-in-from-top-2 absolute right-0 top-10 z-[60] w-[min(92vw,30rem)] overflow-hidden rounded-xl border border-border bg-popover text-popover-foreground shadow-xl duration-150",
                     )}
                 >
                     <div className="flex items-center justify-between border-b border-border/70 px-4 py-3">
