@@ -218,6 +218,17 @@ the Cloud Build pipeline authenticates to npm with a PAT from Secret Manager and
 never hits this restriction. It remains a prerequisite for the **template bump
 PRs** to work.)*
 
+> **Resolved by deletion, 2026-08-11 (template 1.11.0).** Neither fix was ever
+> applied, so the chain stayed broken for its entire life — and its one visible
+> effect was that **every release run went red on a release that had published
+> perfectly well**, which trains people to ignore the only signal that would
+> tell them a publish had genuinely failed. Since we do not want a PR per
+> dependency bump either, the `Notify consumer repos` step and all three
+> `update-template.yml` workflows are gone rather than repaired. Consumers now
+> take a template with `npm install …@latest`, committed alongside the change
+> that needs it. Restoring the chain means re-adding both halves *and* doing the
+> two admin fixes above — do not restore just the dispatch step.
+
 One useful finding: `.npmrc` is gitignored and **has never been committed** in
 any of the three frontends. The warning in `erp-hrm/AGENTS.md` that it is
 "tracked in git [with] a live GitHub PAT" was stale and has been corrected.
