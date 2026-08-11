@@ -83,3 +83,15 @@ export { default as NotificationBell } from "./components/notifications/Notifica
 export { default as NotificationCenter } from "./components/notifications/NotificationCenter";
 export { default as ImmediateNotificationDialog } from "./components/notifications/ImmediateNotificationDialog";
 export { default as UrgentNotificationBanner } from "./components/notifications/UrgentNotificationBanner";
+export { default as TrendChart } from "./components/charts/TrendChart";
+export type { TrendPoint, TrendSeries } from "./components/charts/TrendChart";
+export { default as FunnelBars } from "./components/charts/FunnelBars";
+export type { FunnelStage } from "./components/charts/FunnelBars";
+export { default as CategoryBars } from "./components/charts/CategoryBars";
+export type { CategoryDatum } from "./components/charts/CategoryBars";
+export { default as DonutChart } from "./components/charts/DonutChart";
+export { default as StatTile } from "./components/charts/StatTile";
+export { default as ChartLegend } from "./components/charts/ChartLegend";
+export type { ChartLegendItem } from "./components/charts/ChartLegend";
+export { getChartPalette, useChartPalette } from "./components/charts/palette";
+export type { ChartColorMode, ChartPalette } from "./components/charts/palette";
