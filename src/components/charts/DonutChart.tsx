@@ -75,16 +75,19 @@ export default function DonutChart({
 
     const total = capped.reduce((sum, row) => sum + row.value, 0);
     let offset = 0;
-    return capped.map((row, index) => {
+    // A wedge named `otherLabel` is grey wherever it sorts, and never consumes
+    // a categorical slot. It used to be greyed only when it landed last, so a
+    // caller that pre-folded its own "Other" — the domain-fold case — got it
+    // painted as series 1 and every real category shifted a colour along.
+    let slot = 0;
+    return capped.map((row) => {
       const share = total > 0 ? row.value / total : 0;
       const length = share * CIRCUMFERENCE;
+      const isOther = row.label === otherLabel;
       const segment = {
         ...row,
         share: share * 100,
-        color:
-          row.label === otherLabel && capped.length > 1 && index === capped.length - 1
-            ? palette.other
-            : palette.series(index),
+        color: isOther ? palette.other : palette.series(slot++),
         // Shrink by the gap and nudge forward by half of it, so the gap is
         // shared evenly between neighbours.
         dashArray: `${Math.max(0, length - GAP)} ${CIRCUMFERENCE - Math.max(0, length - GAP)}`,

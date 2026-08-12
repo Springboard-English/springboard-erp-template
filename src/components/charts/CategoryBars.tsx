@@ -62,21 +62,30 @@ export default function CategoryBars({
 
   const rows = useMemo(() => {
     const sorted = [...data].sort((left, right) => right.value - left.value);
-    if (maxRows <= 0 || sorted.length <= maxRows) {
-      return sorted.map((row, index) => ({ ...row, isOther: false, index }));
-    }
+    const capped =
+      maxRows <= 0 || sorted.length <= maxRows
+        ? sorted
+        : [
+            ...sorted.slice(0, maxRows - 1),
+            {
+              label: otherLabel,
+              value: sorted
+                .slice(maxRows - 1)
+                .reduce((sum, row) => sum + row.value, 0),
+            },
+          ];
 
-    const head = sorted.slice(0, maxRows - 1);
-    const tail = sorted.slice(maxRows - 1);
-    return [
-      ...head.map((row, index) => ({ ...row, isOther: false, index })),
-      {
-        label: otherLabel,
-        value: tail.reduce((sum, row) => sum + row.value, 0),
-        isOther: true,
-        index: head.length,
-      },
-    ];
+    // A row named `otherLabel` is "everything else" whether this component
+    // folded it or the caller arrived with it already folded — a caller whose
+    // own fold rule is domain-specific (unrecognised values, say) does that
+    // upstream. It is always grey, and it never consumes a categorical slot:
+    // otherwise a large Other sorts to the front, takes slot 0, and shifts
+    // every real category's colour by one.
+    let slot = 0;
+    return capped.map((row) => {
+      const isOther = row.label === otherLabel;
+      return { ...row, isOther, index: isOther ? -1 : slot++ };
+    });
   }, [data, maxRows, otherLabel]);
 
   const total = rows.reduce((sum, row) => sum + row.value, 0);
