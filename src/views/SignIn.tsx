@@ -29,6 +29,39 @@ export interface SignInViewProps {
   formDescription?: string;
 }
 
+const ONE_TAP_POINTER_STYLE_ID = "springboard-one-tap-pointer-events";
+
+/**
+ * Stop Google One Tap swallowing clicks meant for the page.
+ *
+ * `google.accounts.id.prompt()` appends its prompt to <body> as a fixed
+ * container pinned top-right, and that container is far larger than the card it
+ * draws. The empty remainder still takes pointer events, so while One Tap is up
+ * the controls underneath it — on this screen the locale and colour-mode
+ * selects, and the top of the form on a short viewport — cannot be clicked. The
+ * container goes transparent to pointer events and the iframe that IS the card
+ * takes them back, so One Tap itself is unaffected.
+ *
+ * Injected from here rather than written in `src/index.css`, because **no
+ * consumer imports this package's compiled stylesheet** — each app owns its own
+ * Tailwind build and pulls only `dist/index.js`. A rule in the stylesheet would
+ * ship, look correct in this repo, and reach nobody. It also has to be global
+ * and outlive the view: GSI appends outside the React root, with inline styles,
+ * and the prompt survives navigation away from sign-in. Prefix selectors because
+ * GSI has renamed the container more than once.
+ */
+function ensureOneTapPointerEvents(): void {
+  if (typeof document === "undefined") return;
+  if (document.getElementById(ONE_TAP_POINTER_STYLE_ID)) return;
+
+  const style = document.createElement("style");
+  style.id = ONE_TAP_POINTER_STYLE_ID;
+  style.textContent =
+    '[id^="credential_picker_container"]{pointer-events:none!important}'
+    + '[id^="credential_picker_container"] iframe{pointer-events:auto!important}';
+  document.head.appendChild(style);
+}
+
 export default function SignIn(props: SignInViewProps) {
   const { t } = useI18n();
   const { login, setAuthenticatedUser } = useAuth();
@@ -107,6 +140,8 @@ export default function SignIn(props: SignInViewProps) {
     if (!clientId) {
       return;
     }
+
+    ensureOneTapPointerEvents();
 
     const script = document.createElement("script");
     script.src = "https://accounts.google.com/gsi/client";
