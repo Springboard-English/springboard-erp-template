@@ -33,11 +33,12 @@ import {
     setStoredUserInfo,
 } from "../auth/userStorage";
 import { toBackendTimeValue, toBackendTimestamp } from "../utils/formatters";
+import { clearAccessToken } from "../auth/accessToken";
 import {
-    armAccessTokenFromResponse,
-    clearAccessToken,
-} from "../auth/accessToken";
-import { fetchWithRefresh, fetchWithRetryAfter } from "./fetchWithRefresh";
+    exchangeForAccessToken,
+    fetchAuthExchange,
+    fetchWithRefresh,
+} from "./fetchWithRefresh";
 import type {
     SearchableSelectLoadParams,
     SearchableSelectPage,
@@ -974,21 +975,16 @@ export async function login(
     if (credentials.account_type) {
         loginUrl.searchParams.append("account_type", credentials.account_type);
     }
-    // Take the access token in the body and hold it in memory; the API then sets
-    // only the refresh cookie. See auth/accessToken.ts for why the cookie had to
-    // go — in short, the two together did not fit in WebKit's per-domain budget,
-    // so iOS dropped the access token and every request after this one 401'd.
-    loginUrl.searchParams.append("token_in_body", "true");
-
-    const response = await fetchWithRetryAfter(loginUrl.toString(), {
+    // A credential exchange, not an authed request: cookies out (the reply sets
+    // the refresh cookie, the durable credential that carries SSO between the
+    // apps), access token back, held in memory. No Bearer, and no refreshing out
+    // of a 401 — that would mean the password was wrong.
+    const response = await exchangeForAccessToken(loginUrl.toString(), {
         method: "POST",
         headers: {
             "Content-Type": "application/x-www-form-urlencoded",
             Accept: "application/json",
         },
-        // Cookies on this one: the response sets the refresh cookie, which is
-        // the durable credential and what carries SSO between the apps.
-        credentials: "include",
         body: formData.toString(),
     });
 
@@ -998,7 +994,6 @@ export async function login(
         );
     }
 
-    await armAccessTokenFromResponse(response);
     return fetchCurrentUser();
 }
 
@@ -1013,20 +1008,13 @@ export async function loginWithGoogle(
     if (accountType) {
         params.append("account_type", accountType);
     }
-    params.append("token_in_body", "true");
-
-    // Not through fetchWithRefresh: this IS the sign-in, so a 401 here means the
-    // Google credential was rejected, and trying to refresh out of it would ask
-    // the API to renew a session that doesn't exist yet. It also has to send
-    // cookies, which fetchWithRefresh deliberately never does.
-    const response = await fetchWithRetryAfter(
+    const response = await exchangeForAccessToken(
         `${getEndpoint("authenticateGoogle")}?${params.toString()}`,
         {
             method: "GET",
             headers: {
                 Accept: "application/json",
             },
-            credentials: "include",
         },
     );
 
@@ -1036,20 +1024,18 @@ export async function loginWithGoogle(
         );
     }
 
-    await armAccessTokenFromResponse(response);
     return fetchCurrentUser();
 }
 
 export async function logout(): Promise<void> {
-    // Cookies, and not through fetchWithRefresh: clearing the refresh cookie is
-    // the whole point, and a 401 here must not trigger a refresh that mints the
-    // session we are trying to end.
-    const response = await fetchWithRetryAfter(getEndpoint("logout"), {
+    // Clearing the refresh cookie is the whole point, so this is an exchange
+    // too — and a 401 here must not trigger a refresh that mints the session we
+    // are trying to end.
+    const response = await fetchAuthExchange(getEndpoint("logout"), {
         method: "GET",
         headers: {
             Accept: "application/json",
         },
-        credentials: "include",
     });
 
     // The in-memory token outlives the cookie otherwise, and would keep working

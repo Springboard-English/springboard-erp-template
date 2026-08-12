@@ -1,7 +1,7 @@
 {
     "name": "@springboard-english/springboard-erp-template",
     "private": false,
-    "version": "1.14.0",
+    "version": "1.15.0",
     "type": "module",
     "repository": {
         "type": "git",
@@ -21,15 +21,11 @@
             "types": "./dist/exports.d.ts",
             "import": "./dist/index.js"
         },
-        "./style.css": "./dist/springboard-erp-template.css",
-        "./transport": {
-            "types": "./dist/transport.d.ts",
-            "import": "./dist/transport.js"
-        }
+        "./style.css": "./dist/springboard-erp-template.css"
     },
     "scripts": {
         "dev": "vite",
-        "build": "vite build && tsc -p tsconfig.build.json && node scripts/check-one-session.mjs",
+        "build": "vite build && tsc -p tsconfig.build.json && node scripts/check-node-safe.mjs",
         "preview": "vite preview",
         "lint": "eslint . --ext .ts,.tsx"
     },

@@ -13,17 +13,16 @@ export default defineConfig({
   },
   build: {
     lib: {
-      // Two entries. `transport` exists so a consumer can reach the authed fetch
-      // without importing the component library — something in the markdown
-      // stack touches `document` at import time, which kills any Node-side test
-      // that only wanted to call the API. See src/transport.ts.
-      entry: {
-        index: fileURLToPath(new URL('./src/exports.ts', import.meta.url)),
-        transport: fileURLToPath(new URL('./src/transport.ts', import.meta.url)),
-      },
+      // One entry again. A second, DOM-free `transport` entry existed only
+      // because the markdown renderer touched `document` while this package was
+      // being imported; that is now behind a dynamic import, so the root is safe
+      // to import from Node and the split has nothing left to buy — while two
+      // entries carried a real hazard, since a module they both need can be
+      // emitted twice, and the access token is module state.
+      entry: fileURLToPath(new URL('./src/exports.ts', import.meta.url)),
       name: 'SpringboardComponents',
       formats: ['es'],
-      fileName: (_format, entryName) => `${entryName}.js`,
+      fileName: () => 'index.js',
     },
     rollupOptions: {
       external: ['react', 'react-dom', 'react-router-dom'],
