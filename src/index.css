@@ -106,3 +106,24 @@ body {
 .floating-detail[data-floating-collapsed="false"] [data-detail-tabs-wrap] {
     margin-bottom: 0.75rem;
 }
+
+/* Google One Tap hands its prompt to the page as a fixed container pinned to the
+   top-right corner, and that container is much larger than the card it draws —
+   so it swallowed clicks on whatever sat underneath it, which on the sign-in
+   screen is the language and colour-mode buttons, and the top of the form itself
+   on a short viewport. Making the container transparent to pointer events and
+   giving them back to the iframe leaves One Tap fully usable while everything
+   behind it stays clickable.
+
+   It has to be CSS: `google.accounts.id.prompt()` (SignIn.tsx) appends these
+   nodes to <body> itself, outside the React root, with inline styles — hence the
+   prefix selectors, since GSI has renamed the container more than once, and the
+   `!important`. Do not narrow this to the sign-in view: the prompt outlives the
+   component that started it. */
+[id^="credential_picker_container"] {
+    pointer-events: none !important;
+}
+
+[id^="credential_picker_container"] iframe {
+    pointer-events: auto !important;
+}
