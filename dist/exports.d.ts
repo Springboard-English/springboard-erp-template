@@ -95,3 +95,5 @@ export { default as ChartLegend } from "./components/charts/ChartLegend";
 export type { ChartLegendItem } from "./components/charts/ChartLegend";
 export { getChartPalette, useChartPalette } from "./components/charts/palette";
 export type { ChartColorMode, ChartPalette } from "./components/charts/palette";
+export { fetchWithRefresh, fetchWithRetryAfter, refreshAccessToken, AUTH_SESSION_EXPIRED_EVENT, } from "./api_calls/fetchWithRefresh";
+export { getAccessToken, setAccessToken, clearAccessToken, getAccessTokenExpiry, armAccessTokenFromResponse, } from "./auth/accessToken";

@@ -33,6 +33,10 @@ import {
     setStoredUserInfo,
 } from "../auth/userStorage";
 import { toBackendTimeValue, toBackendTimestamp } from "../utils/formatters";
+import {
+    armAccessTokenFromResponse,
+    clearAccessToken,
+} from "../auth/accessToken";
 import { fetchWithRefresh, fetchWithRetryAfter } from "./fetchWithRefresh";
 import type {
     SearchableSelectLoadParams,
@@ -970,6 +974,11 @@ export async function login(
     if (credentials.account_type) {
         loginUrl.searchParams.append("account_type", credentials.account_type);
     }
+    // Take the access token in the body and hold it in memory; the API then sets
+    // only the refresh cookie. See auth/accessToken.ts for why the cookie had to
+    // go — in short, the two together did not fit in WebKit's per-domain budget,
+    // so iOS dropped the access token and every request after this one 401'd.
+    loginUrl.searchParams.append("token_in_body", "true");
 
     const response = await fetchWithRetryAfter(loginUrl.toString(), {
         method: "POST",
@@ -977,6 +986,8 @@ export async function login(
             "Content-Type": "application/x-www-form-urlencoded",
             Accept: "application/json",
         },
+        // Cookies on this one: the response sets the refresh cookie, which is
+        // the durable credential and what carries SSO between the apps.
         credentials: "include",
         body: formData.toString(),
     });
@@ -987,6 +998,7 @@ export async function login(
         );
     }
 
+    await armAccessTokenFromResponse(response);
     return fetchCurrentUser();
 }
 
@@ -1001,8 +1013,13 @@ export async function loginWithGoogle(
     if (accountType) {
         params.append("account_type", accountType);
     }
+    params.append("token_in_body", "true");
 
-    const response = await fetchWithRefresh(
+    // Not through fetchWithRefresh: this IS the sign-in, so a 401 here means the
+    // Google credential was rejected, and trying to refresh out of it would ask
+    // the API to renew a session that doesn't exist yet. It also has to send
+    // cookies, which fetchWithRefresh deliberately never does.
+    const response = await fetchWithRetryAfter(
         `${getEndpoint("authenticateGoogle")}?${params.toString()}`,
         {
             method: "GET",
@@ -1019,17 +1036,25 @@ export async function loginWithGoogle(
         );
     }
 
+    await armAccessTokenFromResponse(response);
     return fetchCurrentUser();
 }
 
 export async function logout(): Promise<void> {
-    const response = await fetchWithRefresh(getEndpoint("logout"), {
+    // Cookies, and not through fetchWithRefresh: clearing the refresh cookie is
+    // the whole point, and a 401 here must not trigger a refresh that mints the
+    // session we are trying to end.
+    const response = await fetchWithRetryAfter(getEndpoint("logout"), {
         method: "GET",
         headers: {
             Accept: "application/json",
         },
         credentials: "include",
     });
+
+    // The in-memory token outlives the cookie otherwise, and would keep working
+    // until it expired.
+    clearAccessToken();
 
     if (!response.ok) {
         throw new Error(

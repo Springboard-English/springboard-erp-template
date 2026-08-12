@@ -198,3 +198,21 @@ export { default as ChartLegend } from "./components/charts/ChartLegend";
 export type { ChartLegendItem } from "./components/charts/ChartLegend";
 export { getChartPalette, useChartPalette } from "./components/charts/palette";
 export type { ChartColorMode, ChartPalette } from "./components/charts/palette";
+
+// The authed transport. Each app used to carry its own near-identical copy of
+// fetchWithRefresh — two were byte-for-byte this one — which meant a change to
+// how auth travels had to be made five times, and the iOS cookie bug had to be
+// fixed five times. They import it from here now.
+export {
+  fetchWithRefresh,
+  fetchWithRetryAfter,
+  refreshAccessToken,
+  AUTH_SESSION_EXPIRED_EVENT,
+} from "./api_calls/fetchWithRefresh";
+export {
+  getAccessToken,
+  setAccessToken,
+  clearAccessToken,
+  getAccessTokenExpiry,
+  armAccessTokenFromResponse,
+} from "./auth/accessToken";

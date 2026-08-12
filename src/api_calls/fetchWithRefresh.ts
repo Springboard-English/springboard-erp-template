@@ -1,5 +1,27 @@
+// The authed fetch for every Springboard front-end. It lived as a near-identical
+// copy in each app (lms and erp-ops' copies were byte-for-byte this file); they
+// import it from here now, so the auth transport is described once.
+//
+// **Bearer, not cookies.** The API used to set the access token as a cookie, and
+// that cookie plus the refresh one came to ~4.3KB on one domain — past the
+// 4096-byte per-domain floor RFC 6265 lets a browser stop at. WebKit stops
+// there, drops the access token, and every request after login answers 401,
+// which is why sign-in failed on iOS and worked in desktop Chrome. The token now
+// arrives in the login body, lives in memory (see auth/accessToken.ts) and rides
+// an Authorization header.
+//
+// So a normal request sends **no cookies at all** — `credentials: "omit"`,
+// applied here rather than trusted to each call site. The one exception is
+// `/refresh`, which needs the refresh cookie and asks for it explicitly. That
+// cookie is untouched by any of this, which is what keeps SSO across the
+// springboard.vn apps working: an app that opens with an empty memory refreshes
+// into a session without anyone typing a password.
 import { getEndpoint } from "../config/api";
-import { getStoredUserInfo } from "../auth/userStorage";
+import {
+  armAccessTokenFromResponse,
+  clearAccessToken,
+  getAccessToken,
+} from "../auth/accessToken";
 
 interface FetchWithRefreshOptions extends RequestInit {
   skipRefresh?: boolean;
@@ -11,39 +33,6 @@ const RATE_LIMIT_STATUS = 429;
 const MAX_RETRY_AFTER_RETRIES = 1;
 
 export const AUTH_SESSION_EXPIRED_EVENT = "auth:session-expired";
-
-function parseErrorMessage(payload: unknown): string {
-  if (typeof payload === "string") {
-    return payload;
-  }
-
-  if (payload && typeof payload === "object") {
-    const record = payload as Record<string, unknown>;
-    const message = record.message ?? record.detail ?? record.error;
-
-    if (typeof message === "string") {
-      return message;
-    }
-  }
-
-  return "";
-}
-
-async function getResponseErrorMessage(response: Response): Promise<string> {
-  const clone = response.clone();
-  const contentType = clone.headers.get("content-type") || "";
-
-  try {
-    if (contentType.includes("application/json")) {
-      const body = (await clone.json()) as unknown;
-      return parseErrorMessage(body);
-    }
-
-    return (await clone.text()).trim();
-  } catch {
-    return "";
-  }
-}
 
 function parseRetryAfterMs(retryAfter: string | null): number | null {
   if (!retryAfter) {
@@ -92,51 +81,47 @@ export async function fetchWithRetryAfter(
   return fetchWithRetryAfter(input, init, retriesRemaining - 1);
 }
 
-async function shouldAttemptRefresh(response: Response): Promise<boolean> {
-  if (response.status !== 401) {
-    return false;
-  }
-
-  const message = (await getResponseErrorMessage(response)).toLowerCase();
-
-  return message.includes("token") && message.includes("expired");
+/**
+ * Any 401 is worth one refresh.
+ *
+ * This used to insist the message said both "token" and "expired", which was
+ * survivable while the access token was a cookie the browser re-sent by itself:
+ * the only 401 you met was an expired one. With the token in memory, the common
+ * case is having **no** token at all — a fresh tab, a reload — and the API
+ * answers that with "Invalid token. Expected Bearer token, App token, or
+ * Cookie.". Under the old rule that never refreshed, so every reload dropped the
+ * user on the sign-in screen with a live session sitting in the refresh cookie.
+ */
+function shouldAttemptRefresh(response: Response): boolean {
+  return response.status === 401;
 }
 
-function getRefreshUsername(): string | null {
-  const userInfo = getStoredUserInfo();
-  if (!userInfo) {
-    return null;
-  }
-
-  const candidate = userInfo.username ?? userInfo.email ?? userInfo.sub;
-  return typeof candidate === "string" && candidate.trim()
-    ? candidate.trim()
-    : null;
-}
-
+/**
+ * Trade the refresh cookie for a new access token, once at a time.
+ *
+ * Single-flight: a screen that fires five queries at boot gets one refresh, not
+ * five — which also matters because refresh tokens rotate server-side, so
+ * parallel refreshes would invalidate each other.
+ */
 export async function refreshAccessToken(): Promise<boolean> {
   if (!refreshPromise) {
     refreshPromise = (async () => {
-      const username = getRefreshUsername();
-      if (!username) {
-        return false;
-      }
+      const refreshUrl = new URL(getEndpoint("refresh"));
+      refreshUrl.searchParams.set("token_in_body", "true");
 
-      const refreshResponse = await fetchWithRetryAfter(getEndpoint("refresh"), {
+      // The one request that sends cookies: the refresh token is the credential.
+      const refreshResponse = await fetchWithRetryAfter(refreshUrl.toString(), {
         method: "POST",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          username: username,
-        },
+        headers: { Accept: "application/json" },
         credentials: "include",
       });
 
-      if (refreshResponse.ok) {
-        return true;
+      if (!refreshResponse.ok) {
+        return false;
       }
 
-      return false;
+      await armAccessTokenFromResponse(refreshResponse);
+      return true;
     })().finally(() => {
       refreshPromise = null;
     });
@@ -169,28 +154,47 @@ async function forceLogoutAndNotify(): Promise<void> {
   return forceLogoutPromise;
 }
 
+/** The request as it goes out: Bearer if we hold one, and never any cookies. */
+function authedInit(init: RequestInit): RequestInit {
+  const headers = new Headers(init.headers);
+  const token = getAccessToken();
+  if (token && !headers.has("Authorization")) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+
+  // Set here rather than per call site: a stray `credentials: "include"` in one
+  // of the hundred callers would put the 4.3KB of cookies back on the wire for
+  // that request, and it would work everywhere except the browser this exists
+  // for.
+  return { ...init, headers, credentials: "omit" };
+}
+
 export async function fetchWithRefresh(
   input: string,
   options: FetchWithRefreshOptions = {},
 ): Promise<Response> {
   const { skipRefresh = false, ...init } = options;
-  const response = await fetchWithRetryAfter(input, init);
+  const response = await fetchWithRetryAfter(input, authedInit(init));
 
-  if (skipRefresh) {
+  if (skipRefresh || !shouldAttemptRefresh(response)) {
     return response;
   }
 
-  const shouldRefresh = await shouldAttemptRefresh(response);
-  if (!shouldRefresh) {
-    return response;
-  }
-
+  // Whether we were signed in a moment ago decides what a failed refresh means.
+  const hadToken = getAccessToken() !== null;
   const refreshed = await refreshAccessToken();
   if (!refreshed) {
-    await forceLogoutAndNotify();
+    clearAccessToken();
+    // Only tear down a session that existed. A first visit has no token and no
+    // refresh cookie, so its 401 is simply "not signed in" — and treating that
+    // as an expiry logged out and notified on every cold load of the sign-in
+    // page, which is both noise and a needless round trip.
+    if (hadToken) {
+      await forceLogoutAndNotify();
+    }
     return response;
   }
 
-  // Retry exactly once after successful refresh.
+  // Retry exactly once, now carrying the token the refresh just handed us.
   return fetchWithRefresh(input, { ...init, skipRefresh: true });
 }
