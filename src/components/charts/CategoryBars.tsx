@@ -18,6 +18,25 @@ interface CategoryBarsProps {
   emptyMessage?: string;
   className?: string;
   onSelect?: (label: string) => void;
+  /**
+   * The highlighted row, and a callback as the pointer moves over one.
+   *
+   * These mirror `DonutChart`'s pair so the two can be driven from a single
+   * piece of state — hovering a bar highlights its wedge and the other way
+   * round. Leave both unset for an unlinked list.
+   *
+   * `activeLabel` may name a row this list does not have (a donut folds more
+   * aggressively than the list beside it); nothing highlights, which is the
+   * correct outcome rather than an error.
+   */
+  activeLabel?: string | null;
+  onActiveChange?: (label: string | null) => void;
+  /**
+   * Maps a row's label to the label the *other* component knows it by, so a
+   * row folded into "Other" over there still highlights the right thing.
+   * Defaults to identity.
+   */
+  activeLabelFor?: (label: string) => string;
 }
 
 /**
@@ -35,6 +54,9 @@ export default function CategoryBars({
   emptyMessage = 'Nothing to show.',
   className,
   onSelect,
+  activeLabel = null,
+  onActiveChange,
+  activeLabelFor = (label) => label,
 }: CategoryBarsProps) {
   const palette = useChartPalette();
 
@@ -68,11 +90,17 @@ export default function CategoryBars({
     );
   }
 
+  const linked = activeLabel !== null;
+
   return (
-    <ul className={cn('space-y-2.5', className)}>
+    <ul
+      className={cn('space-y-2.5', className)}
+      onMouseLeave={onActiveChange ? () => onActiveChange(null) : undefined}
+    >
       {rows.map((row) => {
         const color = row.isOther ? palette.other : palette.series(row.index);
         const share = total > 0 ? (row.value / total) * 100 : 0;
+        const isActive = linked && activeLabelFor(row.label) === activeLabel;
         const content = (
           <>
             <div className="mb-1 flex items-baseline gap-3">
@@ -104,11 +132,29 @@ export default function CategoryBars({
         );
 
         return (
-          <li key={row.label}>
+          <li
+            key={row.label}
+            // Dim the rest rather than brightening this one, so the highlight
+            // reads the same way the donut's does.
+            className={cn(
+              'transition-opacity',
+              linked && !isActive && 'opacity-40',
+            )}
+            onMouseEnter={
+              onActiveChange
+                ? () => onActiveChange(activeLabelFor(row.label))
+                : undefined
+            }
+          >
             {onSelect && !row.isOther ? (
               <button
                 type="button"
                 onClick={() => onSelect(row.label)}
+                onFocus={
+                  onActiveChange
+                    ? () => onActiveChange(activeLabelFor(row.label))
+                    : undefined
+                }
                 className="w-full rounded-lg text-left transition-opacity hover:opacity-80"
               >
                 {content}
