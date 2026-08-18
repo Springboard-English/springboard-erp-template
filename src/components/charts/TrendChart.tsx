@@ -35,7 +35,9 @@ const SEGMENT_GAP = 2;
 const CORNER = 4;
 
 /** Rounded at the data end, square at the baseline. */
-function columnPath(
+// Shared with ScoreDistributionChart. Package-internal on purpose: not exported
+// from `exports.ts`, because the shape of a column is not public API.
+export function columnPath(
   x: number,
   y: number,
   width: number,
@@ -70,7 +72,7 @@ function columnPath(
  * maximum of 22. Only whole-number steps are considered, and the scale with the
  * least wasted headroom wins.
  */
-function integerScale(maxValue: number): { max: number; step: number } {
+export function integerScale(maxValue: number): { max: number; step: number } {
   if (maxValue <= 0) {
     return { max: 1, step: 1 };
   }

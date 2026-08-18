@@ -77,3 +77,22 @@ every component here also prints its values as text — do not add one that draw
 bare colour with no labels.
 
 Re-run the validator if you change a hex.
+
+**`ScoreDistributionChart` (since 1.16.0) takes its colour from the caller**, and
+is the one chart here that does. Leap consumes it too, and Leap's design system
+forbids raw hex in components — so `color` accepts any CSS colour string and Leap
+passes `var(--rose-500)`. Two consequences:
+
+- **The fill is set through the `style` prop, never the `fill` attribute.**
+  `var()` does not resolve in an SVG presentation attribute, so `fill={color}` —
+  which is what `TrendChart` does with its own palette hexes — would render
+  nothing for a token-passing consumer. The comment at that line says so; do not
+  "simplify" it back.
+- **Its bins come from the API**, not from scores binned in the browser. The
+  tooltip reports the same percentile the rest of the platform reports, and
+  computing it a second time client-side is how two screens end up disagreeing
+  about where a student stands. `GET /v2/tests/{id}/summary` and
+  `GET /v2/live-sessions/{id}/results` both return the shape it takes.
+
+It follows the "no bare colour" rule the same way the others do: each column
+prints its count, and the highlighted-bin variant ships a legend.

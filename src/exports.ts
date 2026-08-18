@@ -194,6 +194,11 @@ export { default as CategoryBars } from "./components/charts/CategoryBars";
 export type { CategoryDatum } from "./components/charts/CategoryBars";
 export { default as DonutChart } from "./components/charts/DonutChart";
 export { default as StatTile } from "./components/charts/StatTile";
+export { default as ScoreDistributionChart } from "./components/charts/ScoreDistributionChart";
+export type {
+  ScoreDistributionBin,
+  ScoreDistributionChartProps,
+} from "./components/charts/ScoreDistributionChart";
 export { default as ChartLegend } from "./components/charts/ChartLegend";
 export type { ChartLegendItem } from "./components/charts/ChartLegend";
 export { getChartPalette, useChartPalette } from "./components/charts/palette";
