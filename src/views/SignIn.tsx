@@ -298,7 +298,16 @@ export default function SignIn(props: SignInViewProps) {
 
   return (
     <AppTheme {...props}>
-      <div className="relative flex min-h-screen overflow-hidden bg-background">
+      {/* A row on desktop. When `heroChildren` puts real content in the left
+        column it also has to show below `lg`, and two columns on a phone give
+        each a sliver — so it stacks there instead. Without heroChildren the
+        hero is `hidden` and the direction never matters. */}
+      <div
+        className={
+          "relative flex min-h-screen overflow-hidden bg-background " +
+          (props.heroChildren ? "flex-col lg:flex-row" : "")
+        }
+      >
         {/* Ambient background blobs */}
         <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
           <div className="absolute -left-40 -top-40 h-[600px] w-[600px] rounded-full bg-primary/5 blur-[120px]" />
@@ -313,8 +322,13 @@ export default function SignIn(props: SignInViewProps) {
           a control nobody on a phone can reach. */}
         <div
           className={
-            "relative flex-col justify-between overflow-hidden border-r border-border/30 bg-card/20 p-8 backdrop-blur-sm lg:flex lg:w-[42%] lg:p-12 xl:w-[38%] " +
-            (props.heroChildren ? "flex" : "hidden")
+            "relative flex-col overflow-hidden border-border/30 bg-card/20 p-8 backdrop-blur-sm lg:flex lg:w-[42%] lg:justify-between lg:border-r lg:p-12 xl:w-[38%] " +
+            // Stacked on a phone it is a band above the form, so it takes only
+            // the height it needs and separates along the bottom instead of the
+            // side. On desktop it is the full-height column it always was.
+            (props.heroChildren
+              ? "flex justify-start gap-8 border-b lg:border-b-0"
+              : "hidden justify-between border-r")
           }
         >
           <div className="pointer-events-none absolute inset-0 -z-10">
@@ -324,7 +338,17 @@ export default function SignIn(props: SignInViewProps) {
 
           <SitemarkIcon />
 
-          <div className="space-y-4">
+          {/* Bottom-aligned reads as deliberate for a headline and stranded for
+            a panel someone has to fill in, so custom content takes the column's
+            remaining height and centres in it. On a phone the hero is a band
+            above the form, where centring has nothing to centre against. */}
+          <div
+            className={
+              props.heroChildren
+                ? "w-full lg:flex lg:flex-1 lg:items-center"
+                : "space-y-4"
+            }
+          >
             {props.heroChildren ?? (
               <>
                 <p className="font-mono text-xs font-semibold uppercase tracking-[0.24em] text-primary/80">
