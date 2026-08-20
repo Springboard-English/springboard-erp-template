@@ -27,6 +27,29 @@ export interface SignInViewProps {
   heroTitleAccentText?: string;
   formTitle?: string;
   formDescription?: string;
+  /**
+   * Slots for content only the consuming app can supply.
+   *
+   * Every other customisation here is a **string**, which is enough to rename
+   * things and no help at all when an app needs a second way in. Leap has one:
+   * a public self-paced test is taken without an account, so a visitor bounced
+   * here from such a link needs a "continue as guest" path that this package
+   * cannot own — it needs that app's join code, its API route and its routing.
+   * A slot keeps the knowledge where it belongs instead of teaching a package
+   * shared by five apps about a concept that exists in one.
+   *
+   * - `children` sits **below the form**, after the Google button, which is
+   *   where an alternative sign-in belongs: past the primary path, before the
+   *   footer.
+   * - `heroChildren` replaces the left panel's copy, whose three text props
+   *   cannot express anything but a headline.
+   * - `footerChildren` replaces the default guide link.
+   *
+   * All optional; omitting them leaves the screen exactly as it was.
+   */
+  children?: React.ReactNode;
+  heroChildren?: React.ReactNode;
+  footerChildren?: React.ReactNode;
 }
 
 const ONE_TAP_POINTER_STYLE_ID = "springboard-one-tap-pointer-events";
@@ -293,13 +316,17 @@ export default function SignIn(props: SignInViewProps) {
           <SitemarkIcon />
 
           <div className="space-y-4">
-            <p className="font-mono text-xs font-semibold uppercase tracking-[0.24em] text-primary/80">
-              {heroEyebrowText}
-            </p>
-            <p className="text-[2.75rem] font-bold leading-[1.15] tracking-tight text-foreground">
-              {heroTitleText}<br />
-              <span className="text-primary">{heroTitleAccentText}</span>
-            </p>
+            {props.heroChildren ?? (
+              <>
+                <p className="font-mono text-xs font-semibold uppercase tracking-[0.24em] text-primary/80">
+                  {heroEyebrowText}
+                </p>
+                <p className="text-[2.75rem] font-bold leading-[1.15] tracking-tight text-foreground">
+                  {heroTitleText}<br />
+                  <span className="text-primary">{heroTitleAccentText}</span>
+                </p>
+              </>
+            )}
           </div>
         </div>
 
@@ -456,16 +483,25 @@ export default function SignIn(props: SignInViewProps) {
                 )}
               </form>
 
+              {/* A second way in, when the app has one. Outside the <form> on
+                purpose: it is not part of submitting these credentials, and
+                nesting a second form inside this one would be invalid markup. */}
+              {props.children ? (
+                <div className="mt-6">{props.children}</div>
+              ) : null}
+
               {/* Footer */}
               <div className="mt-8 space-y-2 text-center">
-                <a
-                  href="https://docs.google.com/document/d/1vueS_dzdvDkBex5BLe_F03GEFLzjtoiFbNi0VJa2_gE/edit?tab=t.0"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex text-xs font-medium text-muted-foreground/70 transition hover:text-muted-foreground"
-                >
-                  {t("signIn.guideLink")}
-                </a>
+                {props.footerChildren ?? (
+                  <a
+                    href="https://docs.google.com/document/d/1vueS_dzdvDkBex5BLe_F03GEFLzjtoiFbNi0VJa2_gE/edit?tab=t.0"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex text-xs font-medium text-muted-foreground/70 transition hover:text-muted-foreground"
+                  >
+                    {t("signIn.guideLink")}
+                  </a>
+                )}
               </div>
             </div>
           </div>
