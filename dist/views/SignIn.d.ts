@@ -24,11 +24,11 @@ export interface SignInViewProps {
      * A slot keeps the knowledge where it belongs instead of teaching a package
      * shared by five apps about a concept that exists in one.
      *
-     * - `children` sits **below the form**, after the Google button, which is
-     *   where an alternative sign-in belongs: past the primary path, before the
-     *   footer.
      * - `heroChildren` replaces the left panel's copy, whose three text props
-     *   cannot express anything but a headline.
+     *   cannot express anything but a headline. Passing it also makes that panel
+     *   **visible at every breakpoint** — it is desktop-only as decoration, and
+     *   anything a visitor has to use must survive a phone.
+     * - `children` sits below the form, after the Google button.
      * - `footerChildren` replaces the default guide link.
      *
      * All optional; omitting them leaves the screen exactly as it was.

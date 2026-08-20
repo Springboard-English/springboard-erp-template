@@ -38,11 +38,11 @@ export interface SignInViewProps {
    * A slot keeps the knowledge where it belongs instead of teaching a package
    * shared by five apps about a concept that exists in one.
    *
-   * - `children` sits **below the form**, after the Google button, which is
-   *   where an alternative sign-in belongs: past the primary path, before the
-   *   footer.
    * - `heroChildren` replaces the left panel's copy, whose three text props
-   *   cannot express anything but a headline.
+   *   cannot express anything but a headline. Passing it also makes that panel
+   *   **visible at every breakpoint** — it is desktop-only as decoration, and
+   *   anything a visitor has to use must survive a phone.
+   * - `children` sits below the form, after the Google button.
    * - `footerChildren` replaces the default guide link.
    *
    * All optional; omitting them leaves the screen exactly as it was.
@@ -306,8 +306,17 @@ export default function SignIn(props: SignInViewProps) {
           <div className="absolute left-1/3 top-1/2 h-[300px] w-[300px] -translate-y-1/2 rounded-full bg-sky-500/4 blur-[80px] dark:bg-sky-400/4" />
         </div>
 
-        {/* Left branding panel — desktop only */}
-        <div className="relative hidden flex-col justify-between overflow-hidden border-r border-border/30 bg-card/20 p-12 backdrop-blur-sm lg:flex lg:w-[42%] xl:w-[38%]">
+        {/* Left branding panel. Desktop-only by default — it is decoration, and
+          a phone has no room for it. `heroChildren` makes it visible at every
+          breakpoint, because a consumer replacing the copy with something a
+          visitor has to USE (Leap puts guest sign-in here) would otherwise ship
+          a control nobody on a phone can reach. */}
+        <div
+          className={
+            "relative flex-col justify-between overflow-hidden border-r border-border/30 bg-card/20 p-8 backdrop-blur-sm lg:flex lg:w-[42%] lg:p-12 xl:w-[38%] " +
+            (props.heroChildren ? "flex" : "hidden")
+          }
+        >
           <div className="pointer-events-none absolute inset-0 -z-10">
             <div className="absolute -left-16 -top-16 h-72 w-72 rounded-full bg-primary/8 blur-3xl" />
             <div className="absolute bottom-0 right-0 h-56 w-56 rounded-full bg-primary/6 blur-3xl" />
@@ -343,10 +352,13 @@ export default function SignIn(props: SignInViewProps) {
           </div>
 
           <div className="flex flex-1 flex-col items-center justify-center px-5 py-16 sm:px-10">
-            {/* Mobile logo */}
-            <div className="mb-10 lg:hidden">
-              <SitemarkIcon />
-            </div>
+            {/* Mobile logo — skipped when the hero panel is already on screen
+              at this breakpoint, which would otherwise show the mark twice. */}
+            {props.heroChildren ? null : (
+              <div className="mb-10 lg:hidden">
+                <SitemarkIcon />
+              </div>
+            )}
 
             <div className="w-full max-w-[360px]">
               {/* Heading */}
