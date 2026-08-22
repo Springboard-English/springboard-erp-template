@@ -72,6 +72,8 @@ export * from "./components/ui/searchable-select";
 export * from "./components/ui/separator";
 export * from "./components/ui/sheet";
 export * from "./components/ui/table";
+export * from "./components/ui/tag-filter";
+export * from "./components/ui/tag-input";
 export * from "./components/ui/textarea";
 export { NotificationProvider, useNotifications } from "./context/NotificationContext";
 export type { NotificationContextValue } from "./context/NotificationContext";

@@ -152,6 +152,12 @@ export * from "./components/ui/searchable-select";
 export * from "./components/ui/separator";
 export * from "./components/ui/sheet";
 export * from "./components/ui/table";
+// Tags on a resource: TagInput authors them, TagFilter narrows a list by them.
+// `normalizeTag`/`normalizeTags` are exported alongside because they have to
+// match the API's `normalize_tags` — callers building a query string need the
+// same canonical form the chips show.
+export * from "./components/ui/tag-filter";
+export * from "./components/ui/tag-input";
 export * from "./components/ui/textarea";
 
 export { NotificationProvider, useNotifications } from "./context/NotificationContext";
