@@ -49,6 +49,30 @@ export {
 export { default as StatusBanner } from "./components/StatusBanner";
 export { default as BuildTag } from "./components/BuildTag";
 export type { BuildTagProps } from "./components/BuildTag";
+// The changelog. `BuildTag` already wires all of it together — pass it the
+// generated commit list and, optionally, a what's-new note — so an app only
+// reaches for these directly to render the history somewhere else, or to test
+// the parsing without a DOM.
+export { default as ChangelogDialog } from "./components/changelog/ChangelogDialog";
+export type { ChangelogDialogProps } from "./components/changelog/ChangelogDialog";
+export { default as WhatsNewNote } from "./components/changelog/WhatsNewNote";
+export type { WhatsNewNoteProps } from "./components/changelog/WhatsNewNote";
+export {
+  buildChangelog,
+  changelogNoteId,
+  countInternalChanges,
+  parseCommitSubject,
+  parseWhatsNewNote,
+  readSeenNoteId,
+  toChangelogChange,
+  writeSeenNoteId,
+} from "./components/changelog/changelog";
+export type {
+  ChangelogChange,
+  ChangelogChangeKind,
+  ChangelogCommit,
+  ChangelogDay,
+} from "./components/changelog/types";
 export { default as DashboardLayout } from "./components/layout/DashboardLayout";
 export type { DashboardLayoutProps, DashboardNavItem, DashboardLayoutClassNames } from "./components/layout/DashboardLayout";
 export { default as AppHeader } from "./components/layout/AppHeader";

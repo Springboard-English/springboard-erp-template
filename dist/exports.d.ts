@@ -28,6 +28,12 @@ export { PENDING_CHANGES_BAR_DEFAULT_SAVE_LABEL, PENDING_CHANGES_BAR_DEFAULT_CAN
 export { default as StatusBanner } from "./components/StatusBanner";
 export { default as BuildTag } from "./components/BuildTag";
 export type { BuildTagProps } from "./components/BuildTag";
+export { default as ChangelogDialog } from "./components/changelog/ChangelogDialog";
+export type { ChangelogDialogProps } from "./components/changelog/ChangelogDialog";
+export { default as WhatsNewNote } from "./components/changelog/WhatsNewNote";
+export type { WhatsNewNoteProps } from "./components/changelog/WhatsNewNote";
+export { buildChangelog, changelogNoteId, countInternalChanges, parseCommitSubject, parseWhatsNewNote, readSeenNoteId, toChangelogChange, writeSeenNoteId, } from "./components/changelog/changelog";
+export type { ChangelogChange, ChangelogChangeKind, ChangelogCommit, ChangelogDay, } from "./components/changelog/types";
 export { default as DashboardLayout } from "./components/layout/DashboardLayout";
 export type { DashboardLayoutProps, DashboardNavItem, DashboardLayoutClassNames } from "./components/layout/DashboardLayout";
 export { default as AppHeader } from "./components/layout/AppHeader";

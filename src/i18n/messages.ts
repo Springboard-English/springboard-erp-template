@@ -141,6 +141,20 @@ export const ENGLISH_MESSAGES = {
   "guides.open": "Open guides",
   "guides.close": "Close guides",
   "guides.menuOpen": "User guide",
+  "changelog.title": "What's new",
+  "changelog.description": "Every change shipped to this app, newest first.",
+  "changelog.open": "See what changed",
+  "changelog.empty": "No changes recorded for this build.",
+  "changelog.currentBuild": "The build you are running",
+  "changelog.kind.feature": "New",
+  "changelog.kind.fix": "Fixed",
+  "changelog.kind.improvement": "Changed",
+  "changelog.kind.internal": "Internal",
+  "changelog.showInternal": "Show {count} internal changes",
+  "changelog.hideInternal": "Hide internal changes",
+  "changelog.note.label": "What changed",
+  "changelog.note.dismiss": "Dismiss",
+  "changelog.note.hint": "Click anywhere to dismiss",
 } as const;
 
 export const VIETNAMESE_MESSAGES = {
@@ -286,6 +300,20 @@ export const VIETNAMESE_MESSAGES = {
   "guides.open": "Mo huong dan",
   "guides.close": "Dong huong dan",
   "guides.menuOpen": "Huong dan su dung",
+  "changelog.title": "Co gi moi",
+  "changelog.description": "Moi thay doi da trien khai cho ung dung nay, moi nhat truoc.",
+  "changelog.open": "Xem nhung thay doi",
+  "changelog.empty": "Chua ghi nhan thay doi nao cho ban dung nay.",
+  "changelog.currentBuild": "Ban dung ban dang chay",
+  "changelog.kind.feature": "Moi",
+  "changelog.kind.fix": "Da sua",
+  "changelog.kind.improvement": "Thay doi",
+  "changelog.kind.internal": "Noi bo",
+  "changelog.showInternal": "Hien {count} thay doi noi bo",
+  "changelog.hideInternal": "An thay doi noi bo",
+  "changelog.note.label": "Thay doi moi",
+  "changelog.note.dismiss": "Bo qua",
+  "changelog.note.hint": "Nhan vao bat ky dau de dong",
 } as const;
 
 export type TemplateI18nKey = keyof typeof ENGLISH_MESSAGES;

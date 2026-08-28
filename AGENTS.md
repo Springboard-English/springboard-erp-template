@@ -96,3 +96,47 @@ passes `var(--rose-500)`. Two consequences:
 
 It follows the "no bare colour" rule the same way the others do: each column
 prints its count, and the highlighted-bin variant ships a legend.
+
+## Changelog (`src/components/changelog/`, since 1.20.0)
+
+`BuildTag` is the whole feature's front door. Given `changelog` it turns the
+commit sha it already printed into a button that opens `ChangelogDialog`; given
+`note` it shows a `WhatsNewNote` above itself once. Consumers pass both and
+nothing else:
+
+```tsx
+<BuildTag commit={__COMMIT_HASH__} hidden={collapsed}
+          changelog={CHANGELOG} note={whatsNew} noteStorageKey="springboard:lms:whats-new" />
+```
+
+**The history is a build artifact, not an API.** Each app's
+`scripts/generate-changelog.mjs` runs `git log` and writes
+`src/content/changelog.ts`, which is committed and imported into the bundle. So
+the history a user reads is exactly the history of the bundle they are running,
+there is nothing to fetch, and it works with the API down. Nothing here calls
+the backend, and it must stay that way — the apps have no version number and no
+release table to ask.
+
+**Author names are not carried.** The generator emits sha, date and subject
+only. Teachers see this panel.
+
+**Kinds are told apart by weight, not hue** — solid primary, outlined primary,
+neutral, muted. Consumers do not import this package's stylesheet (each keeps
+its own theme copy) and Leap forbids raw colour in components, so a literal
+`emerald-500` here would be both off-brand and against that rule. The label
+carries the meaning; the colour only ranks it.
+
+**A commit subject with no `type(scope):` prefix is normal**, not a parse
+failure — Leap's history is written as plain sentences. `parseCommitSubject`
+files those as `improvement`. `chore`/`ci`/`docs`/`deps` are `internal` and the
+dialog folds them away behind a toggle.
+
+**The what's-new note is keyed by its own content**, hashed — there is no
+version to key it on. Rewriting `whats-new.md` shows it once to everyone;
+fixing a typo in it shows it again. It is dismissed by *any* click, does not
+take focus when it appears, and stays anchored (via an `sr-only` element) even
+when the tag itself is hidden by a collapsed sidebar.
+
+`WhatsNewNote` renders markdown through the guides' `SectionMarkdown`, so it
+inherits the same lazy-import boundary — keep it that way, or
+`scripts/check-node-safe.mjs` will fail the build.
