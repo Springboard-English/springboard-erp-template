@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { createInstance } from "i18next";
 import { I18nextProvider, initReactI18next, useTranslation } from "react-i18next";
-import { ENGLISH_MESSAGES, VIETNAMESE_MESSAGES, type TemplateI18nKey } from "@/i18n/messages";
+import { ENGLISH_MESSAGES, VIETNAMESE_MESSAGES, type TemplateI18nKey } from "../i18n/messages";
 
 export type TemplateMessages = Partial<Record<TemplateI18nKey | string, string>>;
 export type TemplateLocaleResources = Record<string, TemplateMessages>;

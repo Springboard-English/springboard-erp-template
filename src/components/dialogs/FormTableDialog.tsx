@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import BaseFormDialog from '@/components/dialogs/BaseFormDialog';
-import FormTableSection, { FormTableRow } from '@/components/dialogs/FormTableSection';
+import FormTableSection, { FormTableRow } from './FormTableSection';
 import { useI18n } from '@/context/I18nContext';
 import { cn } from '@/lib/utils';
 

@@ -145,6 +145,7 @@ export { default as ProgressMetricCell } from "./components/cells/ProgressMetric
 export { default as AdvancedFiltersPanel } from "./components/management/AdvancedFiltersPanel";
 export type { AdvancedFiltersPanelProps } from "./components/management/AdvancedFiltersPanel";
 export { default as AdvancedFiltersToggle } from "./components/management/AdvancedFiltersToggle";
+export { default as ExportCsvButton } from "./components/management/ExportCsvButton";
 export type { AdvancedFiltersToggleProps } from "./components/management/AdvancedFiltersToggle";
 
 export * from "./utils/formatters";
@@ -153,6 +154,11 @@ export * from "./utils/urlQueryState";
 // byte-identical in erp-hrm, erp-crm and lms, with a copy of its test in each.
 export * from "./utils/viewFilterState";
 export * from "./utils/queryCache";
+// erp-ops's version: it is the only one with `csvText`, which wraps an
+// identifier as `="…"` so Excel stops eating the leading zero on a CITAD bank
+// code or an account number. erp-hrm and lms shipped the same file without it,
+// and erp-crm had a third copy inline with no BOM either.
+export * from "./utils/csvExport";
 export * from "./utils/userScopes";
 export * from "./utils/permissions";
 export * from "./utils/conflictErrors";

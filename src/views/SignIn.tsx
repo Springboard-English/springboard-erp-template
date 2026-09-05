@@ -12,7 +12,7 @@ import { SitemarkIcon } from "@/components/CustomIcons";
 import { useAuth } from "@/context/AuthContext";
 import { useI18n } from "@/context/I18nContext";
 import { loginWithGoogle } from "@/api_calls/UserData";
-import { SearchableSelect, type SearchableSelectOption } from "@/components/ui/searchable-select";
+import { SearchableSelect, type SearchableSelectOption } from "../components/ui/searchable-select";
 
 export interface SignInViewProps {
   disableCustomTheme?: boolean;

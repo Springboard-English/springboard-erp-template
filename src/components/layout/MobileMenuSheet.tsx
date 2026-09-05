@@ -11,7 +11,7 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { useI18n } from "@/context/I18nContext";
 import { useColorMode } from "@/theme/AppTheme";
-import type { DashboardNavItem } from "@/components/layout/DashboardLayout";
+import type { DashboardNavItem } from "./DashboardLayout";
 
 // The mobile counterpart of the side nav. Below `md` the sidebar is
 // `display:none` and the desktop header is `md:flex`, so everything an app puts

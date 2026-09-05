@@ -1,5 +1,5 @@
 import * as React from "react";
-import { type SearchableSelectOption } from "@/components/ui/searchable-select";
+import { type SearchableSelectOption } from "../components/ui/searchable-select";
 export interface SignInViewProps {
     disableCustomTheme?: boolean;
     authNotice?: string;

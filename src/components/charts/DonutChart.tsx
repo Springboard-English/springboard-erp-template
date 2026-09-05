@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
-import type { CategoryDatum } from '@/components/charts/CategoryBars';
+import type { CategoryDatum } from './CategoryBars';
 import { useChartPalette } from '@/components/charts/palette';
 
 interface DonutChartProps {

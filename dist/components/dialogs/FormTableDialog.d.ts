@@ -1,5 +1,5 @@
 import { type ReactNode } from 'react';
-import { FormTableRow } from '@/components/dialogs/FormTableSection';
+import { FormTableRow } from './FormTableSection';
 export type FormTableDialogTab = {
     label: string;
     content: ReactNode;

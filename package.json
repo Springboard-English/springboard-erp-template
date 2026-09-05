@@ -25,7 +25,7 @@
     },
     "scripts": {
         "dev": "vite",
-        "build": "vite build && tsc -p tsconfig.build.json && node scripts/check-node-safe.mjs",
+        "build": "vite build && tsc -p tsconfig.build.json && node scripts/check-node-safe.mjs && node scripts/check-dts-portable.mjs",
         "preview": "vite preview",
         "lint": "eslint . --ext .ts,.tsx"
     },
