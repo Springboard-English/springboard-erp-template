@@ -42,10 +42,7 @@ export default function LocaleSelect(props: LocaleSelectProps) {
           variant="outline"
           size="sm"
           className={cn(
-            // `size="sm"` is 36px, which is right for the desktop chrome this
-            // sits in and under the touch target on a phone, where it is one of
-            // only a handful of controls on the sign-in screen.
-            "h-11 rounded-full border-border/70 bg-background/85 px-3 shadow-sm backdrop-blur md:h-9",
+            "rounded-full border-border/70 bg-background/85 px-3 shadow-sm backdrop-blur",
             className,
           )}
           aria-label={t("locale.openSelector")}

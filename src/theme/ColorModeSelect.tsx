@@ -37,8 +37,7 @@ export default function ColorModeSelect(
           variant="outline"
           size="sm"
           className={cn(
-            // 44px on touch; `size="sm"` (36px) is desktop chrome sizing.
-            'h-11 rounded-full border-border/70 bg-background/85 px-3 shadow-sm backdrop-blur md:h-9',
+            'rounded-full border-border/70 bg-background/85 px-3 shadow-sm backdrop-blur',
             className,
           )}
           {...buttonProps}

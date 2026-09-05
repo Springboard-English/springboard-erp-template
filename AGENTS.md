@@ -65,10 +65,15 @@ rules that keep it that way; a per-app copy of any of them is the bug.
   need no JS and do not flash on first paint. Reach for `useIsMobile()` only
   when the decision is which component to *mount*, or when a layout mode has to
   be suppressed outright (see `DetailLayout`'s floating panel).
-- **44px is the control size.** `Button` `size="default"`, `Input`,
-  `SearchableSelect` and `TagInput` are all `h-11`. The `sm`/`xs` rungs exist
-  for dense desktop chrome — toolbars, inline row actions — and are not the size
-  to reach for on anything a finger uses.
+- **44px is the control size, and the scale enforces it — you do not.** Every
+  `Button` size clamps to 44px below `md` and relaxes to its dense value above,
+  so `size="sm"` is already correct on a phone. **Never patch a height back up
+  at a call site.** That was the first design, and it did not hold: two of the
+  template's own components had to carry `h-11 md:h-9`, and the sign-in chrome
+  that forgot to was found by the Playwright suite rather than by review.
+  ⚠️ A **preset** height *replaces* the built-in one, mobile clamp included — so
+  a bare `h-9` in a `UIPreset` opts that app out of this rule silently. Keep the
+  `md:` split on anything under 44px.
 - **16px is the minimum font size for a text input.** `Input`/`Textarea` are
   `text-base md:text-sm` for exactly this reason: iOS Safari auto-zooms any
   focused field under 16px, and the zoom is hard to escape inside a scroll-locked

@@ -25,18 +25,24 @@ const buttonVariants = cva(
           "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
         link: "text-primary underline-offset-4 hover:underline",
       },
-      // `default` is 44px: the whole suite standardised on a touch-legal
-      // primary control rather than a separate mobile density. The smaller
-      // rungs stay for dense desktop chrome (toolbars, inline row actions);
-      // they are not the size to reach for on anything a finger uses.
+      // The whole suite standardised on a touch-legal control rather than a
+      // separate mobile density, and that belongs HERE rather than at each
+      // call site. The smaller rungs are a *desktop* density: below `md` they
+      // all clamp to 44px, so `size="sm"` is correct on a phone by
+      // construction and no caller needs to patch a height back up.
+      //
+      // Written the other way round first, and it did not hold: LocaleSelect
+      // and ColorModeSelect both had to carry `h-11 md:h-9`, and the sign-in
+      // chrome that did not was caught by the Playwright suite rather than by
+      // review. A rule every caller must remember is a rule that gets missed.
       size: {
         default: "h-11 px-6 py-2 has-[>svg]:px-4",
-        xs: "h-6 gap-1 rounded-md px-2 text-xs has-[>svg]:px-1.5 [&_svg:not([class*='size-'])]:size-3",
-        sm: "h-9 gap-1.5 rounded-md px-3 has-[>svg]:px-2.5",
+        xs: "h-11 gap-1 rounded-md px-2 text-xs has-[>svg]:px-1.5 md:h-6 [&_svg:not([class*='size-'])]:size-3",
+        sm: "h-11 gap-1.5 rounded-md px-3 has-[>svg]:px-2.5 md:h-9",
         lg: "h-12 rounded-md px-8 has-[>svg]:px-6",
         icon: "size-11",
-        "icon-xs": "size-6 rounded-md [&_svg:not([class*='size-'])]:size-3",
-        "icon-sm": "size-9",
+        "icon-xs": "size-11 rounded-md md:size-6 [&_svg:not([class*='size-'])]:size-3",
+        "icon-sm": "size-11 md:size-9",
         "icon-lg": "size-12",
       },
     },
