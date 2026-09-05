@@ -340,7 +340,9 @@ export default function SimpleDataTable<T>({
               value={pageSize}
               onValueChange={(value) => onPageSizeChange(Number(value))}
               options={pageSizeOptions.map((option) => ({ value: String(option), label: String(option) }))}
-              className="h-9"
+              // Dense in the footer on desktop; the primitive's 44px stands on
+              // touch. A bare `h-9` here pinned it to 36px on a phone too.
+              className="md:h-9"
               searchPlaceholder={t('simpleDataTable.searchRows')}
             />
           </label>
