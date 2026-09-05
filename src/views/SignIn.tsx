@@ -467,6 +467,10 @@ export default function SignIn(props: SignInViewProps) {
                     <button
                       type="button"
                       onClick={handleClickOpen}
+                      // Inline text beside the Password label, not a target:
+                      // WCAG 2.5.8 exempts these, and padding it to 44px would
+                      // make a word in a label row look like a button.
+                      data-inline-target="true"
                       className="text-xs font-medium text-primary transition hover:text-primary/75"
                     >
                       {t("signIn.forgotPassword")}
@@ -513,7 +517,13 @@ export default function SignIn(props: SignInViewProps) {
                     </div>
 
                     <div className="rounded-2xl border border-dashed border-border/70 bg-muted/35 p-4">
-                      <div id="google-btn" className="flex min-h-10 justify-center" />
+                      {/* Google renders its own button in here and owns its
+                          height; nothing we set reaches inside it. */}
+                      <div
+                        id="google-btn"
+                        data-third-party="google-identity"
+                        className="flex min-h-10 justify-center"
+                      />
                     </div>
                   </>
                 )}
