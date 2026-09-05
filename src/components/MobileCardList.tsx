@@ -2,6 +2,7 @@ import { type ReactNode, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useI18n } from "@/context/I18nContext";
+import useIsMobile from "@/hooks/useIsMobile";
 
 export function CardField({
   label,
@@ -117,11 +118,7 @@ export default function MobileCardList<T>({
   }, [rows, resetKey, infiniteScroll, onLoadMore]);
 
   const [visibleCount, setVisibleCount] = useState(pageSize);
-  const [isMobileViewport, setIsMobileViewport] = useState(() =>
-    typeof window !== "undefined"
-      ? window.matchMedia("(max-width: 767px)").matches
-      : false,
-  );
+  const isMobileViewport = useIsMobile();
   const wasMobileViewportRef = useRef(isMobileViewport);
 
   useEffect(() => {
@@ -130,20 +127,6 @@ export default function MobileCardList<T>({
     }
     setVisibleCount(pageSize);
   }, [resetKey, pageSize, infiniteScroll, onLoadMore]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-    const mediaQuery = window.matchMedia("(max-width: 767px)");
-    const handleChange = (event: MediaQueryListEvent) => {
-      setIsMobileViewport(event.matches);
-    };
-
-    setIsMobileViewport(mediaQuery.matches);
-    mediaQuery.addEventListener("change", handleChange);
-    return () => mediaQuery.removeEventListener("change", handleChange);
-  }, []);
 
   useEffect(() => {
     if (!infiniteScroll || !onLoadMore || !onInfiniteScrollReset) {
@@ -278,6 +261,14 @@ export default function MobileCardList<T>({
     !loading &&
     activeRows.length > 0 &&
     (onLoadMore ? !hasMore : visibleCount >= rows.length);
+
+  // `md:hidden` alone only *hides* the list on desktop — it still mounts, and
+  // with it the IntersectionObserver and the accumulated-row state. Gate the
+  // render too. This is the LMS's local wrapper, adopted upstream; it must stay
+  // below every hook so the hook order is stable across the breakpoint.
+  if (!isMobileViewport) {
+    return null;
+  }
 
   if (loading && activeRows.length === 0) {
     return (

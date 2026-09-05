@@ -83,6 +83,9 @@ export { default as MobileCardList, CardField } from "./components/MobileCardLis
 export type { MobileCardListProps } from "./components/MobileCardList";
 export { default as MobileBottomBar } from "./components/MobileBottomBar";
 export type { MobileBottomBarItem, MobileBottomBarProps } from "./components/MobileBottomBar";
+export { default as MobileMenuSheet } from "./components/layout/MobileMenuSheet";
+export type { MobileMenuSheetProps } from "./components/layout/MobileMenuSheet";
+export { default as useIsMobile, MOBILE_MEDIA_QUERY } from "./hooks/useIsMobile";
 export {
   buildGuides,
   GuideIconButton,
@@ -166,16 +169,26 @@ export type {
   DetailViewCollapsedState,
 } from "./utils/detailViewMode";
 
+export * from "./components/ui/avatar";
+export * from "./components/ui/badge";
 export * from "./components/ui/button";
 export * from "./components/ui/card";
+export * from "./components/ui/checkbox";
 export * from "./components/ui/dialog";
 export * from "./components/ui/dropdown-menu";
 export * from "./components/ui/input";
 export * from "./components/ui/label";
+export * from "./components/ui/popover";
+export * from "./components/ui/progress";
+export * from "./components/ui/radio-group";
+export * from "./components/ui/scroll-area";
 export * from "./components/ui/searchable-select";
+export * from "./components/ui/select";
 export * from "./components/ui/separator";
 export * from "./components/ui/sheet";
+export * from "./components/ui/switch";
 export * from "./components/ui/table";
+export * from "./components/ui/tabs";
 // Tags on a resource: TagInput authors them, TagFilter narrows a list by them.
 // `normalizeTag`/`normalizeTags` are exported alongside because they have to
 // match the API's `normalize_tags` — callers building a query string need the
@@ -183,6 +196,24 @@ export * from "./components/ui/table";
 export * from "./components/ui/tag-filter";
 export * from "./components/ui/tag-input";
 export * from "./components/ui/textarea";
+
+// How an app re-skins the shared primitives without forking them: a layer of
+// Tailwind classes merged between the built-in variant classes and the caller's
+// `className`. Registered once at boot like `configureApi`; see
+// `config/uiPreset` for why tokens alone were not enough.
+export { configureUIPreset, getUIPreset, uiPresetClass } from "./config/uiPreset";
+export type { UIPreset, UIPresetSlot, UIPresetSlotArgs } from "./config/uiPreset";
+
+// Transient app-wide status. `GlobalStatusQueryBridge` wires TanStack Query
+// errors into it; `DashboardLayout` renders the status below `md`, where the
+// desktop header that normally carries it is hidden.
+export {
+  GlobalStatusProvider,
+  useGlobalStatus,
+  useGlobalStatusOptional,
+} from "./context/GlobalStatusContext";
+export type { GlobalStatus, GlobalStatusTone } from "./context/GlobalStatusContext";
+export { default as GlobalStatusQueryBridge } from "./components/GlobalStatusQueryBridge";
 
 export { NotificationProvider, useNotifications } from "./context/NotificationContext";
 export type { NotificationContextValue } from "./context/NotificationContext";

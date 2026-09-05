@@ -46,7 +46,10 @@ export default function MobileBottomBar({
   return (
     <div
       className={cn(
-        "fixed inset-x-0 bottom-0 z-40 h-16 border-t border-border/70 bg-card/95 backdrop-blur md:hidden",
+        // The bar is `h-16` of tappable chrome plus whatever the device reserves
+        // for its home indicator; without the inset the tab row sits inside the
+        // gesture strip on a notched iPhone.
+        "fixed inset-x-0 bottom-0 z-40 h-[calc(4rem+env(safe-area-inset-bottom))] border-t border-border/70 bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden",
         className,
       )}
     >

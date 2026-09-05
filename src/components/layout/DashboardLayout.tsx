@@ -16,6 +16,8 @@ import LazyViewFallback from "@/components/LazyViewFallback";
 import MobileBottomBar, {
   type MobileBottomBarItem,
 } from "@/components/MobileBottomBar";
+import MobileMenuSheet from "@/components/layout/MobileMenuSheet";
+import { useGlobalStatusOptional } from "@/context/GlobalStatusContext";
 
 export interface DashboardNavItem {
   /** Stable id passed back to onTabSelect and compared against activeTab. */
@@ -54,7 +56,7 @@ export interface DashboardLayoutProps {
   sidebarFooter?: (collapsed: boolean) => ReactNode;
   /** Replace the built-in nav list entirely (e.g. a guides tree). */
   sidebarContent?: (collapsed: boolean) => ReactNode;
-  /** Extra content rendered inside the mobile menu sheet trigger area. */
+  /** Extra content rendered inside the mobile menu sheet, above the account block. */
   mobileMenu?: ReactNode;
   /** Rendered into the main area; falls back to the router <Outlet />. */
   children?: ReactNode;
@@ -70,6 +72,30 @@ export interface DashboardLayoutProps {
 
 const ITEM_STRIDE = 44 + 4; // h-11 button + gap-1
 const NAV_PADDING_TOP = 8; // p-2 container
+
+function GlobalStatusMobileBar() {
+  // Optional: Leap and any other app without the provider render no bar at all.
+  const globalStatus = useGlobalStatusOptional();
+  const status = globalStatus?.status;
+
+  if (!status) {
+    return null;
+  }
+
+  return (
+    <div
+      className={cn(
+        "sticky top-0 z-30 border-b px-4 py-2 text-sm md:hidden",
+        status.tone === "error"
+          ? "border-destructive/35 bg-destructive/10 text-destructive"
+          : "border-border/70 bg-card/95 text-muted-foreground backdrop-blur",
+      )}
+      aria-live="polite"
+    >
+      <p className="truncate">{status.message}</p>
+    </div>
+  );
+}
 
 function SideNavList({
   navItems,
@@ -149,13 +175,14 @@ function DashboardLayoutInner({
   headerContent,
   sidebarFooter,
   sidebarContent,
+  mobileMenu,
   children,
   loadingFallback,
   collapsedStorageKey = "dashboard-sidebar-collapsed",
   defaultCollapsed = true,
   classNames,
   maxContentClassName = "max-w-[1700px]",
-}: Omit<DashboardLayoutProps, "disableCustomTheme" | "mobileMenu">) {
+}: Omit<DashboardLayoutProps, "disableCustomTheme">) {
   const { t } = useI18n();
   const location = useLocation();
   const mainScrollRef = useRef<HTMLElement | null>(null);
@@ -182,9 +209,27 @@ function DashboardLayoutInner({
     mainScrollRef.current?.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, [location.pathname, pageApi]);
 
-  const mobileItems: MobileBottomBarItem[] = navItems
-    .filter((item) => !item.hideOnMobile)
-    .map((item) => ({ id: item.id, label: item.label, icon: item.icon }));
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const barItems = navItems.filter((item) => !item.hideOnMobile);
+  const mobileItems: MobileBottomBarItem[] = barItems.map((item) => ({
+    id: item.id,
+    label: item.label,
+    icon: item.icon,
+  }));
+  // Anything the bar drops would otherwise have no entry point on a phone.
+  const overflowItems = navItems.filter((item) => item.hideOnMobile);
+
+  // `sidebarFooter` is `md:block`-only and `headerContent` is `md:flex`-only, so
+  // an app that sets neither `mobileMenu` nor either of those has no account or
+  // sign-out on a phone. Surface whatever it did give us.
+  const defaultMenuBody =
+    sidebarFooter || headerContent ? (
+      <div className="space-y-3">
+        {sidebarFooter ? sidebarFooter(false) : null}
+        {headerContent}
+      </div>
+    ) : null;
 
   return (
     <>
@@ -281,6 +326,10 @@ function DashboardLayoutInner({
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col">
+          {/* Apps publish status into the desktop header, which is `md:flex` —
+              so below `md` every message, errors included, had nowhere to
+              render. This is that surface. Desktop keeps the header. */}
+          <GlobalStatusMobileBar />
           <main
             ref={mainScrollRef}
             className={cn(
@@ -290,7 +339,8 @@ function DashboardLayoutInner({
           >
             <div
               className={cn(
-                "mx-auto flex w-full flex-col items-center gap-2 px-4 pb-20 pt-4 md:px-6 md:pb-5 md:pt-12",
+                // pb clears the fixed bottom bar and its safe-area padding.
+                "mx-auto flex w-full flex-col items-center gap-2 px-4 pb-[calc(5rem+env(safe-area-inset-bottom))] pt-4 md:px-6 md:pb-5 md:pt-12",
                 maxContentClassName,
                 classNames?.content,
               )}
@@ -306,12 +356,23 @@ function DashboardLayoutInner({
       </div>
 
       {mobileItems.length > 0 ? (
-        <MobileBottomBar
-          activeTab={activeTab}
-          items={mobileItems}
-          onTabSelect={onTabSelect}
-          onMenuOpen={() => setCollapsed((current) => !current)}
-        />
+        <>
+          <MobileBottomBar
+            activeTab={activeTab}
+            items={mobileItems}
+            onTabSelect={onTabSelect}
+            onMenuOpen={() => setMenuOpen(true)}
+          />
+          <MobileMenuSheet
+            open={menuOpen}
+            onOpenChange={setMenuOpen}
+            overflowItems={overflowItems}
+            activeTab={activeTab}
+            onTabSelect={onTabSelect}
+          >
+            {mobileMenu ?? defaultMenuBody}
+          </MobileMenuSheet>
+        </>
       ) : null}
     </>
   );

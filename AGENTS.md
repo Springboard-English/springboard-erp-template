@@ -16,6 +16,87 @@ React + TypeScript component library (`@springboard-english/springboard-erp-temp
 - After any implementation, verify with both `npm run build` and `npx tsc` (no emit).
 - Remember: a component not exported from `src/exports.ts` is invisible to consumers.
 
+## Re-skinning a primitive (`configureUIPreset`, since 2.0.0)
+
+**Do not fork a primitive to restyle it.** Every fork in this suite drifted, and
+each one lost a fix rather than gaining one: Leap's forked `Input` had dropped
+the 16px mobile rule (so every field zoomed on iOS) and its forked `Dialog` had
+dropped `max-h-[calc(100vh-1rem)]` (so a tall dialog overflowed with no way to
+reach the buttons). Both came back for free on adopting the shared versions.
+
+Register a `UIPreset` at boot instead, next to `configureApi`:
+
+```ts
+configureApi({ baseUrl: API_CONFIG.baseURL });
+configureUIPreset(LEAP_UI_PRESET);
+```
+
+It is module config, not a provider, because a preset is decided once and never
+changes — nothing needs to re-render when it is set, and the primitives stay
+plain functions of their props. Contrast `AppTheme`, which *is* a provider
+because a user toggles colour mode at runtime and subscribers must re-render.
+
+A slot is a class string, or a function when classes vary by variant/size. The
+primitive merges three layers in order — **built-in variant classes → preset →
+the caller's `className`** — and because `cn` is tailwind-merge, each later
+layer wins only on the utilities it actually conflicts with (`rounded-full`
+replaces `rounded-md`; `ease-bounce` just composes). The component's API is
+untouched: same props, same refs, same `asChild`, no wrapper.
+
+Slots today: `button`, `input`, `textarea`, `card`, `dialogContent`,
+`sheetContent` (receives the open edge as `variant`), `tableHead`, `tableRow`.
+Add a slot rather than a fork when a new one is needed. With no preset
+registered, `uiPresetClass` returns `undefined` and `cn` drops it, so apps
+without one are unaffected.
+
+Put **only** what differs in a preset. `leap.springboard.vn/src/theme/ui-preset.ts`
+is the worked example, including a note on what it deliberately omits and why.
+
+## Mobile (the contract, since 2.0.0)
+
+Every app in the suite is one shell and one set of primitives. These are the
+rules that keep it that way; a per-app copy of any of them is the bug.
+
+- **The breakpoint is `md` (768px).** That is the line the shell already uses —
+  the sidebar is `md:block`, the header is `md:flex`, the bottom bar is
+  `md:hidden`. Do not introduce a second one. `useIsMobile()` is its JS
+  complement (`max-width: 767px`) and agrees with it by construction.
+- **Prefer CSS to JS for showing and hiding.** `md:hidden` / `hidden md:block`
+  need no JS and do not flash on first paint. Reach for `useIsMobile()` only
+  when the decision is which component to *mount*, or when a layout mode has to
+  be suppressed outright (see `DetailLayout`'s floating panel).
+- **44px is the control size.** `Button` `size="default"`, `Input`,
+  `SearchableSelect` and `TagInput` are all `h-11`. The `sm`/`xs` rungs exist
+  for dense desktop chrome — toolbars, inline row actions — and are not the size
+  to reach for on anything a finger uses.
+- **16px is the minimum font size for a text input.** `Input`/`Textarea` are
+  `text-base md:text-sm` for exactly this reason: iOS Safari auto-zooms any
+  focused field under 16px, and the zoom is hard to escape inside a scroll-locked
+  layout. Never override the mobile step down.
+- **A table needs a card fallback.** Pair `SimpleDataTable`
+  (`hidden md:block`) with `MobileCardList` (`md:hidden`). A table left to
+  scroll horizontally is usable but poor; a table inside a *detail tab* is the
+  case most often missed.
+- **Nothing fixed to the bottom without a safe-area inset.** Use
+  `env(safe-area-inset-bottom)`, as `MobileBottomBar` and the mobile FAB do, or
+  the control lands under the iOS home indicator. Every `index.html` carries
+  `viewport-fit=cover`, which is what makes `env()` resolve at all — do not drop
+  it.
+- **Use `dvh`, not `vh`.** `100vh` overflows behind mobile browser chrome.
+- **Anything an app puts in `sidebarFooter` or `headerContent` is desktop-only.**
+  Both are gated above `md`. `DashboardLayout` surfaces them in `MobileMenuSheet`
+  by default, and `mobileMenu` replaces that body — an app that overrides it owns
+  putting account and sign-out somewhere reachable.
+- **Nav items flagged `hideOnMobile` are not hidden, they are moved.** They drop
+  off the bottom bar and appear in the menu sheet's overflow grid.
+- **Transient status goes through `GlobalStatusProvider`, not a second toast
+  library.** `useGlobalStatus()` to set it, `GlobalStatusQueryBridge` to feed
+  TanStack Query errors in. `DashboardLayout` renders it below `md` itself,
+  because apps put it in the desktop-only header and it was invisible on a
+  phone. Use `useGlobalStatusOptional()` in chrome that must render with or
+  without a provider. `StatusBanner` is a different thing — an in-flow banner
+  for a form or a page, not app-wide feedback.
+
 ## Releasing
 
 Releases are automated — **do not `npm publish` by hand.** The flow is driven by git tags:

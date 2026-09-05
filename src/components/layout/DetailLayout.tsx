@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/context/I18nContext";
+import useIsMobile from "@/hooks/useIsMobile";
 import {
     DETAIL_HIDDEN_COLLAPSED_VALUE,
     useDetailViewMode,
@@ -164,7 +165,13 @@ export function DetailView({
     const isBackgroundFromContext = useContext(BackgroundDetailViewContext);
     const isBackground = isBackgroundProp ?? isBackgroundFromContext;
     const detailViewMode = useDetailViewMode({ enabled: !isBackground });
-    const floating = isBackground ? false : detailViewMode.floating;
+    // The floating panel has a 544px floor and locks body scroll, so on a phone
+    // it overflows the viewport with no way to scroll to the rest. The mode is
+    // carried in the URL, so a link shared from a desktop would otherwise land a
+    // phone straight in it. Suppress the mode rather than clear it — the stored
+    // preference survives, and a rotate or a resize brings the panel back.
+    const isMobile = useIsMobile();
+    const floating = isBackground || isMobile ? false : detailViewMode.floating;
     const collapsed = isBackground ? false : detailViewMode.isCollapsed;
     const hiddenCollapsed = isBackground
         ? false
@@ -275,8 +282,8 @@ export function DetailView({
                         floating
                             ? collapsed
                                 ? hiddenCollapsed
-                                    ? "floating-detail pointer-events-none absolute right-0 top-1/2 z-10 w-[44dvw] min-w-[34rem] max-w-[70rem] -translate-y-1/2 translate-x-[calc(100%-20px)] !h-[76dvh] overflow-hidden rounded-2xl border border-border/70 bg-background p-4 shadow-2xl"
-                                    : "floating-detail pointer-events-auto absolute right-3 top-1/2 z-10 w-[44dvw] min-w-[34rem] max-w-[70rem] -translate-y-1/2 !h-[76dvh] overflow-visible rounded-2xl border border-border/70 bg-background p-4 shadow-2xl"
+                                    ? "floating-detail pointer-events-none absolute right-0 top-1/2 z-10 w-[44dvw] md:min-w-[34rem] max-w-[70rem] -translate-y-1/2 translate-x-[calc(100%-20px)] !h-[76dvh] overflow-hidden rounded-2xl border border-border/70 bg-background p-4 shadow-2xl"
+                                    : "floating-detail pointer-events-auto absolute right-3 top-1/2 z-10 w-[44dvw] md:min-w-[34rem] max-w-[70rem] -translate-y-1/2 !h-[76dvh] overflow-visible rounded-2xl border border-border/70 bg-background p-4 shadow-2xl"
                                 : "floating-detail absolute left-1/2 top-1/2 z-10 w-[85dvw] -translate-x-1/2 -translate-y-1/2 !h-[76dvh] overflow-hidden rounded-2xl border border-border/70 bg-background p-4 shadow-2xl"
                             : "",
                     )}
@@ -375,9 +382,13 @@ export function DetailHeader({
 }) {
     const { t } = useI18n();
     const detailViewContext = useContext(DetailViewContext);
+    // Floating view is suppressed on a phone (see DetailLayout), so offering the
+    // toggle would be a button that silently does nothing.
+    const isMobile = useIsMobile();
     const showExpandAction =
-        detailViewContext?.floating && !detailViewContext.collapsed;
-    const showFloatingAction = detailViewContext && !detailViewContext.floating;
+        !isMobile && detailViewContext?.floating && !detailViewContext.collapsed;
+    const showFloatingAction =
+        !isMobile && detailViewContext && !detailViewContext.floating;
 
     return (
         <div

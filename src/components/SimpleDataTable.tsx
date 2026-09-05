@@ -194,7 +194,10 @@ export default function SimpleDataTable<T>({
       const containerRect = container.getBoundingClientRect();
       const rootTopWithinContainer = Math.max(0, rootRect.top - containerRect.top);
       const containerVisibleHeight = container.clientHeight;
-      const footerHeight = footerRef.current?.offsetHeight ?? 80;
+      // Measured whenever the ref is attached; the literal is only the
+      // first-paint fallback. Re-derived when controls moved to 44px — the
+      // footer's `size="sm"` buttons went 32px → 36px.
+      const footerHeight = footerRef.current?.offsetHeight ?? 88;
       const bottomGap = 16;
 
       if (containerVisibleHeight <= 0) {
@@ -205,16 +208,18 @@ export default function SimpleDataTable<T>({
       const availableHeight = containerVisibleHeight - rootTopWithinContainer - bottomGap;
 
       // Always allocate space for the header, footer, and at least some rows.
-      // Minimum is header (60px) + footer (80px) + one row (40px) = 180px
-      const minRequiredSpace = 180;
+      // Minimum is header (64px) + footer (88px) + one row (48px) = 200px.
+      // Each term grew when controls moved to 44px: a row carrying an icon
+      // button is now 48px, not 40px, so the old 180 clamped a row in half.
+      const minRequiredSpace = 200;
       if (availableHeight < minRequiredSpace) {
         // If there's truly no space, still clamp to avoid overflow pushing footer out of view
-        const nextBodyHeight = Math.max(40, availableHeight - footerHeight - 8);
+        const nextBodyHeight = Math.max(48, availableHeight - footerHeight - 8);
         setTableBodyMaxHeight(Math.max(0, nextBodyHeight));
         return;
       }
 
-      const nextBodyHeight = Math.max(100, Math.floor(availableHeight - footerHeight - 8));
+      const nextBodyHeight = Math.max(120, Math.floor(availableHeight - footerHeight - 8));
       setTableBodyMaxHeight(nextBodyHeight);
     };
 

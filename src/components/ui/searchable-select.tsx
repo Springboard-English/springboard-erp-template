@@ -249,7 +249,7 @@ export function SearchableSelect({
           type="button"
           disabled={disabled}
           className={cn(
-            'flex h-10 w-full min-w-0 cursor-pointer items-center justify-between rounded-md border border-input bg-background px-3 text-sm shadow-xs outline-none transition',
+            'flex h-11 w-full min-w-0 cursor-pointer items-center justify-between rounded-md border border-input bg-background px-3 text-sm shadow-xs outline-none transition',
             'focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50',
             'disabled:cursor-not-allowed disabled:opacity-50',
             className,
@@ -286,7 +286,7 @@ export function SearchableSelect({
               onChange={(event) => setQuery(event.target.value)}
               placeholder={resolvedSearchPlaceholder}
               className={cn(
-                'h-8 w-full rounded-md border border-input bg-background pr-8 pl-8 text-sm shadow-xs outline-none transition',
+                'h-10 w-full rounded-md border border-input bg-background pr-8 pl-8 text-sm shadow-xs outline-none transition',
                 'focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50',
               )}
               autoFocus
