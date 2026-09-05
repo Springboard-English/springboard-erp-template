@@ -7,11 +7,15 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { getUserScopes } from "@/utils/userScopes";
 
-const DEFAULT_SCOPE_OPTIONS = ["payrolls_get", "tasks_get", "projects_get"];
-
 export interface MultiSelectDropdownProps {
   value: string | null | undefined;
   onValueChange: (nextValue: string) => void;
+  /**
+   * The scopes to offer beyond those already selected. Required, because the
+   * set is the caller's domain — this used to default to erp-hrm's
+   * `payrolls_get`/`tasks_get`/`projects_get`, so every other app's picker
+   * silently offered three scopes it has no concept of.
+   */
   additionalOptions?: string[];
   placeholder?: string;
 }
@@ -25,7 +29,7 @@ export default function MultiSelectDropdown({
   const selectedScopes = useMemo(() => getUserScopes(value), [value]);
   const selectedScopeSet = useMemo(() => new Set(selectedScopes), [selectedScopes]);
   const options = useMemo(() => {
-    const merged = [...DEFAULT_SCOPE_OPTIONS, ...(additionalOptions ?? []), ...selectedScopes];
+    const merged = [...(additionalOptions ?? []), ...selectedScopes];
     return Array.from(new Set(merged.filter(Boolean)));
   }, [additionalOptions, selectedScopes]);
 
