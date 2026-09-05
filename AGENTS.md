@@ -8,6 +8,27 @@ React + TypeScript component library (`@springboard-english/springboard-erp-temp
 - `src/views/` — full pages. `src/components/` — shared components (`ui/` primitives, `layout/` detail scaffolds, `management/`, `dialogs/`, `question-builder/`, `notifications/`, `guides/`).
 - `src/context/`, `src/api_calls/`, `src/auth/`, `src/config/`, `src/utils/`, `src/theme/`, `src/i18n/`.
 
+## What belongs in this package
+
+UI, and the auth this package's own screens perform. Nothing about a domain.
+
+**In:** components and primitives, layout and shell, theming, i18n plumbing,
+the credential exchange behind `SignIn`/`ResetPassword`/`AuthContext`
+(`api_calls/UserData.tsx`, 247 lines), `fetchWithRefresh`, notifications (the
+package draws the bell and the centre), and generic utilities — formatters,
+filter state, query cache, CSV, detail-view mode, scopes.
+
+**Out:** an app's resource calls, its endpoint map, its route table, its domain
+types. `api_calls/UserData.tsx` was 3,426 lines of LMS/HRM resources and
+`config/api.ts` carried 15 resource endpoints plus 29 sub-resource builders —
+none exported, none called from here, and every app already defines its own
+`API_CONFIG` with the endpoints it actually uses. Two stale copies of five
+route maps, in a UI library.
+
+The test for a new file: **would a fifth app with a different domain want
+this?** If it only makes sense for classes, payrolls or exercises, it belongs
+to that app.
+
 ## Rules
 
 - Reuse existing components before writing view-specific solutions; alter shared components rather than patching per view.
