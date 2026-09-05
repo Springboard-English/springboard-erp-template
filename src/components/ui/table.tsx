@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { cn } from '@/lib/utils';
+import { uiPresetClass } from '@/config/uiPreset';
 
 function Table({ className, containerClassName, ...props }: React.ComponentProps<'table'> & { containerClassName?: string }) {
   return (
@@ -50,11 +51,17 @@ function TableFooter({ className, ...props }: React.ComponentProps<'tfoot'>) {
 }
 
 function TableRow({ className, ...props }: React.ComponentProps<'tr'>) {
+  const presetClass = uiPresetClass('tableRow');
+
   return (
     <tr
       data-slot="table-row"
       className={cn(
-        'border-b transition-colors hover:bg-muted/40 data-[state=selected]:bg-muted',
+        // `has-aria-expanded` keeps the row lit while a control inside it is
+        // open — otherwise the row a dropdown belongs to goes dim the moment
+        // you reach for it. Adopted from Leap's fork.
+        'border-b transition-colors hover:bg-muted/40 has-aria-expanded:bg-muted/40 data-[state=selected]:bg-muted',
+        presetClass,
         className,
       )}
       {...props}
@@ -63,11 +70,14 @@ function TableRow({ className, ...props }: React.ComponentProps<'tr'>) {
 }
 
 function TableHead({ className, ...props }: React.ComponentProps<'th'>) {
+  const presetClass = uiPresetClass('tableHead');
+
   return (
     <th
       data-slot="table-head"
       className={cn(
         'h-11 px-4 text-left align-middle text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground',
+        presetClass,
         className,
       )}
       {...props}

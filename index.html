@@ -4,7 +4,10 @@
     <link rel="icon" type="image/x-icon" href="/favicon.ico"/>
     <meta charset="utf-8" />
     <title>Springboard English LMS</title>
-    <meta name="viewport" content="initial-scale=1, width=device-width" />
+    <!-- viewport-fit=cover is what makes env(safe-area-inset-*) resolve to a
+         real value; without it the fixed bottom bar sits under the iOS home
+         indicator. -->
+    <meta name="viewport" content="initial-scale=1, width=device-width, viewport-fit=cover" />
     <!-- Fonts to support Material Design -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

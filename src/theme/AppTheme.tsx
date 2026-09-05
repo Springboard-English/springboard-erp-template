@@ -13,6 +13,13 @@ interface ColorModeContextValue {
   resolvedMode: ResolvedColorMode;
   systemMode: ResolvedColorMode;
   setMode: (mode: ColorMode) => void;
+  /**
+   * False when there is no `AppTheme` above — the context default is a real
+   * object with a no-op `setMode`, so without this a colour-mode control
+   * renders happily and does nothing when clicked. Leap mounts no `AppTheme`
+   * at all (it is light-only), so shared chrome has to ask before offering one.
+   */
+  isConfigured: boolean;
 }
 
 const COLOR_MODE_STORAGE_KEY = 'app-color-mode';
@@ -22,6 +29,7 @@ const ColorModeContext = React.createContext<ColorModeContextValue>({
   resolvedMode: 'light',
   systemMode: 'light',
   setMode: () => undefined,
+  isConfigured: false,
 });
 
 function getStoredMode(): ColorMode {
@@ -102,6 +110,7 @@ export default function AppTheme({ children, disableCustomTheme }: AppThemeProps
     resolvedMode,
     systemMode,
     setMode,
+    isConfigured: true,
   }), [mode, resolvedMode, systemMode]);
 
   return (

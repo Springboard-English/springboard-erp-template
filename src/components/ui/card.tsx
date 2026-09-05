@@ -1,13 +1,17 @@
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
+import { uiPresetClass } from "@/config/uiPreset"
 
 function Card({ className, ...props }: React.ComponentProps<"div">) {
+  const presetClass = uiPresetClass("card")
+
   return (
     <div
       data-slot="card"
       className={cn(
         "flex flex-col gap-6 rounded-xl border bg-card py-6 text-card-foreground shadow-sm",
+        presetClass,
         className
       )}
       {...props}
@@ -28,9 +32,13 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
+// A heading and a paragraph, not two divs: a card title should show up in the
+// document outline a screen reader builds. Adopted from Leap's fork. Preflight
+// already strips the browser's default heading size and margin, so this renders
+// exactly as the div did.
+function CardTitle({ className, ...props }: React.ComponentProps<"h3">) {
   return (
-    <div
+    <h3
       data-slot="card-title"
       className={cn("leading-none font-semibold", className)}
       {...props}
@@ -38,9 +46,9 @@ function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
+function CardDescription({ className, ...props }: React.ComponentProps<"p">) {
   return (
-    <div
+    <p
       data-slot="card-description"
       className={cn("text-sm text-muted-foreground", className)}
       {...props}

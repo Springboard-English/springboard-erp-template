@@ -82,7 +82,9 @@ export function MobileFloatingActionButton({
     <button
       type="button"
       className={cn(
-        "fixed bottom-20 right-4 z-30 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 transition-transform active:scale-95 md:hidden",
+        // Clears the bottom bar (h-16) plus the home-indicator inset the bar now
+        // pads for, so the two never overlap.
+        "fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] right-4 z-30 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 transition-transform active:scale-95 md:hidden",
         className,
       )}
       onClick={fab.onClick}

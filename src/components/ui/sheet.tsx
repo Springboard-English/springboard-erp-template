@@ -6,6 +6,7 @@ import { Dialog as SheetPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
 import { useI18n } from "@/context/I18nContext"
+import { uiPresetClass } from "@/config/uiPreset"
 
 function Sheet({ ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {
   return <SheetPrimitive.Root data-slot="sheet" {...props} />
@@ -56,6 +57,9 @@ function SheetContent({
   showCloseButton?: boolean
 }) {
   const { t } = useI18n()
+  // The open edge is passed as `variant` so a preset can style, say, a bottom
+  // sheet differently from a side one.
+  const presetClass = uiPresetClass("sheetContent", { variant: side })
   return (
     <SheetPortal>
       <SheetOverlay />
@@ -71,6 +75,7 @@ function SheetContent({
             "inset-x-0 top-0 h-auto border-b data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top",
           side === "bottom" &&
             "inset-x-0 bottom-0 h-auto border-t data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
+          presetClass,
           className
         )}
         {...props}
