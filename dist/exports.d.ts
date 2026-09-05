@@ -66,6 +66,8 @@ export { default as AdvancedFiltersToggle } from "./components/management/Advanc
 export type { AdvancedFiltersToggleProps } from "./components/management/AdvancedFiltersToggle";
 export * from "./utils/formatters";
 export * from "./utils/urlQueryState";
+export * from "./utils/viewFilterState";
+export * from "./utils/queryCache";
 export * from "./utils/userScopes";
 export * from "./utils/permissions";
 export * from "./utils/conflictErrors";

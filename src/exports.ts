@@ -149,6 +149,10 @@ export type { AdvancedFiltersToggleProps } from "./components/management/Advance
 
 export * from "./utils/formatters";
 export * from "./utils/urlQueryState";
+// Filter state that survives leaving and returning to a view. Was 233 lines
+// byte-identical in erp-hrm, erp-crm and lms, with a copy of its test in each.
+export * from "./utils/viewFilterState";
+export * from "./utils/queryCache";
 export * from "./utils/userScopes";
 export * from "./utils/permissions";
 export * from "./utils/conflictErrors";
