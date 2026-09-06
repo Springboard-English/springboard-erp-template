@@ -47,6 +47,8 @@ export type { MobileBottomBarItem, MobileBottomBarProps } from "./components/Mob
 export { default as MobileMenuSheet } from "./components/layout/MobileMenuSheet";
 export type { MobileMenuSheetProps } from "./components/layout/MobileMenuSheet";
 export { default as useIsMobile, MOBILE_MEDIA_QUERY } from "./hooks/useIsMobile";
+export { default as useInfiniteList } from "./hooks/useInfiniteList";
+export type { InfiniteList, InfiniteListPage, UseInfiniteListOptions, } from "./hooks/useInfiniteList";
 export { buildGuides, GuideIconButton, GuideMenuButton, GuidesSidebarContent, parseGuide, UserGuideView, } from "./components/guides/UserGuide";
 export type { GuideIconButtonProps, GuideMenuButtonProps, GuideRecord, GuideSection, GuidesSidebarContentProps, RawGuides, UserGuideViewProps, } from "./components/guides/UserGuide";
 export { default as BaseFormDialog } from "./components/dialogs/BaseFormDialog";

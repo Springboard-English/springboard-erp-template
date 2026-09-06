@@ -76,6 +76,24 @@ export interface MobileCardListProps<T> {
   onLoadMore?: () => void;
   onInfiniteScrollReset?: () => void;
   resetKey?: string | number;
+  /**
+   * A failed page load. Without this the list has nowhere to put a failure:
+   * the rows come back empty, `hasMore` goes false, and it announces "end of
+   * content" for a list the reader is halfway through.
+   */
+  error?: string | null;
+  onRetry?: () => void;
+  /**
+   * Whether this component should merge each incoming page into the rows it is
+   * already showing. True is the legacy shape, where the caller hands over one
+   * page at a time.
+   *
+   * Callers on `useInfiniteList` pass false: the query cache already holds
+   * every page, so `rows` arrives complete and accumulating again would only
+   * risk holding rows the query has since dropped. Transitional — once every
+   * call site is migrated, the accumulation here goes away and so does this.
+   */
+  accumulate?: boolean;
   className?: string;
 }
 
@@ -95,6 +113,9 @@ export default function MobileCardList<T>({
   onLoadMore,
   onInfiniteScrollReset,
   resetKey,
+  error,
+  onRetry,
+  accumulate = true,
   className,
 }: MobileCardListProps<T>) {
   // This component only ever renders on a phone, and prev/next buttons are the
@@ -106,6 +127,7 @@ export default function MobileCardList<T>({
   const { t } = useI18n();
   const resolvedEmptyMessage = emptyMessage ?? t("mobileCardList.empty");
   const resolvedEndOfContentMessage = t("mobileCardList.endOfContent");
+  const resolvedRetryMessage = t("mobileCardList.retry");
   const [accumulatedRows, setAccumulatedRows] = useState<T[]>([]);
   const accumulatedMapRef = useRef<Map<string | number, T>>(new Map());
   const rowKeyRef = useRef(rowKey);
@@ -113,7 +135,7 @@ export default function MobileCardList<T>({
   const prevResetKeyRef = useRef<string | number | undefined>(resetKey);
 
   useEffect(() => {
-    if (!infiniteScroll || !onLoadMore) {
+    if (!infiniteScroll || !onLoadMore || !accumulate) {
       return;
     }
 
@@ -139,7 +161,7 @@ export default function MobileCardList<T>({
     if (changed) {
       setAccumulatedRows([...accumulatedMapRef.current.values()]);
     }
-  }, [rows, resetKey, infiniteScroll, onLoadMore]);
+  }, [rows, resetKey, infiniteScroll, onLoadMore, accumulate]);
 
   const [visibleCount, setVisibleCount] = useState(pageSize);
   const isMobileViewport = useIsMobile();
@@ -178,10 +200,12 @@ export default function MobileCardList<T>({
   const onLoadMoreRef = useRef(onLoadMore);
   const pageRef = useRef(page);
   const loadingRef = useRef(loading);
+  const errorRef = useRef(error);
   const lastRequestedKeyRef = useRef<string | null>(null);
   onLoadMoreRef.current = onLoadMore;
   pageRef.current = page;
   loadingRef.current = loading;
+  errorRef.current = error;
 
   // What "we already asked for this" is keyed on. It used to be `page` alone,
   // which quietly broke every caller that does not pass one: `page` defaults to
@@ -193,7 +217,7 @@ export default function MobileCardList<T>({
   // signal because it is what changes when a load actually lands, and `page`
   // stays in the key for the callers that do pass it.
   const loadKeyRef = useRef("");
-  loadKeyRef.current = `${page}:${accumulatedRows.length}`;
+  loadKeyRef.current = `${page}:${accumulate ? accumulatedRows.length : rows.length}`;
 
   if (infiniteScroll) {
     canLoadRef.current = onLoadMore
@@ -223,6 +247,10 @@ export default function MobileCardList<T>({
   const requestLoadIfAtEnd = () => {
     const list = listRef.current;
     if (!list || !canLoadRef.current || loadingRef.current) {
+      return;
+    }
+    // Do not spin on a failed page. The reader retries deliberately.
+    if (errorRef.current) {
       return;
     }
     if (
@@ -304,9 +332,11 @@ export default function MobileCardList<T>({
     page,
   ]);
 
-  const displayRowsForInfinite = onLoadMore
-    ? accumulatedRows
-    : rows.slice(0, visibleCount);
+  const displayRowsForInfinite = !onLoadMore
+    ? rows.slice(0, visibleCount)
+    : accumulate
+      ? accumulatedRows
+      : rows;
   const total =
     paginationMode === "server" ? (totalRowCount ?? rows.length) : rows.length;
   const hasPrev = page > 0;
@@ -320,6 +350,7 @@ export default function MobileCardList<T>({
   const showEndOfContent =
     infiniteScroll &&
     !loading &&
+    !error &&
     activeRows.length > 0 &&
     (onLoadMore ? !hasMore : visibleCount >= rows.length);
 
@@ -373,6 +404,28 @@ export default function MobileCardList<T>({
     );
   }
 
+  // A first page that failed is not an empty list, and must not be reported as
+  // one — "no records" and "we could not load your records" are different
+  // facts about the world.
+  if (!loading && activeRows.length === 0 && error) {
+    return (
+      <div className={cn("md:hidden", className)}>
+        <div className="rounded-2xl border border-destructive/40 bg-destructive/5 px-4 py-8 text-center">
+          <p className="text-sm text-foreground">{error}</p>
+          {onRetry ? (
+            <button
+              type="button"
+              onClick={onRetry}
+              className="mt-3 min-h-11 rounded-lg px-4 text-sm font-medium text-primary underline-offset-4 hover:underline"
+            >
+              {resolvedRetryMessage}
+            </button>
+          ) : null}
+        </div>
+      </div>
+    );
+  }
+
   if (!loading && activeRows.length === 0) {
     return (
       <div className={cn("md:hidden", className)}>
@@ -413,6 +466,20 @@ export default function MobileCardList<T>({
           {loading ? (
             <div className="flex justify-center py-4">
               <Loader2 className="size-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : null}
+          {error && !loading ? (
+            <div className="rounded-2xl border border-destructive/40 bg-destructive/5 px-4 py-4 text-center">
+              <p className="text-sm text-foreground">{error}</p>
+              {onRetry ? (
+                <button
+                  type="button"
+                  onClick={onRetry}
+                  className="mt-2 min-h-11 rounded-lg px-4 text-sm font-medium text-primary underline-offset-4 hover:underline"
+                >
+                  {resolvedRetryMessage}
+                </button>
+              ) : null}
             </div>
           ) : null}
           {showEndOfContent ? (

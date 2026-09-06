@@ -86,6 +86,12 @@ export type { MobileBottomBarItem, MobileBottomBarProps } from "./components/Mob
 export { default as MobileMenuSheet } from "./components/layout/MobileMenuSheet";
 export type { MobileMenuSheetProps } from "./components/layout/MobileMenuSheet";
 export { default as useIsMobile, MOBILE_MEDIA_QUERY } from "./hooks/useIsMobile";
+export { default as useInfiniteList } from "./hooks/useInfiniteList";
+export type {
+  InfiniteList,
+  InfiniteListPage,
+  UseInfiniteListOptions,
+} from "./hooks/useInfiniteList";
 export {
   buildGuides,
   GuideIconButton,
