@@ -1,8 +1,13 @@
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useI18n } from "@/context/I18nContext";
 import useIsMobile from "@/hooks/useIsMobile";
+
+/** How close the list's bottom edge must get to the viewport before the next
+ *  page is fetched. Roughly one thumb-flick of runway, so the rows are usually
+ *  there by the time the reader arrives. */
+const END_THRESHOLD_PX = 300;
 
 export function CardField({
   label,
@@ -72,13 +77,19 @@ export default function MobileCardList<T>({
   onPageChange,
   paginationMode = "client",
   totalRowCount,
-  infiniteScroll = false,
+  infiniteScroll: infiniteScrollProp,
   hasMore = false,
   onLoadMore,
   onInfiniteScrollReset,
   resetKey,
   className,
 }: MobileCardListProps<T>) {
+  // This component only ever renders on a phone, and prev/next buttons are the
+  // wrong shape there — so infinite scroll is the default and paging is the
+  // opt-in, rather than the other way round. A caller that wired
+  // `onPageChange` has explicitly asked for pager buttons, so it keeps them.
+  const infiniteScroll = infiniteScrollProp ?? !onPageChange;
+
   const { t } = useI18n();
   const resolvedEmptyMessage = emptyMessage ?? t("mobileCardList.empty");
   const resolvedEndOfContentMessage = t("mobileCardList.endOfContent");
@@ -149,16 +160,27 @@ export default function MobileCardList<T>({
     page,
   ]);
 
-  const sentinelRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
   const canLoadRef = useRef(false);
   const onLoadMoreRef = useRef(onLoadMore);
-  const isIntersectingRef = useRef(false);
   const pageRef = useRef(page);
   const loadingRef = useRef(loading);
-  const lastRequestedPageRef = useRef<number | null>(null);
+  const lastRequestedKeyRef = useRef<string | null>(null);
   onLoadMoreRef.current = onLoadMore;
   pageRef.current = page;
   loadingRef.current = loading;
+
+  // What "we already asked for this" is keyed on. It used to be `page` alone,
+  // which quietly broke every caller that does not pass one: `page` defaults to
+  // 0, so after the first load the guard compared 0 to 0 and refused every
+  // request from then on — one extra page, then silence.
+  //
+  // Callers are free not to pass `page`; several track it themselves and just
+  // hand back the next slice of `rows`. The accumulated row count is the honest
+  // signal because it is what changes when a load actually lands, and `page`
+  // stays in the key for the callers that do pass it.
+  const loadKeyRef = useRef("");
+  loadKeyRef.current = `${page}:${accumulatedRows.length}`;
 
   if (infiniteScroll) {
     canLoadRef.current = onLoadMore
@@ -170,78 +192,104 @@ export default function MobileCardList<T>({
     if (!onLoadMoreRef.current) {
       return;
     }
-    if (!isIntersectingRef.current || !canLoadRef.current || loadingRef.current) {
+    if (!canLoadRef.current || loadingRef.current) {
       return;
     }
-    if (lastRequestedPageRef.current === pageRef.current) {
+    if (lastRequestedKeyRef.current === loadKeyRef.current) {
       return;
     }
 
-    lastRequestedPageRef.current = pageRef.current;
+    lastRequestedKeyRef.current = loadKeyRef.current;
     onLoadMoreRef.current();
   };
+
+  // One scroll-driven trigger, where there used to be an IntersectionObserver
+  // *and* a scroll listener both watching a sentinel element. The list's own
+  // bottom edge is what actually matters, so it is measured directly and no
+  // marker node is rendered at all.
+  const requestLoadIfAtEnd = () => {
+    const list = listRef.current;
+    if (!list || !canLoadRef.current || loadingRef.current) {
+      return;
+    }
+    if (
+      list.getBoundingClientRect().bottom - window.innerHeight >
+      END_THRESHOLD_PX
+    ) {
+      return;
+    }
+    if (onLoadMoreRef.current) {
+      maybeLoadMore();
+      return;
+    }
+    setVisibleCount((previousCount) => previousCount + pageSize);
+  };
+
+  const requestLoadIfAtEndRef = useRef(requestLoadIfAtEnd);
+  requestLoadIfAtEndRef.current = requestLoadIfAtEnd;
+
+  // Coalesced to one measurement per frame. Scroll fires far more often than
+  // that and every call here reads layout, which is the part worth rationing.
+  // The "already queued" flag is deliberately separate from the frame id: the
+  // id is only assigned once requestAnimationFrame returns, which is after the
+  // callback has run if the frame resolves synchronously, and a flag written in
+  // that order would latch on and wedge the list forever.
+  const scheduledRef = useRef(false);
+  const frameRef = useRef(0);
+  const scheduleCheck = useCallback(() => {
+    if (scheduledRef.current) {
+      return;
+    }
+    scheduledRef.current = true;
+    frameRef.current = requestAnimationFrame(() => {
+      scheduledRef.current = false;
+      requestLoadIfAtEndRef.current();
+    });
+  }, []);
 
   useEffect(() => {
     if (!infiniteScroll) {
       return;
     }
-    const sentinel = sentinelRef.current;
-    if (!sentinel) {
-      return;
-    }
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        isIntersectingRef.current = entry.isIntersecting;
-        if (!entry.isIntersecting || !canLoadRef.current) {
-          return;
-        }
-        if (onLoadMoreRef.current) {
-          maybeLoadMore();
-          return;
-        }
-        setVisibleCount((previousCount) => previousCount + pageSize);
-      },
-      { rootMargin: "300px" },
-    );
-
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, [infiniteScroll, pageSize]);
-
-  useEffect(() => {
-    if (!infiniteScroll || !onLoadMoreRef.current) {
-      return;
-    }
-    maybeLoadMore();
-  }, [hasMore, infiniteScroll, loading, page]);
-
-  useEffect(() => {
-    if (!infiniteScroll || !onLoadMore) {
-      return;
-    }
-
-    const handleScroll = () => {
-      const sentinel = sentinelRef.current;
-      if (!sentinel) {
-        return;
-      }
-      const { top } = sentinel.getBoundingClientRect();
-      if (top - window.innerHeight <= 300) {
-        isIntersectingRef.current = true;
-        maybeLoadMore();
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    window.addEventListener("resize", handleScroll);
-    handleScroll();
+    // `capture: true` because scroll events do not bubble, and on several
+    // screens the list scrolls inside a <main> rather than the document.
+    // Capture sees those without having to hunt for the scroll container.
+    window.addEventListener("scroll", scheduleCheck, {
+      passive: true,
+      capture: true,
+    });
+    window.addEventListener("resize", scheduleCheck, { passive: true });
+    scheduleCheck();
 
     return () => {
-      window.removeEventListener("scroll", handleScroll);
-      window.removeEventListener("resize", handleScroll);
+      window.removeEventListener("scroll", scheduleCheck, { capture: true });
+      window.removeEventListener("resize", scheduleCheck);
+      if (frameRef.current) {
+        cancelAnimationFrame(frameRef.current);
+        frameRef.current = 0;
+      }
+      scheduledRef.current = false;
     };
-  }, [infiniteScroll, onLoadMore, page, hasMore, loading]);
+  }, [infiniteScroll, scheduleCheck]);
+
+  // Re-check whenever what is on screen changes: a page that does not fill the
+  // viewport has to pull the next one without the user scrolling at all.
+  useEffect(() => {
+    if (!infiniteScroll) {
+      return;
+    }
+    scheduleCheck();
+  }, [
+    infiniteScroll,
+    scheduleCheck,
+    rows,
+    accumulatedRows.length,
+    visibleCount,
+    loading,
+    hasMore,
+    page,
+  ]);
 
   const displayRowsForInfinite = onLoadMore
     ? accumulatedRows
@@ -263,9 +311,9 @@ export default function MobileCardList<T>({
     (onLoadMore ? !hasMore : visibleCount >= rows.length);
 
   // `md:hidden` alone only *hides* the list on desktop — it still mounts, and
-  // with it the IntersectionObserver and the accumulated-row state. Gate the
-  // render too. This is the LMS's local wrapper, adopted upstream; it must stay
-  // below every hook so the hook order is stable across the breakpoint.
+  // with it the scroll listener and the accumulated-row state. Gate the render
+  // too. This is the LMS's local wrapper, adopted upstream; it must stay below
+  // every hook so the hook order is stable across the breakpoint.
   if (!isMobileViewport) {
     return null;
   }
@@ -291,14 +339,13 @@ export default function MobileCardList<T>({
   }
 
   return (
-    <div className={cn("space-y-3 md:hidden", className)}>
+    <div ref={listRef} className={cn("space-y-3 md:hidden", className)}>
       {activeRows.map((row) => (
         <div key={rowKey(row)}>{renderCard(row)}</div>
       ))}
 
       {infiniteScroll ? (
         <>
-          <div ref={sentinelRef} aria-hidden="true" />
           {loading ? (
             <div className="flex justify-center py-4">
               <Loader2 className="size-5 animate-spin text-muted-foreground" />
