@@ -74,7 +74,7 @@ export interface MobileCardListProps<T> {
   infiniteScroll?: boolean;
   hasMore?: boolean;
   onLoadMore?: () => void;
-  onInfiniteScrollReset?: () => void;
+  /** Resets how many rows are shown; client-side infinite scroll only. */
   resetKey?: string | number;
   /**
    * A failed page load. Without this the list has nowhere to put a failure:
@@ -83,17 +83,6 @@ export interface MobileCardListProps<T> {
    */
   error?: string | null;
   onRetry?: () => void;
-  /**
-   * Whether this component should merge each incoming page into the rows it is
-   * already showing. True is the legacy shape, where the caller hands over one
-   * page at a time.
-   *
-   * Callers on `useInfiniteList` pass false: the query cache already holds
-   * every page, so `rows` arrives complete and accumulating again would only
-   * risk holding rows the query has since dropped. Transitional — once every
-   * call site is migrated, the accumulation here goes away and so does this.
-   */
-  accumulate?: boolean;
   className?: string;
 }
 
@@ -111,11 +100,9 @@ export default function MobileCardList<T>({
   infiniteScroll: infiniteScrollProp,
   hasMore = false,
   onLoadMore,
-  onInfiniteScrollReset,
   resetKey,
   error,
   onRetry,
-  accumulate = true,
   className,
 }: MobileCardListProps<T>) {
   // This component only ever renders on a phone, and prev/next buttons are the
@@ -128,45 +115,12 @@ export default function MobileCardList<T>({
   const resolvedEmptyMessage = emptyMessage ?? t("mobileCardList.empty");
   const resolvedEndOfContentMessage = t("mobileCardList.endOfContent");
   const resolvedRetryMessage = t("mobileCardList.retry");
-  const [accumulatedRows, setAccumulatedRows] = useState<T[]>([]);
-  const accumulatedMapRef = useRef<Map<string | number, T>>(new Map());
-  const rowKeyRef = useRef(rowKey);
-  rowKeyRef.current = rowKey;
-  const prevResetKeyRef = useRef<string | number | undefined>(resetKey);
-
-  useEffect(() => {
-    if (!infiniteScroll || !onLoadMore || !accumulate) {
-      return;
-    }
-
-    if (resetKey !== prevResetKeyRef.current) {
-      prevResetKeyRef.current = resetKey;
-      const freshMap = new Map<string | number, T>();
-      for (const row of rows) {
-        freshMap.set(rowKeyRef.current(row), row);
-      }
-      accumulatedMapRef.current = freshMap;
-      setAccumulatedRows([...freshMap.values()]);
-      return;
-    }
-
-    let changed = false;
-    for (const row of rows) {
-      const key = rowKeyRef.current(row);
-      if (!accumulatedMapRef.current.has(key)) {
-        accumulatedMapRef.current.set(key, row);
-        changed = true;
-      }
-    }
-    if (changed) {
-      setAccumulatedRows([...accumulatedMapRef.current.values()]);
-    }
-  }, [rows, resetKey, infiniteScroll, onLoadMore, accumulate]);
-
   const [visibleCount, setVisibleCount] = useState(pageSize);
   const isMobileViewport = useIsMobile();
-  const wasMobileViewportRef = useRef(isMobileViewport);
 
+  // Only the client-side path needs this. A caller that passes `onLoadMore`
+  // owns its own pages — it hands over the whole list it has walked so far —
+  // so there is nothing here to reset.
   useEffect(() => {
     if (!infiniteScroll || onLoadMore) {
       return;
@@ -174,50 +128,16 @@ export default function MobileCardList<T>({
     setVisibleCount(pageSize);
   }, [resetKey, pageSize, infiniteScroll, onLoadMore]);
 
-  useEffect(() => {
-    if (!infiniteScroll || !onLoadMore || !onInfiniteScrollReset) {
-      return;
-    }
-    const becameMobile = !wasMobileViewportRef.current && isMobileViewport;
-    wasMobileViewportRef.current = isMobileViewport;
-    if (!becameMobile || page <= 0) {
-      return;
-    }
-
-    accumulatedMapRef.current = new Map();
-    setAccumulatedRows([]);
-    onInfiniteScrollReset();
-  }, [
-    infiniteScroll,
-    isMobileViewport,
-    onInfiniteScrollReset,
-    onLoadMore,
-    page,
-  ]);
-
   const listRef = useRef<HTMLDivElement>(null);
   const canLoadRef = useRef(false);
   const onLoadMoreRef = useRef(onLoadMore);
   const pageRef = useRef(page);
   const loadingRef = useRef(loading);
   const errorRef = useRef(error);
-  const lastRequestedKeyRef = useRef<string | null>(null);
   onLoadMoreRef.current = onLoadMore;
   pageRef.current = page;
   loadingRef.current = loading;
   errorRef.current = error;
-
-  // What "we already asked for this" is keyed on. It used to be `page` alone,
-  // which quietly broke every caller that does not pass one: `page` defaults to
-  // 0, so after the first load the guard compared 0 to 0 and refused every
-  // request from then on — one extra page, then silence.
-  //
-  // Callers are free not to pass `page`; several track it themselves and just
-  // hand back the next slice of `rows`. The accumulated row count is the honest
-  // signal because it is what changes when a load actually lands, and `page`
-  // stays in the key for the callers that do pass it.
-  const loadKeyRef = useRef("");
-  loadKeyRef.current = `${page}:${accumulate ? accumulatedRows.length : rows.length}`;
 
   if (infiniteScroll) {
     canLoadRef.current = onLoadMore
@@ -225,18 +145,14 @@ export default function MobileCardList<T>({
       : !loading && visibleCount < rows.length;
   }
 
+  // No "already asked for this page" guard here any more. Every caller that
+  // passes `onLoadMore` drives it from the query cache, which knows whether a
+  // fetch is in flight and ignores a second request — so the bookkeeping this
+  // used to do by hand is now done once, properly, a layer down.
   const maybeLoadMore = () => {
-    if (!onLoadMoreRef.current) {
+    if (!onLoadMoreRef.current || !canLoadRef.current || loadingRef.current) {
       return;
     }
-    if (!canLoadRef.current || loadingRef.current) {
-      return;
-    }
-    if (lastRequestedKeyRef.current === loadKeyRef.current) {
-      return;
-    }
-
-    lastRequestedKeyRef.current = loadKeyRef.current;
     onLoadMoreRef.current();
   };
 
@@ -325,18 +241,18 @@ export default function MobileCardList<T>({
     infiniteScroll,
     scheduleCheck,
     rows,
-    accumulatedRows.length,
     visibleCount,
     loading,
     hasMore,
     page,
   ]);
 
-  const displayRowsForInfinite = !onLoadMore
-    ? rows.slice(0, visibleCount)
-    : accumulate
-      ? accumulatedRows
-      : rows;
+  // With `onLoadMore` the caller owns the pages and hands over everything it
+  // has walked so far; without it, every row is already here and the list
+  // reveals more of them as the reader arrives.
+  const displayRowsForInfinite = onLoadMore
+    ? rows
+    : rows.slice(0, visibleCount);
   const total =
     paginationMode === "server" ? (totalRowCount ?? rows.length) : rows.length;
   const hasPrev = page > 0;

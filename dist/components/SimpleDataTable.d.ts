@@ -34,6 +34,18 @@ export interface SimpleDataTableProps<T> {
     columns: Array<SimpleDataTableColumn<T>>;
     rows: T[];
     rowKey: (row: T) => string;
+    /**
+     * Set this when the view pairs the table with a `MobileCardList`.
+     *
+     * `hidden md:block` on a wrapper only *hides* the table on a phone — it stays
+     * mounted, with every row component, its effects and its measurements alive
+     * behind the card list that replaced it. This unmounts it instead.
+     *
+     * Opt-in rather than the default, because a table with no card list beside it
+     * is better cramped than absent: some views still have no mobile surface at
+     * all, and blanking them would be worse than the squeeze.
+     */
+    desktopOnly?: boolean;
     /** Convenience alias for `classNames.root`. */
     className?: string;
     /** Granular restyling slots for the table chrome. */
@@ -57,4 +69,4 @@ export interface SimpleDataTableProps<T> {
     hoveredRow?: T | null;
     onHoveredRowChange?: (row: T | null) => void;
 }
-export default function SimpleDataTable<T>({ columns, rows, rowKey, className, classNames, loading, loadingMessage, emptyMessage, page, pageSize, pageSizeOptions, onPageChange, onPageSizeChange, onRowClick, paginationMode, totalRowCount, sortBy, sortOrder, onSortChange, alignPaginationToLeft, onLoadingChange, hoveredRow, onHoveredRowChange, }: SimpleDataTableProps<T>): import("react/jsx-runtime").JSX.Element;
+export default function SimpleDataTable<T>({ columns, rows, rowKey, desktopOnly, className, classNames, loading, loadingMessage, emptyMessage, page, pageSize, pageSizeOptions, onPageChange, onPageSizeChange, onRowClick, paginationMode, totalRowCount, sortBy, sortOrder, onSortChange, alignPaginationToLeft, onLoadingChange, hoveredRow, onHoveredRowChange, }: SimpleDataTableProps<T>): import("react/jsx-runtime").JSX.Element | null;

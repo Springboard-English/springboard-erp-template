@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
+import useIsMobile from '@/hooks/useIsMobile';
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SearchableSelect } from '@/components/ui/searchable-select';
@@ -51,6 +52,18 @@ export interface SimpleDataTableProps<T> {
   columns: Array<SimpleDataTableColumn<T>>;
   rows: T[];
   rowKey: (row: T) => string;
+  /**
+   * Set this when the view pairs the table with a `MobileCardList`.
+   *
+   * `hidden md:block` on a wrapper only *hides* the table on a phone — it stays
+   * mounted, with every row component, its effects and its measurements alive
+   * behind the card list that replaced it. This unmounts it instead.
+   *
+   * Opt-in rather than the default, because a table with no card list beside it
+   * is better cramped than absent: some views still have no mobile surface at
+   * all, and blanking them would be worse than the squeeze.
+   */
+  desktopOnly?: boolean;
   /** Convenience alias for `classNames.root`. */
   className?: string;
   /** Granular restyling slots for the table chrome. */
@@ -79,6 +92,7 @@ export default function SimpleDataTable<T>({
   columns,
   rows,
   rowKey,
+  desktopOnly = false,
   className,
   classNames,
   loading = false,
@@ -100,6 +114,7 @@ export default function SimpleDataTable<T>({
   hoveredRow = null,
   onHoveredRowChange,
 }: SimpleDataTableProps<T>) {
+  const isMobileViewport = useIsMobile();
   const { t } = useI18n();
   const resolvedLoadingMessage = loadingMessage ?? t('simpleDataTable.loading');
   const resolvedEmptyMessage = emptyMessage ?? t('simpleDataTable.empty');
@@ -244,6 +259,11 @@ export default function SimpleDataTable<T>({
       observer.disconnect();
     };
   }, []);
+
+  // Below every hook, so the hook order stays stable across the breakpoint.
+  if (desktopOnly && isMobileViewport) {
+    return null;
+  }
 
   return (
     <div
