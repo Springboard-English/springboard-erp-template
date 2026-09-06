@@ -52,38 +52,12 @@ export interface SignInViewProps {
   footerChildren?: React.ReactNode;
 }
 
-const ONE_TAP_POINTER_STYLE_ID = "springboard-one-tap-pointer-events";
-
-/**
- * Stop Google One Tap swallowing clicks meant for the page.
- *
- * `google.accounts.id.prompt()` appends its prompt to <body> as a fixed
- * container pinned top-right, and that container is far larger than the card it
- * draws. The empty remainder still takes pointer events, so while One Tap is up
- * the controls underneath it — on this screen the locale and colour-mode
- * selects, and the top of the form on a short viewport — cannot be clicked. The
- * container goes transparent to pointer events and the iframe that IS the card
- * takes them back, so One Tap itself is unaffected.
- *
- * Injected from here rather than written in `src/index.css`, because **no
- * consumer imports this package's compiled stylesheet** — each app owns its own
- * Tailwind build and pulls only `dist/index.js`. A rule in the stylesheet would
- * ship, look correct in this repo, and reach nobody. It also has to be global
- * and outlive the view: GSI appends outside the React root, with inline styles,
- * and the prompt survives navigation away from sign-in. Prefix selectors because
- * GSI has renamed the container more than once.
- */
-function ensureOneTapPointerEvents(): void {
-  if (typeof document === "undefined") return;
-  if (document.getElementById(ONE_TAP_POINTER_STYLE_ID)) return;
-
-  const style = document.createElement("style");
-  style.id = ONE_TAP_POINTER_STYLE_ID;
-  style.textContent =
-    '[id^="credential_picker_container"]{pointer-events:none!important}'
-    + '[id^="credential_picker_container"] iframe{pointer-events:auto!important}';
-  document.head.appendChild(style);
-}
+// The One Tap pointer-events workaround lived here. It carved clicks back out
+// of the oversized `credential_picker_container` that `prompt()` appends to
+// <body>. It is gone with the `prompt()` call itself — see the note at the
+// renderButton site. `git log` has it if One Tap is ever wanted back, but the
+// workaround had already stopped holding: GSI renames that container, and
+// FedCM draws the prompt differently again.
 
 export default function SignIn(props: SignInViewProps) {
   const { t } = useI18n();
@@ -164,7 +138,6 @@ export default function SignIn(props: SignInViewProps) {
       return;
     }
 
-    ensureOneTapPointerEvents();
 
     const script = document.createElement("script");
     script.src = "https://accounts.google.com/gsi/client";
@@ -189,11 +162,17 @@ export default function SignIn(props: SignInViewProps) {
             text: "continue_with",
           },
         );
-        window.google.accounts.id.prompt((notification: any) => {
-          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-            console.log("Google prompt status:", notification.getNotDisplayedReason());
-          }
-        });
+        // One Tap is deliberately NOT prompted. `prompt()` appends a fixed
+        // container to <body> that is far larger than the card it draws, and
+        // the empty remainder swallows clicks meant for the page — the locale
+        // and colour-mode selects, and the top of the form on a short
+        // viewport. A pointer-events rule used to carve that back out; it
+        // stopped holding (GSI has renamed the container more than once, and
+        // FedCM draws it differently), so the page was blocked again.
+        //
+        // Nothing is lost by dropping it: `renderButton` above still draws the
+        // real "Continue with Google" button, which is the deliberate path
+        // rather than an interstitial nobody asked for.
       }
     };
   }, [props.googleClientId]);

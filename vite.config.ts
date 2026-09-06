@@ -25,7 +25,18 @@ export default defineConfig({
       fileName: () => 'index.js',
     },
     rollupOptions: {
-      external: ['react', 'react-dom', 'react-router-dom'],
+      // Anything whose API is a React CONTEXT must be external, or the package
+      // gets its own copy and reads a context the app never provided.
+      // `@tanstack/react-query` was not on this list, so bundling it was
+      // harmless right up until a component here called `useQueryClient` —
+      // GlobalStatusQueryBridge — and every HRM page died with "No QueryClient
+      // set" while the app's provider sat right above it.
+      external: [
+        'react',
+        'react-dom',
+        'react-router-dom',
+        '@tanstack/react-query',
+      ],
       output: {
         assetFileNames: (assetInfo) => assetInfo.name ?? 'asset',
       },
