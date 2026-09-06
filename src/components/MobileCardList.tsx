@@ -1,4 +1,12 @@
-import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
+import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useI18n } from "@/context/I18nContext";
@@ -8,6 +16,11 @@ import useIsMobile from "@/hooks/useIsMobile";
  *  page is fetched. Roughly one thumb-flick of runway, so the rows are usually
  *  there by the time the reader arrives. */
 const END_THRESHOLD_PX = 300;
+
+/** Starting guess for a card's height, including the gap below it. Every card
+ *  is measured for real once it mounts, so this only has to be close enough
+ *  that the initial scrollbar is not wildly wrong. */
+const ESTIMATED_CARD_PX = 180;
 
 export function CardField({
   label,
@@ -310,6 +323,38 @@ export default function MobileCardList<T>({
     activeRows.length > 0 &&
     (onLoadMore ? !hasMore : visibleCount >= rows.length);
 
+  // Virtualised, so a long list costs a bounded number of DOM nodes instead of
+  // one card per row — accumulating 500 rows used to mean 500 mounted cards.
+  //
+  // The window variant is the right one here: these views scroll the document,
+  // not an inner pane. That was checked rather than assumed — the list screens
+  // have no scrollable ancestor once the desktop-only height clamp is gated to
+  // `md`, which it now is.
+  const [scrollMargin, setScrollMargin] = useState(0);
+  const hasRows = activeRows.length > 0;
+
+  useLayoutEffect(() => {
+    const node = listRef.current;
+    if (!node) {
+      return;
+    }
+    // Where the list starts in the document — the virtualizer works in page
+    // coordinates, so it needs the offset of the list itself.
+    const measure = () =>
+      setScrollMargin(node.getBoundingClientRect().top + window.scrollY);
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [hasRows, isMobileViewport]);
+
+  const virtualizer = useWindowVirtualizer({
+    count: activeRows.length,
+    estimateSize: () => ESTIMATED_CARD_PX,
+    overscan: 6,
+    scrollMargin,
+    getItemKey: (index) => rowKey(activeRows[index]),
+  });
+
   // `md:hidden` alone only *hides* the list on desktop — it still mounts, and
   // with it the scroll listener and the accumulated-row state. Gate the render
   // too. This is the LMS's local wrapper, adopted upstream; it must stay below
@@ -339,10 +384,29 @@ export default function MobileCardList<T>({
   }
 
   return (
-    <div ref={listRef} className={cn("space-y-3 md:hidden", className)}>
-      {activeRows.map((row) => (
-        <div key={rowKey(row)}>{renderCard(row)}</div>
-      ))}
+    <div ref={listRef} className={cn("md:hidden", className)}>
+      {/* The spacer carries the full height of every row, measured or
+          estimated, so the scrollbar and the load-more trigger both see the
+          real end of the list even though only a window of cards is mounted. */}
+      <div
+        className="relative w-full"
+        style={{ height: `${virtualizer.getTotalSize()}px` }}
+      >
+        {virtualizer.getVirtualItems().map((item) => (
+          <div
+            key={item.key}
+            data-index={item.index}
+            ref={virtualizer.measureElement}
+            // `pb-3` replaces the old `space-y-3`: absolutely positioned items
+            // have no margin collapsing to space them, and keeping the gap
+            // inside the measured element keeps the maths honest.
+            className="absolute left-0 top-0 w-full pb-3"
+            style={{ transform: `translateY(${item.start - scrollMargin}px)` }}
+          >
+            {renderCard(activeRows[item.index])}
+          </div>
+        ))}
+      </div>
 
       {infiniteScroll ? (
         <>
