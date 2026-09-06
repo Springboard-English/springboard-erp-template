@@ -56,7 +56,13 @@ export interface DashboardLayoutProps {
   sidebarFooter?: (collapsed: boolean) => ReactNode;
   /** Replace the built-in nav list entirely (e.g. a guides tree). */
   sidebarContent?: (collapsed: boolean) => ReactNode;
-  /** Extra content rendered inside the mobile menu sheet, above the account block. */
+  /**
+   * Extra content for the mobile menu sheet, below the account block.
+   *
+   * Omit it and the sheet surfaces `headerContent` (an app's notifications and
+   * such, which are otherwise `md:`-only). Pass `null` for deliberately
+   * nothing — the sheet already draws identity, Appearance and sign-out.
+   */
   mobileMenu?: ReactNode;
   /** Rendered into the main area; falls back to the router <Outlet />. */
   children?: ReactNode;
@@ -220,16 +226,17 @@ function DashboardLayoutInner({
   // Anything the bar drops would otherwise have no entry point on a phone.
   const overflowItems = navItems.filter((item) => item.hideOnMobile);
 
-  // `sidebarFooter` is `md:block`-only and `headerContent` is `md:flex`-only, so
-  // an app that sets neither `mobileMenu` nor either of those has no account or
-  // sign-out on a phone. Surface whatever it did give us.
-  const defaultMenuBody =
-    sidebarFooter || headerContent ? (
-      <div className="space-y-3">
-        {sidebarFooter ? sidebarFooter(false) : null}
-        {headerContent}
-      </div>
-    ) : null;
+  // `headerContent` is `md:flex`-only, so whatever an app puts there — its
+  // notifications, its own controls — has no home on a phone. Surface it.
+  //
+  // `sidebarFooter` is deliberately NOT surfaced. It is where apps put their
+  // account panel, and the sheet already draws identity and sign-out itself;
+  // passing it through rendered the name, the email and a Logout button twice
+  // over, which is exactly what it looked like. An app that wants something
+  // else in the sheet passes `mobileMenu`.
+  const defaultMenuBody = headerContent ? (
+    <div className="space-y-3">{headerContent}</div>
+  ) : null;
 
   return (
     <>
@@ -370,7 +377,11 @@ function DashboardLayoutInner({
             activeTab={activeTab}
             onTabSelect={onTabSelect}
           >
-            {mobileMenu ?? defaultMenuBody}
+            {/* `undefined` means "not specified, use the default"; `null` means
+                "deliberately nothing" — which an app whose headerContent is
+                only a colour-mode control wants, since the sheet already draws
+                Appearance and the passed-through icon reads as orphaned. */}
+            {mobileMenu === undefined ? defaultMenuBody : mobileMenu}
           </MobileMenuSheet>
         </>
       ) : null}
