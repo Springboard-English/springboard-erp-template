@@ -1,5 +1,6 @@
 import { API_CONFIG } from "../config/api";
 import { fetchWithRefresh } from "./fetchWithRefresh";
+import { throwIfNotOk } from "./apiErrors";
 
 export type NotificationPriority = "IMMEDIATE" | "URGENT" | "INFORMATIVE";
 export type NotificationPriorityKind = "immediate" | "urgent" | "informative" | "notice";
@@ -110,9 +111,7 @@ export async function fetchUserNotifications(activeOnly = true): Promise<UserNot
         headers: { Accept: "application/json" },
         credentials: "include",
     });
-    if (!response.ok) {
-        throw new Error(`Failed to fetch notifications: ${response.status} ${response.statusText}`);
-    }
+    await throwIfNotOk(response, "Failed to fetch notifications");
     const data = await response.json();
     const items: unknown[] = Array.isArray(data)
         ? data

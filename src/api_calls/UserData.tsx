@@ -6,6 +6,7 @@ import {
     fetchAuthExchange,
     fetchWithRefresh,
 } from "./fetchWithRefresh";
+import { throwIfNotOk } from "./apiErrors";
 
 /**
  * Auth, and only auth.
@@ -129,11 +130,7 @@ export async function login(
         body: formData.toString(),
     });
 
-    if (!response.ok) {
-        throw new Error(
-            `Login failed: ${response.status} ${response.statusText}`,
-        );
-    }
+    await throwIfNotOk(response, "Login failed");
 
     return fetchCurrentUser();
 }
@@ -159,11 +156,7 @@ export async function loginWithGoogle(
         },
     );
 
-    if (!response.ok) {
-        throw new Error(
-            `Google login failed: ${response.status} ${response.statusText}`,
-        );
-    }
+    await throwIfNotOk(response, "Google login failed");
 
     return fetchCurrentUser();
 }
@@ -183,11 +176,7 @@ export async function logout(): Promise<void> {
     // until it expired.
     clearAccessToken();
 
-    if (!response.ok) {
-        throw new Error(
-            `Logout failed: ${response.status} ${response.statusText}`,
-        );
-    }
+    await throwIfNotOk(response, "Logout failed");
 
     clearStoredUserInfo();
 }
@@ -201,11 +190,7 @@ export async function fetchCurrentUser(): Promise<UserInfo> {
         credentials: "include",
     });
 
-    if (!response.ok) {
-        throw new Error(
-            `Failed to fetch current user: ${response.status} ${response.statusText}`,
-        );
-    }
+    await throwIfNotOk(response, "Failed to fetch current user");
 
     const data = await response.json();
     const userInfo = toUserInfo(getCurrentUserPayload(data));
@@ -239,9 +224,5 @@ export async function resetPassword(
         },
     );
 
-    if (!response.ok) {
-        throw new Error(
-            `Password reset failed: ${response.status} ${response.statusText}`,
-        );
-    }
+    await throwIfNotOk(response, "Password reset failed");
 }

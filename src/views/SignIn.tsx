@@ -12,6 +12,7 @@ import { SitemarkIcon } from "@/components/CustomIcons";
 import { useAuth } from "@/context/AuthContext";
 import { useI18n } from "@/context/I18nContext";
 import { loginWithGoogle } from "@/api_calls/UserData";
+import { ApiError } from "@/api_calls/apiErrors";
 import { SearchableSelect, type SearchableSelectOption } from "../components/ui/searchable-select";
 
 export interface SignInViewProps {
@@ -230,8 +231,12 @@ export default function SignIn(props: SignInViewProps) {
         account_type: getSelectedAccountType(),
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "";
-      if (message.includes("401") || message.includes("400")) {
+      // The status, not the wording. "Wrong password" is the one failure the
+      // user can act on, so it gets our sentence rather than the API's — but
+      // the old test was `message.includes("400")`, and a network failure now
+      // reports how long it waited, so a server unreachable for 401ms would
+      // have told the user their password was wrong.
+      if (error instanceof ApiError && (error.status === 400 || error.status === 401)) {
         setLoginError(t("signIn.invalidCredentials"));
         return;
       }

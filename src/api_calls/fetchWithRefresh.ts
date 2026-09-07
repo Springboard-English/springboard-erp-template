@@ -20,6 +20,7 @@
 // apps working: an app that opens with an empty memory refreshes into a session
 // without anyone typing a password.
 import { getEndpoint } from "../config/api";
+import { NetworkError } from "./apiErrors";
 import {
   armAccessTokenFromResponse,
   clearAccessToken,
@@ -61,12 +62,49 @@ function delay(ms: number): Promise<void> {
   });
 }
 
+/**
+ * `fetch`, but a network failure says which request failed and what we know.
+ *
+ * Every request in every app funnels through here, which is the reason the
+ * wrapping lives at this line and not at the hundred call sites: the bare
+ * "Failed to fetch" banner the apps show today is this rejection, rendered as
+ * `error.message`, and it names neither the endpoint nor the cause. See
+ * `apiErrors.ts` for what the browser will and will not tell us.
+ *
+ * An abort is deliberately left alone. React Query cancels in-flight queries on
+ * unmount and on a key change, and it recognises that cancellation by the
+ * `AbortError` it gets back — dressing it up as a network failure would make
+ * every navigation raise an error banner for a request nobody was waiting for.
+ */
+async function sendRequest(input: string, init: RequestInit): Promise<Response> {
+  const startedAt = Date.now();
+
+  try {
+    return await fetch(input, init);
+  } catch (error) {
+    if (init.signal?.aborted || (error instanceof Error && error.name === "AbortError")) {
+      throw error;
+    }
+
+    throw new NetworkError({
+      url: input,
+      method: init.method ?? "GET",
+      elapsedMs: Date.now() - startedAt,
+      // Anything other than a definite `false` counts as online. Node has a
+      // `navigator` with no `onLine` on it, and reading that as "offline"
+      // would put a wrong reason in front of every app's node-side tests.
+      online: typeof navigator?.onLine === "boolean" ? navigator.onLine : true,
+      cause: error,
+    });
+  }
+}
+
 export async function fetchWithRetryAfter(
   input: string,
   init?: RequestInit,
   retriesRemaining = MAX_RETRY_AFTER_RETRIES,
 ): Promise<Response> {
-  const response = await fetch(input, {
+  const response = await sendRequest(input, {
     ...init,
     cache: init?.cache ?? "no-store",
   });

@@ -298,3 +298,17 @@ export {
   getAccessTokenExpiry,
   armAccessTokenFromResponse,
 } from "./auth/accessToken";
+
+// Why a request failed, rather than that it did. `NetworkError` arrives on its
+// own — every request already goes through the transport above, so a dead
+// server names the endpoint instead of saying "Failed to fetch". `ApiError`
+// needs the call site: swap a hand-written throw of
+// "Failed to fetch tests: <status> <statusText>" for
+// `await throwIfNotOk(response, "Failed to fetch tests")` and the API's own
+// explanation follows the status.
+export {
+  ApiError,
+  NetworkError,
+  throwIfNotOk,
+  toApiError,
+} from "./api_calls/apiErrors";
