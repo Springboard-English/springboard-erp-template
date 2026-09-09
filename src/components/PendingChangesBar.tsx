@@ -149,7 +149,8 @@ export default function PendingChangesBar({
         >
           <div
             className={cn(
-              "pointer-events-auto mx-auto w-[calc(100%-7rem)] overflow-auto rounded-t-[28px] border border-b-0 border-border/70 shadow-[0_20px_48px_-28px_rgba(15,23,42,0.5)] backdrop-blur",
+              // No `pointer-events-auto` here — see the pill below.
+              "mx-auto w-[calc(100%-7rem)] overflow-auto rounded-t-[28px] border border-b-0 border-border/70 shadow-[0_20px_48px_-28px_rgba(15,23,42,0.5)] backdrop-blur",
               dimmed ? "bg-muted/80 opacity-80 shadow-none" : "bg-card/95",
             )}
           >
@@ -199,7 +200,16 @@ export default function PendingChangesBar({
 
         <div
           className={cn(
-            "pointer-events-auto relative flex min-h-[3.75rem] items-center justify-between gap-3 rounded-[999px] border border-border/70 px-4 py-2 shadow-[0_18px_40px_-20px_rgba(15,23,42,0.4)] backdrop-blur-md",
+            // Deliberately NOT `pointer-events-auto`. The wrapper above owns
+            // that decision and sets `pointer-events-none` while the bar is
+            // hidden — but `pointer-events` is overridable by a descendant, so
+            // re-enabling it here put a 60px invisible strip (opacity 0, still
+            // hit-testable) across the bottom of every screen. On any page
+            // whose content reaches the viewport floor that swallowed real
+            // clicks: the data tables' Previous/Next and rows-per-page sat
+            // under it and simply did not respond. Inheriting is what makes
+            // "hidden" mean untouchable.
+            "relative flex min-h-[3.75rem] items-center justify-between gap-3 rounded-[999px] border border-border/70 px-4 py-2 shadow-[0_18px_40px_-20px_rgba(15,23,42,0.4)] backdrop-blur-md",
             dimmed ? "bg-muted/80 opacity-80 shadow-none" : "bg-card/96",
           )}
         >
