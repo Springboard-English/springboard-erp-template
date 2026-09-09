@@ -15,11 +15,6 @@
  *
  * If you are about to add a resource call here, add it to the app instead.
  */
-export interface LoginCredentials {
-    username: string;
-    password: string;
-    account_type?: string;
-}
 export interface UserInfo {
     name: string;
     username: string;
@@ -27,15 +22,11 @@ export interface UserInfo {
     account_type: string;
     [key: string]: unknown;
 }
-export interface LoginResponse extends UserInfo {
-}
 export interface ResetPasswordRequest {
     token: string;
     username: string;
     password: string;
 }
-export declare function login(credentials: LoginCredentials): Promise<LoginResponse>;
-export declare function loginWithGoogle(credential: string, accountType?: string): Promise<LoginResponse>;
 export declare function logout(): Promise<void>;
 export declare function fetchCurrentUser(): Promise<UserInfo>;
 export declare function resetPassword(request: ResetPasswordRequest): Promise<void>;

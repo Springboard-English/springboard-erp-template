@@ -2,8 +2,31 @@ import "./index.css";
 
 export { configureApi, API_CONFIG } from "./config/api";
 
-export { default as SignIn } from "./views/SignIn";
-export type { SignInViewProps } from "./views/SignIn";
+// Signing in through Ory Hydra — authorization code + PKCE. **There is no
+// `SignIn` view any more** (4.0.0): the API hosts the one login page, as the
+// OIDC bridge in front of Hydra, and it is the only thing that ever sees a
+// password or a Google credential. An app mounts `OidcBoot` above
+// `AuthProvider`, routes `OIDC_CONFIG.callbackRoute` at `OidcCallback`, and
+// signs out with `useAuth().logout()`.
+export { default as OidcBoot } from "./auth/oidc/OidcBoot";
+export type { OidcBootProps } from "./auth/oidc/OidcBoot";
+export { default as OidcCallback } from "./auth/oidc/OidcCallback";
+export type { OidcCallbackProps } from "./auth/oidc/OidcCallback";
+export { configureOidc, isOidcEnabled, OIDC_CONFIG } from "./auth/oidc/config";
+export {
+  beginSignIn,
+  beginSignOut,
+  completeSignIn,
+  endSession,
+  hasOidcSession,
+  markSigningOut,
+  refreshSession,
+} from "./auth/oidc/client";
+export {
+  markLogoutToSignInTransition,
+  consumeLogoutToSignInTransition,
+} from "./auth/transitionStorage";
+
 export { default as ResetPassword } from "./views/ResetPassword";
 export type { ResetPasswordViewProps } from "./views/ResetPassword";
 
@@ -26,7 +49,6 @@ export { default as ColorModeSelect } from "./theme/ColorModeSelect";
 export { default as ColorModeIconDropdown } from "./theme/ColorModeIconDropdown";
 export { default as LocaleSelect } from "./theme/LocaleSelect";
 
-export { default as ForgotPassword } from "./components/ForgotPassword";
 export { SitemarkIcon } from "./components/CustomIcons";
 export { default as LazyViewFallback } from "./components/LazyViewFallback";
 export { default as MultiSelectDropdown } from "./components/MultiSelectDropdown";

@@ -15,9 +15,10 @@ Consuming apps import components/hooks from the package entry point and the styl
 ## Repo layout
 
 - `src/exports.ts` — the public API surface; every symbol a consumer can import must be re-exported here. This is the build entry point (`vite.config.ts` `build.lib.entry`).
-- `src/index.tsx` — standalone dev entry (`npm run dev`) that mounts `SignIn` for local preview; not part of the published package.
-- `src/views/` — full-page views (`SignIn`, `ResetPassword`) exported directly.
-- `src/components/` — top-level shared components (e.g. `PatchRecordDialog`, `SimpleDataTable`, `MobileCardList`, `PendingChangesBar`, `StatusBanner`, `ForgotPassword`).
+- `src/index.tsx` — standalone dev entry (`npm run dev`) that mounts `OidcBoot` for local preview; not part of the published package.
+- `src/views/` — full-page views (`ResetPassword`) exported directly.
+- `src/auth/oidc/` — signing in, since 4.0.0: `config` (env + `configureOidc`), `client` (authorization code + PKCE), `OidcBoot` (mount it **above** `AuthProvider`) and `OidcCallback`.
+- `src/components/` — top-level shared components (e.g. `PatchRecordDialog`, `SimpleDataTable`, `MobileCardList`, `PendingChangesBar`, `StatusBanner`).
   - `components/ui/` — low-level shadcn/radix-based primitives (button, card, dialog, input, table, etc.)
   - `components/layout/` — `DetailLayout` — the detail-view scaffold (header, summary grid, tabs, action panel). Use `ManagementClassDetails` (in the consuming app) as the reference shape/interaction pattern for any new detail view.
   - `components/management/` — advanced filters panel/toggle for list/management views.
@@ -33,7 +34,7 @@ Consuming apps import components/hooks from the package entry point and the styl
 
 ## Scripts
 
-- `npm run dev` — Vite dev server (previews `SignIn` via `src/index.tsx`)
+- `npm run dev` — Vite dev server (previews the OIDC boot path via `src/index.tsx`)
 - `npm run build` — Vite library build + `tsc` declaration emit to `dist/`
 - `npm run lint` — ESLint
 

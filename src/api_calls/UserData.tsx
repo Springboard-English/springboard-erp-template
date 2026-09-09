@@ -1,11 +1,7 @@
 import { getEndpoint } from "../config/api";
 import { clearStoredUserInfo, setStoredUserInfo } from "../auth/userStorage";
 import { clearAccessToken } from "../auth/accessToken";
-import {
-    exchangeForAccessToken,
-    fetchAuthExchange,
-    fetchWithRefresh,
-} from "./fetchWithRefresh";
+import { fetchAuthExchange, fetchWithRefresh } from "./fetchWithRefresh";
 import { throwIfNotOk } from "./apiErrors";
 
 /**
@@ -26,22 +22,12 @@ import { throwIfNotOk } from "./apiErrors";
  * If you are about to add a resource call here, add it to the app instead.
  */
 
-export interface LoginCredentials {
-    username: string;
-    password: string;
-    account_type?: string;
-}
-
 export interface UserInfo {
     name: string;
     username: string;
     sub: string;
     account_type: string;
     [key: string]: unknown;
-}
-
-export interface LoginResponse extends UserInfo {
-    // Extends UserInfo which has sub, name, and any additional fields
 }
 
 export interface ResetPasswordRequest {
@@ -105,61 +91,12 @@ function getCurrentUserPayload(data: unknown): unknown {
     return data;
 }
 
-export async function login(
-    credentials: LoginCredentials,
-): Promise<LoginResponse> {
-    const formData = new URLSearchParams();
-    formData.append("grant_type", "password");
-    formData.append("username", credentials.username);
-    formData.append("password", credentials.password);
-    const loginUrl = new URL(getEndpoint("login"), window.location.origin);
-
-    if (credentials.account_type) {
-        loginUrl.searchParams.append("account_type", credentials.account_type);
-    }
-    // A credential exchange, not an authed request: cookies out (the reply sets
-    // the refresh cookie, the durable credential that carries SSO between the
-    // apps), access token back, held in memory. No Bearer, and no refreshing out
-    // of a 401 — that would mean the password was wrong.
-    const response = await exchangeForAccessToken(loginUrl.toString(), {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-            Accept: "application/json",
-        },
-        body: formData.toString(),
-    });
-
-    await throwIfNotOk(response, "Login failed");
-
-    return fetchCurrentUser();
-}
-
-export async function loginWithGoogle(
-    credential: string,
-    accountType?: string,
-): Promise<LoginResponse> {
-    // Send Google JWT credential to backend as query parameter
-    // Backend will verify the token and set cookies
-    const params = new URLSearchParams();
-    params.append("credential", credential);
-    if (accountType) {
-        params.append("account_type", accountType);
-    }
-    const response = await exchangeForAccessToken(
-        `${getEndpoint("authenticateGoogle")}?${params.toString()}`,
-        {
-            method: "GET",
-            headers: {
-                Accept: "application/json",
-            },
-        },
-    );
-
-    await throwIfNotOk(response, "Google login failed");
-
-    return fetchCurrentUser();
-}
+// `login` and `loginWithGoogle` are GONE (4.0.0). A password and a Google
+// credential are only ever seen by the API, which hosts the one login page as
+// the OIDC bridge in front of Hydra. An app signs in by redirecting there —
+// `AuthProvider.signIn()` — so a credential exchange in a front end has nothing
+// left to be. The endpoints themselves still exist and are unchanged; nothing
+// here calls them.
 
 export async function logout(): Promise<void> {
     // Clearing the refresh cookie is the whole point, so this is an exchange

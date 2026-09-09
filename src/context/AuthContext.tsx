@@ -6,10 +6,8 @@ import {
   ReactNode,
 } from "react";
 import {
-  login as apiLogin,
   logout as apiLogout,
   fetchCurrentUser,
-  LoginCredentials,
   UserInfo,
 } from "../api_calls/UserData";
 import {
@@ -17,13 +15,29 @@ import {
   getStoredUserInfo,
   setStoredUserInfo,
 } from "../auth/userStorage";
+import { beginSignIn, beginSignOut, markSigningOut } from "../auth/oidc/client";
+import { markLogoutToSignInTransition } from "../auth/transitionStorage";
 import { AUTH_SESSION_EXPIRED_EVENT } from "../api_calls/fetchWithRefresh";
 
+/**
+ * **Signing in is not this provider's job any more.**
+ *
+ * There is no `login(credentials)`. The API is the only thing that ever sees a
+ * password or a Google credential — it hosts the one login page, as the OIDC
+ * bridge in front of Hydra — and an app reaches it by redirecting, which is
+ * what `signIn()` does. `setAuthenticatedUser` stays because `OidcCallback`
+ * needs to hand the loaded account back after the code exchange.
+ *
+ * The bootstrap below is unchanged and is safe **because `OidcBoot` runs above
+ * this provider**: it does not render children without an access token, so
+ * `fetchCurrentUser` here is never the call that discovers there is no session.
+ */
 interface AuthContextType {
   user: UserInfo | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (credentials: LoginCredentials) => Promise<void>;
+  /** Redirect to the authorization server. Returns only if a sign-out owns the page. */
+  signIn: (returnTo?: string) => void;
   setAuthenticatedUser: (userInfo: UserInfo) => void;
   logout: () => Promise<void>;
 }
@@ -92,14 +106,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const login = async (credentials: LoginCredentials) => {
-    try {
-      const userInfo = await apiLogin(credentials);
-      setUser(userInfo);
-    } catch (error) {
-      console.error("Login failed:", error);
-      throw error;
-    }
+  const signIn = (returnTo?: string) => {
+    void beginSignIn(returnTo);
   };
 
   const setAuthenticatedUser = (userInfo: UserInfo) => {
@@ -107,9 +115,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(userInfo);
   };
 
+  /**
+   * All three sign-outs, in the one order that works.
+   *
+   * `markSigningOut` FIRST, before anything clears the user: setting
+   * `user = null` re-renders, a route guard sees an unauthenticated app and
+   * calls `signIn()`, and that redirect races the sign-out one. When the
+   * sign-in won, Hydra's session was still alive, so it completed silently and
+   * put the person straight back where they were — a Logout button that
+   * visibly does nothing.
+   *
+   * Then the API logout, which ends the first-party session; then
+   * `beginSignOut`, which is the only thing that ends **Hydra's**. Dropping our
+   * own tokens and stopping there would leave the SSO session alive, and the
+   * next authorization would sign them back in without asking. On a shared
+   * machine that is the whole problem.
+   */
   const logout = async () => {
+    markSigningOut();
+    markLogoutToSignInTransition();
     try {
-      // Call logout API to clear cookie server-side
       await apiLogout();
     } catch (error) {
       console.error("Logout API failed:", error);
@@ -118,6 +143,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Clear all local storage on logout, including UI preferences and caches.
       clearAllLocalStorage();
       setUser(null);
+      beginSignOut();
     }
   };
 
@@ -127,7 +153,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         isLoading,
         isAuthenticated: !!user,
-        login,
+        signIn,
         setAuthenticatedUser,
         logout,
       }}

@@ -13,7 +13,7 @@ React + TypeScript component library (`@springboard-english/springboard-erp-temp
 UI, and the auth this package's own screens perform. Nothing about a domain.
 
 **In:** components and primitives, layout and shell, theming, i18n plumbing,
-the credential exchange behind `SignIn`/`ResetPassword`/`AuthContext`
+signing in (`auth/oidc/`, `AuthContext`) and `ResetPassword`
 (`api_calls/UserData.tsx`, 247 lines), `fetchWithRefresh`, notifications (the
 package draws the bell and the centre), and generic utilities — formatters,
 filter state, query cache, CSV, detail-view mode, scopes.

@@ -24,7 +24,12 @@ try {
 
   // A representative import, so this fails if the entry point stops exporting
   // the things apps actually reach for.
-  const expected = ["fetchWithRefresh", "getAccessToken", "SignIn", "UserGuideView"];
+  const expected = [
+    "fetchWithRefresh",
+    "getAccessToken",
+    "OidcBoot",
+    "UserGuideView",
+  ];
   const missing = expected.filter((name) => typeof pkg[name] === "undefined");
   if (missing.length > 0) {
     console.error(`dist/index.js is missing expected exports: ${missing.join(", ")}`);
