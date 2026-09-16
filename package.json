@@ -27,7 +27,8 @@
         "dev": "vite",
         "build": "vite build && tsc -p tsconfig.build.json && node scripts/check-node-safe.mjs && node scripts/check-dts-portable.mjs",
         "preview": "vite preview",
-        "lint": "eslint . --ext .ts,.tsx"
+        "lint": "eslint . --ext .ts,.tsx",
+        "test": "vitest run"
     },
     "dependencies": {
         "@radix-ui/react-popover": "^1.1.15",
@@ -54,10 +55,16 @@
     },
     "devDependencies": {
         "@tailwindcss/vite": "^4.2.2",
+        "@testing-library/dom": "^10.4.1",
+        "@testing-library/jest-dom": "^6.9.1",
+        "@testing-library/react": "^16.3.2",
+        "@testing-library/user-event": "^14.6.1",
         "@types/react": "^19.2.14",
         "@types/react-dom": "^19.2.3",
         "@vitejs/plugin-react": "^5.1.4",
+        "jsdom": "^29.1.1",
         "tailwindcss": "^4.2.2",
-        "vite": "^7.3.2"
+        "vite": "^7.3.2",
+        "vitest": "^4.1.9"
     }
 }
