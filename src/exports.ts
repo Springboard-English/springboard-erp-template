@@ -160,6 +160,13 @@ export * from "./utils/urlQueryState";
 // byte-identical in erp-hrm, erp-crm and lms, with a copy of its test in each.
 export * from "./utils/viewFilterState";
 export * from "./utils/queryCache";
+// Paging a cursor-paginated list. `cursorPagination` walks cursors to reach an
+// offset — every app had its own copy of that walk and two of them returned the
+// FIRST page's rows as the last page's (see `fetchPageSlice`). `cursorTrail`
+// remembers the cursors already walked, so Previous, and coming back to a saved
+// page, cost one request instead of re-walking from the beginning.
+export * from "./utils/cursorPagination";
+export * from "./utils/cursorTrail";
 // erp-ops's version: it is the only one with `csvText`, which wraps an
 // identifier as `="…"` so Excel stops eating the leading zero on a CITAD bank
 // code or an account number. erp-hrm and lms shipped the same file without it,
