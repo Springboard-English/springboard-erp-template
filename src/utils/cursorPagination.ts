@@ -17,8 +17,61 @@
  * reach for this when a call site is already shaped around `(limit, offset)`.
  */
 
+declare const PAGE_SIZE: unique symbol;
+
+/**
+ * A validated `page_size`: an integer in `[1, MAX_PAGE_SIZE]`.
+ *
+ * It is a type rather than a number because a bad one is silent. `-1` used to be
+ * a sentinel meaning "drain the list" in four apps' private walks; when the walk
+ * moved in here it became a page size, and clamping turned it into ONE — so nine
+ * CSV exports wrote a single row and a timeline tab rendered a single class. No
+ * compiler could see it: `-1` is a perfectly good `number`.
+ *
+ * Build one with {@link pageSize} (throws — for literals and anything whose being
+ * wrong is a bug) or {@link toPageSize} (clamps — for values restored from
+ * sessionStorage or a URL, where a bad value should reset rather than crash).
+ */
+export type PageSize = number & { readonly [PAGE_SIZE]: true };
+
+const MAX_PAGE_SIZE_VALUE = 200;
+
 /** The API's page cap; `page_size` is validated `ge=1, le=200`. */
-export const MAX_PAGE_SIZE = 200;
+export const MAX_PAGE_SIZE = MAX_PAGE_SIZE_VALUE as PageSize;
+
+/** What a table opens on when nothing has been remembered for it. */
+export const DEFAULT_PAGE_SIZE = 25 as PageSize;
+
+/**
+ * A page size, or a `RangeError` naming what was wrong with it.
+ *
+ * For literals and computed values: if this throws, the call site is wrong, and
+ * failing at the first request beats serving one row for a year.
+ */
+export function pageSize(value: number): PageSize {
+  if (!Number.isInteger(value)) {
+    throw new RangeError(`page_size must be a whole number, got ${value}`);
+  }
+  if (value < 1 || value > MAX_PAGE_SIZE_VALUE) {
+    throw new RangeError(
+      `page_size must be between 1 and ${MAX_PAGE_SIZE_VALUE}, got ${value}`,
+    );
+  }
+  return value as PageSize;
+}
+
+/**
+ * A page size, clamped into range.
+ *
+ * For values that arrive from outside the code — sessionStorage, a query string,
+ * a saved view — where the right answer to nonsense is a usable default, not an
+ * exception in a render.
+ */
+export function toPageSize(value: number, fallback: PageSize = DEFAULT_PAGE_SIZE): PageSize {
+  if (!Number.isFinite(value)) return fallback;
+  const whole = Math.trunc(value);
+  return Math.min(Math.max(whole, 1), MAX_PAGE_SIZE_VALUE) as PageSize;
+}
 
 /**
  * Ceiling on `fetchEveryPage`, so "select all matching" can't walk a filterless
@@ -32,9 +85,16 @@ export interface CursorPage<T> {
   nextCursor: string | null;
 }
 
+/**
+ * THE canonical fetcher: one page of a listing, at the size asked for, after
+ * `cursor`. Everything else in this module is a read over one of these, and a
+ * resource should expose exactly one — bound to its filters by a closure — so
+ * that its paged read, its drain-all and its phone list cannot drift apart.
+ */
 export type FetchCursorPage<T> = (
-  pageSize: number,
+  size: PageSize,
   cursor: string | null,
+  signal?: AbortSignal,
 ) => Promise<CursorPage<T>>;
 
 /**
@@ -62,16 +122,25 @@ export interface PageSlice<T> {
   totalHint: number;
 }
 
-export function clampPageSize(pageSize: number, max = MAX_PAGE_SIZE): number {
-  return Math.min(Math.max(Math.trunc(pageSize), 1), max);
+/** @deprecated Use {@link pageSize} or {@link toPageSize}. */
+export function clampPageSize(size: number, max = MAX_PAGE_SIZE_VALUE): number {
+  return Math.min(Math.max(Math.trunc(size), 1), max);
+}
+
+/** Which page, and how big. Replaces a positional `(limit, offset)` pair. */
+export interface PageParams {
+  /** Zero-based. */
+  page: number;
+  pageSize: PageSize;
 }
 
 /**
- * Fetches the page at `offset`, walking (and discarding) the pages before it.
+ * The page at `start`, walking — and discarding — the pages before it.
  *
- * Reaching page 5 costs five requests. That is the price of a cursor API without
- * offsets, and it is why tables over this default to a 25-row page and lean on
- * filters instead of paging deep.
+ * Reaching page 5 costs five requests: the first four are fetched, parsed and
+ * thrown away, and the only thing kept from each is its cursor. That is the
+ * price of offset paging on a cursor API, and it is why `useServerList` keeps
+ * the cursors instead.
  *
  * **The exit guard is load-bearing.** Two apps guarded the walk with
  * `if (!cursor && remainingOffset > 0)`, which does not fire when the skip loop
@@ -83,21 +152,20 @@ export function clampPageSize(pageSize: number, max = MAX_PAGE_SIZE): number {
  * leaving "next" enabled on the last page. Checking `nextCursor` inside the
  * loop, before the offset is consulted, is what makes that unreachable.
  */
-export async function fetchPageSlice<T>(
-  limit: number,
-  offset: number,
+async function walkToOffset<T>(
+  size: PageSize,
+  start: number,
   fetchPage: FetchCursorPage<T>,
+  signal?: AbortSignal,
 ): Promise<PageSlice<T>> {
-  const pageSize = clampPageSize(limit);
-  const start = Math.max(0, Math.trunc(offset));
-
   let cursor: string | null = null;
   let remaining = start;
 
   while (remaining > 0) {
     const skipped: CursorPage<T> = await fetchPage(
-      Math.min(pageSize, remaining),
+      toPageSize(Math.min(size, remaining)),
       cursor,
+      signal,
     );
 
     // Ran out of rows before reaching the requested page — the caller is
@@ -111,14 +179,14 @@ export async function fetchPageSlice<T>(
     cursor = skipped.nextCursor;
   }
 
-  const page = await fetchPage(pageSize, cursor);
+  const page = await fetchPage(size, cursor, signal);
 
   // An endpoint that ignores `page_size` and answers with the whole table would
   // otherwise be reported as one enormous page, and `totalHint` would claim a
   // total the table cannot page through. Truncating says "there is more",
   // which is both true and navigable.
-  const overflowed = page.items.length > pageSize;
-  const items = overflowed ? page.items.slice(0, pageSize) : page.items;
+  const overflowed = page.items.length > size;
+  const items = overflowed ? page.items.slice(0, size) : page.items;
 
   // A SHORT page does not end the list; only an empty one or a missing cursor
   // does. The API fills a page by scanning and then trimming to what the caller
@@ -139,6 +207,39 @@ export async function fetchPageSlice<T>(
   };
 }
 
+/**
+ * The page at `params.page`, walking (and discarding) the pages before it.
+ *
+ * Prefer `useServerList`, which reaches the next page in ONE request by keeping
+ * the cursor the current page returned. Reach for this only where a call site is
+ * genuinely offset-shaped — an endpoint that pages by offset server-side, or a
+ * jump to a page no trail has visited.
+ */
+export async function fetchSlice<T>(
+  params: PageParams,
+  fetchPage: FetchCursorPage<T>,
+  signal?: AbortSignal,
+): Promise<PageSlice<T>> {
+  const page = Math.max(0, Math.trunc(params.page));
+  return walkToOffset(params.pageSize, page * params.pageSize, fetchPage, signal);
+}
+
+/**
+ * @deprecated Use {@link fetchSlice}, which takes a {@link PageSize} that cannot
+ * be `-1`. This clamps instead, which is how a sentinel became a one-row page.
+ */
+export async function fetchPageSlice<T>(
+  limit: number,
+  offset: number,
+  fetchPage: FetchCursorPage<T>,
+): Promise<PageSlice<T>> {
+  return walkToOffset(
+    toPageSize(limit),
+    Math.max(0, Math.trunc(offset)),
+    fetchPage,
+  );
+}
+
 export interface EveryPageResult<T> {
   items: T[];
   /** `true` when the cap stopped the walk before the last page. */
@@ -154,12 +255,13 @@ export interface EveryPageResult<T> {
 export async function fetchEveryPage<T>(
   fetchPage: FetchCursorPage<T>,
   cap = EVERY_PAGE_CAP,
+  signal?: AbortSignal,
 ): Promise<EveryPageResult<T>> {
   const items: T[] = [];
   let cursor: string | null = null;
 
   do {
-    const page: CursorPage<T> = await fetchPage(MAX_PAGE_SIZE, cursor);
+    const page: CursorPage<T> = await fetchPage(MAX_PAGE_SIZE, cursor, signal);
     items.push(...page.items);
     cursor = page.nextCursor;
 
