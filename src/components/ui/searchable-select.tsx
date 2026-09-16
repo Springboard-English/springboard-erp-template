@@ -3,6 +3,10 @@ import { Check, ChevronDown, Loader2, Search } from 'lucide-react';
 import { Popover as PopoverPrimitive } from 'radix-ui';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/context/I18nContext';
+// Relative, not `@/`: this module's types are emitted, and tsc writes an import
+// specifier into a .d.ts verbatim — a consumer would resolve `@/` against its
+// OWN src and silently get `any`. `scripts/check-dts-portable.mjs` enforces it.
+import { toPageSize, type FetchCursorPage } from '../../utils/cursorPagination';
 
 export interface SearchableSelectOption {
   value: string;
@@ -28,6 +32,35 @@ export interface SearchableSelectPage {
   options: SearchableSelectOption[];
   /** Cursor for the next page, or `null`/`undefined` when there are no more pages. */
   nextCursor?: string | null;
+}
+
+/**
+ * Adapts a resource's cursor page-fetcher into the {@link SearchableSelectProps.loadOptions}
+ * prop, so an inline-option fetcher can be an ordinary `FetchCursorPage` like
+ * every other list rather than a fifth page shape.
+ *
+ * `fetchPage` takes the query and RETURNS the fetcher, because a combobox's
+ * search is part of the request while `FetchCursorPage` is deliberately only
+ * `(size, cursor, signal)` — binding `q` in the closure is what keeps that
+ * signature the same for tables, exports and dropdowns alike.
+ *
+ * `extraOptions` pins sentinels such as an "All" entry, and only to the
+ * unfiltered first page — a sentinel repeated on page two, or surviving a
+ * search that excludes it, reads as a result.
+ */
+export function toLoadOptions<T>(
+  fetchPage: (query: string) => FetchCursorPage<T>,
+  toOption: (item: T) => SearchableSelectOption,
+  extraOptions: SearchableSelectOption[] = [],
+): (params: SearchableSelectLoadParams) => Promise<SearchableSelectPage> {
+  return async ({ query, cursor, pageSize, signal }) => {
+    const page = await fetchPage(query)(toPageSize(pageSize), cursor, signal);
+    const prefix = cursor === null && !query.trim() ? extraOptions : [];
+    return {
+      options: [...prefix, ...page.items.map(toOption)],
+      nextCursor: page.nextCursor,
+    };
+  };
 }
 
 const DEFAULT_PAGE_SIZE = 25;

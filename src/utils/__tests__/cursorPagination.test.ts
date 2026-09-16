@@ -1,8 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
 import {
+  DEFAULT_PAGE_SIZE,
   fetchEveryPage,
   fetchPageSlice,
+  fetchSlice,
   knownRowCount,
+  MAX_PAGE_SIZE,
+  pageSize,
+  toPageSize,
   type CursorPage,
 } from "../cursorPagination";
 
@@ -86,7 +91,9 @@ describe("fetchPageSlice", () => {
 
     await fetchPageSlice(1000, 0, fetchPage);
 
-    expect(fetchPage).toHaveBeenCalledWith(200, null);
+    // The third argument is the optional `AbortSignal`, passed through as
+    // `undefined` when the caller has none.
+    expect(fetchPage).toHaveBeenCalledWith(200, null, undefined);
   });
 
   // The regression that made this a shared module. erp-crm and erp-hrm both
@@ -162,6 +169,69 @@ describe("fetchEveryPage", () => {
 
     expect(result.items).toHaveLength(400);
     expect(result.truncated).toBe(false);
+  });
+});
+
+describe("pageSize", () => {
+  // The whole point of the brand. `-1` was a sentinel meaning "drain the list"
+  // in four apps; when the shared walk started clamping it to 1, nine exports
+  // wrote a single row and no compiler objected, because `-1` is a `number`.
+  it("refuses the sentinel that broke nine call sites", () => {
+    expect(() => pageSize(-1)).toThrow(RangeError);
+  });
+
+  it("refuses anything the API would reject", () => {
+    expect(() => pageSize(0)).toThrow(RangeError);
+    expect(() => pageSize(201)).toThrow(RangeError);
+    expect(() => pageSize(1.5)).toThrow(RangeError);
+    expect(() => pageSize(Number.NaN)).toThrow(RangeError);
+  });
+
+  it("accepts the range the API validates", () => {
+    expect(pageSize(1)).toBe(1);
+    expect(pageSize(25)).toBe(25);
+    expect(pageSize(200)).toBe(200);
+  });
+});
+
+describe("toPageSize", () => {
+  // For values arriving from sessionStorage or a URL, where the right answer to
+  // nonsense is a usable default rather than an exception inside a render.
+  it("clamps rather than throwing", () => {
+    expect(toPageSize(-1)).toBe(1);
+    expect(toPageSize(0)).toBe(1);
+    expect(toPageSize(999)).toBe(MAX_PAGE_SIZE);
+    expect(toPageSize(25.9)).toBe(25);
+  });
+
+  it("falls back when the value is not a number at all", () => {
+    expect(toPageSize(Number.NaN)).toBe(DEFAULT_PAGE_SIZE);
+    expect(toPageSize(Number.POSITIVE_INFINITY)).toBe(DEFAULT_PAGE_SIZE);
+    expect(toPageSize(Number.NaN, pageSize(50))).toBe(50);
+  });
+});
+
+describe("fetchSlice", () => {
+  it("takes a page index rather than an offset", async () => {
+    const fetchPage = listing(100);
+
+    const slice = await fetchSlice({ page: 2, pageSize: pageSize(25) }, fetchPage);
+
+    expect(slice.items[0].id).toBe(50);
+    expect(fetchPage).toHaveBeenCalledTimes(3);
+  });
+
+  it("agrees with the deprecated offset form", async () => {
+    const viaPage = await fetchSlice({ page: 2, pageSize: pageSize(25) }, listing(100));
+    const viaOffset = await fetchPageSlice(25, 50, listing(100));
+
+    expect(viaPage).toEqual(viaOffset);
+  });
+
+  it("treats a negative page as the first one", async () => {
+    const slice = await fetchSlice({ page: -3, pageSize: pageSize(25) }, listing(100));
+
+    expect(slice.items[0].id).toBe(0);
   });
 });
 
