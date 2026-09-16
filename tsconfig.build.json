@@ -9,5 +9,13 @@
   },
   "include": [
     "src"
+  ],
+  // Tests are excluded, or tsc emits a .d.ts for every one of them into dist/,
+  // which then ships to all five consumers. `files: ["dist"]` in package.json
+  // is no help — the stray declarations would be inside dist.
+  "exclude": [
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx",
+    "src/test"
   ]
 }
