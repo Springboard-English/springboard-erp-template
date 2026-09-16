@@ -108,6 +108,11 @@ export type { MobileBottomBarItem, MobileBottomBarProps } from "./components/Mob
 export { default as MobileMenuSheet } from "./components/layout/MobileMenuSheet";
 export type { MobileMenuSheetProps } from "./components/layout/MobileMenuSheet";
 export { default as useIsMobile, MOBILE_MEDIA_QUERY } from "./hooks/useIsMobile";
+// One server-paged list: the desktop table's props, the phone's infinite list,
+// and a cursor trail so Next costs one request and reopening a saved page costs
+// one rather than re-walking every page before it.
+export { default as useServerList } from "./hooks/useServerList";
+export type { UseServerListOptions, ServerList } from "./hooks/useServerList";
 export { default as useInfiniteList } from "./hooks/useInfiniteList";
 export type {
   InfiniteList,
