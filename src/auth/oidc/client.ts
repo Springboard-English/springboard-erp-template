@@ -248,9 +248,18 @@ export function markSigningOut(): void {
  * is back in without being asked for anything. On a shared machine that is the
  * whole problem.
  *
- * `id_token_hint` tells Hydra which session to end. Without it Hydra shows its
- * own "are you sure" screen, which we cannot style and the user has no reason
- * to expect.
+ * `id_token_hint` tells Hydra which session to end, and the two parameters go
+ * together or not at all: `post_logout_redirect_uri` on its own is a hard
+ * ERROR, not a softer logout. Hydra validates the redirect against the client
+ * the id_token names, so with no hint there is no client to validate against
+ * and it refuses the whole request —
+ *
+ *     Logout failed because query parameter post_logout_redirect_uri is set
+ *     but id_token_hint is missing.
+ *
+ * — on Hydra's own error page, which is where pressing Logout used to land.
+ * Without a hint we send neither and let Hydra ask and land on its own default;
+ * that is a worse sign-out, but it is a sign-out.
  */
 export function beginSignOut(): void {
     signingOut = true;
@@ -258,10 +267,16 @@ export function beginSignOut(): void {
     endSession();
 
     const params = new URLSearchParams();
-    if (hint) params.set("id_token_hint", hint);
-    params.set("post_logout_redirect_uri", OIDC_CONFIG.postLogoutRedirectUri);
+    if (hint) {
+        params.set("id_token_hint", hint);
+        params.set(
+            "post_logout_redirect_uri",
+            OIDC_CONFIG.postLogoutRedirectUri,
+        );
+    }
 
+    const query = params.toString();
     window.location.assign(
-        `${OIDC_CONFIG.issuer}/oauth2/sessions/logout?${params}`,
+        `${OIDC_CONFIG.issuer}/oauth2/sessions/logout${query ? `?${query}` : ""}`,
     );
 }

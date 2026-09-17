@@ -7,21 +7,16 @@ import { isOidcEnabled, OIDC_CONFIG } from "./config";
 
 export interface OidcBootProps {
     children: ReactNode;
-    /** Shown after an explicit sign-out, instead of signing straight back in. */
+    /**
+     * @deprecated No longer rendered. A sign-out goes straight to the sign-in
+     * page rather than to an interstitial. Still accepted so that passing it is
+     * not a build error in an app that has not dropped the prop yet.
+     */
     signedOutMessage?: string;
+    /** @deprecated No longer rendered. See {@link OidcBootProps.signedOutMessage}. */
     signInLabel?: string;
 }
 
-function SignedOut({ message, label }: { message: string; label: string }) {
-    return (
-        <div style={{ padding: "3rem", textAlign: "center" }}>
-            <p>{message}</p>
-            <button type="button" onClick={() => void beginSignIn()}>
-                {label}
-            </button>
-        </div>
-    );
-}
 
 /**
  * Sits **above** `AuthProvider` and decides whether the app should boot at all.
@@ -44,11 +39,10 @@ function SignedOut({ message, label }: { message: string; label: string }) {
  * - **OIDC not configured**, which is every build without `VITE_OIDC_ISSUER`.
  *   Then this is a pass-through and the app boots exactly as it always has.
  */
-export default function OidcBoot({
-    children,
-    signedOutMessage = "You have been signed out.",
-    signInLabel = "Sign in",
-}: OidcBootProps) {
+// The two deprecated props are accepted and not destructured: naming them here
+// would be an unused binding, and dropping them from the interface would break
+// an app still passing one.
+export default function OidcBoot({ children }: OidcBootProps) {
     if (!isOidcEnabled()) {
         return <>{children}</>;
     }
@@ -60,15 +54,19 @@ export default function OidcBoot({
         return <>{children}</>;
     }
 
-    // Someone who just pressed Logout must not be signed straight back in.
-    // If the authorization server's own session somehow survived — a failed
-    // RP-initiated logout, a missing `id_token_hint` — an automatic redirect
-    // would complete silently and land them exactly where they left. That is
-    // indistinguishable from a broken Logout button, so after an explicit
-    // sign-out we stop and let them choose.
-    if (consumeLogoutToSignInTransition()) {
-        return <SignedOut message={signedOutMessage} label={signInLabel} />;
-    }
+    // Someone who just pressed Logout goes to the sign-in page, not to an
+    // interstitial telling them they signed out. It is the same redirect as
+    // below; the flag is still consumed here so it cannot survive into the next
+    // boot and be read as a sign-out that never happened.
+    //
+    // This is safe only because RP-initiated logout actually ends Hydra's
+    // session now — it was sending `post_logout_redirect_uri` with no
+    // `id_token_hint`, which Hydra refuses outright. While that was broken, an
+    // automatic redirect here would have completed silently against the
+    // surviving session and put the person straight back where they were, with
+    // nothing on screen to say the Logout button had failed. If that regresses,
+    // this is where it hides.
+    consumeLogoutToSignInTransition();
 
     // Read during render rather than in an effect, deliberately: an effect runs
     // after the children mount, which is precisely the mount we are trying to

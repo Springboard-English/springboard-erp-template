@@ -11,27 +11,26 @@
 // an Authorization header.
 //
 // So a normal request sends **no cookies at all** — `credentials: "omit"`,
-// applied here rather than trusted to each call site. Four requests are the
-// exception, and they are the auth exchange itself: sign-in, Google sign-in,
-// sign-out and refresh. They go through `fetchAuthExchange`, which is not
-// exported from the package, so sending cookies is an argument with a name
-// rather than something any caller can opt into. The refresh cookie is
-// untouched by all of this, which is what keeps SSO across the springboard.vn
-// apps working: an app that opens with an empty memory refreshes into a session
-// without anyone typing a password.
+// applied here rather than trusted to each call site. What is left of the
+// cookie exchange is sign-out, through `fetchAuthExchange`, which is not
+// exported from the package: sending cookies is an argument with a name rather
+// than something any caller can opt into.
+//
+// **Renewal is OIDC's, not the API's.** All five apps are OIDC clients and the
+// first-party refresh flow is retired — the OAuth login page returns an
+// accepted challenge and no first-party session, so the cookie that flow needed
+// has not existed for a while. SSO across the springboard.vn apps is Hydra's
+// session now, which is what makes an app opening with an empty memory silent:
+// it re-authorizes rather than refreshing.
 import { getEndpoint } from "../config/api";
 import { NetworkError } from "./apiErrors";
-import {
-  armAccessTokenFromResponse,
-  clearAccessToken,
-  getAccessToken,
-} from "../auth/accessToken";
+import { clearAccessToken, getAccessToken } from "../auth/accessToken";
+import { refreshSession } from "../auth/oidc/client";
 
 export interface FetchWithRefreshOptions extends RequestInit {
   skipRefresh?: boolean;
 }
 
-let refreshPromise: Promise<boolean> | null = null;
 let forceLogoutPromise: Promise<void> | null = null;
 const RATE_LIMIT_STATUS = 429;
 const MAX_RETRY_AFTER_RETRIES = 1;
@@ -138,29 +137,22 @@ function shouldAttemptRefresh(response: Response): boolean {
 }
 
 /**
- * Trade the refresh cookie for a new access token, once at a time.
+ * Renew the access token, once at a time.
  *
- * Single-flight: a screen that fires five queries at boot gets one refresh, not
- * five — which also matters because refresh tokens rotate server-side, so
- * parallel refreshes would invalidate each other.
+ * **This is the OIDC refresh now.** It used to POST the API's `/refresh` with
+ * the first-party refresh COOKIE — a flow that is retired: all five apps are
+ * OIDC clients, and the OAuth login page returns an accepted challenge and no
+ * first-party session, so there has been no cookie for it to send. It could
+ * only ever fail, and the cost of it failing is not nothing: a failed refresh
+ * tears the session down and notifies, so a single 401 anywhere logged the
+ * person out instead of renewing them.
+ *
+ * `refreshSession` holds the single-flight itself — refresh tokens rotate, so
+ * two in parallel invalidate each other — which is why there is no second
+ * promise kept here.
  */
 export async function refreshAccessToken(): Promise<boolean> {
-  if (!refreshPromise) {
-    refreshPromise = (async () => {
-      // The refresh token IS the credential here, and the reply carries the
-      // new access token.
-      const refreshResponse = await exchangeForAccessToken(getEndpoint("refresh"), {
-        method: "POST",
-        headers: { Accept: "application/json" },
-      });
-
-      return refreshResponse.ok;
-    })().finally(() => {
-      refreshPromise = null;
-    });
-  }
-
-  return refreshPromise;
+  return refreshSession();
 }
 
 async function forceLogoutAndNotify(): Promise<void> {
@@ -227,30 +219,6 @@ export async function fetchAuthExchange(
   options: RequestInit,
 ): Promise<Response> {
   return fetchWithRetryAfter(input, { ...options, credentials: "include" });
-}
-
-/**
- * Trade credentials for an access token: cookies out, token in, store armed.
- *
- * Sign-in, Google sign-in and refresh are the same three steps — ask for the
- * token in the body, send the cookies, arm the store from the reply — and each
- * used to spell all three out. Forgetting the last one is silent: the request
- * succeeds, nothing throws, and the app simply behaves as though nobody signed
- * in. Owning the sequence here is the point of this function; `logout` keeps the
- * plain exchange above, since it ends a session rather than starting one.
- */
-export async function exchangeForAccessToken(
-  input: string,
-  options: RequestInit,
-): Promise<Response> {
-  const target = new URL(input);
-  target.searchParams.set("token_in_body", "true");
-
-  const response = await fetchAuthExchange(target.toString(), options);
-  if (response.ok) {
-    await armAccessTokenFromResponse(response);
-  }
-  return response;
 }
 
 export async function fetchWithRefresh(
