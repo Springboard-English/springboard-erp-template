@@ -11,26 +11,33 @@
 // an Authorization header.
 //
 // So a normal request sends **no cookies at all** — `credentials: "omit"`,
-// applied here rather than trusted to each call site. What is left of the
-// cookie exchange is sign-out, through `fetchAuthExchange`, which is not
-// exported from the package: sending cookies is an argument with a name rather
-// than something any caller can opt into.
+// applied here rather than trusted to each call site. The exceptions are the
+// auth exchange itself: sign-out, and the cookie refresh below. They go through
+// `fetchAuthExchange`, which is not exported from the package, so sending
+// cookies is an argument with a name rather than something any caller can opt
+// into.
 //
-// **Renewal is OIDC's, not the API's.** All five apps are OIDC clients and the
-// first-party refresh flow is retired — the OAuth login page returns an
-// accepted challenge and no first-party session, so the cookie that flow needed
-// has not existed for a while. SSO across the springboard.vn apps is Hydra's
-// session now, which is what makes an app opening with an empty memory silent:
-// it re-authorizes rather than refreshing.
+// **Renewal follows the session, not the app.** All five apps sign in through
+// OIDC and those sessions renew with a refresh_token grant — SSO across the
+// springboard.vn apps is Hydra's session now, which is what makes an app
+// opening with an empty memory silent: it re-authorizes rather than refreshing.
+// The first-party cookie refresh is NOT retired, only narrowed: Leap's guest
+// sign-in for public self-paced tests is not an OIDC session and has nothing
+// else to renew with. See `refreshAccessToken`.
 import { getEndpoint } from "../config/api";
 import { NetworkError } from "./apiErrors";
-import { clearAccessToken, getAccessToken } from "../auth/accessToken";
-import { refreshSession } from "../auth/oidc/client";
+import {
+  armAccessTokenFromResponse,
+  clearAccessToken,
+  getAccessToken,
+} from "../auth/accessToken";
+import { hasOidcSession, refreshSession } from "../auth/oidc/client";
 
 export interface FetchWithRefreshOptions extends RequestInit {
   skipRefresh?: boolean;
 }
 
+let refreshPromise: Promise<boolean> | null = null;
 let forceLogoutPromise: Promise<void> | null = null;
 const RATE_LIMIT_STATUS = 429;
 const MAX_RETRY_AFTER_RETRIES = 1;
@@ -137,22 +144,49 @@ function shouldAttemptRefresh(response: Response): boolean {
 }
 
 /**
- * Renew the access token, once at a time.
+ * Renew the access token, once at a time — by whichever means this session has.
  *
- * **This is the OIDC refresh now.** It used to POST the API's `/refresh` with
- * the first-party refresh COOKIE — a flow that is retired: all five apps are
- * OIDC clients, and the OAuth login page returns an accepted challenge and no
- * first-party session, so there has been no cookie for it to send. It could
- * only ever fail, and the cost of it failing is not nothing: a failed refresh
- * tears the session down and notifies, so a single 401 anywhere logged the
- * person out instead of renewing them.
+ * **An OIDC session renews with its own refresh token**, not by POSTing the
+ * API's `/refresh`. That is the sign-in path for all five apps, and the OAuth
+ * login page returns an accepted challenge and no first-party session, so there
+ * is no cookie for the old call to send: it could only fail, and a failed
+ * refresh tears the session down and notifies, which turns one 401 into a
+ * logout.
  *
- * `refreshSession` holds the single-flight itself — refresh tokens rotate, so
- * two in parallel invalidate each other — which is why there is no second
- * promise kept here.
+ * **But not every session is an OIDC one, and the cookie path is still
+ * load-bearing.** Leap signs a guest in at `POST /authenticate/guest` so a
+ * public self-paced test can be taken without an account: no authorization
+ * code, no OIDC refresh token, a first-party refresh COOKIE, and a 15-minute
+ * access token. Renewing that through Hydra is impossible — there is nothing to
+ * present — so a guest whose paper runs past fifteen minutes would be signed
+ * out **mid-exam**. `/refresh` is still answering 200 in production for exactly
+ * these sessions; it is not dead, it is narrower.
+ *
+ * So: OIDC when there is an OIDC session, the cookie otherwise.
  */
 export async function refreshAccessToken(): Promise<boolean> {
-  return refreshSession();
+  // `refreshSession` holds its own single-flight — refresh tokens rotate, so
+  // two in parallel invalidate each other.
+  if (hasOidcSession()) return refreshSession();
+
+  if (!refreshPromise) {
+    refreshPromise = (async () => {
+      // The refresh cookie IS the credential here, and the reply carries the
+      // new access token.
+      const target = new URL(getEndpoint("refresh"));
+      target.searchParams.set("token_in_body", "true");
+      const response = await fetchAuthExchange(target.toString(), {
+        method: "POST",
+        headers: { Accept: "application/json" },
+      });
+      if (response.ok) await armAccessTokenFromResponse(response);
+      return response.ok;
+    })().finally(() => {
+      refreshPromise = null;
+    });
+  }
+
+  return refreshPromise;
 }
 
 async function forceLogoutAndNotify(): Promise<void> {
