@@ -16,6 +16,7 @@ import {
 } from "../utils/cursorTrail";
 import { usePersistentFilter } from "../utils/viewFilterState";
 import useInfiniteList, { type InfiniteList } from "./useInfiniteList";
+import useIsMobile from "./useIsMobile";
 
 /**
  * One server-paged list: the desktop table, the phone's infinite list, and the
@@ -84,7 +85,14 @@ export interface UseServerListOptions<T> {
      */
     keepPreviousPage?: boolean;
 
-    /** Also drive a phone list from the same key and closure. */
+    /**
+     * Also drive a phone list from the same key and closure.
+     *
+     * Only ONE surface ever fetches: the numbered-page query is suppressed on a
+     * phone and the infinite list is suppressed off it, on `useIsMobile`. Pass
+     * `false` for a table that has no phone list at all — a detail panel, say —
+     * and nothing but the paged query runs.
+     */
     mobile?: boolean;
 }
 
@@ -158,10 +166,17 @@ export default function useServerList<T>({
     const page = cursors.length - 1;
     const cursor = cursors[page];
 
+    // Which surface is on screen. Both are mounted — the table is `hidden
+    // md:block` and the card list the reverse — so without this BOTH would
+    // fetch page one, doubling the request every list makes on open. Every
+    // hand-rolled pair this hook replaced gated on exactly this.
+    const isMobile = useIsMobile();
+    const showMobile = mobile && isMobile;
+
     const query = useQuery({
         queryKey: [...queryKey, pageSize, cursor],
         queryFn: ({ signal }) => fetchPage(pageSize, cursor, signal),
-        enabled,
+        enabled: enabled && !showMobile,
         ...(keepPreviousPage ? { placeholderData: keepPreviousData } : {}),
     });
 
@@ -217,7 +232,7 @@ export default function useServerList<T>({
     // scrolling N pages costs N(N+1)/2 requests; this costs N.
     const mobileList = useInfiniteList<T, string>({
         queryKey: [...queryKey, pageSize, "infinite"],
-        enabled: enabled && mobile,
+        enabled: enabled && showMobile,
         initialPageParam: null,
         fetchPage: async ({ pageParam, signal }) => {
             const result = await fetchPage(pageSize, pageParam, signal);
