@@ -223,4 +223,59 @@ describe("useServerList", () => {
         expect(second).toHaveBeenCalledTimes(1);
         expect(second.mock.calls[0]?.[1]).toBe("25");
     });
+
+    /**
+     * Both surfaces are always MOUNTED — the table is `hidden md:block` and the
+     * card list the reverse — so the only thing keeping them from both fetching
+     * is the viewport gate. Without it every list in the suite opens with two
+     * requests for page one instead of one.
+     */
+    describe("only one surface fetches", () => {
+        function setViewport(isMobile: boolean) {
+            window.matchMedia = ((query: string) =>
+                ({
+                    matches: isMobile,
+                    media: query,
+                    onchange: null,
+                    addListener: () => undefined,
+                    removeListener: () => undefined,
+                    addEventListener: () => undefined,
+                    removeEventListener: () => undefined,
+                    dispatchEvent: () => false,
+                }) as MediaQueryList) as typeof window.matchMedia;
+        }
+
+        it("leaves the phone list alone on a desktop", async () => {
+            setViewport(false);
+            const fetchPage = listing(100);
+            const { result } = renderList(fetchPage, { mobile: true });
+
+            await waitFor(() => expect(result.current.rows).toHaveLength(25));
+            expect(fetchPage).toHaveBeenCalledTimes(1);
+            expect(result.current.mobile.rows).toHaveLength(0);
+        });
+
+        it("leaves the numbered pages alone on a phone", async () => {
+            setViewport(true);
+            const fetchPage = listing(100);
+            const { result } = renderList(fetchPage, { mobile: true });
+
+            await waitFor(() =>
+                expect(result.current.mobile.rows).toHaveLength(25),
+            );
+            expect(fetchPage).toHaveBeenCalledTimes(1);
+            expect(result.current.rows).toHaveLength(0);
+        });
+
+        // The caller's gate is the whole list's, not just the table's: it is
+        // how a tabbed view keeps a list it is not showing from fetching.
+        it("fetches neither while the caller's gate is closed", async () => {
+            setViewport(true);
+            const fetchPage = listing(100);
+            renderList(fetchPage, { mobile: true, enabled: false });
+
+            await new Promise((resolve) => setTimeout(resolve, 20));
+            expect(fetchPage).not.toHaveBeenCalled();
+        });
+    });
 });
