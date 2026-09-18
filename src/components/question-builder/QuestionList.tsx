@@ -91,10 +91,19 @@ export default function QuestionList({
                 <SearchableSelect
                   value={question.value}
                   onValueChange={question.onChange}
-                  options={question.options.map((option) => ({
-                    value: option.value,
-                    label: option.label,
-                  }))}
+                  onOptionSelect={question.onOptionSelect}
+                  // Async mode ignores `options` wholesale, so the two are
+                  // passed as alternatives rather than layered.
+                  loadOptions={question.loadOptions}
+                  selectedOption={question.selectedOption}
+                  options={
+                    question.loadOptions
+                      ? undefined
+                      : (question.options ?? []).map((option) => ({
+                          value: option.value,
+                          label: option.label,
+                        }))
+                  }
                   placeholder={question.placeholder}
                   searchPlaceholder={question.searchPlaceholder}
                 />

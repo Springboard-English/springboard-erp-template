@@ -1,4 +1,11 @@
 import { type ReactNode } from "react";
+// Relative, not `@/`: these types are re-emitted in this module's .d.ts and tsc
+// writes the specifier verbatim. `scripts/check-dts-portable.mjs` enforces it.
+import type {
+  SearchableSelectLoadParams,
+  SearchableSelectOption,
+  SearchableSelectPage,
+} from "../ui/searchable-select";
 
 export interface QuestionBuilderOption {
   value: string;
@@ -41,7 +48,24 @@ export interface QuestionBuilderSelectQuestion
   type: "select";
   value: string;
   onChange: (value: string) => void;
-  options: QuestionBuilderOption[];
+  /**
+   * The whole option list, for a choice that is genuinely finite. For anything
+   * backed by a listing endpoint use {@link loadOptions} — filling this from a
+   * drained endpoint means the form cannot render until every row has arrived.
+   */
+  options?: QuestionBuilderOption[];
+  /**
+   * Cursor-paged options, fetched as the question is opened, searched and
+   * paged. Takes precedence over {@link options}, which the underlying
+   * `SearchableSelect` ignores entirely in async mode.
+   */
+  loadOptions?: (params: SearchableSelectLoadParams) => Promise<SearchableSelectPage>;
+  /**
+   * The selected option, for a {@link loadOptions} question — the chosen row
+   * may not be on any page that has been loaded.
+   */
+  selectedOption?: SearchableSelectOption;
+  onOptionSelect?: (option: SearchableSelectOption) => void;
   placeholder?: string;
   searchPlaceholder?: string;
 }
