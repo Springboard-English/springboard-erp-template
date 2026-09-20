@@ -138,6 +138,33 @@ describe("beginSignIn", () => {
         });
     });
 
+    /**
+     * The guard must not latch on a flow that never left. `crypto.subtle` is
+     * undefined outside a secure context and `http://` still answers on these
+     * hosts, so this is reachable — and a latched guard would leave the tab
+     * unable to sign in for the life of the page.
+     */
+    it("can be retried after a failure that never reached the redirect", async () => {
+        const config = await import("../config");
+        config.configureOidc({ issuer: "https://auth.test", clientId: "app" });
+        const { beginSignIn } = await import("../client");
+
+        const subtle = crypto.subtle;
+        Object.defineProperty(crypto, "subtle", {
+            configurable: true,
+            value: undefined,
+        });
+        await expect(beginSignIn("/a")).rejects.toThrow();
+        expect(assigned).toHaveLength(0);
+
+        Object.defineProperty(crypto, "subtle", {
+            configurable: true,
+            value: subtle,
+        });
+        await beginSignIn("/a");
+        expect(assigned).toHaveLength(1);
+    });
+
     it("starts one flow per page load however often it is called", async () => {
         const config = await import("../config");
         config.configureOidc({ issuer: "https://auth.test", clientId: "app" });

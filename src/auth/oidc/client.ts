@@ -187,25 +187,36 @@ export async function beginSignIn(returnTo?: string): Promise<void> {
     if (authorizing) return;
     authorizing = true;
 
-    const verifier = randomUrlSafe();
-    const state = randomUrlSafe(16);
+    // Released if we never get as far as navigating. The guard is meant to stop
+    // a second flow racing one already on its way out; a flow that died here is
+    // not on its way anywhere, and latching would leave the tab unable to try
+    // again for the life of the page. `crypto.subtle` is the way this happens:
+    // it is undefined outside a secure context, and `http://` still answers on
+    // these hosts.
+    try {
+        const verifier = randomUrlSafe();
+        const state = randomUrlSafe(16);
 
-    sessionStorage.setItem(VERIFIER_KEY, verifier);
-    sessionStorage.setItem(STATE_KEY, state);
-    if (returnTo) sessionStorage.setItem(RETURN_KEY, returnTo);
+        sessionStorage.setItem(VERIFIER_KEY, verifier);
+        sessionStorage.setItem(STATE_KEY, state);
+        if (returnTo) sessionStorage.setItem(RETURN_KEY, returnTo);
 
-    const params = new URLSearchParams({
-        client_id: OIDC_CONFIG.clientId,
-        response_type: "code",
-        scope: OIDC_CONFIG.scope,
-        redirect_uri: OIDC_CONFIG.redirectUri,
-        audience: OIDC_CONFIG.audience,
-        state,
-        code_challenge: await s256(verifier),
-        code_challenge_method: "S256",
-    });
+        const params = new URLSearchParams({
+            client_id: OIDC_CONFIG.clientId,
+            response_type: "code",
+            scope: OIDC_CONFIG.scope,
+            redirect_uri: OIDC_CONFIG.redirectUri,
+            audience: OIDC_CONFIG.audience,
+            state,
+            code_challenge: await s256(verifier),
+            code_challenge_method: "S256",
+        });
 
-    window.location.assign(`${OIDC_CONFIG.issuer}/oauth2/auth?${params}`);
+        window.location.assign(`${OIDC_CONFIG.issuer}/oauth2/auth?${params}`);
+    } catch (error) {
+        authorizing = false;
+        throw error;
+    }
 }
 
 interface TokenResponse {
