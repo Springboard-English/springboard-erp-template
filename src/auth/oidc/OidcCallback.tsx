@@ -4,7 +4,13 @@ import { useNavigate } from "react-router-dom";
 import { fetchWithRefresh } from "../../api_calls/fetchWithRefresh";
 import { API_CONFIG } from "../../config/api";
 import { useAuth } from "../../context/AuthContext";
-import { completeSignIn, endSession } from "./client";
+import {
+    clearAuthRetries,
+    completeSignIn,
+    endSession,
+    OidcAuthError,
+    retryAuthorization,
+} from "./client";
 import { OIDC_CONFIG } from "./config";
 
 export interface OidcCallbackProps {
@@ -56,13 +62,30 @@ export default function OidcCallback({
                 // v2 reads answer in an envelope; be tolerant of both shapes.
                 setAuthenticatedUser(body?.objects?.[0] ?? body);
 
+                clearAuthRetries();
                 navigate(returnTo, { replace: true });
             } catch (caught) {
+                // A flow that lost the CSRF race is not a failed sign-in, it is
+                // a tab that has to go round again — and saying so out loud is
+                // worse than useless, because the sentence Hydra sends is about
+                // its own cookie store and the person reading it can do nothing
+                // with it. Run the flow again instead; this page keeps saying
+                // "Signing you in…" while it does. See `OidcAuthError`.
+                const raced =
+                    caught instanceof OidcAuthError && caught.retryable;
+                if (raced && (await retryAuthorization())) return;
+
                 endSession();
+                clearAuthRetries();
                 setError(
-                    caught instanceof Error
-                        ? caught.message
-                        : "Sign-in failed. Please try again.",
+                    raced
+                        ? // The budget is spent, so this is the one case where
+                          // the race is worth naming. Hydra's own sentence is
+                          // about its cookie store and would only mislead.
+                          "Sign-in kept being interrupted, usually by this app being open in more than one tab. Close the others and try again."
+                        : caught instanceof Error
+                          ? caught.message
+                          : "Sign-in failed. Please try again.",
                 );
             }
         })();

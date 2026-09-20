@@ -16,11 +16,14 @@ export { configureOidc, isOidcEnabled, OIDC_CONFIG } from "./auth/oidc/config";
 export {
   beginSignIn,
   beginSignOut,
+  clearAuthRetries,
   completeSignIn,
   endSession,
   hasOidcSession,
   markSigningOut,
+  OidcAuthError,
   refreshSession,
+  retryAuthorization,
 } from "./auth/oidc/client";
 export {
   markLogoutToSignInTransition,

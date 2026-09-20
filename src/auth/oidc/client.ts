@@ -20,6 +20,105 @@ import { OIDC_CONFIG } from "./config";
 const VERIFIER_KEY = "oidc.verifier";
 const STATE_KEY = "oidc.state";
 const RETURN_KEY = "oidc.return_to";
+const RETRY_KEY = "oidc.retries";
+
+/**
+ * How many times one tab may restart an authorization that came back
+ * retryable. Three covers a browser restoring a handful of tabs of the same app
+ * at once (see {@link OidcAuthError}); past that something is wrong in a way a
+ * fourth redirect will not fix, and looping would hide it.
+ */
+const MAX_AUTH_RETRIES = 3;
+
+/**
+ * An authorization the server refused, carrying the OAuth2 `error` code.
+ *
+ * The code is what decides whether to retry, and it has to be the code rather
+ * than the sentence: `error_description` is English prose from Hydra that can
+ * be reworded in any release, while `error` is the protocol.
+ */
+export class OidcAuthError extends Error {
+    readonly code: string;
+
+    constructor(code: string, description?: string | null) {
+        super(description || code);
+        this.name = "OidcAuthError";
+        this.code = code;
+    }
+
+    /**
+     * Whether starting a fresh authorization is likely to succeed.
+     *
+     * **`request_forbidden` is the one that matters, and it is not the caller's
+     * fault.** Hydra names its login CSRF cookie per CLIENT —
+     * `ory_hydra_login_csrf_<hash(client_id)>`, verified against production —
+     * so two authorization flows for the same app in one browser share one
+     * cookie and the second overwrites the first. The first flow can then never
+     * be verified, and Hydra sends the app
+     *
+     *     error=request_forbidden
+     *     error_description=The request is not allowed. The CSRF value from the
+     *     token does not match the CSRF value from the data store.
+     *
+     * That is what a browser restoring several tabs of the same app does: each
+     * tab boots with an empty in-memory token, each calls `beginSignIn`, and
+     * every one but the last dies here. Nothing is wrong with the session — the
+     * tab simply lost a race — so the answer is to run the flow again, which by
+     * then usually completes silently against the session the winning tab
+     * established.
+     *
+     * Everything else is deliberately NOT retried. `invalid_scope` in
+     * particular is how a scope missing from the Hydra client registration
+     * presents, and it takes sign-in down for everyone: retrying would turn a
+     * loud outage into a redirect loop that hammers the authorization server
+     * and tells nobody why.
+     */
+    get retryable(): boolean {
+        return this.code === "request_forbidden";
+    }
+}
+
+function readRetries(): number {
+    return Number(sessionStorage.getItem(RETRY_KEY)) || 0;
+}
+
+/**
+ * Restart an authorization that lost the CSRF race, if this tab has tries left.
+ *
+ * Returns false when the budget is spent, which is the caller's cue to show the
+ * error instead. The wait is **jittered**, and that is the load-bearing part:
+ * the tabs arriving here are the ones that just collided, so retrying them all
+ * on the same tick would collide them again. Spreading them over a second lets
+ * one land at a time.
+ */
+export async function retryAuthorization(): Promise<boolean> {
+    const attempt = readRetries() + 1;
+    if (attempt > MAX_AUTH_RETRIES) return false;
+
+    sessionStorage.setItem(RETRY_KEY, String(attempt));
+    await new Promise((resolve) =>
+        window.setTimeout(resolve, Math.random() * 250 * 2 ** attempt),
+    );
+
+    // The one caller allowed to start a second flow in one page load. Today the
+    // callback route never calls `beginSignIn` itself, so the guard would not be
+    // set anyway — but relying on that makes this a silent no-op the day it
+    // changes, and a no-op here leaves the screen saying "Signing you in…" for
+    // ever, which is a worse failure than the one being fixed.
+    authorizing = false;
+
+    // No `returnTo`: the one this flow started with is still in sessionStorage,
+    // and `beginSignIn` only overwrites it when given a new one. A retry must
+    // land where the original attempt was headed, not at the callback route it
+    // is currently sitting on.
+    await beginSignIn();
+    return true;
+}
+
+/** Called once a sign-in completes, so the next failure starts from zero. */
+export function clearAuthRetries(): void {
+    sessionStorage.removeItem(RETRY_KEY);
+}
 
 /**
  * Set the moment a sign-out starts, and never cleared — the page is on its way
@@ -35,6 +134,9 @@ const RETURN_KEY = "oidc.return_to";
  * nothing.
  */
 let signingOut = false;
+
+/** Set once this page load has committed to an authorization. See `beginSignIn`. */
+let authorizing = false;
 
 /** In memory, deliberately. See the note at the top of this file. */
 let refreshToken: string | null = null;
@@ -74,6 +176,16 @@ export async function beginSignIn(returnTo?: string): Promise<void> {
     // session and reaches for the authorization server is too late, and would
     // undo the sign-out.
     if (signingOut) return;
+
+    // One flow per page load. `OidcBoot` calls this during RENDER — deliberately,
+    // so nothing below it mounts — and a render can happen more than once before
+    // `location.assign` commits. A second call would overwrite the verifier and
+    // state the first one stored while the first navigation was still in flight,
+    // so the code that came back could not be exchanged. Module state, so it
+    // resets with the page: a retry after a failed flow is a new load and is not
+    // blocked by this.
+    if (authorizing) return;
+    authorizing = true;
 
     const verifier = randomUrlSafe();
     const state = randomUrlSafe(16);
@@ -184,7 +296,7 @@ export async function completeSignIn(search: string): Promise<string> {
 
     const error = params.get("error");
     if (error) {
-        throw new Error(params.get("error_description") || error);
+        throw new OidcAuthError(error, params.get("error_description"));
     }
 
     const code = params.get("code");
