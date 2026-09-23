@@ -267,6 +267,18 @@ describe("useServerList", () => {
             expect(result.current.rows).toHaveLength(0);
         });
 
+        // A caller that copies `rows` into state from an effect re-runs it on
+        // every new reference; a fresh `[]` per render looped erp-hrm forever.
+        it("keeps the empty table rows the same array across renders on a phone", async () => {
+            setViewport(true);
+            const { result, rerender } = renderList(listing(100), { mobile: true });
+
+            await waitFor(() => expect(result.current.mobile.rows).toHaveLength(25));
+            const before = result.current.rows;
+            rerender();
+            expect(result.current.rows).toBe(before);
+        });
+
         // The caller's gate is the whole list's, not just the table's: it is
         // how a tabbed view keeps a list it is not showing from fetching.
         it("fetches neither while the caller's gate is closed", async () => {

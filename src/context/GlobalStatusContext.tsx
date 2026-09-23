@@ -82,7 +82,13 @@ export function GlobalStatusProvider({ children }: { children: ReactNode }) {
         const normalizedKey = key.trim();
         const normalizedMessage = message.trim();
 
-        if (!normalizedKey || !normalizedMessage) {
+        // Already showing: no re-render. GlobalStatusQueryBridge re-registers on
+        // every query-cache event, and a render emits one, so bumping here loops.
+        if (
+            !normalizedKey ||
+            !normalizedMessage ||
+            errorStatusesRef.current.get(normalizedKey) === normalizedMessage
+        ) {
             return;
         }
 
@@ -106,7 +112,11 @@ export function GlobalStatusProvider({ children }: { children: ReactNode }) {
         const normalizedKey = key.trim();
         const normalizedMessage = message.trim();
 
-        if (!normalizedKey || !normalizedMessage) {
+        if (
+            !normalizedKey ||
+            !normalizedMessage ||
+            loadingStatusesRef.current.get(normalizedKey) === normalizedMessage
+        ) {
             return;
         }
 

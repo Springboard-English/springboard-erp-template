@@ -18,6 +18,11 @@ import { usePersistentFilter } from "../utils/viewFilterState";
 import useInfiniteList, { type InfiniteList } from "./useInfiniteList";
 import useIsMobile from "./useIsMobile";
 
+// On a phone the table's query is disabled and has no data, so a fresh `[]`
+// each render would hand callers a new `rows` every time — and any caller
+// syncing it into state through an effect loops forever.
+const NO_ROWS: never[] = [];
+
 /**
  * One server-paged list: the desktop table, the phone's infinite list, and the
  * state between them.
@@ -246,7 +251,7 @@ export default function useServerList<T>({
         },
     });
 
-    const rows = query.data?.items ?? [];
+    const rows = query.data?.items ?? NO_ROWS;
 
     return {
         rows,
