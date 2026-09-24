@@ -63,7 +63,42 @@ function renderHarness(kind: "query" | "mutation") {
     );
 }
 
+/** Row one's save fails only after row two's has taken the hook over. */
+function OverlappingMutations() {
+    const { mutate } = useMutation({
+        mutationFn: (row: number) =>
+            new Promise<void>((resolve, reject) =>
+                row === 1
+                    ? setTimeout(() => reject(new Error("Row 1 failed")), 50)
+                    : setTimeout(resolve, 5),
+            ),
+    });
+    const [settled, setSettled] = useState(false);
+    useEffect(() => {
+        mutate(1);
+        mutate(2);
+        const timer = setTimeout(() => setSettled(true), 120);
+        return () => clearTimeout(timer);
+    }, [mutate]);
+    return settled ? <p>settled</p> : null;
+}
+
 describe("GlobalStatusQueryBridge", () => {
+    it("ignores a run that fails after its hook has moved on", async () => {
+        render(
+            <QueryClientProvider client={new QueryClient()}>
+                <GlobalStatusProvider>
+                    <GlobalStatusQueryBridge />
+                    <StatusLine />
+                    <OverlappingMutations />
+                </GlobalStatusProvider>
+            </QueryClientProvider>,
+        );
+
+        await screen.findByText("settled");
+        expect(screen.getByTestId("status").textContent).toBe("none");
+    });
+
     it("shows a failed query while it is read, and drops it once nothing reads it", async () => {
         renderHarness("query");
         await waitFor(() =>

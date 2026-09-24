@@ -75,18 +75,25 @@ export default function GlobalStatusQueryBridge() {
                     syncQuery(event.query, event.type === "removed");
                 }
             });
+        // useMutation detaches when its component unmounts or it mutates
+        // again. A detached run that fails afterwards (several rows saved at
+        // once) has nobody to show it to, so it stays out of the bar.
+        const detached = new WeakSet<Mutation>();
         const unsubscribeMutations = queryClient
             .getMutationCache()
             .subscribe((event) => {
-                if ("mutation" in event && event.mutation) {
-                    // useMutation detaches when its component unmounts or it
-                    // mutates again, so the error leaves with its screen.
-                    syncMutation(
-                        event.mutation,
-                        event.type === "removed" ||
-                            event.type === "observerRemoved",
-                    );
+                if (!("mutation" in event) || !event.mutation) {
+                    return;
                 }
+                if (event.type === "observerRemoved") {
+                    detached.add(event.mutation);
+                } else if (event.type === "observerAdded") {
+                    detached.delete(event.mutation);
+                }
+                syncMutation(
+                    event.mutation,
+                    event.type === "removed" || detached.has(event.mutation),
+                );
             });
 
         return () => {
