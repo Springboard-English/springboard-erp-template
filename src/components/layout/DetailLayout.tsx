@@ -1045,3 +1045,95 @@ export function DetailTabbedSection<T extends string>({
         </section>
     );
 }
+
+/** Pulse placeholder the size of a line of text; the unit a pending view is drawn in. */
+export function DetailPulse({ className }: { className?: string }) {
+    return (
+        <span
+            aria-hidden
+            className={cn(
+                "inline-block h-4 w-40 animate-pulse rounded bg-muted/60 align-middle",
+                className,
+            )}
+        />
+    );
+}
+
+function DetailPendingFields() {
+    return (
+        <div className="grid gap-4 rounded-3xl border border-border/70 p-6 md:grid-cols-2">
+            {Array.from({ length: 10 }).map((_, index) => (
+                <div key={index} className="space-y-2">
+                    <DetailPulse className="block h-3 w-24 bg-muted/40" />
+                    <DetailPulse className="block h-10 w-full rounded-2xl" />
+                </div>
+            ))}
+        </div>
+    );
+}
+
+/**
+ * A detail view's real shell — breadcrumbs, header, tabs — drawn while its
+ * record loads, so navigation lands on the view instead of a spinner. Pass
+ * `message` for the error / not-found states so they keep the shell too.
+ */
+export function DetailPendingView<T extends string>({
+    breadcrumbs,
+    title,
+    actions,
+    tabs,
+    activeTab,
+    onTabChange,
+    message,
+    className,
+    onCloseFloating,
+}: {
+    breadcrumbs: BreadcrumbItem[];
+    /** Omitted while the record's name is unknown: a pulse bar stands in. */
+    title?: ReactNode;
+    actions?: ReactNode;
+    tabs?: Array<{ value: T; label: ReactNode }>;
+    activeTab?: T;
+    onTabChange?: (tab: T) => void;
+    message?: ReactNode;
+    className?: string;
+    onCloseFloating?: () => void;
+}) {
+    const body = message ? (
+        <div
+            role="status"
+            className="rounded-2xl border border-border/70 bg-card px-4 py-3 text-sm text-muted-foreground"
+        >
+            {message}
+        </div>
+    ) : (
+        <DetailPendingFields />
+    );
+
+    return (
+        <DetailView className={className} onCloseFloating={onCloseFloating}>
+            <DetailHeader
+                breadcrumbs={
+                    <DetailBreadcrumbs
+                        items={breadcrumbs}
+                        current={title ?? <DetailPulse className="h-6 w-48" />}
+                    />
+                }
+                actions={actions}
+            />
+            <div aria-busy={message ? undefined : true} className="contents">
+                {tabs && tabs.length > 0 ? (
+                    <DetailTabbedSection
+                        tabs={tabs}
+                        activeTab={activeTab ?? tabs[0].value}
+                        onChange={onTabChange ?? (() => undefined)}
+                    >
+                        {body}
+                    </DetailTabbedSection>
+                ) : (
+                    body
+                )}
+            </div>
+        </DetailView>
+    );
+}

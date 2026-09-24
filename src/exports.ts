@@ -54,6 +54,8 @@ export { default as LocaleSelect } from "./theme/LocaleSelect";
 
 export { SitemarkIcon } from "./components/CustomIcons";
 export { default as LazyViewFallback } from "./components/LazyViewFallback";
+export { lazyWithPreload, usePreloadOnIdle } from "./utils/lazyWithPreload";
+export type { PreloadableComponent } from "./utils/lazyWithPreload";
 export { default as MultiSelectDropdown } from "./components/MultiSelectDropdown";
 export type { MultiSelectDropdownProps } from "./components/MultiSelectDropdown";
 export { default as PatchRecordDialog } from "./components/PatchRecordDialog";
@@ -174,6 +176,8 @@ export {
   DetailActionPanel,
   DetailTabs,
   DetailTabbedSection,
+  DetailPendingView,
+  DetailPulse,
   BackgroundDetailViewContext,
 } from "./components/layout/DetailLayout";
 export type { DetailTabsClassNames } from "./components/layout/DetailLayout";
