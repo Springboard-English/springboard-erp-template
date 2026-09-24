@@ -29,9 +29,13 @@ export default function GlobalStatusQueryBridge() {
     const { registerErrorStatus, unregisterErrorStatus } = useGlobalStatus();
 
     useEffect(() => {
-        const syncQuery = (query: Query) => {
+        const syncQuery = (query: Query, removed = false) => {
+            // Only a query something on screen still reads: a failed detail
+            // left behind must not keep the bar red on every later page.
             const message =
-                query.state.status === "error"
+                !removed &&
+                query.state.status === "error" &&
+                query.getObserversCount() > 0
                     ? getErrorMessage(query.state.error)
                     : null;
             const key = getQueryErrorKey(query);
@@ -44,9 +48,9 @@ export default function GlobalStatusQueryBridge() {
             unregisterErrorStatus(key);
         };
 
-        const syncMutation = (mutation: Mutation) => {
+        const syncMutation = (mutation: Mutation, detached = false) => {
             const message =
-                mutation.state.status === "error"
+                !detached && mutation.state.status === "error"
                     ? getErrorMessage(mutation.state.error)
                     : null;
             const key = getMutationErrorKey(mutation);
@@ -59,21 +63,29 @@ export default function GlobalStatusQueryBridge() {
             unregisterErrorStatus(key);
         };
 
-        queryClient.getQueryCache().getAll().forEach(syncQuery);
-        queryClient.getMutationCache().getAll().forEach(syncMutation);
+        // Mutations are not synced on mount: one that failed before the bridge
+        // mounted belongs to a screen that is gone, and they expose no
+        // observer count to tell otherwise.
+        queryClient.getQueryCache().getAll().forEach((query) => syncQuery(query));
 
         const unsubscribeQueries = queryClient
             .getQueryCache()
             .subscribe((event) => {
                 if ("query" in event && event.query) {
-                    syncQuery(event.query);
+                    syncQuery(event.query, event.type === "removed");
                 }
             });
         const unsubscribeMutations = queryClient
             .getMutationCache()
             .subscribe((event) => {
                 if ("mutation" in event && event.mutation) {
-                    syncMutation(event.mutation);
+                    // useMutation detaches when its component unmounts or it
+                    // mutates again, so the error leaves with its screen.
+                    syncMutation(
+                        event.mutation,
+                        event.type === "removed" ||
+                            event.type === "observerRemoved",
+                    );
                 }
             });
 
