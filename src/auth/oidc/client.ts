@@ -250,15 +250,7 @@ function arm(tokens: TokenResponse): void {
     scheduleRefresh(tokens.expires_in);
 }
 
-/**
- * Renew a minute before expiry rather than waiting for a 401.
- *
- * `fetchWithRefresh` answers a 401 by POSTing `/refresh` with the refresh
- * COOKIE — which this flow never sets, because the OAuth login page
- * deliberately returns only an accepted challenge and no first-party session.
- * So that fallback cannot work for an OIDC session, and renewing early is what
- * keeps it from ever being reached.
- */
+/** Renew a minute before expiry rather than waiting for a 401. */
 function scheduleRefresh(expiresIn?: number): void {
     if (refreshTimer !== null) window.clearTimeout(refreshTimer);
     if (!expiresIn) return;

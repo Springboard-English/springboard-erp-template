@@ -5,11 +5,7 @@ import {
   useEffect,
   ReactNode,
 } from "react";
-import {
-  logout as apiLogout,
-  fetchCurrentUser,
-  UserInfo,
-} from "../api_calls/UserData";
+import { fetchCurrentUser, UserInfo } from "../api_calls/UserData";
 import {
   clearStoredUserInfo,
   getStoredUserInfo,
@@ -116,7 +112,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   /**
-   * All three sign-outs, in the one order that works.
+   * Sign out, in the one order that works.
    *
    * `markSigningOut` FIRST, before anything clears the user: setting
    * `user = null` re-renders, a route guard sees an unauthenticated app and
@@ -125,26 +121,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    * put the person straight back where they were — a Logout button that
    * visibly does nothing.
    *
-   * Then the API logout, which ends the first-party session; then
-   * `beginSignOut`, which is the only thing that ends **Hydra's**. Dropping our
-   * own tokens and stopping there would leave the SSO session alive, and the
-   * next authorization would sign them back in without asking. On a shared
-   * machine that is the whole problem.
+   * Then `beginSignOut`, which is the only thing that ends **Hydra's** session.
+   * Dropping our own tokens and stopping there would leave the SSO session
+   * alive, and the next authorization would sign them back in without asking.
+   * On a shared machine that is the whole problem.
    */
   const logout = async () => {
     markSigningOut();
     markLogoutToSignInTransition();
-    try {
-      await apiLogout();
-    } catch (error) {
-      console.error("Logout API failed:", error);
-      // Continue with client-side logout even if API fails
-    } finally {
-      // Clear all local storage on logout, including UI preferences and caches.
-      clearAllLocalStorage();
-      setUser(null);
-      beginSignOut();
-    }
+    // Clear all local storage on logout, including UI preferences and caches.
+    clearAllLocalStorage();
+    setUser(null);
+    beginSignOut();
   };
 
   return (

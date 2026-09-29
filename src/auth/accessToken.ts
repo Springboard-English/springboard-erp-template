@@ -6,14 +6,12 @@
  * came to on one domain — and RFC 6265 only obliges a browser to keep 4096 bytes
  * per domain. WebKit stops exactly there, drops the access token, and every
  * request after a successful login answers 401: sign-in worked in desktop Chrome
- * and failed on iOS. So the API hands the token to the body instead
- * (`token_in_body=true`) and it is sent as a Bearer header from here.
+ * and failed on iOS. So the token is sent as a Bearer header from here.
  *
  * **Memory only, deliberately.** Nothing is written to localStorage or
- * sessionStorage: a reload starts with no token, calls `/refresh` with the
- * refresh cookie, and is signed in again before the first screen paints. The
- * durable credential stays the HttpOnly refresh cookie, which is also what
- * carries SSO across the springboard.vn apps — that is untouched by any of this.
+ * sessionStorage: a reload starts with no token and `OidcBoot` re-authorizes
+ * against Hydra, whose own session is what carries SSO across the
+ * springboard.vn apps.
  */
 
 // Plain module scope. The package ships two entry points — the component library
@@ -43,34 +41,4 @@ export function clearAccessToken(): void {
 /** When the token expires, as a Unix timestamp in seconds, if the API said. */
 export function getAccessTokenExpiry(): number | null {
   return expiresAt;
-}
-
-/**
- * Read the access token out of an auth response, if it carried one.
- *
- * Tolerates the older shape — an empty body, cookies only — so a front-end on
- * this version still works against an API that predates `token_in_body`, and so
- * an endpoint that has not been migrated does not throw here.
- */
-export async function armAccessTokenFromResponse(response: Response): Promise<void> {
-  const contentType = response.headers.get("content-type") || "";
-  if (!contentType.includes("application/json")) {
-    return;
-  }
-
-  try {
-    const body = (await response.clone().json()) as {
-      access_token?: unknown;
-      expires_at?: unknown;
-    };
-    if (typeof body?.access_token === "string" && body.access_token) {
-      setAccessToken(
-        body.access_token,
-        typeof body.expires_at === "number" ? body.expires_at : null,
-      );
-    }
-  } catch {
-    // A body that isn't the token response tells us nothing; the cookie path,
-    // if the API is still on it, has already done the work.
-  }
 }

@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { getAccessToken } from "../accessToken";
 import { consumeLogoutToSignInTransition } from "../transitionStorage";
 import { beginSignIn } from "./client";
-import { isOidcEnabled, OIDC_CONFIG } from "./config";
+import { OIDC_CONFIG } from "./config";
 
 export interface OidcBootProps {
     children: ReactNode;
@@ -23,8 +23,8 @@ export interface OidcBootProps {
  *
  * Why it has to be above it: `AuthProvider` bootstraps by calling
  * `/v2/users/me`, and treats failure as "logged out" — it clears the stored
- * user and the transport's 401 handling calls `/logout` and fires
- * `AUTH_SESSION_EXPIRED_EVENT` on the way. Under OIDC that is exactly what
+ * user and the transport's 401 handling fires `AUTH_SESSION_EXPIRED_EVENT`
+ * on the way. Under OIDC that is exactly what
  * happens on every reload, because the access token lives in memory and a
  * reload has none. The bootstrap would race the restore, and lose noisily.
  *
@@ -32,21 +32,13 @@ export interface OidcBootProps {
  * the authorization server instead. With a live Hydra session that round trip
  * is invisible; without one the user sees the sign-in page, which is correct.
  *
- * Two exemptions, and both matter:
- *
- * - **The callback route**, which is mid-flow and legitimately has no token
- *   yet. Redirecting from there would loop forever.
- * - **OIDC not configured**, which is every build without `VITE_OIDC_ISSUER`.
- *   Then this is a pass-through and the app boots exactly as it always has.
+ * One exemption: **the callback route**, which is mid-flow and legitimately
+ * has no token yet. Redirecting from there would loop forever.
  */
 // The two deprecated props are accepted and not destructured: naming them here
 // would be an unused binding, and dropping them from the interface would break
 // an app still passing one.
 export default function OidcBoot({ children }: OidcBootProps) {
-    if (!isOidcEnabled()) {
-        return <>{children}</>;
-    }
-
     const onCallback = window.location.pathname.endsWith(
         OIDC_CONFIG.callbackRoute,
     );

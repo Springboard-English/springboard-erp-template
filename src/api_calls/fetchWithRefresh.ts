@@ -10,35 +10,26 @@
 // arrives in the login body, lives in memory (see auth/accessToken.ts) and rides
 // an Authorization header.
 //
-// So a normal request sends **no cookies at all** — `credentials: "omit"`,
-// applied here rather than trusted to each call site. The exceptions are the
-// auth exchange itself: sign-out, and the cookie refresh below. They go through
-// `fetchAuthExchange`, which is not exported from the package, so sending
-// cookies is an argument with a name rather than something any caller can opt
-// into.
+// So a request sends **no cookies at all** — `credentials: "omit"`, applied
+// here rather than trusted to each call site. There are no exceptions: this
+// package holds no first-party session code. Every app signs in through OIDC
+// and renews with its refresh_token grant.
 //
-// **Renewal follows the session, not the app.** All five apps sign in through
-// OIDC and those sessions renew with a refresh_token grant — SSO across the
-// springboard.vn apps is Hydra's session now, which is what makes an app
-// opening with an empty memory silent: it re-authorizes rather than refreshing.
-// The first-party cookie refresh is NOT retired, only narrowed: Leap's guest
-// sign-in for public self-paced tests is not an OIDC session and has nothing
-// else to renew with. See `refreshAccessToken`.
-import { getEndpoint } from "../config/api";
+// The first-party `/refresh` cookie is what made a session switch issuers
+// mid-tab: a failed OIDC renewal fell back to it, and a stale cookie from an
+// old sign-in minted a first-party token carrying every role the person holds,
+// so whether a call was allowed depended on which token it happened to carry.
+// It is gone rather than guarded. The one session with no OIDC behind it — a
+// Leap guest — renews through `configureSessionRenewal`, which Leap owns.
 import { NetworkError } from "./apiErrors";
-import {
-  armAccessTokenFromResponse,
-  clearAccessToken,
-  getAccessToken,
-} from "../auth/accessToken";
+import { clearAccessToken, getAccessToken } from "../auth/accessToken";
 import { hasOidcSession, refreshSession } from "../auth/oidc/client";
 
 export interface FetchWithRefreshOptions extends RequestInit {
   skipRefresh?: boolean;
 }
 
-let refreshPromise: Promise<boolean> | null = null;
-let forceLogoutPromise: Promise<void> | null = null;
+let sessionRenewal: (() => Promise<boolean>) | null = null;
 const RATE_LIMIT_STATUS = 429;
 const MAX_RETRY_AFTER_RETRIES = 1;
 
@@ -137,79 +128,40 @@ export async function fetchWithRetryAfter(
  * case is having **no** token at all — a fresh tab, a reload — and the API
  * answers that with "Invalid token. Expected Bearer token, App token, or
  * Cookie.". Under the old rule that never refreshed, so every reload dropped the
- * user on the sign-in screen with a live session sitting in the refresh cookie.
+ * user on the sign-in screen with a live session still renewable.
  */
 function shouldAttemptRefresh(response: Response): boolean {
   return response.status === 401;
 }
 
 /**
- * Renew the access token, once at a time — by whichever means this session has.
+ * Renew a session that has no OIDC refresh token behind it.
  *
- * **An OIDC session renews with its own refresh token**, not by POSTing the
- * API's `/refresh`. That is the sign-in path for all five apps, and the OAuth
- * login page returns an accepted challenge and no first-party session, so there
- * is no cookie for the old call to send: it could only fail, and a failed
- * refresh tears the session down and notifies, which turns one 401 into a
- * logout.
+ * For an app whose users can hold a session this package did not mint — Leap's
+ * guests, signed in at `POST /authenticate/guest` to sit a public test. The app
+ * owns the whole exchange and must decide for itself whether the tab holds such
+ * a session: this is called on every 401 without an OIDC session, including a
+ * staff member's, and a renewer that answers for them brings back the
+ * issuer-switch bug. Return whether a new token was armed.
+ */
+export function configureSessionRenewal(
+  renew: (() => Promise<boolean>) | null,
+): void {
+  sessionRenewal = renew;
+}
+
+/**
+ * Renew the access token, once at a time.
  *
- * **But not every session is an OIDC one, and the cookie path is still
- * load-bearing.** Leap signs a guest in at `POST /authenticate/guest` so a
- * public self-paced test can be taken without an account: no authorization
- * code, no OIDC refresh token, a first-party refresh COOKIE, and a 15-minute
- * access token. Renewing that through Hydra is impossible — there is nothing to
- * present — so a guest whose paper runs past fifteen minutes would be signed
- * out **mid-exam**. `/refresh` is still answering 200 in production for exactly
- * these sessions; it is not dead, it is narrower.
- *
- * So: OIDC when there is an OIDC session, the cookie otherwise.
+ * An OIDC session renews with its own refresh token. Without one there is
+ * nothing to renew unless the app registered `configureSessionRenewal` — and a
+ * failed renewal tears the session down, so the next screen re-authorizes.
  */
 export async function refreshAccessToken(): Promise<boolean> {
   // `refreshSession` holds its own single-flight — refresh tokens rotate, so
   // two in parallel invalidate each other.
   if (hasOidcSession()) return refreshSession();
-
-  if (!refreshPromise) {
-    refreshPromise = (async () => {
-      // The refresh cookie IS the credential here, and the reply carries the
-      // new access token.
-      const target = new URL(getEndpoint("refresh"));
-      target.searchParams.set("token_in_body", "true");
-      const response = await fetchAuthExchange(target.toString(), {
-        method: "POST",
-        headers: { Accept: "application/json" },
-      });
-      if (response.ok) await armAccessTokenFromResponse(response);
-      return response.ok;
-    })().finally(() => {
-      refreshPromise = null;
-    });
-  }
-
-  return refreshPromise;
-}
-
-async function forceLogoutAndNotify(): Promise<void> {
-  if (!forceLogoutPromise) {
-    forceLogoutPromise = (async () => {
-      try {
-        await fetchAuthExchange(getEndpoint("logout"), {
-          method: "GET",
-          headers: {
-            Accept: "application/json",
-          },
-        });
-      } catch {
-        // Best effort: still clear client auth state even if logout request fails.
-      } finally {
-        window.dispatchEvent(new Event(AUTH_SESSION_EXPIRED_EVENT));
-      }
-    })().finally(() => {
-      forceLogoutPromise = null;
-    });
-  }
-
-  return forceLogoutPromise;
+  return sessionRenewal ? sessionRenewal() : false;
 }
 
 /** The request as it goes out: Bearer if we hold one, and never any cookies. */
@@ -225,34 +177,6 @@ function authedInit(init: RequestInit): RequestInit {
   // that request, and it would work everywhere except the browser this exists
   // for.
   return { ...init, headers, credentials: "omit" };
-}
-
-/**
- * The cookie half of the transport: sign-in, Google sign-in, sign-out.
- *
- * These used to call `fetchWithRetryAfter` directly, which read as "this one
- * opts out of the auth layer" when it is really the opposite — they are the auth
- * layer. Routing them here keeps every request in the package on one path, and
- * makes *sending cookies* an argument with a name rather than a choice of
- * function.
- *
- * No Bearer header: a token from a previous session says nothing about the
- * credentials being presented now. No refresh either — a 401 here means the
- * password or the Google credential was rejected, and refreshing out of it would
- * ask the API to renew a session that does not exist yet. For `/logout` it would
- * mint the very session being ended.
- *
- * **Not exported from the package's entry points**, deliberately: the one thing
- * that must never happen is a screen quietly putting the cookies back on the
- * wire, which would pass review, work in every desktop browser, and fail on a
- * phone. Callers inside this package import it from this module directly; apps
- * only ever see `fetchWithRefresh`.
- */
-export async function fetchAuthExchange(
-  input: string,
-  options: RequestInit,
-): Promise<Response> {
-  return fetchWithRetryAfter(input, { ...options, credentials: "include" });
 }
 
 export async function fetchWithRefresh(
@@ -271,12 +195,11 @@ export async function fetchWithRefresh(
   const refreshed = await refreshAccessToken();
   if (!refreshed) {
     clearAccessToken();
-    // Only tear down a session that existed. A first visit has no token and no
-    // refresh cookie, so its 401 is simply "not signed in" — and treating that
-    // as an expiry logged out and notified on every cold load of the sign-in
-    // page, which is both noise and a needless round trip.
+    // Only tear down a session that existed. A first visit has no token, so its
+    // 401 is simply "not signed in" — and treating that as an expiry notified
+    // on every cold load of the sign-in page.
     if (hadToken) {
-      await forceLogoutAndNotify();
+      window.dispatchEvent(new Event(AUTH_SESSION_EXPIRED_EVENT));
     }
     return response;
   }

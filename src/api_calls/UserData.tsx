@@ -1,7 +1,6 @@
 import { getEndpoint } from "../config/api";
-import { clearStoredUserInfo, setStoredUserInfo } from "../auth/userStorage";
-import { clearAccessToken } from "../auth/accessToken";
-import { fetchAuthExchange, fetchWithRefresh } from "./fetchWithRefresh";
+import { setStoredUserInfo } from "../auth/userStorage";
+import { fetchWithRefresh } from "./fetchWithRefresh";
 import { throwIfNotOk } from "./apiErrors";
 
 /**
@@ -15,9 +14,9 @@ import { throwIfNotOk } from "./apiErrors";
  *
  * A shared component library has no business owning an app's resource calls:
  * the endpoints, their shapes and their pagination belong to the app that
- * serves them. What DOES belong here is the credential exchange the package's
- * own SignIn, ResetPassword and AuthContext perform — sign in, sign out, and
- * read back who is signed in. That is what is left.
+ * serves them. What DOES belong here is what the package's own ResetPassword
+ * and AuthContext call — redeem a reset link, and read back who is signed in.
+ * Signing in and out are OIDC's (`auth/oidc/client.ts`).
  *
  * If you are about to add a resource call here, add it to the app instead.
  */
@@ -91,40 +90,12 @@ function getCurrentUserPayload(data: unknown): unknown {
     return data;
 }
 
-// `login` and `loginWithGoogle` are GONE (4.0.0). A password and a Google
-// credential are only ever seen by the API, which hosts the one login page as
-// the OIDC bridge in front of Hydra. An app signs in by redirecting there —
-// `AuthProvider.signIn()` — so a credential exchange in a front end has nothing
-// left to be. The endpoints themselves still exist and are unchanged; nothing
-// here calls them.
-
-export async function logout(): Promise<void> {
-    // Clearing the refresh cookie is the whole point, so this is an exchange
-    // too — and a 401 here must not trigger a refresh that mints the session we
-    // are trying to end.
-    const response = await fetchAuthExchange(getEndpoint("logout"), {
-        method: "GET",
-        headers: {
-            Accept: "application/json",
-        },
-    });
-
-    // The in-memory token outlives the cookie otherwise, and would keep working
-    // until it expired.
-    clearAccessToken();
-
-    await throwIfNotOk(response, "Logout failed");
-
-    clearStoredUserInfo();
-}
-
 export async function fetchCurrentUser(): Promise<UserInfo> {
     const response = await fetchWithRefresh(getEndpoint("currentUser"), {
         method: "GET",
         headers: {
             Accept: "application/json",
         },
-        credentials: "include",
     });
 
     await throwIfNotOk(response, "Failed to fetch current user");
@@ -156,7 +127,6 @@ export async function resetPassword(
                 "Content-Type": "application/x-www-form-urlencoded",
                 Accept: "application/json",
             },
-            credentials: "include",
             body: formData.toString(),
         },
     );

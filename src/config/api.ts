@@ -36,23 +36,15 @@ export const API_CONFIG = {
         return _baseURL;
     },
     endpoints: {
-        login: "/login/password",
-        authenticateGoogle: "/authenticate/google",
         currentUser: "/users/me",
-        refresh: "/refresh",
-        logout: "/logout",
         resetPassword: "/reset/password",
         resetPasswordAuthorised: "/authenticate/reset",
     },
 } as const;
 
-// Auth predates the `/v2` prefix and is served unversioned; `currentUser` is
-// the one endpoint here that is not.
+// Password reset predates the `/v2` prefix and is served unversioned;
+// `currentUser` is not.
 const UNVERSIONED_ENDPOINTS: ReadonlySet<keyof typeof API_CONFIG.endpoints> = new Set([
-    "login",
-    "authenticateGoogle",
-    "refresh",
-    "logout",
     "resetPassword",
     "resetPasswordAuthorised",
 ]);

@@ -12,7 +12,7 @@ export { default as OidcBoot } from "./auth/oidc/OidcBoot";
 export type { OidcBootProps } from "./auth/oidc/OidcBoot";
 export { default as OidcCallback } from "./auth/oidc/OidcCallback";
 export type { OidcCallbackProps } from "./auth/oidc/OidcCallback";
-export { configureOidc, isOidcEnabled, OIDC_CONFIG } from "./auth/oidc/config";
+export { configureOidc, OIDC_CONFIG } from "./auth/oidc/config";
 export {
   beginSignIn,
   beginSignOut,
@@ -330,6 +330,7 @@ export {
   fetchWithRefresh,
   fetchWithRetryAfter,
   refreshAccessToken,
+  configureSessionRenewal,
   AUTH_SESSION_EXPIRED_EVENT,
 } from "./api_calls/fetchWithRefresh";
 export {
@@ -337,7 +338,6 @@ export {
   setAccessToken,
   clearAccessToken,
   getAccessTokenExpiry,
-  armAccessTokenFromResponse,
 } from "./auth/accessToken";
 
 // Why a request failed, rather than that it did. `NetworkError` arrives on its

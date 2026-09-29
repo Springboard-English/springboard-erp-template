@@ -1,13 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
- * Renewal follows the SESSION, not the app.
+ * Renewal is OIDC, or whatever the app registered — never the API's `/refresh`.
  *
- * An OIDC session renews with its refresh_token grant. A guest sitting a public
- * self-paced test on Leap has no OIDC session at all — `POST /authenticate/guest`
- * hands back a first-party refresh COOKIE and a 15-minute access token — so if
- * this only ever asked Hydra, that guest is signed out mid-exam. `/refresh` is
- * still answering 200 in production for exactly those sessions.
+ * A failed OIDC renewal used to fall back to the first-party refresh cookie,
+ * and a stale cookie from an old sign-in minted a token from a different issuer
+ * carrying every role the person holds. So nothing here may reach the API.
  */
 describe("refreshAccessToken", () => {
     beforeEach(() => {
@@ -30,31 +28,42 @@ describe("refreshAccessToken", () => {
 
         expect(await refreshAccessToken()).toBe(true);
         expect(refreshSession).toHaveBeenCalledOnce();
-        // Nothing was asked of the API: no cookie exchange went out.
         expect(fetchSpy).not.toHaveBeenCalled();
     });
 
-    it("falls back to the refresh cookie for a guest, who has no OIDC session", async () => {
-        const refreshSession = vi.fn().mockResolvedValue(false);
+    it("fails without an OIDC session and sends nothing", async () => {
         vi.doMock("../../auth/oidc/client", () => ({
             hasOidcSession: () => false,
-            refreshSession,
+            refreshSession: vi.fn(),
         }));
-        const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(
-            new Response(JSON.stringify({ access_token: "fresh", expires_at: 1 }), {
-                status: 200,
-                headers: { "Content-Type": "application/json" },
-            }),
-        );
+        const fetchSpy = vi.spyOn(globalThis, "fetch");
 
         const { refreshAccessToken } = await import("../fetchWithRefresh");
 
-        expect(await refreshAccessToken()).toBe(true);
-        expect(refreshSession).not.toHaveBeenCalled();
+        expect(await refreshAccessToken()).toBe(false);
+        expect(fetchSpy).not.toHaveBeenCalled();
+    });
 
-        const [url, init] = fetchSpy.mock.calls[0] as [string, RequestInit];
-        expect(String(url)).toContain("/refresh");
-        // The cookie IS the credential here, so this one request must send it.
-        expect(init.credentials).toBe("include");
+    it("asks the app's renewer, and only when there is no OIDC session", async () => {
+        const refreshSession = vi.fn().mockResolvedValue(true);
+        let oidc = false;
+        vi.doMock("../../auth/oidc/client", () => ({
+            hasOidcSession: () => oidc,
+            refreshSession,
+        }));
+        const renew = vi.fn().mockResolvedValue(true);
+
+        const { configureSessionRenewal, refreshAccessToken } = await import(
+            "../fetchWithRefresh"
+        );
+        configureSessionRenewal(renew);
+
+        expect(await refreshAccessToken()).toBe(true);
+        expect(renew).toHaveBeenCalledOnce();
+
+        oidc = true;
+        await refreshAccessToken();
+        expect(renew).toHaveBeenCalledOnce();
+        expect(refreshSession).toHaveBeenCalledOnce();
     });
 });

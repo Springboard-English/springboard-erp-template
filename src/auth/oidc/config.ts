@@ -1,13 +1,9 @@
 /// <reference types="vite/client" />
 
 /**
- * OIDC client configuration for signing in through Ory Hydra.
- *
- * **Unset means off.** Without an issuer and a client id an app behaves exactly
- * as it always has — `/login/password` and the Google button, tokens minted by
- * our own API. That is deliberate and matches how every other piece of this
- * pipeline shipped: inert until configured, one env var to enable, one to
- * revert.
+ * OIDC client configuration for signing in through Ory Hydra — the only way
+ * an app on this line signs in. The first-party password and Google sign-in
+ * live on `release/3.x`.
  *
  * Shaped like `API_CONFIG`: env defaults, getters, and one `configure*` call
  * for an app that needs to override them at boot. The getters are not
@@ -109,12 +105,3 @@ export const OIDC_CONFIG = {
         );
     },
 };
-
-/**
- * A function rather than a const, because `configureOidc` may run after this
- * module is imported — a const evaluated at import would answer for the state
- * before the app had configured anything.
- */
-export function isOidcEnabled(): boolean {
-    return Boolean(OIDC_CONFIG.issuer && OIDC_CONFIG.clientId);
-}

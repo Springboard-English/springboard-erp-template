@@ -109,7 +109,6 @@ export async function fetchUserNotifications(activeOnly = true): Promise<UserNot
     const response = await fetchWithRefresh(url.toString(), {
         method: "GET",
         headers: { Accept: "application/json" },
-        credentials: "include",
     });
     await throwIfNotOk(response, "Failed to fetch notifications");
     const data = await response.json();
@@ -130,7 +129,6 @@ export async function markNotificationRead(usersNotificationKey: string): Promis
             {
                 method: "PATCH",
                 headers: { Accept: "application/json", "Content-Type": "application/json" },
-                credentials: "include",
                 body: JSON.stringify({ read_status: true }),
             },
         );
