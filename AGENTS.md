@@ -247,3 +247,30 @@ when the tag itself is hidden by a collapsed sidebar.
 `WhatsNewNote` renders markdown through the guides' `SectionMarkdown`, so it
 inherits the same lazy-import boundary — keep it that way, or
 `scripts/check-node-safe.mjs` will fail the build.
+
+## Push notifications (`PushNotificationsToggle`, since 4.9.0)
+
+`<PushNotificationsToggle app="lms" serviceWorkerUrl="/sw.js" />` in an app's
+account panel turns Web Push on for that browser. The API decides what is sent
+(the `web_push` channel in `springboard_cloud-api`); this package only
+registers, removes and tests the device (`api_calls/pushNotifications.ts`,
+`hooks/usePushNotifications.ts`).
+
+- **It renders nothing where push cannot be offered**: a server without VAPID
+  keys (the routes answer 503) or a browser with no Push API that installing
+  would not fix. On an iPhone or iPad in Safari it shows the two Add to Home
+  Screen steps instead, because iOS only exposes the Push API to a Home Screen
+  app. Mount it unconditionally.
+- **The service worker ships as `dist/push-sw.js`** (from `public/`, exported as
+  `@springboard-english/springboard-erp-template/push-sw.js`). Each app copies
+  it into its build output as `sw.js` and serves it `Cache-Control: no-cache` —
+  never with the immutable header its hashed assets get, or a worker can never
+  be updated.
+- **The worker has no `fetch` handler and caches nothing**, on purpose: each
+  app's release is its `index.html`, and a worker that cached it would keep
+  serving an old release after a deploy or a rollback. Do not add one.
+- Its notification icon is `icons/icon-192.png` relative to the worker's scope,
+  so each app ships that file beside its manifest.
+- **On mount the hook re-registers an existing subscription.** Registration is
+  idempotent on the endpoint, and re-sending repairs a server row lost after a
+  410 and moves a shared device to whoever is signed in now.
