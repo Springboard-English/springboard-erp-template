@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Input } from '@/components/ui/input';
+import { PhoneInput } from '@/components/ui/phone-input';
+import { isValidPhoneNumber } from '../utils/phone';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 // Relative, not `@/`: these types land in this module's emitted .d.ts, and tsc
 // writes the specifier verbatim — a consumer would resolve `@/` against its own
@@ -13,7 +15,8 @@ import { Textarea } from '@/components/ui/textarea';
 import FormTableDialog, { FormTableRow } from '@/components/dialogs/FormTableDialog';
 import { useI18n } from '@/context/I18nContext';
 
-export type PatchFieldType = 'text' | 'number' | 'date' | 'datetime' | 'boolean' | 'select';
+/** `tel`: a phone number, checked as one before the dialog will submit. */
+export type PatchFieldType = 'text' | 'number' | 'date' | 'datetime' | 'boolean' | 'select' | 'tel';
 
 export interface PatchFieldOption {
   label: string;
@@ -215,6 +218,17 @@ export default function PatchRecordDialog({
     await onSubmit(payload);
   };
 
+  // Only a changed phone is checked: a legacy value the user did not touch
+  // must not lock them out of editing the rest of the record.
+  const invalidPhone = rows.some(
+    (row) =>
+      row.type === 'tel'
+      && row.value !== row.initialValue
+      && typeof row.value === 'string'
+      && row.value.trim() !== ''
+      && !isValidPhoneNumber(row.value),
+  );
+
   return (
     <FormTableDialog
       open={open}
@@ -223,6 +237,8 @@ export default function PatchRecordDialog({
       description={description ?? t('patchRecord.description')}
       error={error}
       submitLabel={submitLabel ?? t('common.save')}
+      submitDisabled={invalidPhone}
+      submitDisabledReason={invalidPhone ? t('patchRecord.fixInvalid') : undefined}
       onClose={onClose}
       onSubmit={handleSubmit}
     >
@@ -276,6 +292,14 @@ export default function PatchRecordDialog({
                 }
                 placeholder={selectPlaceholder}
                 searchPlaceholder={t('patchRecord.searchField', undefined, { label: row.label.toLowerCase() })}
+              />
+            ) : row.type === 'tel' ? (
+              <PhoneInput
+                value={stringValue}
+                onChange={(value) => handleValueChange(row.key, value)}
+                readOnly={row.readOnly}
+                disabled={row.readOnly}
+                placeholder={row.placeholder ?? row.label}
               />
             ) : isMultiline ? (
               <Textarea

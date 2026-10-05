@@ -189,6 +189,7 @@ export { default as ExportCsvButton } from "./components/management/ExportCsvBut
 export type { AdvancedFiltersToggleProps } from "./components/management/AdvancedFiltersToggle";
 
 export * from "./utils/formatters";
+export * from "./utils/phone";
 export * from "./utils/urlQueryState";
 // Filter state that survives leaving and returning to a view. Was 233 lines
 // byte-identical in erp-hrm, erp-crm and lms, with a copy of its test in each.
@@ -234,6 +235,7 @@ export * from "./components/ui/checkbox";
 export * from "./components/ui/dialog";
 export * from "./components/ui/dropdown-menu";
 export * from "./components/ui/input";
+export * from "./components/ui/phone-input";
 export * from "./components/ui/label";
 export * from "./components/ui/popover";
 export * from "./components/ui/progress";
