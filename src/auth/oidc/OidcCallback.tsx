@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useHref, useNavigate } from "react-router-dom";
 
 import { fetchWithRefresh } from "../../api_calls/fetchWithRefresh";
 import { API_CONFIG } from "../../config/api";
@@ -20,6 +20,14 @@ export interface OidcCallbackProps {
     backLabel?: string;
 }
 
+function stripBasename(path: string, basename: string): string {
+    if (!basename) return path;
+    if (path === basename) return "/";
+    return path.startsWith(`${basename}/`) || path.startsWith(`${basename}?`)
+        ? path.slice(basename.length) || "/"
+        : path;
+}
+
 /**
  * Where Hydra sends the browser back with `?code=…&state=…`.
  *
@@ -34,6 +42,8 @@ export default function OidcCallback({
     backLabel = "Back to sign in",
 }: OidcCallbackProps = {}) {
     const navigate = useNavigate();
+    // The router's base path ("" at the root, "/crm" for CRM).
+    const basename = useHref("/").replace(/\/$/, "");
     const { setAuthenticatedUser } = useAuth();
     const [error, setError] = useState<string | null>(null);
     // React 18 mounts effects twice in StrictMode, and an authorization code is
@@ -63,7 +73,10 @@ export default function OidcCallback({
                 setAuthenticatedUser(body?.objects?.[0] ?? body);
 
                 clearAuthRetries();
-                navigate(returnTo, { replace: true });
+                // `OidcBoot` stores the browser path, base included, and
+                // `navigate` would prepend the base again — `/crm/crm/…`,
+                // which only the catch-all matches.
+                navigate(stripBasename(returnTo, basename), { replace: true });
             } catch (caught) {
                 // A flow that lost the CSRF race is not a failed sign-in, it is
                 // a tab that has to go round again — and saying so out loud is
@@ -89,7 +102,7 @@ export default function OidcCallback({
                 );
             }
         })();
-    }, [navigate, setAuthenticatedUser]);
+    }, [basename, navigate, setAuthenticatedUser]);
 
     if (error) {
         return (
@@ -98,9 +111,13 @@ export default function OidcCallback({
                 <button
                     type="button"
                     onClick={() =>
-                        navigate(signInRoute ?? OIDC_CONFIG.signInRoute, {
-                            replace: true,
-                        })
+                        navigate(
+                            stripBasename(
+                                signInRoute ?? OIDC_CONFIG.signInRoute,
+                                basename,
+                            ),
+                            { replace: true },
+                        )
                     }
                 >
                     {backLabel}
