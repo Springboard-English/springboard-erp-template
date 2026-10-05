@@ -27,10 +27,10 @@ describe("PhoneInput", () => {
     const input = renderPhone();
 
     await user.type(input, "0985/0385");
-    expect(screen.queryByText(/valid phone number/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/valid Vietnamese phone number/)).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "elsewhere" }));
-    expect(screen.getByText(/valid phone number/)).toBeInTheDocument();
+    expect(screen.getByText(/valid Vietnamese phone number/)).toBeInTheDocument();
     expect(input).toHaveAttribute("aria-invalid", "true");
   });
 
@@ -43,7 +43,7 @@ describe("PhoneInput", () => {
     expect(screen.getByText("Phone number is required.")).toBeInTheDocument();
 
     await user.type(input, "0912 345 678");
-    expect(screen.queryByText(/required|valid phone/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/required|valid Vietnamese phone/)).not.toBeInTheDocument();
     expect(input).toHaveAttribute("type", "tel");
   });
 });

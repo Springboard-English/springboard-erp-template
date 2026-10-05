@@ -22,10 +22,12 @@ function parse(value: string) {
     defaultCountry: DEFAULT_PHONE_REGION,
     extract: false,
   });
-  return parsed?.isValid() ? parsed : undefined;
+  // Vietnamese only: every number here is for Zalo ZNS, which delivers to
+  // nowhere else. The API refuses a foreign one with a 422.
+  return parsed?.isValid() && parsed.country === DEFAULT_PHONE_REGION ? parsed : undefined;
 }
 
-/** Whether `value` is exactly one valid phone number, in any local form. */
+/** Whether `value` is exactly one valid Vietnamese number, in any local form. */
 export function isValidPhoneNumber(value: string): boolean {
   return parse(value) !== undefined;
 }
@@ -36,19 +38,12 @@ export function toE164Phone(value: string): string | null {
 }
 
 /**
- * A stored number as a person reads it: national for Vietnam (`0912 345 678`),
- * international otherwise. Anything that does not parse is returned unchanged,
- * so a legacy value still shows.
+ * A stored number as a person reads it (`0912 345 678`). Anything that does
+ * not parse — a legacy or foreign value — is returned unchanged, so it still shows.
  */
 export function formatPhoneNumber(value: string | null | undefined): string {
   if (!value) {
     return '';
   }
-  const parsed = parse(value);
-  if (!parsed) {
-    return value;
-  }
-  return parsed.country === DEFAULT_PHONE_REGION
-    ? parsed.formatNational()
-    : parsed.formatInternational();
+  return parse(value)?.formatNational() ?? value;
 }
