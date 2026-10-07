@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useHref, useNavigate } from "react-router-dom";
 
 import { fetchWithRefresh } from "../../api_calls/fetchWithRefresh";
+import type { UserInfo } from "../../api_calls/UserData";
 import { API_CONFIG } from "../../config/api";
 import { useAuth } from "../../context/AuthContext";
 import {
@@ -18,6 +19,12 @@ export interface OidcCallbackProps {
     signInRoute?: string;
     pendingLabel?: string;
     backLabel?: string;
+    /**
+     * Runs once the user is loaded and stored, before navigating. Return `true`
+     * when it has taken the browser elsewhere itself — the callback then does
+     * not navigate. `returnTo` is the browser path, base included.
+     */
+    onSignedIn?: (user: UserInfo, returnTo: string) => boolean;
 }
 
 function stripBasename(path: string, basename: string): string {
@@ -40,6 +47,7 @@ export default function OidcCallback({
     signInRoute,
     pendingLabel = "Signing you in…",
     backLabel = "Back to sign in",
+    onSignedIn,
 }: OidcCallbackProps = {}) {
     const navigate = useNavigate();
     // The router's base path ("" at the root, "/crm" for CRM).
@@ -70,9 +78,11 @@ export default function OidcCallback({
                 }
                 const body = await response.json();
                 // v2 reads answer in an envelope; be tolerant of both shapes.
-                setAuthenticatedUser(body?.objects?.[0] ?? body);
+                const user = body?.objects?.[0] ?? body;
+                setAuthenticatedUser(user);
 
                 clearAuthRetries();
+                if (onSignedIn?.(user, returnTo)) return;
                 // `OidcBoot` stores the browser path, base included, and
                 // `navigate` would prepend the base again — `/crm/crm/…`,
                 // which only the catch-all matches.
@@ -102,7 +112,7 @@ export default function OidcCallback({
                 );
             }
         })();
-    }, [basename, navigate, setAuthenticatedUser]);
+    }, [basename, navigate, setAuthenticatedUser, onSignedIn]);
 
     if (error) {
         return (
