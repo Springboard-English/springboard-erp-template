@@ -324,6 +324,43 @@ export type { ChartLegendItem } from "./components/charts/ChartLegend";
 export { getChartPalette, useChartPalette } from "./components/charts/palette";
 export type { ChartColorMode, ChartPalette } from "./components/charts/palette";
 
+// The widget home: a board of user-arranged widgets saved in the user's own
+// `info`. The template draws the board, gallery and edit mode; an app supplies
+// a registry of `WidgetDefinition`s (each fetching its own data) and defaults.
+export { default as WidgetBoard } from "./components/widgets/WidgetBoard";
+export type { WidgetBoardProps } from "./components/widgets/WidgetBoard";
+export { default as useWidgetLayout } from "./components/widgets/useWidgetLayout";
+export type { UseWidgetLayoutOptions, WidgetLayoutState } from "./components/widgets/useWidgetLayout";
+export {
+  WidgetEmpty,
+  WidgetError,
+  WidgetList,
+  WidgetQueryState,
+  WidgetSkeleton,
+  WidgetStat,
+} from "./components/widgets/WidgetBodies";
+export type { WidgetListRow, WidgetQueryLike } from "./components/widgets/WidgetBodies";
+export {
+  availableWidgets,
+  isWidgetAvailable,
+  normaliseLayout,
+} from "./components/widgets/layout";
+export { isWidgetStack, WIDGET_SIZES } from "./components/widgets/types";
+export type {
+  AnyWidgetDefinition,
+  WidgetDefaults,
+  WidgetDefinition,
+  WidgetItem,
+  WidgetLayout,
+  WidgetLayoutEntry,
+  WidgetRegistry,
+  WidgetRenderProps,
+  WidgetSize,
+  WidgetStack,
+  WidgetStackChild,
+} from "./components/widgets/types";
+export { patchCurrentUserInfo } from "./api_calls/UserData";
+
 // The authed transport. Each app used to carry its own near-identical copy of
 // fetchWithRefresh — two were byte-for-byte this one — which meant a change to
 // how auth travels had to be made five times, and the iOS cookie bug had to be

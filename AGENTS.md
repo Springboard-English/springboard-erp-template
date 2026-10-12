@@ -204,6 +204,30 @@ passes `var(--rose-500)`. Two consequences:
 It follows the "no bare colour" rule the same way the others do: each column
 prints its count, and the highlighted-bin variant ships a legend.
 
+## Widget home (`src/components/widgets/`, since 4.10.0)
+
+A phone-style home page: `WidgetBoard` draws the grid, the gallery, edit mode
+(remove, resize, drag or menu reorder, stacks) and per-widget error boundaries.
+An app passes a `registry` of `WidgetDefinition`s and a `defaults(user)`.
+
+- **The split follows the rule above.** The template owns everything generic,
+  including writing the user's own `info` (`patchCurrentUserInfo`). Each
+  widget's `render` belongs to the app and fetches its own data — no resource
+  call lives here.
+- **The layout is stored in `user.info[storageKey]`, not localStorage.**
+  `logout()` runs `localStorage.clear()`, and a home should follow the user to
+  another device. A user who never customises stores nothing and keeps getting
+  the app's current defaults; saving a layout equal to the defaults stores `null`.
+- **Order, not coordinates.** The layout is a list packed with
+  `grid-flow-row-dense`, so one saved layout fits four columns and two.
+- **`normaliseLayout` repairs, it does not reject.** Unknown widgets, lost
+  scopes and unsupported sizes are dropped or reset one at a time. Never rename
+  a widget `id`: it is what users' saved layouts point at.
+- **dnd-kit is bundled and lazy.** It loads only in edit mode
+  (`WidgetSortableGrid`). It is not `external` because no app shares its context.
+- **Consumers must `@source` the whole `dist/` directory.** `dist/index.js` is
+  a re-export stub, and the classes live in the chunks next to it.
+
 ## Changelog (`src/components/changelog/`, since 1.20.0)
 
 `BuildTag` is the whole feature's front door. Given `changelog` it turns the
