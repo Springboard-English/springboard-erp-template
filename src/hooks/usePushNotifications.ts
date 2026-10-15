@@ -190,3 +190,52 @@ export function usePushNotifications({
         sendTest,
     };
 }
+
+export interface PushSetupState {
+    /** False until this device has been checked. */
+    ready: boolean;
+    /** Push could be turned on here and is not yet: worth a setup step. */
+    needed: boolean;
+}
+
+/**
+ * Whether a setup prompt should offer push on this device. Reads only the
+ * browser, never the server, so it is cheap to call wherever a prompt decides
+ * whether to open. A device that refused permission is not asked again (the
+ * browser would not show the prompt), and one with no Push API is skipped; an
+ * iPhone in a Safari tab counts as needed, since adding it to the Home Screen
+ * is the step.
+ */
+export function usePushSetupNeeded({
+    serviceWorkerUrl,
+    scope,
+}: Pick<UsePushNotificationsOptions, "serviceWorkerUrl" | "scope">): PushSetupState {
+    const [state, setState] = useState<PushSetupState>({ ready: false, needed: false });
+
+    useEffect(() => {
+        const support = pushSupport(readEnvironment());
+        if (support !== "supported") {
+            setState({ ready: true, needed: support === "needs-install" });
+            return;
+        }
+        if (Notification.permission !== "granted") {
+            setState({ ready: true, needed: Notification.permission === "default" });
+            return;
+        }
+        let cancelled = false;
+        (async () => {
+            try {
+                const reg = await navigator.serviceWorker.getRegistration(scope ?? serviceWorkerUrl);
+                const subscription = await reg?.pushManager.getSubscription();
+                if (!cancelled) setState({ ready: true, needed: !subscription });
+            } catch {
+                if (!cancelled) setState({ ready: true, needed: false });
+            }
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, [serviceWorkerUrl, scope]);
+
+    return state;
+}

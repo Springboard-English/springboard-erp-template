@@ -304,9 +304,10 @@ export {
 export { default as NotificationBell } from "./components/notifications/NotificationBell";
 export { default as PushNotificationsToggle } from "./components/notifications/PushNotificationsToggle";
 export type { PushNotificationsToggleProps } from "./components/notifications/PushNotificationsToggle";
-export { usePushNotifications } from "./hooks/usePushNotifications";
+export { usePushNotifications, usePushSetupNeeded } from "./hooks/usePushNotifications";
 export type {
     PushNotificationsState,
+    PushSetupState,
     UsePushNotificationsOptions,
 } from "./hooks/usePushNotifications";
 export {
