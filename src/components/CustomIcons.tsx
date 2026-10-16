@@ -1,4 +1,4 @@
-import sitemarkUrl from '../assets/sitemark.png';
+import sitemarkUrl from '../assets/sitemark.svg';
 
 export function SitemarkIcon() {
   return (
