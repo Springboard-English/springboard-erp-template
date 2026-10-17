@@ -1,6 +1,7 @@
 import {
   Suspense,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type ReactNode,
@@ -18,6 +19,7 @@ import MobileBottomBar, {
 } from "@/components/MobileBottomBar";
 import MobileMenuSheet from "@/components/layout/MobileMenuSheet";
 import { useGlobalStatusOptional } from "@/context/GlobalStatusContext";
+import { dismissBootScreen, isBootScreenShowing } from "@/boot/bootScreen";
 
 export interface DashboardNavItem {
   /** Stable id passed back to onTabSelect and compared against activeTab. */
@@ -193,6 +195,14 @@ function DashboardLayoutInner({
   const location = useLocation();
   const mainScrollRef = useRef<HTMLElement | null>(null);
 
+  // Mounting over the boot screen (springboardBoot() in the app's vite config):
+  // play the entrance once while the boot card lifts away. Read once, so a
+  // remount later in the session does not animate.
+  const [entering] = useState(isBootScreenShowing);
+  useLayoutEffect(() => {
+    if (entering) dismissBootScreen();
+  }, [entering]);
+
   const [collapsed, setCollapsed] = useState(() => {
     if (typeof window === "undefined") {
       return defaultCollapsed;
@@ -241,7 +251,12 @@ function DashboardLayoutInner({
   return (
     <>
       {headerContent ? (
-        <div className="pointer-events-none fixed inset-x-0 top-0 z-50 hidden h-12 items-center md:flex">
+        <div
+          className={cn(
+            "pointer-events-none fixed inset-x-0 top-0 z-50 hidden h-12 items-center md:flex",
+            entering && "sb-enter-fade",
+          )}
+        >
           <div className="pointer-events-none flex h-full w-full items-center justify-end px-6">
             <div className={cn("pointer-events-auto", classNames?.header)}>
               {headerContent}
@@ -255,6 +270,7 @@ function DashboardLayoutInner({
           className={cn(
             "sticky top-0 z-20 hidden h-screen shrink-0 border-r border-border/70 bg-card/95 transition-[width] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] md:block",
             collapsed ? "w-20" : "w-72",
+            entering && "sb-enter-sidebar",
             classNames?.sidebar,
           )}
         >
@@ -332,7 +348,7 @@ function DashboardLayoutInner({
           </div>
         </aside>
 
-        <div className="flex min-w-0 flex-1 flex-col">
+        <div className={cn("flex min-w-0 flex-1 flex-col", entering && "sb-enter-content")}>
           {/* Apps publish status into the desktop header, which is `md:flex` —
               so below `md` every message, errors included, had nowhere to
               render. This is that surface. Desktop keeps the header. */}

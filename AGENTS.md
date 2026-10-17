@@ -289,6 +289,30 @@ bump everywhere else.
   letterhead, `assets/sitemark.png` for the sign-in page): it is Python and
   cannot read this package. Change them together.
 - Emails keep a PNG on the LMS bucket, because email clients do not render SVG.
+- `sitemark.svg` lives in `public/`, not `src/assets/`, because the boot screen
+  ships it as a file too; `SitemarkIcon` still inlines it.
+
+## The boot screen (`springboardBoot()`, since 4.14.0)
+
+The hop from the accounts site's consent card into an app reads as one scene:
+the app's first paint is the same backdrop with the same card in the same
+place, and `DashboardLayout` lifts it away as the side nav slides in.
+
+- **An app opts in with one line in `vite.config`:**
+  `springboardBoot({ label: "HRM" })` from
+  `@springboard-english/springboard-erp-template/vite` (`public/vite-boot.mjs`,
+  plain Node, not part of the main entry). It writes `#sb-boot` into
+  index.html and links `boot.css` / `boot.js` as hashed files, never inline, so
+  a strict CSP needs no exception.
+- **Who takes it down:** `DashboardLayout` on mount (animated, once);
+  `OidcCallback` holds it while it exchanges the code and drops it on an error;
+  `boot.js` fades it ~1.5s after the app renders anything while no one holds it,
+  for pages that are neither. `holdBootScreen` / `dismissBootScreen` are
+  exported for an app page that needs the same.
+- **Keep it in step with accounts.springboard.vn**: `boot.css` copies its
+  CardShell geometry and the template's colour tokens; `boot.js` draws the same
+  Morse guilloche with the day's message (accounts' `public/guilloche.js`).
+  Measure both cards after changing either: they must sit on the same pixels.
 
 ## Push notifications (`PushNotificationsToggle`, since 4.9.0)
 

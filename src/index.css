@@ -106,3 +106,46 @@ body {
 .floating-detail[data-floating-collapsed="false"] [data-detail-tabs-wrap] {
     margin-bottom: 0.75rem;
 }
+
+/* DashboardLayout's entrance, played once as it takes over from the boot
+   screen (public/boot.css): the side nav slides in from the left and the page
+   rises, while the boot card lifts away above them. */
+@keyframes sb-enter-from-left {
+    from {
+        opacity: 0;
+        transform: translateX(-24px);
+    }
+}
+
+@keyframes sb-enter-from-below {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+}
+
+@keyframes sb-enter-fade {
+    from {
+        opacity: 0;
+    }
+}
+
+.sb-enter-sidebar {
+    animation: sb-enter-from-left 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+}
+
+.sb-enter-content {
+    animation: sb-enter-from-below 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.22s both;
+}
+
+.sb-enter-fade {
+    animation: sb-enter-fade 0.5s ease-out 0.3s both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sb-enter-sidebar,
+    .sb-enter-content,
+    .sb-enter-fade {
+        animation: sb-enter-fade 0.2s linear both;
+    }
+}

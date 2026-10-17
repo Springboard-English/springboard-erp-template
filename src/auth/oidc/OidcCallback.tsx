@@ -1,10 +1,15 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useHref, useNavigate } from "react-router-dom";
 
 import { fetchWithRefresh } from "../../api_calls/fetchWithRefresh";
 import type { UserInfo } from "../../api_calls/UserData";
 import { API_CONFIG } from "../../config/api";
 import { useAuth } from "../../context/AuthContext";
+import {
+    dismissBootScreen,
+    holdBootScreen,
+    isBootScreenShowing,
+} from "../../boot/bootScreen";
 import {
     clearAuthRetries,
     completeSignIn,
@@ -58,6 +63,16 @@ export default function OidcCallback({
     // single-use — a second exchange fails and would show an error over a
     // sign-in that actually worked.
     const started = useRef(false);
+    // The boot screen stays up while the code is exchanged, so the person sees
+    // the accounts card carry on into the app rather than "Signing you in…".
+    const [underBootScreen] = useState(isBootScreenShowing);
+
+    useLayoutEffect(() => holdBootScreen(), []);
+
+    useEffect(() => {
+        // An error is something to read, not to hide behind the card.
+        if (error) dismissBootScreen({ animate: false });
+    }, [error]);
 
     useEffect(() => {
         if (started.current) return;
@@ -135,6 +150,8 @@ export default function OidcCallback({
             </div>
         );
     }
+
+    if (underBootScreen) return null;
 
     return (
         <div style={{ padding: "3rem", textAlign: "center" }}>{pendingLabel}</div>

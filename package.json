@@ -1,7 +1,7 @@
 {
     "name": "@springboard-english/springboard-erp-template",
     "private": false,
-    "version": "4.13.0",
+    "version": "4.14.0",
     "type": "module",
     "repository": {
         "type": "git",
@@ -23,7 +23,11 @@
         },
         "./style.css": "./dist/springboard-erp-template.css",
         "./push-sw.js": "./dist/push-sw.js",
-        "./favicon.svg": "./dist/favicon.svg"
+        "./favicon.svg": "./dist/favicon.svg",
+        "./vite": {
+            "types": "./dist/vite-boot.d.mts",
+            "import": "./dist/vite-boot.mjs"
+        }
     },
     "scripts": {
         "dev": "vite",

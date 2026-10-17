@@ -1,4 +1,6 @@
-import sitemarkUrl from '../assets/sitemark.svg';
+// In public/ rather than assets/ because the boot screen (public/vite-boot.mjs)
+// ships it as a file too; this import still inlines it into the bundle.
+import sitemarkUrl from '../../public/sitemark.svg';
 import logoUrl from '../assets/logo.svg';
 
 interface LogoProps {

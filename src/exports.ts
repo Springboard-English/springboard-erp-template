@@ -12,6 +12,7 @@ export { default as OidcBoot } from "./auth/oidc/OidcBoot";
 export type { OidcBootProps } from "./auth/oidc/OidcBoot";
 export { default as OidcCallback } from "./auth/oidc/OidcCallback";
 export type { OidcCallbackProps } from "./auth/oidc/OidcCallback";
+export { dismissBootScreen, holdBootScreen, isBootScreenShowing } from "./boot/bootScreen";
 export { configureOidc, OIDC_CONFIG } from "./auth/oidc/config";
 export {
   beginSignIn,
