@@ -218,7 +218,49 @@ html.dark:has(#sb-boot) {
     }
 }
 
+/* DashboardLayout's entrance, played once as it takes over from this screen:
+   the side nav slides in from the left and the page rises. Here rather than
+   in src/index.css because no app imports the template's stylesheet, and an
+   app that has this file is exactly one that plays the entrance. */
+@keyframes sb-enter-from-left {
+    from {
+        opacity: 0;
+        transform: translateX(-24px);
+    }
+}
+
+@keyframes sb-enter-from-below {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+}
+
+.sb-enter-sidebar {
+    animation: sb-enter-from-left 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+}
+
+.sb-enter-content {
+    animation: sb-enter-from-below 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.22s both;
+}
+
+.sb-enter-fade {
+    animation: sbb-fade-in 0.5s ease-out 0.3s both;
+}
+
+@keyframes sbb-fade-in {
+    from {
+        opacity: 0;
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
+    .sb-enter-sidebar,
+    .sb-enter-content,
+    .sb-enter-fade {
+        animation: sbb-fade-in 0.2s linear both;
+    }
+
     #sb-boot.sbb-leaving,
     #sb-boot.sbb-leaving .sbb-main,
     #sb-boot.sbb-leaving .sbb-panel,
