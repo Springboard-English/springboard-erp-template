@@ -22,7 +22,8 @@
             "import": "./dist/index.js"
         },
         "./style.css": "./dist/springboard-erp-template.css",
-        "./push-sw.js": "./dist/push-sw.js"
+        "./push-sw.js": "./dist/push-sw.js",
+        "./favicon.svg": "./dist/favicon.svg"
     },
     "scripts": {
         "dev": "vite",
