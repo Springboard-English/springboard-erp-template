@@ -21,6 +21,7 @@ const VERIFIER_KEY = "oidc.verifier";
 const STATE_KEY = "oidc.state";
 const RETURN_KEY = "oidc.return_to";
 const RETRY_KEY = "oidc.retries";
+const EXTRA_PARAMS_KEY = "oidc.extra_params";
 
 /**
  * How many times one tab may restart an authorization that came back
@@ -110,8 +111,9 @@ export async function retryAuthorization(): Promise<boolean> {
     // No `returnTo`: the one this flow started with is still in sessionStorage,
     // and `beginSignIn` only overwrites it when given a new one. A retry must
     // land where the original attempt was headed, not at the callback route it
-    // is currently sitting on.
-    await beginSignIn();
+    // is currently sitting on. The extra parameters go round again too, or a
+    // guest's retry would come back as an ordinary sign-in.
+    await beginSignIn(undefined, readExtraParams());
     return true;
 }
 
@@ -171,7 +173,24 @@ async function s256(verifier: string): Promise<string> {
  * to this tab's flow. Two tabs signing in at once must not overwrite each
  * other's, and neither should outlive the tab.
  */
-export async function beginSignIn(returnTo?: string): Promise<void> {
+function readExtraParams(): Record<string, string> | undefined {
+    try {
+        const stored = sessionStorage.getItem(EXTRA_PARAMS_KEY);
+        return stored ? (JSON.parse(stored) as Record<string, string>) : undefined;
+    } catch {
+        return undefined;
+    }
+}
+
+/**
+ * `extraParams` ride the authorize request, for the sign-in page to read off
+ * Hydra's login request, e.g. Leap's `guest_join`. They never override a
+ * parameter this function sets.
+ */
+export async function beginSignIn(
+    returnTo?: string,
+    extraParams?: Record<string, string>,
+): Promise<void> {
     // A sign-out already owns this page. Anything that notices the cleared
     // session and reaches for the authorization server is too late, and would
     // undo the sign-out.
@@ -200,8 +219,11 @@ export async function beginSignIn(returnTo?: string): Promise<void> {
         sessionStorage.setItem(VERIFIER_KEY, verifier);
         sessionStorage.setItem(STATE_KEY, state);
         if (returnTo) sessionStorage.setItem(RETURN_KEY, returnTo);
+        if (extraParams) sessionStorage.setItem(EXTRA_PARAMS_KEY, JSON.stringify(extraParams));
+        else sessionStorage.removeItem(EXTRA_PARAMS_KEY);
 
         const params = new URLSearchParams({
+            ...extraParams,
             client_id: OIDC_CONFIG.clientId,
             response_type: "code",
             scope: OIDC_CONFIG.scope,
