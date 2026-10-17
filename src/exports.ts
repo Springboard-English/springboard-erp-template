@@ -52,7 +52,7 @@ export { default as ColorModeSelect } from "./theme/ColorModeSelect";
 export { default as ColorModeIconDropdown } from "./theme/ColorModeIconDropdown";
 export { default as LocaleSelect } from "./theme/LocaleSelect";
 
-export { SitemarkIcon } from "./components/CustomIcons";
+export { SitemarkIcon, LogoIcon } from "./components/CustomIcons";
 export { default as LazyViewFallback } from "./components/LazyViewFallback";
 export { lazyWithPreload, usePreloadOnIdle } from "./utils/lazyWithPreload";
 export type { PreloadableComponent } from "./utils/lazyWithPreload";

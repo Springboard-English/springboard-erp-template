@@ -272,6 +272,24 @@ when the tag itself is hidden by a collapsed sidebar.
 inherits the same lazy-import boundary — keep it that way, or
 `scripts/check-node-safe.mjs` will fail the build.
 
+## The logo (`SitemarkIcon`, `LogoIcon`, `favicon.svg`, since 4.13.0)
+
+This package holds the only copy of the logo the five apps use. An app imports
+`SitemarkIcon` (the horizontal badge) or `LogoIcon` (the square lockup) rather
+than keeping its own image, so a logo change is one release here and a version
+bump everywhere else.
+
+- **The favicon ships as `dist/favicon.svg`** (from `public/`). An app links it
+  from its `index.html` as
+  `/node_modules/@springboard-english/springboard-erp-template/dist/favicon.svg`.
+  Vite copies that file into the build under a hashed name and rewrites the
+  link. The package name on its own (`@springboard-english/.../favicon.svg`) is
+  left untouched by Vite and 404s in production.
+- **The API keeps its own copies** (`assets/logo.svg` for the PDF letterhead,
+  `assets/sitemark.svg` for the sign-in page): it is Python and cannot read this
+  package. Change them together.
+- Emails keep a PNG on the LMS bucket, because email clients do not render SVG.
+
 ## Push notifications (`PushNotificationsToggle`, since 4.9.0)
 
 `<PushNotificationsToggle app="lms" serviceWorkerUrl="/sw.js" />` in an app's
