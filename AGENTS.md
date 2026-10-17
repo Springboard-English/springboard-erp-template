@@ -285,9 +285,9 @@ bump everywhere else.
   Vite copies that file into the build under a hashed name and rewrites the
   link. The package name on its own (`@springboard-english/.../favicon.svg`) is
   left untouched by Vite and 404s in production.
-- **The API keeps its own copies** (`assets/logo.svg` for the PDF letterhead,
-  `assets/sitemark.svg` for the sign-in page): it is Python and cannot read this
-  package. Change them together.
+- **The API still keeps its own raster logo** (`assets/logo.jpg` for the PDF
+  letterhead, `assets/sitemark.png` for the sign-in page): it is Python and
+  cannot read this package. Change them together.
 - Emails keep a PNG on the LMS bucket, because email clients do not render SVG.
 
 ## Push notifications (`PushNotificationsToggle`, since 4.9.0)
