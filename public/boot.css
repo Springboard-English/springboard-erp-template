@@ -114,7 +114,7 @@ html.dark:has(#sb-boot) {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 4rem 1.25rem;
+    padding: 4rem 0.5rem;
 }
 
 .sbb-mark-small {
@@ -126,8 +126,21 @@ html.dark:has(#sb-boot) {
     max-width: 27.5rem;
 }
 
+/* A solid card at every width: without it the skeleton sits on the guilloche. */
 .sbb-card {
     overflow: hidden;
+    border: 1px solid color-mix(in oklab, var(--sbb-border) 60%, transparent);
+    border-radius: 28px;
+    background: var(--sbb-card);
+    padding: 2.25rem 1.5rem;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 28px -12px rgba(0, 0, 0, 0.12);
+}
+
+/* A phone shows mostly card; the waves are dimmed around it, as on accounts. */
+@media (max-width: 639px) {
+    .sbb-guilloche {
+        opacity: 0.35;
+    }
 }
 
 /* The accounts card's skeleton: what it shows while the browser is on its way
@@ -167,11 +180,7 @@ html.dark:has(#sb-boot) {
     }
 
     .sbb-card {
-        border: 1px solid color-mix(in oklab, var(--sbb-border) 60%, transparent);
-        border-radius: 28px;
-        background: var(--sbb-card);
         padding: 2.5rem;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 28px -12px rgba(0, 0, 0, 0.12);
     }
 }
 
