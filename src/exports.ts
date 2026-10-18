@@ -77,6 +77,9 @@ export {
 export { default as StatusBanner } from "./components/StatusBanner";
 export { default as BuildTag } from "./components/BuildTag";
 export type { BuildTagProps } from "./components/BuildTag";
+export { default as ManageAccountLink } from "./components/ManageAccountLink";
+export type { ManageAccountLinkProps } from "./components/ManageAccountLink";
+export { ACCOUNTS_PROFILE_URL } from "./config/accounts";
 // The changelog. `BuildTag` already wires all of it together — pass it the
 // generated commit list and, optionally, a what's-new note — so an app only
 // reaches for these directly to render the history somewhere else, or to test

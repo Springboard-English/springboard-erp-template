@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react";
-import { LogOut, Monitor, Moon, Sun, type LucideIcon } from "lucide-react";
+import { LogOut, Monitor, Moon, Sun, UserCog, type LucideIcon } from "lucide-react";
+import { ACCOUNTS_PROFILE_URL } from "@/config/accounts";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -195,6 +196,18 @@ export default function MobileMenuSheet({
           ) : null}
 
           <Separator />
+
+          {user && user.account_type !== "guest" ? (
+            <a
+              href={ACCOUNTS_PROFILE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors hover:bg-muted"
+            >
+              <UserCog className="size-4" />
+              {t("account.manage", "Manage account")}
+            </a>
+          ) : null}
 
           <button
             type="button"
