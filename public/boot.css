@@ -70,6 +70,28 @@ html.dark:has(#sb-boot) {
     opacity: 0.75;
 }
 
+/* The occasions boot.js marks on <html>: 20/10, Vietnamese Women's Day, in
+   rose and peach petals; 20/11, Teachers' Day, in sky and gold. */
+html[data-sb-occasion="womens-day"] .sbb-guilloche {
+    background: linear-gradient(
+        125deg,
+        color-mix(in oklab, oklch(0.62 0.2 0) 70%, transparent) 0%,
+        color-mix(in oklab, oklch(0.78 0.13 45) 60%, transparent) 50%,
+        color-mix(in oklab, oklch(0.6 0.2 340) 60%, transparent) 100%
+    );
+    opacity: 0.9;
+}
+
+html[data-sb-occasion="teachers-day"] .sbb-guilloche {
+    background: linear-gradient(
+        125deg,
+        color-mix(in oklab, oklch(0.62 0.14 245) 65%, transparent) 0%,
+        color-mix(in oklab, oklch(0.8 0.14 85) 65%, transparent) 50%,
+        color-mix(in oklab, oklch(0.6 0.15 260) 55%, transparent) 100%
+    );
+    opacity: 0.9;
+}
+
 /* Left panel: wide landscape screens only, as on the accounts site. */
 .sbb-panel {
     position: relative;
@@ -138,7 +160,8 @@ html.dark:has(#sb-boot) {
 
 /* A phone shows mostly card; the waves are dimmed around it, as on accounts. */
 @media (max-width: 639px) {
-    .sbb-guilloche {
+    .sbb-guilloche,
+    html[data-sb-occasion] .sbb-guilloche {
         opacity: 0.35;
     }
 }

@@ -18,6 +18,7 @@ import MobileBottomBar, {
   type MobileBottomBarItem,
 } from "@/components/MobileBottomBar";
 import MobileMenuSheet from "@/components/layout/MobileMenuSheet";
+import OccasionBackdrop from "@/components/layout/OccasionBackdrop";
 import { useGlobalStatusOptional } from "@/context/GlobalStatusContext";
 import { dismissBootScreen, isBootScreenShowing } from "@/boot/bootScreen";
 
@@ -348,7 +349,8 @@ function DashboardLayoutInner({
           </div>
         </aside>
 
-        <div className={cn("flex min-w-0 flex-1 flex-col", entering && "sb-enter-content")}>
+        <div className={cn("relative isolate flex min-w-0 flex-1 flex-col", entering && "sb-enter-content")}>
+          <OccasionBackdrop />
           {/* Apps publish status into the desktop header, which is `md:flex` —
               so below `md` every message, errors included, had nowhere to
               render. This is that surface. Desktop keeps the header. */}

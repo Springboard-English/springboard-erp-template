@@ -314,6 +314,15 @@ place, and `DashboardLayout` lifts it away as the side nav slides in.
   Morse guilloche with the day's message (accounts' `public/guilloche.js`).
   Measure both cards after changing either: they must sit on the same pixels.
 
+## Occasions (since 4.17.0)
+
+20/10 (Women's Day) and 20/11 (Teachers' Day), whole day in ICT, redraw the
+backgrounds: `boot.js` swaps the guilloche's message, wave shape and colours
+(`data-sb-occasion` on `<html>`, styled in `boot.css`), and `DashboardLayout`
+draws `OccasionBackdrop` behind every page (flowers; trees). The dates live in
+`utils/occasion.ts` and again in `boot.js`, which runs before the app; change
+both, and accounts' `guilloche.js`. `?sb-occasion=womens-day` previews one.
+
 ## Push notifications (`PushNotificationsToggle`, since 4.9.0)
 
 `<PushNotificationsToggle app="lms" serviceWorkerUrl="/sw.js" />` in an app's

@@ -7,6 +7,7 @@
 //    message in Morse. The message is the day's, not random: the accounts site
 //    is another origin and can't share a pick, but both sides can agree on
 //    today, so the pattern doesn't change on the hop from consent to the app.
+//    A few dates (OCCASIONS) redraw it with their own message and shape.
 // 3. A failsafe. DashboardLayout dismisses the screen as it mounts, and the
 //    OIDC callback holds it while it works; a page that is neither (a public
 //    page, an error) would otherwise sit under it forever.
@@ -41,15 +42,31 @@
     Q: "--.-", R: ".-.", S: "...", T: "-", U: "..-", V: "...-", W: ".--", X: "-..-",
     Y: "-.--", Z: "--..",
   };
+  // Days that redraw the backdrop: their own message, wave shape and colours
+  // (boot.css reads data-sb-occasion). Keyed by month-day in Vietnam's time.
+  var OCCASIONS = {
+    "10-20": { name: "womens-day", message: "HAPPY WOMENS DAY", amplitude: 56, period: 224 },
+    "11-20": { name: "teachers-day", message: "THANK YOU TEACHERS", amplitude: 18, period: 448 },
+  };
   var UNIT = 2;
-  var PERIOD = 320;
   var ROW = 14;
   var HEIGHT = 112;
   var STAGGER = 4;
 
-  // Days since the epoch in Vietnam's time zone, so it turns over at midnight there.
-  var day = Math.floor((Date.now() + 7 * 3600 * 1000) / 86400000);
-  var words = MESSAGES[day % MESSAGES.length].split(" ");
+  // Vietnam's time zone, so everything turns over at midnight there.
+  var now = new Date(Date.now() + 7 * 3600 * 1000);
+  var day = Math.floor(now.getTime() / 86400000);
+  var monthDay = ("0" + (now.getUTCMonth() + 1)).slice(-2) + "-" + ("0" + now.getUTCDate()).slice(-2);
+  var occasion = OCCASIONS[monthDay];
+  // ?sb-occasion=womens-day previews one on any day.
+  var preview = /[?&]sb-occasion=([\w-]+)/.exec(window.location.search);
+  if (preview) {
+    for (var key in OCCASIONS) if (OCCASIONS[key].name === preview[1]) occasion = OCCASIONS[key];
+  }
+  if (occasion) root.dataset.sbOccasion = occasion.name;
+  var PERIOD = occasion ? occasion.period : 320;
+  var AMPLITUDE = occasion ? occasion.amplitude : 36;
+  var words = (occasion ? occasion.message : MESSAGES[day % MESSAGES.length]).split(" ");
 
   // A dot is 1 unit lit, a dash 3; 1 dark between marks, 3 between letters,
   // 7 between words and before the message repeats.
@@ -80,11 +97,13 @@
     }
   }
 
+  // Enough rows past each edge that a tall wave still fills the tile.
+  var margin = Math.ceil(AMPLITUDE / ROW) + 1;
   var paths = "";
   for (var family = -1; family <= 1; family += 2) {
-    for (var row = -2; row <= HEIGHT / ROW + 2; row += 1) {
+    for (var row = -margin; row <= HEIGHT / ROW + margin; row += 1) {
       var y = row * ROW;
-      var d = "M0 " + y + "Q" + PERIOD / 4 + " " + (y + family * 36) + " " + PERIOD / 2 + " " + y;
+      var d = "M0 " + y + "Q" + PERIOD / 4 + " " + (y + family * AMPLITUDE) + " " + PERIOD / 2 + " " + y;
       for (var x = PERIOD; x <= width; x += PERIOD / 2) d += "T" + x + " " + y;
       var shift = (((row % STAGGER) + STAGGER) % STAGGER) * Math.round(length / STAGGER);
       paths += '<path pathLength="' + length + '" stroke-dashoffset="' + shift + '" d="' + d + '"/>';
