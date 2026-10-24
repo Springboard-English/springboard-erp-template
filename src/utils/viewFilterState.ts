@@ -3,13 +3,12 @@ import { useCallback, useRef, useState, type Dispatch, type SetStateAction } fro
 /**
  * Filter state that survives leaving and returning to a view.
  *
- * Backed by sessionStorage only. An earlier version also mirrored every field
- * into the URL query string, which is what the older lms/erp-crm tables do —
- * that was dropped deliberately. Keeping the two in sync meant per-field
- * encoding, precedence rules between URL and storage, and batching writes so
- * that filters applied in the same tick did not clobber each other's params.
- * The cost grew with every new filter and bought little: a filtered view is
- * working state, not something people link to.
+ * Backed by sessionStorage only, deliberately not mirrored into the URL query
+ * string. Keeping the two in sync would mean per-field encoding, precedence
+ * rules between URL and storage, and batching writes so that filters applied in
+ * the same tick do not clobber each other's params — a cost that grows with
+ * every filter and buys little: a filtered view is working state, not
+ * something people link to.
  *
  * Per-tab lifetime is the right one here — filters come back while you are
  * working, and start clean in a new tab.
@@ -182,13 +181,11 @@ export interface FilterOption {
  *
  * The select needs a `{ value, label }` pair to render anything other than its
  * placeholder, and a label cannot be derived from a key without another network
- * round trip. Persisting only the key therefore restored the filter — the query
- * really was filtered — while the panel showed "All employees", which reads as
+ * round trip. Persisting only the key would restore the filter — the query
+ * really is filtered — while the panel shows "All employees", which reads as
  * *no filter applied*. Worse than losing the filter, because it is untrue.
  *
- * Returns the same four values the call sites already used, so the JSX is
- * unchanged; only the two `useState`/`usePersistentFilter` declarations collapse
- * into one call.
+ * Returns `[value, setValue, option, setOption]`.
  */
 export function usePersistentOptionFilter(
   scope: string,

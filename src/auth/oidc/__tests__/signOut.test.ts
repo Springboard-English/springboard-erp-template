@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  * Hydra validates the redirect against the client the id_token names, so the
  * redirect alone is a hard error — "Logout failed because query parameter
  * post_logout_redirect_uri is set but id_token_hint is missing" — shown on
- * Hydra's own error page. That is what pressing Logout did.
+ * Hydra's own error page.
  */
 describe("beginSignOut", () => {
     let assigned: string;

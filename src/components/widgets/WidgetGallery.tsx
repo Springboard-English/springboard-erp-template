@@ -27,8 +27,8 @@ const PREVIEW_NATURAL_WIDTH: Record<WidgetSize, number> = { S: 220, M: 600, L: 6
 
 /**
  * A widget drawn at its real width and zoomed to fit the sheet, like a phone's
- * widget thumbnail. Rendering it at sheet width instead squashed wide layouts
- * (a seven-day week) into unreadable columns.
+ * widget thumbnail. Rendering it at sheet width instead would squash wide
+ * layouts (a seven-day week) into unreadable columns.
  */
 function ScaledPreview({ size, children }: { size: WidgetSize; children: ReactNode }) {
     const { ref, width } = useChartWidth<HTMLDivElement>(360);

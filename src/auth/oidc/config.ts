@@ -2,8 +2,7 @@
 
 /**
  * OIDC client configuration for signing in through Ory Hydra — the only way
- * an app on this line signs in. The first-party password and Google sign-in
- * live on `release/3.x`.
+ * an app signs in.
  *
  * Shaped like `API_CONFIG`: env defaults, getters, and one `configure*` call
  * for an app that needs to override them at boot. The getters are not
@@ -21,9 +20,8 @@ interface OidcOverrides {
     issuer: string;
     clientId: string;
     /**
-     * The scopes this app asks for. **Per app, deliberately** — the whole point
-     * of moving each SPA onto its own client is that they stop sharing one
-     * ceiling, and the measured overlap between them is 27%.
+     * The scopes this app asks for. **Per app, deliberately** — each SPA has
+     * its own client so that they do not share one scope ceiling.
      *
      * The default is the protocol minimum and nothing else, so an app that
      * forgets to state its scopes gets a token that reads no data rather than

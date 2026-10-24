@@ -6,7 +6,7 @@
 // one: Next pushes the cursor the current page handed back, Previous drops back
 // to one already on the trail, and the current page is simply its length.
 //
-// It is kept in sessionStorage (see `useCursorTable`) so someone who opens a
+// It is kept in sessionStorage (see `useServerList`) so someone who opens a
 // row from page 3 of a list comes back to page 3 — for one request rather than
 // the four an offset walk would spend re-reaching it. A cursor is only good for
 // the filters it was minted under, so the trail carries a fingerprint of them,

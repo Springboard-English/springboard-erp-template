@@ -173,8 +173,7 @@ export default function useServerList<T>({
 
     // Which surface is on screen. Both are mounted — the table is `hidden
     // md:block` and the card list the reverse — so without this BOTH would
-    // fetch page one, doubling the request every list makes on open. Every
-    // hand-rolled pair this hook replaced gated on exactly this.
+    // fetch page one, doubling the request every list makes on open.
     const isMobile = useIsMobile();
     const showMobile = mobile && isMobile;
 
@@ -232,9 +231,8 @@ export default function useServerList<T>({
 
     const resetPage = useCallback(() => setStoredTrail(""), [setStoredTrail]);
 
-    // The phone walks forward by CURSOR, not by page index. Every hand-rolled
-    // mobile list in the suite pages by index through an offset read, so
-    // scrolling N pages costs N(N+1)/2 requests; this costs N.
+    // The phone walks forward by CURSOR, not by page index. Paging by index
+    // through an offset read costs N(N+1)/2 requests for N pages; this costs N.
     const mobileList = useInfiniteList<T, string>({
         queryKey: [...queryKey, pageSize, "infinite"],
         enabled: enabled && showMobile,

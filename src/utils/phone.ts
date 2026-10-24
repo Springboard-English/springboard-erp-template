@@ -1,5 +1,5 @@
 // `/max`: the default build's metadata checks only a number's LENGTH, so
-// `0131-3721` passed as valid. The API's `phonenumbers` checks the real ranges.
+// `0131-3721` would pass as valid. The API's `phonenumbers` checks the real ranges.
 import { parsePhoneNumberFromString } from 'libphonenumber-js/max';
 
 /**
@@ -17,7 +17,7 @@ function parse(value: string) {
     return undefined;
   }
   // `extract: false`: by default the library pulls a number out of surrounding
-  // text, so "0912345678 (so Zalo)" passed here and was a 422 at the API.
+  // text, so "0912345678 (so Zalo)" would pass here and be a 422 at the API.
   const parsed = parsePhoneNumberFromString(trimmed, {
     defaultCountry: DEFAULT_PHONE_REGION,
     extract: false,

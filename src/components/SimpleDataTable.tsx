@@ -60,8 +60,8 @@ export interface SimpleDataTableProps<T> {
    * behind the card list that replaced it. This unmounts it instead.
    *
    * Opt-in rather than the default, because a table with no card list beside it
-   * is better cramped than absent: some views still have no mobile surface at
-   * all, and blanking them would be worse than the squeeze.
+   * is better cramped than absent: a view with no mobile surface would be left
+   * blank, which is worse than the squeeze.
    */
   desktopOnly?: boolean;
   /** Convenience alias for `classNames.root`. */
@@ -210,8 +210,7 @@ export default function SimpleDataTable<T>({
       const rootTopWithinContainer = Math.max(0, rootRect.top - containerRect.top);
       const containerVisibleHeight = container.clientHeight;
       // Measured whenever the ref is attached; the literal is only the
-      // first-paint fallback. Re-derived when controls moved to 44px — the
-      // footer's `size="sm"` buttons went 32px → 36px.
+      // first-paint fallback, sized for the footer's 36px `size="sm"` buttons.
       const footerHeight = footerRef.current?.offsetHeight ?? 88;
       const bottomGap = 16;
 
@@ -224,8 +223,7 @@ export default function SimpleDataTable<T>({
 
       // Always allocate space for the header, footer, and at least some rows.
       // Minimum is header (64px) + footer (88px) + one row (48px) = 200px.
-      // Each term grew when controls moved to 44px: a row carrying an icon
-      // button is now 48px, not 40px, so the old 180 clamped a row in half.
+      // A row carrying a 44px icon button is 48px; less clamps it in half.
       const minRequiredSpace = 200;
       if (availableHeight < minRequiredSpace) {
         // If there's truly no space, still clamp to avoid overflow pushing footer out of view
@@ -361,7 +359,7 @@ export default function SimpleDataTable<T>({
               onValueChange={(value) => onPageSizeChange(Number(value))}
               options={pageSizeOptions.map((option) => ({ value: String(option), label: String(option) }))}
               // Dense in the footer on desktop; the primitive's 44px stands on
-              // touch. A bare `h-9` here pinned it to 36px on a phone too.
+              // touch. A bare `h-9` here would pin it to 36px on a phone too.
               className="md:h-9"
               searchPlaceholder={t('simpleDataTable.searchRows')}
             />

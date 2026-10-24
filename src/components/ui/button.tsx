@@ -18,23 +18,19 @@ const buttonVariants = cva(
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         // AI actions (import, extract). Carries the same weight as `default`
-        // because it is a primary action, not a secondary one. Adopted from
-        // Leap, which styles it further through its UI preset.
+        // because it is a primary action, not a secondary one. Leap styles it
+        // further through its UI preset.
         ai: "bg-primary text-primary-foreground hover:bg-primary/90",
         ghost:
           "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
         link: "text-primary underline-offset-4 hover:underline",
       },
-      // The whole suite standardised on a touch-legal control rather than a
-      // separate mobile density, and that belongs HERE rather than at each
-      // call site. The smaller rungs are a *desktop* density: below `md` they
-      // all clamp to 44px, so `size="sm"` is correct on a phone by
-      // construction and no caller needs to patch a height back up.
-      //
-      // Written the other way round first, and it did not hold: LocaleSelect
-      // and ColorModeSelect both had to carry `h-11 md:h-9`, and the sign-in
-      // chrome that did not was caught by the Playwright suite rather than by
-      // review. A rule every caller must remember is a rule that gets missed.
+      // The suite uses a touch-legal control rather than a separate mobile
+      // density, and that belongs HERE rather than at each call site. The
+      // smaller rungs are a *desktop* density: below `md` they all clamp to
+      // 44px, so `size="sm"` is correct on a phone by construction and no
+      // caller needs to patch a height back up. A rule every caller must
+      // remember is a rule that gets missed.
       size: {
         default: "h-11 px-6 py-2 has-[>svg]:px-4",
         xs: "h-11 gap-1 rounded-md px-2 text-xs has-[>svg]:px-1.5 md:h-6 [&_svg:not([class*='size-'])]:size-3",

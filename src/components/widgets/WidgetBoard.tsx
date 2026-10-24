@@ -22,8 +22,8 @@ import WidgetConfigDialog, { type WidgetConfigTarget } from "./WidgetConfigDialo
 import { WidgetEmpty } from "./WidgetBodies";
 import type { WidgetDefaults, WidgetLayoutEntry, WidgetRegistry, WidgetSize } from "./types";
 
-// Loaded BEFORE edit mode opens. Swapping it in after the static grid had
-// rendered remounted every widget, closing any menu the user had just opened.
+// Loaded BEFORE edit mode opens. Swapping it in after the static grid has
+// rendered would remount every widget, closing any menu the user just opened.
 const WidgetSortableGrid = lazyWithPreload(() => import("./WidgetSortableGrid"));
 
 // Rows grow with their content; the minimum keeps an S tile square-ish.

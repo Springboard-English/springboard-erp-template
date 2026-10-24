@@ -14,12 +14,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 // It has to be this way round. `react-markdown` pulls in
 // `decode-named-character-reference`, whose *browser* build decodes HTML
 // entities with the DOM — `const element = document.createElement('i')`, at
-// module scope. A bundler building for the browser resolves that build, so
-// merely importing the package root executed it, and any Node-side import (an
-// app's pure-logic test, a script) died with "document is not defined" before
-// running a line. That is what the separate `/transport` entry point existed to
-// work around; with this boundary the root barrel is Node-safe and the second
-// entry point is unnecessary.
+// module scope. A bundler building for the browser resolves that build, so a
+// static import would run it the moment the package root is imported, and any
+// Node-side import (an app's pure-logic test, a script) would die with
+// "document is not defined". This boundary keeps the root barrel Node-safe.
 
 type GuideImagePreview = { src: string; alt: string };
 

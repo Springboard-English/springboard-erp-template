@@ -51,13 +51,11 @@ export default function OidcBoot({ children }: OidcBootProps) {
     // below; the flag is still consumed here so it cannot survive into the next
     // boot and be read as a sign-out that never happened.
     //
-    // This is safe only because RP-initiated logout actually ends Hydra's
-    // session now — it was sending `post_logout_redirect_uri` with no
-    // `id_token_hint`, which Hydra refuses outright. While that was broken, an
-    // automatic redirect here would have completed silently against the
-    // surviving session and put the person straight back where they were, with
-    // nothing on screen to say the Logout button had failed. If that regresses,
-    // this is where it hides.
+    // This is safe only because RP-initiated logout ends Hydra's session (see
+    // `beginSignOut`). If it ever does not, an automatic redirect here completes
+    // silently against the surviving session and puts the person straight back
+    // where they were, with nothing on screen to say the Logout button failed.
+    // If that regresses, this is where it hides.
     consumeLogoutToSignInTransition();
 
     // Read during render rather than in an effect, deliberately: an effect runs

@@ -27,7 +27,7 @@ import type { WidgetSortableBinding } from "./WidgetFrame";
  */
 
 // Drop where the pointer is. `closestCenter` alone compares the dragged card's
-// centre, so a full-width widget dropped on a half-width one landed a slot off.
+// centre, so a full-width widget dropped on a half-width one lands a slot off.
 // The keyboard sensor has no pointer, and falls through to it.
 const pointerFirst: CollisionDetection = (args) => {
     const hits = pointerWithin(args);

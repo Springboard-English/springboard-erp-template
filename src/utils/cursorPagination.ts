@@ -11,10 +11,10 @@
  * from the first page. That happens naturally here: each call starts at
  * `cursor: null`, and React Query's key carries the filters.
  *
- * Every app had its own copy of this walk and two of them were wrong; see
- * `fetchPageSlice` for the specific bug. Prefer `useCursorTable` for a new
- * table — it reaches a page in one request instead of `page` of them — and
- * reach for this when a call site is already shaped around `(limit, offset)`.
+ * See `walkToOffset` for the exit guard the walk depends on. Prefer
+ * `useServerList` for a new table — it reaches a page in one request instead of
+ * `page` of them — and reach for this when a call site is already shaped around
+ * `(limit, offset)`.
  */
 
 declare const PAGE_SIZE: unique symbol;
@@ -22,11 +22,10 @@ declare const PAGE_SIZE: unique symbol;
 /**
  * A validated `page_size`: an integer in `[1, MAX_PAGE_SIZE]`.
  *
- * It is a type rather than a number because a bad one is silent. `-1` used to be
- * a sentinel meaning "drain the list" in four apps' private walks; when the walk
- * moved in here it became a page size, and clamping turned it into ONE — so nine
- * CSV exports wrote a single row and a timeline tab rendered a single class. No
- * compiler could see it: `-1` is a perfectly good `number`.
+ * It is a type rather than a number because a bad one is silent. `-1` as a
+ * "drain the list" sentinel becomes a page size here, and clamping turns it
+ * into ONE — so a CSV export writes a single row. No compiler can see it: `-1`
+ * is a perfectly good `number`.
  *
  * Build one with {@link pageSize} (throws — for literals and anything whose being
  * wrong is a bug) or {@link toPageSize} (clamps — for values restored from
@@ -142,15 +141,14 @@ export interface PageParams {
  * price of offset paging on a cursor API, and it is why `useServerList` keeps
  * the cursors instead.
  *
- * **The exit guard is load-bearing.** Two apps guarded the walk with
- * `if (!cursor && remainingOffset > 0)`, which does not fire when the skip loop
+ * **The exit guard is load-bearing.** A guard of
+ * `if (!cursor && remainingOffset > 0)` does not fire when the skip loop
  * consumes the last full page exactly: the offset reaches zero, the cursor is
  * null, the loop falls through, and the final fetch is made with no cursor —
  * so the API restarts at page one and its rows are returned as the last page's.
- * It showed up on any list whose row count was an exact multiple of the page
- * size, which the `offset + limit + 1` row count actively steers users into by
- * leaving "next" enabled on the last page. Checking `nextCursor` inside the
- * loop, before the offset is consulted, is what makes that unreachable.
+ * Any list whose row count is an exact multiple of the page size reaches it.
+ * Checking `nextCursor` inside the loop, before the offset is consulted, is
+ * what makes that unreachable.
  */
 async function walkToOffset<T>(
   size: PageSize,
@@ -226,7 +224,7 @@ export async function fetchSlice<T>(
 
 /**
  * @deprecated Use {@link fetchSlice}, which takes a {@link PageSize} that cannot
- * be `-1`. This clamps instead, which is how a sentinel became a one-row page.
+ * be `-1`. This clamps instead, which turns a `-1` sentinel into a one-row page.
  */
 export async function fetchPageSlice<T>(
   limit: number,
@@ -282,9 +280,8 @@ export async function fetchEveryPage<T>(
  * inventing an "of N". On the last page the count is exact.
  *
  * `total` is for the few endpoints that actually count, and wins outright when
- * given. Every other strategy in the apps — the `offset + limit + 1` effect,
- * the over-fetch-by-one, the inline expression — is this function written out,
- * which is why they all live here now.
+ * given. An `offset + limit + 1` effect or an over-fetch-by-one is this
+ * function written out; call it instead.
  */
 export function knownRowCount(
   page: number,

@@ -145,10 +145,9 @@ export default function MobileCardList<T>({
       : !loading && visibleCount < rows.length;
   }
 
-  // No "already asked for this page" guard here any more. Every caller that
-  // passes `onLoadMore` drives it from the query cache, which knows whether a
-  // fetch is in flight and ignores a second request — so the bookkeeping this
-  // used to do by hand is now done once, properly, a layer down.
+  // No "already asked for this page" guard here. Every caller that passes
+  // `onLoadMore` drives it from the query cache, which knows whether a fetch
+  // is in flight and ignores a second request.
   const maybeLoadMore = () => {
     if (!onLoadMoreRef.current || !canLoadRef.current || loadingRef.current) {
       return;
@@ -156,10 +155,8 @@ export default function MobileCardList<T>({
     onLoadMoreRef.current();
   };
 
-  // One scroll-driven trigger, where there used to be an IntersectionObserver
-  // *and* a scroll listener both watching a sentinel element. The list's own
-  // bottom edge is what actually matters, so it is measured directly and no
-  // marker node is rendered at all.
+  // One scroll-driven trigger. The list's own bottom edge is what matters, so
+  // it is measured directly and no sentinel node is rendered.
   const requestLoadIfAtEnd = () => {
     const list = listRef.current;
     if (!list || !canLoadRef.current || loadingRef.current) {
@@ -271,12 +268,11 @@ export default function MobileCardList<T>({
     (onLoadMore ? !hasMore : visibleCount >= rows.length);
 
   // Virtualised, so a long list costs a bounded number of DOM nodes instead of
-  // one card per row — accumulating 500 rows used to mean 500 mounted cards.
+  // one card per row.
   //
   // The window variant is the right one here: these views scroll the document,
-  // not an inner pane. That was checked rather than assumed — the list screens
-  // have no scrollable ancestor once the desktop-only height clamp is gated to
-  // `md`, which it now is.
+  // not an inner pane — the list screens have no scrollable ancestor, because
+  // the desktop-only height clamp is gated to `md`.
   const [scrollMargin, setScrollMargin] = useState(0);
   const hasRows = activeRows.length > 0;
 
@@ -304,8 +300,8 @@ export default function MobileCardList<T>({
 
   // `md:hidden` alone only *hides* the list on desktop — it still mounts, and
   // with it the scroll listener and the accumulated-row state. Gate the render
-  // too. This is the LMS's local wrapper, adopted upstream; it must stay below
-  // every hook so the hook order is stable across the breakpoint.
+  // too. It must stay below every hook so the hook order is stable across the
+  // breakpoint.
   if (!isMobileViewport) {
     return null;
   }
@@ -366,9 +362,9 @@ export default function MobileCardList<T>({
             key={item.key}
             data-index={item.index}
             ref={virtualizer.measureElement}
-            // `pb-3` replaces the old `space-y-3`: absolutely positioned items
-            // have no margin collapsing to space them, and keeping the gap
-            // inside the measured element keeps the maths honest.
+            // `pb-3` rather than `space-y-3`: absolutely positioned items have
+            // no margin collapsing to space them, and keeping the gap inside
+            // the measured element keeps the maths honest.
             className="absolute left-0 top-0 w-full pb-3"
             style={{ transform: `translateY(${item.start - scrollMargin}px)` }}
           >

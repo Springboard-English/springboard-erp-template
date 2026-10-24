@@ -33,9 +33,8 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 // A heading and a paragraph, not two divs: a card title should show up in the
-// document outline a screen reader builds. Adopted from Leap's fork. Preflight
-// already strips the browser's default heading size and margin, so this renders
-// exactly as the div did.
+// document outline a screen reader builds. Preflight strips the browser's
+// default heading size and margin, so it renders like a plain div.
 function CardTitle({ className, ...props }: React.ComponentProps<"h3">) {
   return (
     <h3

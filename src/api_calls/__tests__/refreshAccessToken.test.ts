@@ -3,9 +3,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 /**
  * Renewal is OIDC, or whatever the app registered — never the API's `/refresh`.
  *
- * A failed OIDC renewal used to fall back to the first-party refresh cookie,
- * and a stale cookie from an old sign-in minted a token from a different issuer
- * carrying every role the person holds. So nothing here may reach the API.
+ * Falling back to the first-party refresh cookie would let a stale cookie from
+ * an old sign-in mint a token from a different issuer carrying every role the
+ * person holds. So nothing here may reach the API.
  */
 describe("refreshAccessToken", () => {
     beforeEach(() => {

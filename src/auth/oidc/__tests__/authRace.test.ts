@@ -6,17 +6,16 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  * Hydra names its login CSRF cookie per CLIENT — `ory_hydra_login_csrf_<hash>`,
  * one cookie for every flow of the same `client_id` — so a second
  * `/oauth2/auth` overwrites the first's value and the first can never be
- * verified. Reproduced against the dev issuer on 2026-09-20: accepting flow A's
- * login challenge while the browser held flow B's cookie answered
+ * verified. Accepting flow A's login challenge while the browser holds flow B's
+ * cookie answers
  *
  *     303 → /oauth/callback?error=request_forbidden&error_description=The
  *     request is not allowed. The CSRF value from the token does not match the
  *     CSRF value from the data store.
  *
- * — delivered to the APP, which is why it surfaced as that sentence on the
- * callback screen. A browser restoring several tabs of the same app does
- * exactly this: every tab boots with an empty in-memory token and calls
- * `beginSignIn`, and all but the last lose.
+ * — delivered to the APP's callback. A browser restoring several tabs of the
+ * same app does exactly this: every tab boots with an empty in-memory token and
+ * calls `beginSignIn`, and all but the last lose.
  */
 describe("an authorization that lost the CSRF race", () => {
     let assigned: string[];

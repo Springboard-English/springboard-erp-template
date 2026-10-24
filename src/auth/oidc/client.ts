@@ -8,10 +8,11 @@
  * user is and hands Hydra back the `appsheet_key` as the subject.
  *
  * **Tokens are held in memory only**, never in localStorage. That is the
- * standing rule in this codebase — an access token in a cookie is what broke
- * iOS sign-in, and a refresh token in localStorage is an XSS away from being
- * someone else's session. The cost is that a reload has no tokens and has to
- * re-authorize; with Hydra's own session that round trip is silent.
+ * standing rule in this codebase — an access token in a cookie overflows
+ * WebKit's per-domain cookie limit, and a refresh token in localStorage is an
+ * XSS away from being someone else's session. The cost is that a reload has no
+ * tokens and has to re-authorize; with Hydra's own session that round trip is
+ * silent.
  */
 
 import { clearAccessToken, setAccessToken } from "../accessToken";
@@ -130,8 +131,8 @@ export function clearAuthRetries(): void {
  * the auth state *causes* the second one: `logout()` sets `user = null`, React
  * re-renders, the guard sees an unauthenticated route and calls `beginSignIn()`
  * — all before `beginSignOut()` on the next line gets to navigate. Whichever
- * `location.assign` lands first wins, and when the login one won, Hydra's
- * session was still alive, so it completed silently and put the user straight
+ * `location.assign` lands first wins, and when the login one wins, Hydra's
+ * session is still alive, so it completes silently and puts the user straight
  * back where they started. It looks exactly like a Logout button that does
  * nothing.
  */
@@ -394,9 +395,9 @@ export function markSigningOut(): void {
  *     Logout failed because query parameter post_logout_redirect_uri is set
  *     but id_token_hint is missing.
  *
- * — on Hydra's own error page, which is where pressing Logout used to land.
- * Without a hint we send neither and let Hydra ask and land on its own default;
- * that is a worse sign-out, but it is a sign-out.
+ * — on Hydra's own error page. Without a hint we send neither and let Hydra
+ * ask and land on its own default; that is a worse sign-out, but it is a
+ * sign-out.
  */
 export function beginSignOut(): void {
     signingOut = true;

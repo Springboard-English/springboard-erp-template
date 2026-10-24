@@ -3,15 +3,8 @@
 /**
  * The base URL, and the auth endpoints this package calls itself.
  *
- * Nothing else. This file used to carry the LMS/HRM resource map — classes,
- * groups, schedules, feedbacks, registrations, assessments, recordings — plus
- * 29 `get*Endpoint` builders for their sub-resources, none of which were
- * exported and none of which anything here called. Every app defines its own
- * `API_CONFIG` with the endpoints it actually uses (erp-ops's is the model:
- * "Only the endpoints this console actually calls"), so those 130-odd lines
- * were a second, stale copy of five different route maps.
- *
- * A resource endpoint belongs to the app that calls it. If you are adding one,
+ * Nothing else. Every app defines its own `API_CONFIG` with the endpoints it
+ * actually uses. A resource endpoint belongs to the app that calls it. If you are adding one,
  * add it there.
  */
 
@@ -42,8 +35,7 @@ export const API_CONFIG = {
     },
 } as const;
 
-// Password reset predates the `/v2` prefix and is served unversioned;
-// `currentUser` is not.
+// Password reset is served unversioned; `currentUser` is under `/v2`.
 const UNVERSIONED_ENDPOINTS: ReadonlySet<keyof typeof API_CONFIG.endpoints> = new Set([
     "resetPassword",
     "resetPasswordAuthorised",

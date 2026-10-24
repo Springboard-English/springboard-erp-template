@@ -268,7 +268,7 @@ describe("useServerList", () => {
         });
 
         // A caller that copies `rows` into state from an effect re-runs it on
-        // every new reference; a fresh `[]` per render looped erp-hrm forever.
+        // every new reference; a fresh `[]` per render would loop it forever.
         it("keeps the empty table rows the same array across renders on a phone", async () => {
             setViewport(true);
             const { result, rerender } = renderList(listing(100), { mobile: true });

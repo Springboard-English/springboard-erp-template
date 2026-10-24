@@ -24,11 +24,10 @@ type ExportCsvButtonProps<T> = {
            * `fetchAllFoos(filters)` over `fetchEveryPage`.
            *
            * It takes an {@link EveryPageResult} rather than an array for two
-           * reasons. `truncated` is surfaced below instead of being dropped, as
-           * it was at fifteen call sites. And a `PageSlice` — what a PAGED read
-           * returns — has no `truncated`, so handing one to an export is a type
-           * error rather than a CSV with one row in it, which is exactly how
-           * nine exports broke.
+           * reasons. `truncated` is surfaced below instead of being dropped. And
+           * a `PageSlice` — what a PAGED read returns — has no `truncated`, so
+           * handing one to an export is a type error rather than a CSV with one
+           * row in it.
            */
           fetchAll: () => Promise<EveryPageResult<T>>;
           fetchRows?: never;

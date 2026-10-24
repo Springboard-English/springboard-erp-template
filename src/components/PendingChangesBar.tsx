@@ -130,8 +130,8 @@ export default function PendingChangesBar({
       className={cn(
         // Layer scale (see DetailLayout): app chrome ≤ 40, the floating detail
         // panel 50, this bar 55, modals/popovers 60. The bar has to clear the
-        // floating panel — the edits it saves are made *inside* that panel, so
-        // at the old z-35 it sat under the panel's backdrop and was unreachable.
+        // floating panel — the edits it saves are made *inside* that panel, and
+        // any lower layer sits under the panel's backdrop, unreachable.
         "fixed bottom-[calc(4rem+0.75rem)] left-3 right-3 z-[55] transform-gpu transition-all md:bottom-6 md:left-[calc(18rem+1.5rem)] md:right-6",
         show
           ? "translate-y-0 opacity-100 pointer-events-auto"
@@ -203,12 +203,11 @@ export default function PendingChangesBar({
             // Deliberately NOT `pointer-events-auto`. The wrapper above owns
             // that decision and sets `pointer-events-none` while the bar is
             // hidden — but `pointer-events` is overridable by a descendant, so
-            // re-enabling it here put a 60px invisible strip (opacity 0, still
-            // hit-testable) across the bottom of every screen. On any page
-            // whose content reaches the viewport floor that swallowed real
-            // clicks: the data tables' Previous/Next and rows-per-page sat
-            // under it and simply did not respond. Inheriting is what makes
-            // "hidden" mean untouchable.
+            // re-enabling it here would leave a 60px invisible strip (opacity
+            // 0, still hit-testable) across the bottom of every screen,
+            // swallowing clicks on whatever sits under it, such as the data
+            // tables' pager. Inheriting is what makes "hidden" mean
+            // untouchable.
             "relative flex min-h-[3.75rem] items-center justify-between gap-3 rounded-[999px] border border-border/70 px-4 py-2 shadow-[0_18px_40px_-20px_rgba(15,23,42,0.4)] backdrop-blur-md",
             dimmed ? "bg-muted/80 opacity-80 shadow-none" : "bg-card/96",
           )}

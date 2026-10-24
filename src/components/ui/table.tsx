@@ -59,7 +59,7 @@ function TableRow({ className, ...props }: React.ComponentProps<'tr'>) {
       className={cn(
         // `has-aria-expanded` keeps the row lit while a control inside it is
         // open — otherwise the row a dropdown belongs to goes dim the moment
-        // you reach for it. Adopted from Leap's fork.
+        // you reach for it.
         'border-b transition-colors hover:bg-muted/40 has-aria-expanded:bg-muted/40 data-[state=selected]:bg-muted',
         presetClass,
         className,

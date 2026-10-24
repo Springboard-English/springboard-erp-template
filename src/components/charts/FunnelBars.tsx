@@ -91,10 +91,9 @@ export default function FunnelBars({
               {current && currentTotal > 0 ? (
                 <div className="mt-1.5 flex items-center gap-2">
                   <div className="flex-1">
-                    {/* Scaled against the same maximum as the bar above it. An
-                        earlier version let this row fill its container, so 22
-                        here-now drew exactly as wide as 50 — the one thing a
-                        bar must never do. */}
+                    {/* Scaled against the same maximum as the bar above it, not
+                        its container, so a smaller count never draws as wide as
+                        a larger one. */}
                     <div
                       className="flex h-1.5 gap-[2px]"
                       style={{

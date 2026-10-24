@@ -11,10 +11,9 @@ export interface MultiSelectDropdownProps {
   value: string | null | undefined;
   onValueChange: (nextValue: string) => void;
   /**
-   * The scopes to offer beyond those already selected. Required, because the
-   * set is the caller's domain — this used to default to erp-hrm's
-   * `payrolls_get`/`tasks_get`/`projects_get`, so every other app's picker
-   * silently offered three scopes it has no concept of.
+   * The scopes to offer beyond those already selected. There is no default,
+   * because the set is the caller's domain: without it the picker offers only
+   * the scopes already selected.
    */
   additionalOptions?: string[];
   placeholder?: string;

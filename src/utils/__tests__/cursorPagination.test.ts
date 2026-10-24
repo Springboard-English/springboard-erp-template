@@ -96,12 +96,11 @@ describe("fetchPageSlice", () => {
     expect(fetchPage).toHaveBeenCalledWith(200, null, undefined);
   });
 
-  // The regression that made this a shared module. erp-crm and erp-hrm both
-  // guarded the walk with `!cursor && remainingOffset > 0`, which does not fire
-  // when the skip loop lands exactly on the end: the final fetch then went out
-  // with a null cursor, the API restarted at page one, and its rows were shown
-  // as the last page's. Any list whose count is an exact multiple of the page
-  // size reached it, and the row count left "next" enabled to lead users there.
+  // A walk guarded with `!cursor && remainingOffset > 0` does not stop when the
+  // skip loop lands exactly on the end: the final fetch goes out with a null
+  // cursor, the API restarts at page one, and its rows show as the last page's.
+  // Any list whose count is an exact multiple of the page size reaches it, and
+  // the row count leaves "next" enabled to lead users there.
   it("does not restart at page one when the offset lands exactly at the end", async () => {
     const fetchPage = listing(20);
 
@@ -173,9 +172,9 @@ describe("fetchEveryPage", () => {
 });
 
 describe("pageSize", () => {
-  // The whole point of the brand. `-1` was a sentinel meaning "drain the list"
-  // in four apps; when the shared walk started clamping it to 1, nine exports
-  // wrote a single row and no compiler objected, because `-1` is a `number`.
+  // The whole point of the brand. `-1` as a "drain the list" sentinel is
+  // clamped to 1 by the walk, so an export writes a single row — and no
+  // compiler objects to a bare number, because `-1` is a `number`.
   it("refuses the sentinel that broke nine call sites", () => {
     expect(() => pageSize(-1)).toThrow(RangeError);
   });
@@ -249,7 +248,7 @@ describe("knownRowCount", () => {
   });
 
   it("is tighter than the page-size guess on a partial page", () => {
-    // The "+1" strategy the apps used would say 2 * 25 + 25 + 1 = 76 here.
+    // A page-size "+1" guess would say 2 * 25 + 25 + 1 = 76 here.
     expect(knownRowCount(2, 25, 10, true)).toBe(61);
   });
 

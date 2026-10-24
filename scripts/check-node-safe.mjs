@@ -2,18 +2,14 @@
 //
 // Apps call this package from modules that have nothing to do with a browser —
 // DTO mappers, query clients, vitest suites running in the `node` environment.
-// Importing it used to kill those instantly: `react-markdown` reaches
-// `decode-named-character-reference`, whose *browser* build decodes HTML
-// entities with the DOM — `const element = document.createElement('i')`, at
-// module scope — and a bundler building for the browser resolves that build. So
-// the DOM call ran during import, and Node threw "document is not defined"
-// before a single line of anyone's test.
+// `react-markdown` reaches `decode-named-character-reference`, whose *browser*
+// build decodes HTML entities with the DOM — `document.createElement('i')` at
+// module scope — and a bundler building for the browser resolves that build. A
+// static import of it makes Node throw "document is not defined" during import.
 //
-// The renderer is behind a dynamic import now, which is what keeps that out of
-// the import graph. It is an easy thing to undo by accident: one static
-// `import ReactMarkdown from "react-markdown"` at the top of any module the
-// barrel re-exports puts it straight back. Hence a check that runs on every
-// build rather than a comment nobody re-reads.
+// The renderer is behind a dynamic import, which keeps that out of the import
+// graph. One static `import ReactMarkdown from "react-markdown"` in any module
+// the barrel re-exports puts it straight back, hence a check on every build.
 //
 // Deliberately NO DOM stub here. Stubbing `document` would make this pass while
 // the real failure — an app's Node-side test — still failed.

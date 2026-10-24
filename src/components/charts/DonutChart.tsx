@@ -76,9 +76,8 @@ export default function DonutChart({
     const total = capped.reduce((sum, row) => sum + row.value, 0);
     let offset = 0;
     // A wedge named `otherLabel` is grey wherever it sorts, and never consumes
-    // a categorical slot. It used to be greyed only when it landed last, so a
-    // caller that pre-folded its own "Other" — the domain-fold case — got it
-    // painted as series 1 and every real category shifted a colour along.
+    // a categorical slot — including one the caller pre-folded itself — so no
+    // real category is shifted a colour along.
     let slot = 0;
     return capped.map((row) => {
       const share = total > 0 ? row.value / total : 0;

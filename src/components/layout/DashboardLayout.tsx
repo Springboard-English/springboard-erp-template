@@ -241,10 +241,9 @@ function DashboardLayoutInner({
   // notifications, its own controls — has no home on a phone. Surface it.
   //
   // `sidebarFooter` is deliberately NOT surfaced. It is where apps put their
-  // account panel, and the sheet already draws identity and sign-out itself;
-  // passing it through rendered the name, the email and a Logout button twice
-  // over, which is exactly what it looked like. An app that wants something
-  // else in the sheet passes `mobileMenu`.
+  // account panel, and the sheet already draws identity and sign-out itself, so
+  // passing it through would show the name, the email and a Logout button
+  // twice. An app that wants something else in the sheet passes `mobileMenu`.
   const defaultMenuBody = headerContent ? (
     <div className="space-y-3">{headerContent}</div>
   ) : null;
@@ -352,8 +351,8 @@ function DashboardLayoutInner({
         <div className={cn("relative isolate flex min-w-0 flex-1 flex-col", entering && "sb-enter-content")}>
           <OccasionBackdrop />
           {/* Apps publish status into the desktop header, which is `md:flex` —
-              so below `md` every message, errors included, had nowhere to
-              render. This is that surface. Desktop keeps the header. */}
+              so below `md` every message, errors included, would have nowhere
+              to render. This is that surface. Desktop keeps the header. */}
           <GlobalStatusMobileBar />
           <main
             ref={mainScrollRef}

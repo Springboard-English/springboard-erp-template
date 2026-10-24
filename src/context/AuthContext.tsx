@@ -16,7 +16,7 @@ import { markLogoutToSignInTransition } from "../auth/transitionStorage";
 import { AUTH_SESSION_EXPIRED_EVENT } from "../api_calls/fetchWithRefresh";
 
 /**
- * **Signing in is not this provider's job any more.**
+ * **Signing in is not this provider's job.**
  *
  * There is no `login(credentials)`. The API is the only thing that ever sees a
  * password or a Google credential — it hosts the one login page, as the OIDC
@@ -24,7 +24,7 @@ import { AUTH_SESSION_EXPIRED_EVENT } from "../api_calls/fetchWithRefresh";
  * what `signIn()` does. `setAuthenticatedUser` stays because `OidcCallback`
  * needs to hand the loaded account back after the code exchange.
  *
- * The bootstrap below is unchanged and is safe **because `OidcBoot` runs above
+ * The bootstrap below is safe **because `OidcBoot` runs above
  * this provider**: it does not render children without an access token, so
  * `fetchCurrentUser` here is never the call that discovers there is no session.
  */
@@ -117,8 +117,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    * `markSigningOut` FIRST, before anything clears the user: setting
    * `user = null` re-renders, a route guard sees an unauthenticated app and
    * calls `signIn()`, and that redirect races the sign-out one. When the
-   * sign-in won, Hydra's session was still alive, so it completed silently and
-   * put the person straight back where they were — a Logout button that
+   * sign-in wins, Hydra's session is still alive, so it completes silently and
+   * puts the person straight back where they were — a Logout button that
    * visibly does nothing.
    *
    * Then `beginSignOut`, which is the only thing that ends **Hydra's** session.

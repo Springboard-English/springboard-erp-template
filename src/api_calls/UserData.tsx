@@ -7,12 +7,6 @@ import { isOutdatedEditedAtConflictError } from "../utils/conflictErrors";
 /**
  * Auth, and only auth.
  *
- * This file used to be 3,426 lines: the whole LMS/HRM resource surface —
- * classes, sessions, schedules, assessments, feedbacks, achievements — sitting
- * in a UI package that exported none of it. `exports.ts` never listed it, so no
- * consumer could import it, and lms and erp-hrm kept their own 5,618- and
- * 3,682-line copies with roughly 2,600 lines byte-identical to what was here.
- *
  * A shared component library has no business owning an app's resource calls:
  * the endpoints, their shapes and their pagination belong to the app that
  * serves them. What DOES belong here is what the package's own ResetPassword

@@ -13,12 +13,9 @@ export default defineConfig({
   },
   build: {
     lib: {
-      // One entry again. A second, DOM-free `transport` entry existed only
-      // because the markdown renderer touched `document` while this package was
-      // being imported; that is now behind a dynamic import, so the root is safe
-      // to import from Node and the split has nothing left to buy — while two
-      // entries carried a real hazard, since a module they both need can be
-      // emitted twice, and the access token is module state.
+      // One entry, deliberately. The root is safe to import from Node (the
+      // markdown renderer is behind a dynamic import), and two entries could
+      // emit a module they both need twice — the access token is module state.
       entry: fileURLToPath(new URL('./src/exports.ts', import.meta.url)),
       name: 'SpringboardComponents',
       formats: ['es'],
@@ -26,11 +23,9 @@ export default defineConfig({
     },
     rollupOptions: {
       // Anything whose API is a React CONTEXT must be external, or the package
-      // gets its own copy and reads a context the app never provided.
-      // `@tanstack/react-query` was not on this list, so bundling it was
-      // harmless right up until a component here called `useQueryClient` —
-      // GlobalStatusQueryBridge — and every HRM page died with "No QueryClient
-      // set" while the app's provider sat right above it.
+      // gets its own copy and reads a context the app never provided — e.g.
+      // `useQueryClient` in GlobalStatusQueryBridge would throw "No QueryClient
+      // set" with the app's provider right above it.
       external: [
         'react',
         'react-dom',

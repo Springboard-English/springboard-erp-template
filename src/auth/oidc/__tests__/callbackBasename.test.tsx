@@ -9,9 +9,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  * `OidcBoot` runs outside the router, so the place it remembers is the whole
  * `window.location.pathname`, base path included. `navigate()` treats an
  * absolute path as relative to the router's `basename` and prepends it again:
- * `/crm/students/42` became `/crm/crm/students/42`, matched nothing, and the
- * catch-all sent every deep link — the LMS's "open in CRM" chevron included —
- * to the bare app.
+ * unstripped, `/crm/students/42` becomes `/crm/crm/students/42`, matches
+ * nothing, and the catch-all sends every deep link — the LMS's "open in CRM"
+ * chevron included — to the bare app.
  */
 
 const completeSignIn = vi.fn<(search: string) => Promise<string>>();

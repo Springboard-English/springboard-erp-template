@@ -17,7 +17,7 @@ import { useEffect, useState } from 'react';
 export type ChartColorMode = 'light' | 'dark';
 
 /**
- * Categorical slots, assigned in fixed order and never cycled. A ninth series
+ * Categorical slots, assigned in fixed order and never cycled. A seventh series
  * folds into "Other" rather than inventing a hue.
  *
  * Validated: light worst-adjacent CVD ΔE 9.1, normal-vision ΔE 19.6; dark

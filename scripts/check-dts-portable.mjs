@@ -8,10 +8,9 @@ import { join } from "node:path";
 // `src/` — so an aliased TYPE import does not fail loudly on the other side, it
 // resolves to nothing and the type degrades to `any`.
 //
-// That is how `CsvColumn<T>` reached five apps as `any`: every
-// `csvValue: (row) => …` became an implicit-any error at the call site, in
-// files nobody had touched. The package built, the types emitted, and only the
-// consumers' tsc complained — about their own code.
+// The package still builds and emits types; only the consumers' tsc
+// complains, about their own code — e.g. an aliased `CsvColumn<T>` turns every
+// `csvValue: (row) => …` into an implicit-any error at the call site.
 //
 // Value imports are bundled by vite and never reach a .d.ts, which is why this
 // only bites on types, and why it is easy to reintroduce.

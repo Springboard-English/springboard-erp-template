@@ -7,8 +7,8 @@ import { GlobalStatusProvider, useGlobalStatus } from "../GlobalStatusContext";
 /**
  * GlobalStatusQueryBridge re-registers a failed query on every query-cache
  * event, and a render emits one. If re-registering what is already shown
- * re-rendered, the two fed each other without end — erp-hrm's whole shell
- * stopped committing route changes.
+ * re-rendered, the two would feed each other without end and the app's shell
+ * would stop committing route changes.
  */
 
 function renderStatus() {

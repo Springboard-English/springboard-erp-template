@@ -10,8 +10,8 @@
 //
 // This exists because Leap's look is not only colour. Its tokens sit on the
 // same shadcn base as the ERP apps, but its *shape and motion* — pill radius, a
-// hard bottom-edge shadow, a bounce easing — lived in the class strings of a
-// forked copy. Tokens alone cannot express those; a preset can.
+// hard bottom-edge shadow, a bounce easing — cannot be expressed by tokens
+// alone; a preset can.
 //
 // Module state rather than a context, matching `configureApi` in ./api.ts: a
 // preset is decided once at boot and never changes, so nothing needs to

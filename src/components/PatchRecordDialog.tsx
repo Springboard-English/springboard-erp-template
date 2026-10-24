@@ -30,8 +30,8 @@ export interface PatchFieldConfig {
   /**
    * The whole option list, for a `select` whose choices are genuinely finite —
    * a status, a day of the week. For anything backed by a listing endpoint use
-   * {@link loadOptions} instead: filling this from a drained endpoint is what
-   * made seven views fetch every employee on mount to populate one dropdown.
+   * {@link loadOptions} instead: filling this from a drained endpoint fetches
+   * every row on mount to populate one dropdown.
    */
   options?: PatchFieldOption[];
   /**
@@ -60,7 +60,7 @@ export interface PatchFieldConfig {
    * Grouping hints for dialogs that lay fields out in sections. This dialog
    * renders one flat table and ignores both; they live here so a sectioned
    * form (CRM's `RecordFormDialog`) can share one field-config type instead of
-   * forking it — which is how the two copies drifted apart before.
+   * forking it.
    */
   section?: string;
   sectionDescription?: string;

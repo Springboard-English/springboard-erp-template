@@ -1,6 +1,6 @@
 // What went wrong, in the error itself.
 //
-// Two different failures used to reach the user as the same unhelpful sentence.
+// Two different failures, each with what the user needs to tell them apart.
 //
 // 1. **"Failed to fetch."** That is the browser's own words for `fetch()`
 //    rejecting, and it is deliberately vague: offline, DNS, a refused
@@ -12,12 +12,11 @@
 //    request that dies in 3ms did not time out; one that dies after 30s was not
 //    a CORS rejection. `NetworkError` carries all of it.
 //
-// 2. **"Failed to fetch tests: 400 Bad Request."** Ours, and it throws away the
-//    one part that says anything: the response body. The API answers an error
-//    with FastAPI's `{"detail": ...}` — "test is already published", "edited_at
-//    is older than the current value", a 422's field-by-field list — and the
-//    call sites formatted the status line and dropped the body unread.
-//    `ApiError` reads it.
+// 2. **"Failed to fetch tests: 400 Bad Request."** The status line alone says
+//    little; the response body says why. The API answers an error with
+//    FastAPI's `{"detail": ...}` — "test is already published", "edited_at is
+//    older than the current value", a 422's field-by-field list. `ApiError`
+//    reads it.
 //
 // Both keep the status code and the detail text inside `error.message`, because
 // the message is what a banner renders and what `isPermissionDeniedError` and
@@ -279,8 +278,8 @@ export async function toApiError(
  * The one-liner for a call site: `await throwIfNotOk(response, "Failed to
  * fetch tests")` in place of the hand-written status-line `throw`.
  *
- * `context` keeps the wording the app already used, so the change at each call
- * site is only that the server's reason now follows the status.
+ * `context` is the call site's own wording; the server's reason follows the
+ * status.
  */
 export async function throwIfNotOk(
     response: Response,

@@ -1,7 +1,7 @@
 // Relative, NOT `@/`. tsc emits the specifier verbatim into the .d.ts, and a
 // consumer resolves `@/` against its OWN src — so an aliased type import
-// silently becomes `any` on the other side. Here that turned every
-// `csvValue: (row) => …` in five apps into an implicit-any error.
+// silently becomes `any` on the other side. Here that would turn every
+// consumer's `csvValue: (row) => …` into an implicit-any error.
 import type { SimpleDataTableColumn } from "../components/SimpleDataTable";
 
 export type CsvCellValue = string | number | boolean | null | undefined;

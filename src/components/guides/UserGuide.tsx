@@ -11,8 +11,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 
 // Lazy on purpose: `react-markdown` reaches
 // `decode-named-character-reference`, whose browser build calls
-// `document.createElement` at module scope. Statically imported, that ran the
-// moment anything imported this package — which killed every Node-side import
+// `document.createElement` at module scope. Statically imported, that would run
+// the moment anything imported this package, killing every Node-side import
 // (an app's pure-logic tests, a script) with "document is not defined". Behind a
 // dynamic import it only loads when a guide is rendered, and the package root
 // stays safe to import anywhere. See SectionMarkdown.tsx.

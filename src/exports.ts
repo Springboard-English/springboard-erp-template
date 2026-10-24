@@ -3,7 +3,7 @@ import "./index.css";
 export { configureApi, API_CONFIG } from "./config/api";
 
 // Signing in through Ory Hydra — authorization code + PKCE. **There is no
-// `SignIn` view any more** (4.0.0): the API hosts the one login page, as the
+// `SignIn` view**: the API hosts the one login page, as the
 // OIDC bridge in front of Hydra, and it is the only thing that ever sees a
 // password or a Google credential. An app mounts `OidcBoot` above
 // `AuthProvider`, routes `OIDC_CONFIG.callbackRoute` at `OidcCallback`, and
@@ -195,21 +195,17 @@ export type { AdvancedFiltersToggleProps } from "./components/management/Advance
 export * from "./utils/formatters";
 export * from "./utils/phone";
 export * from "./utils/urlQueryState";
-// Filter state that survives leaving and returning to a view. Was 233 lines
-// byte-identical in erp-hrm, erp-crm and lms, with a copy of its test in each.
+// Filter state that survives leaving and returning to a view.
 export * from "./utils/viewFilterState";
 export * from "./utils/queryCache";
 // Paging a cursor-paginated list. `cursorPagination` walks cursors to reach an
-// offset — every app had its own copy of that walk and two of them returned the
-// FIRST page's rows as the last page's (see `fetchPageSlice`). `cursorTrail`
-// remembers the cursors already walked, so Previous, and coming back to a saved
-// page, cost one request instead of re-walking from the beginning.
+// offset. `cursorTrail` remembers the cursors already walked, so Previous, and
+// coming back to a saved page, cost one request instead of re-walking from the
+// beginning.
 export * from "./utils/cursorPagination";
 export * from "./utils/cursorTrail";
-// erp-ops's version: it is the only one with `csvText`, which wraps an
-// identifier as `="…"` so Excel stops eating the leading zero on a CITAD bank
-// code or an account number. erp-hrm and lms shipped the same file without it,
-// and erp-crm had a third copy inline with no BOM either.
+// CSV export. `csvText` wraps an identifier as `="…"` so Excel keeps the
+// leading zero on a CITAD bank code or an account number.
 export * from "./utils/csvExport";
 export * from "./utils/userScopes";
 export * from "./utils/permissions";
@@ -263,7 +259,7 @@ export * from "./components/ui/textarea";
 // How an app re-skins the shared primitives without forking them: a layer of
 // Tailwind classes merged between the built-in variant classes and the caller's
 // `className`. Registered once at boot like `configureApi`; see
-// `config/uiPreset` for why tokens alone were not enough.
+// `config/uiPreset` for why tokens alone are not enough.
 export { configureUIPreset, getUIPreset, uiPresetClass } from "./config/uiPreset";
 export type { UIPreset, UIPresetSlot, UIPresetSlotArgs } from "./config/uiPreset";
 
@@ -389,10 +385,8 @@ export type {
 } from "./components/widgets/types";
 export { patchCurrentUserInfo } from "./api_calls/UserData";
 
-// The authed transport. Each app used to carry its own near-identical copy of
-// fetchWithRefresh — two were byte-for-byte this one — which meant a change to
-// how auth travels had to be made five times, and the iOS cookie bug had to be
-// fixed five times. They import it from here now.
+// The authed transport, shared so that how auth travels is decided once for
+// every app.
 export {
   fetchWithRefresh,
   fetchWithRetryAfter,
@@ -410,10 +404,9 @@ export {
 // Why a request failed, rather than that it did. `NetworkError` arrives on its
 // own — every request already goes through the transport above, so a dead
 // server names the endpoint instead of saying "Failed to fetch". `ApiError`
-// needs the call site: swap a hand-written throw of
-// "Failed to fetch tests: <status> <statusText>" for
-// `await throwIfNotOk(response, "Failed to fetch tests")` and the API's own
-// explanation follows the status.
+// needs the call site: `await throwIfNotOk(response, "Failed to fetch tests")`
+// throws "Failed to fetch tests: <status> <statusText>" with the API's own
+// explanation following the status.
 export {
   ApiError,
   NetworkError,

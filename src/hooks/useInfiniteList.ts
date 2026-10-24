@@ -8,11 +8,10 @@ import { useInfiniteQuery } from "@tanstack/react-query";
  * page after this one — a cursor string for a cursor API, `page + 1` for an
  * offset one. `null` means this is the last page.
  *
- * Deliberately the caller's answer rather than something inferred here. The
- * old shape guessed with `rows.length === pageSize`, which is wrong whenever a
- * fetch fails: the rows come back empty, the guess says "no more", and the
- * list tells the reader it has reached the end of a list it is halfway
- * through.
+ * Deliberately the caller's answer rather than something inferred here. A
+ * guess from `rows.length === pageSize` is wrong whenever a fetch fails: the
+ * rows come back empty, the guess says "no more", and the list tells the
+ * reader it has reached the end of a list it is halfway through.
  */
 export interface InfiniteListPage<T, TPageParam = unknown> {
     items: T[];
@@ -47,12 +46,10 @@ export interface InfiniteList<T> {
  * Infinite list state, backed by the query cache rather than by component
  * state.
  *
- * This replaces a hand-rolled accumulation that every call site had to feed
- * correctly: merge pages by key, rebuild them when a filter changed (a
- * `resetKey` the caller had to remember to pass), compute `hasMore`, and hold a
- * "already asked for this" guard. Changing `queryKey` resets the pages here, so
- * the filter case cannot be forgotten, and a failed page is retried at the same
- * page param instead of the list skipping past it.
+ * The caller merges no pages, computes no `hasMore` and holds no "already
+ * asked for this" guard. Changing `queryKey` resets the pages, so a filter
+ * change cannot be forgotten, and a failed page is retried at the same page
+ * param instead of the list skipping past it.
  */
 export function useInfiniteList<T, TPageParam = unknown>({
     queryKey,
