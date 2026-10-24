@@ -104,7 +104,8 @@ function toUserNotification(raw: unknown): UserNotification | null {
 
 export async function fetchUserNotifications(activeOnly = true): Promise<UserNotification[]> {
     const url = new URL(`${API_CONFIG.baseURL}/v2/users/me/notifications`);
-    if (!activeOnly) url.searchParams.set("active_only", "false");
+    // Always sent: the API's default is `false`, so omitting it means "all".
+    url.searchParams.set("active_only", String(activeOnly));
     url.searchParams.set("page_size", "100");
     const response = await fetchWithRefresh(url.toString(), {
         method: "GET",
