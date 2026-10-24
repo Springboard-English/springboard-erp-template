@@ -42,5 +42,5 @@ Consuming apps import components/hooks from the package entry point and the styl
 
 - **`src/exports.ts` is the contract.** A component/hook not exported there is invisible to consumers, even if implemented.
 - Only `react`, `react-dom`, and `react-router-dom` are bundler-externals (peer deps) — everything else is bundled into `dist`.
-- All views live under `src/views` and should follow the `ManagementClassDetails` reference shape (see `AGENTS.md`).
-- No test suite currently exists; verification is `npm run build` + `npx tsc` (no emit) per `AGENTS.md`.
+- All views live under `src/views` and should follow the `ManagementClassDetails` reference shape (it lives in `lms.springboard.vn`; see that repo's `AGENTS.md`).
+- Verification is `npm run build` + `npx tsc` (no emit) + `npm test` (vitest) per `AGENTS.md`. Feature behaviour is in `docs/features.md`, releasing in `docs/releasing.md`.

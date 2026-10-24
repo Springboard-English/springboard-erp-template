@@ -155,7 +155,7 @@ not. §5's Step 1 stands unimplemented, and is the largest remaining gap (§4).
 
 ### The API is fully automated
 
-Per `api.springboard.vn/CLAUDE.md`:
+Per `api.springboard.vn/AGENTS.md`:
 
 - **`main` → Cloud Build trigger → auto-deploy** to the dev/staging Cloud Run
   service. Merging to `main` is shipping.
