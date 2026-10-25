@@ -9,7 +9,7 @@ import {
 } from "react";
 import { animated, useSpring } from "@react-spring/web";
 
-import { ArrowLeft, ChevronRight, Expand, PanelRight } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Expand, PanelRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
@@ -335,8 +335,9 @@ export function DetailView({
 
 /**
  * Detail page title with its parent pages shown above it as a small
- * "← Parent / Child" back link. Items with an `onClick` are clickable; the
- * title renders as the page's `h2`.
+ * "← Parent / Child" back link. On a phone it becomes a navigation bar: only
+ * the nearest parent, as a full-height "‹ Parent" tap target, over a large
+ * title. Items with an `onClick` are clickable; the title is the page's `h2`.
  */
 export function DetailBreadcrumbs({
     items,
@@ -345,30 +346,37 @@ export function DetailBreadcrumbs({
     items: BreadcrumbItem[];
     current: ReactNode;
 }) {
+    const lastIndex = items.length - 1;
     return (
-        <div className="space-y-2">
+        // On a phone the nav and title join DetailHeader's grid, so the actions share the nav's row.
+        <div className="space-y-2 max-md:contents">
             {items.length > 0 ? (
-                <nav className="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
-                    <ArrowLeft className="size-3" aria-hidden="true" />
+                <nav className="flex min-w-0 flex-wrap items-center gap-1 text-xs text-muted-foreground max-md:col-start-1 max-md:row-start-1 max-md:min-h-11 max-md:text-base max-md:text-primary">
+                    <ArrowLeft className="size-3 max-md:hidden" aria-hidden="true" />
                     {items.map((item, index) => (
-                        <div key={`${item.label}-${index}`} className="contents">
-                            {index > 0 ? <span aria-hidden="true">/</span> : null}
+                        // Native apps name only the screen you came from, so a phone hides the rest of the trail.
+                        <div
+                            key={`${item.label}-${index}`}
+                            className={cn("contents", index < lastIndex && "max-md:hidden")}
+                        >
+                            {index > 0 ? <span aria-hidden="true" className="max-md:hidden">/</span> : null}
                             {item.onClick ? (
                                 <button
                                     type="button"
-                                    className="underline-offset-4 hover:text-foreground hover:underline"
+                                    className="underline-offset-4 md:hover:text-foreground md:hover:underline max-md:-ml-1.5 max-md:inline-flex max-md:min-h-11 max-md:min-w-0 max-md:items-center"
                                     onClick={item.onClick}
                                 >
-                                    {item.label}
+                                    <ChevronLeft className="size-6 shrink-0 md:hidden" aria-hidden="true" />
+                                    <span className="truncate">{item.label}</span>
                                 </button>
                             ) : (
-                                <span>{item.label}</span>
+                                <span className="truncate">{item.label}</span>
                             )}
                         </div>
                     ))}
                 </nav>
             ) : null}
-            <h2 className="min-w-0 break-words text-xl font-semibold tracking-tight">
+            <h2 className="min-w-0 break-words text-xl font-semibold tracking-tight max-md:col-span-2 max-md:row-start-2 max-md:text-2xl max-md:font-bold">
                 {current}
             </h2>
         </div>
@@ -399,14 +407,16 @@ export function DetailHeader({
             data-detail-header
             className={cn(
                 "flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between",
+                // Phone: a nav bar row (back left, actions right) above the title.
+                "max-md:grid max-md:grid-cols-[minmax(0,1fr)_auto] max-md:items-center max-md:gap-x-3 max-md:gap-y-1",
                 className,
             )}
         >
-            <div className="min-w-0 flex-1">
+            <div className="min-w-0 flex-1 max-md:contents">
                 {breadcrumbs}
             </div>
             {actions ? (
-                <div className="flex shrink-0 items-center gap-2 self-start">
+                <div className="flex shrink-0 items-center gap-2 self-start max-md:col-start-2 max-md:row-start-1 max-md:self-center">
                     {showExpandAction ? (
                         <Button
                             type="button"
