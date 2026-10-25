@@ -734,6 +734,7 @@ export interface DetailTabsClassNames {
     tabActive?: string;
 }
 
+/** Underlined tab bar for a detail view: a full-width track, a spring underline under the active tab, and a hover underline on the rest. */
 export function DetailTabs<T extends string>({
     tabs,
     activeTab,
@@ -912,12 +913,13 @@ export function DetailTabs<T extends string>({
     }, [updatePill]);
 
     return (
-        <div className={cn("overflow-x-auto rounded-2xl border border-border/70 bg-card/70 p-1 drop-shadow-md", className, classNames?.root)}>
-            <div ref={tabListRef} className={cn("relative flex min-w-max gap-2", classNames?.list)}>
-                {/* Spring-animated active pill — inside the flex div so offsetLeft is accurate */}
+        <div className={cn("w-full overflow-x-auto", className, classNames?.root)}>
+            {/* The bottom border is the track; it spans the full width even when the tabs don't */}
+            <div ref={tabListRef} className={cn("relative flex min-w-max border-b border-border", classNames?.list)}>
+                {/* Spring-animated active underline, sitting over the track */}
                 <animated.div
                     aria-hidden="true"
-                    className={cn("pointer-events-none absolute left-0 top-0 h-full rounded-xl bg-primary shadow-sm", classNames?.pill)}
+                    className={cn("pointer-events-none absolute -bottom-px left-0 h-0.5 rounded-full bg-primary", classNames?.pill)}
                     style={{
                         left: pillSpring.left,
                         width: pillSpring.width,
@@ -957,17 +959,24 @@ export function DetailTabs<T extends string>({
                             onChange(tab.value);
                         }}
                         className={cn(
-                            "relative z-10 shrink-0 cursor-pointer whitespace-nowrap rounded-xl px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] transition-colors duration-150",
+                            "group relative z-10 shrink-0 cursor-pointer whitespace-nowrap px-4 pb-2.5 pt-1 text-sm font-medium transition-colors duration-200",
                             resolvedActiveTab === tab.value
-                                ? "text-primary-foreground"
+                                ? "text-foreground"
                                 : tab.hasPendingChanges
-                                  ? "font-bold text-primary hover:bg-primary/10"
-                                  : "text-muted-foreground hover:text-accent-foreground",
+                                  ? "font-semibold text-primary"
+                                  : "text-muted-foreground hover:text-foreground",
                             classNames?.tab,
                             resolvedActiveTab === tab.value && classNames?.tabActive,
                         )}
                     >
                         {tab.label}
+                        {/* Hover underline grows from the centre; the active tab has the spring underline instead */}
+                        {resolvedActiveTab !== tab.value && (
+                            <span
+                                aria-hidden="true"
+                                className="pointer-events-none absolute inset-x-2 -bottom-px h-0.5 origin-center scale-x-0 rounded-full bg-primary/40 transition-transform duration-200 ease-out group-hover:scale-x-100 motion-reduce:transition-none"
+                            />
+                        )}
                     </button>
                 ))}
             </div>
