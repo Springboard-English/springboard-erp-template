@@ -9,7 +9,7 @@ import {
 } from "react";
 import { animated, useSpring } from "@react-spring/web";
 
-import { ChevronRight, Expand, PanelRight } from "lucide-react";
+import { ArrowLeft, ChevronRight, Expand, PanelRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
@@ -333,6 +333,11 @@ export function DetailView({
     );
 }
 
+/**
+ * Detail page title with its parent pages shown above it as a small
+ * "← Parent / Child" back link. Items with an `onClick` are clickable; the
+ * title renders as the page's `h2`.
+ */
 export function DetailBreadcrumbs({
     items,
     current,
@@ -341,29 +346,28 @@ export function DetailBreadcrumbs({
     current: ReactNode;
 }) {
     return (
-        <div className="flex flex-wrap items-center gap-2 text-base">
-            {items.map((item, index) => (
-                <div key={`${item.label}-${index}`} className="contents">
-                    {item.onClick ? (
-                        <Button
-                            type="button"
-                            variant="link"
-                            size="sm"
-                            className="h-auto px-0 text-base no-underline hover:no-underline"
-                            onClick={item.onClick}
-                        >
-                            {item.label}
-                        </Button>
-                    ) : (
-                        <span className="text-base">
-                            {item.label}
-                        </span>
-                    )}
-                    <span className="text-muted-foreground">
-                        {">"}
-                    </span>
-                </div>
-            ))}
+        <div className="space-y-2">
+            {items.length > 0 ? (
+                <nav className="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
+                    <ArrowLeft className="size-3" aria-hidden="true" />
+                    {items.map((item, index) => (
+                        <div key={`${item.label}-${index}`} className="contents">
+                            {index > 0 ? <span aria-hidden="true">/</span> : null}
+                            {item.onClick ? (
+                                <button
+                                    type="button"
+                                    className="underline-offset-4 hover:text-foreground hover:underline"
+                                    onClick={item.onClick}
+                                >
+                                    {item.label}
+                                </button>
+                            ) : (
+                                <span>{item.label}</span>
+                            )}
+                        </div>
+                    ))}
+                </nav>
+            ) : null}
             <h2 className="min-w-0 break-words text-xl font-semibold tracking-tight">
                 {current}
             </h2>
