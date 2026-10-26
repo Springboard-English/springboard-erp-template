@@ -169,6 +169,8 @@ export {
   DetailView,
   DetailHeader,
   DetailBreadcrumbs,
+  DetailChip,
+  DetailActionsMenu,
   DetailSummaryGrid,
   DetailSummaryItem,
   DetailCard,
@@ -184,7 +186,12 @@ export {
   DetailPulse,
   BackgroundDetailViewContext,
 } from "./components/layout/DetailLayout";
-export type { DetailTabsClassNames } from "./components/layout/DetailLayout";
+export type {
+  DetailTabsClassNames,
+  DetailTabItem,
+  DetailChipTone,
+  DetailMenuAction,
+} from "./components/layout/DetailLayout";
 export { default as ProgressMetricCell } from "./components/cells/ProgressMetricCell";
 export { default as AdvancedFiltersPanel } from "./components/management/AdvancedFiltersPanel";
 export type { AdvancedFiltersPanelProps } from "./components/management/AdvancedFiltersPanel";

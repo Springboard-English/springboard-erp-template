@@ -9,8 +9,15 @@ import {
 } from "react";
 import { animated, useSpring } from "@react-spring/web";
 
-import { ArrowLeft, ChevronLeft, ChevronRight, Expand, PanelRight } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Expand, MoreHorizontal, PanelRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/context/I18nContext";
@@ -342,9 +349,15 @@ export function DetailView({
 export function DetailBreadcrumbs({
     items,
     current,
+    status,
+    summary,
 }: {
     items: BreadcrumbItem[];
     current: ReactNode;
+    /** Sits beside the title, typically one `DetailChip`. */
+    status?: ReactNode;
+    /** A row of `DetailChip`s under the title giving the record's gist. */
+    summary?: ReactNode;
 }) {
     const lastIndex = items.length - 1;
     return (
@@ -376,10 +389,99 @@ export function DetailBreadcrumbs({
                     ))}
                 </nav>
             ) : null}
-            <h2 className="min-w-0 break-words text-xl font-semibold tracking-tight max-md:col-span-2 max-md:row-start-2 max-md:text-2xl max-md:font-bold">
-                {current}
-            </h2>
+            <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 max-md:col-span-2 max-md:row-start-2">
+                <h2 className="min-w-0 break-words text-xl font-semibold tracking-tight max-md:text-2xl max-md:font-bold">
+                    {current}
+                </h2>
+                {status}
+            </div>
+            {summary ? (
+                <div className="flex flex-wrap items-center gap-1.5 max-md:col-span-2 max-md:row-start-3">
+                    {summary}
+                </div>
+            ) : null}
         </div>
+    );
+}
+
+export type DetailChipTone = "neutral" | "lav" | "mint" | "peach" | "sky" | "butter";
+
+const DETAIL_CHIP_TONES: Record<DetailChipTone, string> = {
+    neutral: "border-border bg-muted text-muted-foreground",
+    lav: "border-lav-300/60 bg-lav-bg text-lav-700",
+    mint: "border-mint-300/60 bg-mint-bg text-mint-700",
+    peach: "border-peach-300/60 bg-peach-bg text-peach-700",
+    sky: "border-sky-300/60 bg-sky-bg text-sky-700",
+    butter: "border-butter-300/60 bg-butter-bg text-butter-700",
+};
+
+/** A small pastel pill for a status or a fact about the record. Tones need the app's `lav`/`mint`/`peach`/`sky`/`butter` colour tokens. */
+export function DetailChip({
+    tone = "neutral",
+    icon,
+    children,
+    className,
+}: {
+    tone?: DetailChipTone;
+    icon?: ReactNode;
+    children: ReactNode;
+    className?: string;
+}) {
+    return (
+        <span
+            className={cn(
+                "inline-flex max-w-full items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium [&_svg]:size-3.5 [&_svg]:shrink-0",
+                DETAIL_CHIP_TONES[tone],
+                className,
+            )}
+        >
+            {icon}
+            <span className="truncate">{children}</span>
+        </span>
+    );
+}
+
+export interface DetailMenuAction {
+    label: ReactNode;
+    icon?: ReactNode;
+    onSelect: () => void;
+    disabled?: boolean;
+    /** Destructive actions sit last, under a divider, in red. */
+    destructive?: boolean;
+}
+
+/** A "⋯" button opening a menu of the page's less common actions, so a destructive one is never a single click away. */
+export function DetailActionsMenu({ actions }: { actions: DetailMenuAction[] }) {
+    const { t } = useI18n();
+    if (actions.length === 0) {
+        return null;
+    }
+    const regular = actions.filter((action) => !action.destructive);
+    const destructive = actions.filter((action) => action.destructive);
+    const renderItem = (action: DetailMenuAction, index: number) => (
+        <DropdownMenuItem
+            key={index}
+            variant={action.destructive ? "destructive" : "default"}
+            disabled={action.disabled}
+            onSelect={action.onSelect}
+        >
+            {action.icon}
+            {action.label}
+        </DropdownMenuItem>
+    );
+    return (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button type="button" variant="outline" size="icon-sm" aria-label={t("detail.moreActions")}>
+                    <MoreHorizontal aria-hidden />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-44">
+                {regular.map(renderItem)}
+                {regular.length > 0 && destructive.length > 0 ? <DropdownMenuSeparator /> : null}
+                {destructive.map(renderItem)}
+            </DropdownMenuContent>
+        </DropdownMenu>
     );
 }
 
@@ -481,7 +583,7 @@ export function DetailHeader({
 
 export function DetailSummaryGrid({
     children,
-    className = "grid gap-4 rounded-3xl border border-border/70 bg-card p-5 shadow-[0_20px_50px_-30px_rgba(0,0,0,0.45)] md:grid-cols-4",
+    className = "grid gap-4 rounded-3xl border border-border/70 bg-card p-5 shadow-md md:grid-cols-4",
 }: {
     children: ReactNode;
     className?: string;
@@ -502,7 +604,7 @@ export function DetailSummaryItem({ label, value }: DetailStat) {
 
 export function DetailCard({
     children,
-    className = "rounded-3xl border border-border/70 bg-card p-5 shadow-[0_18px_40px_-28px_rgba(0,0,0,0.35)]",
+    className = "rounded-3xl border border-border/70 bg-card p-5 shadow-md",
 }: {
     children: ReactNode;
     className?: string;
@@ -569,7 +671,7 @@ export function DetailFieldsTable({
     return (
         <div
             className={cn(
-                "overflow-hidden rounded-2xl border border-border/70 bg-card shadow-[0_18px_40px_-28px_rgba(0,0,0,0.35)]",
+                "overflow-hidden rounded-2xl border border-border/70 bg-card shadow-md",
                 scrollable && "min-h-0",
                 className,
             )}
@@ -715,7 +817,7 @@ export function DetailActionPanel({
     children: ReactNode;
 }) {
     return (
-        <aside className="rounded-3xl border border-border/70 bg-card p-5 shadow-[0_18px_40px_-28px_rgba(0,0,0,0.35)]">
+        <aside className="rounded-3xl border border-border/70 bg-card p-5 shadow-md">
             <div className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                 {title}
             </div>
@@ -724,6 +826,14 @@ export function DetailActionPanel({
             </div>
         </aside>
     );
+}
+
+export interface DetailTabItem<T extends string> {
+    value: T;
+    label: ReactNode;
+    hasPendingChanges?: boolean;
+    /** Shown as a small pill after the label; omitted while unknown. */
+    count?: number;
 }
 
 export interface DetailTabsClassNames {
@@ -742,7 +852,7 @@ export function DetailTabs<T extends string>({
     className,
     classNames,
 }: {
-    tabs: Array<{ value: T; label: ReactNode; hasPendingChanges?: boolean }>;
+    tabs: Array<DetailTabItem<T>>;
     activeTab: T;
     onChange: (tab: T) => void;
     className?: string;
@@ -970,6 +1080,11 @@ export function DetailTabs<T extends string>({
                         )}
                     >
                         {tab.label}
+                        {tab.count !== undefined ? (
+                            <span className="ml-1.5 inline-flex min-w-5 justify-center rounded-full bg-lav-bg px-1.5 py-px text-[11px] font-semibold tabular-nums text-lav-700">
+                                {tab.count}
+                            </span>
+                        ) : null}
                         {/* Hover underline grows from the centre; the active tab has the spring underline instead */}
                         {resolvedActiveTab !== tab.value && (
                             <span
@@ -994,7 +1109,7 @@ export function DetailTabbedSection<T extends string>({
     contentScrollable,
     scrollResetKey,
 }: {
-    tabs: Array<{ value: T; label: ReactNode; hasPendingChanges?: boolean }>;
+    tabs: Array<DetailTabItem<T>>;
     activeTab: T;
     onChange: (tab: T) => void;
     children: ReactNode;
