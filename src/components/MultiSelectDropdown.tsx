@@ -40,7 +40,7 @@ export default function MultiSelectDropdown({
         <DropdownMenuTrigger asChild>
           <button
             type="button"
-            className="grid h-10 w-full min-w-0 max-w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-2 overflow-hidden rounded-md border border-input bg-background px-3 text-sm font-normal"
+            className="grid h-11 w-full md:pointer-fine:h-9 min-w-0 max-w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-2 overflow-hidden rounded-md border border-input bg-background px-3 text-sm font-normal"
           >
             <span className="block min-w-0 max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-left">
               {displayValue}
@@ -59,7 +59,7 @@ export default function MultiSelectDropdown({
                 <button
                   key={scope}
                   type="button"
-                  className="flex w-full items-center justify-between rounded-sm px-2 py-1.5 text-left text-sm hover:bg-muted"
+                  className="flex w-full items-center justify-between rounded-sm px-2 py-1.5 text-left text-sm hover:bg-muted max-md:min-h-11 pointer-coarse:min-h-11"
                   onClick={() => {
                     const nextScopes = checked
                       ? selectedScopes.filter((item) => item !== scope)

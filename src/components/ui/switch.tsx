@@ -2,6 +2,7 @@ import * as React from "react"
 import { Switch as SwitchPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
+import { touchHitArea } from "@/lib/touchTarget"
 
 function Switch({
   className,
@@ -15,7 +16,8 @@ function Switch({
       data-slot="switch"
       data-size={size}
       className={cn(
-        "peer group/switch inline-flex shrink-0 items-center rounded-full border-2 border-muted p-0.5 shadow-xs transition-all duration-200 ease-bounce outline-none focus-visible:border-rose-400 focus-visible:ring-4 focus-visible:ring-rose-100 disabled:cursor-not-allowed disabled:opacity-50 data-[size=default]:h-[30px] data-[size=default]:w-[52px] data-[size=sm]:h-5 data-[size=sm]:w-9 data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=unchecked]:border-input data-[state=unchecked]:bg-input",
+        touchHitArea,
+        "peer group/switch relative inline-flex shrink-0 items-center rounded-full border-2 border-muted p-0.5 shadow-xs transition-all duration-200 ease-bounce outline-none focus-visible:border-rose-400 focus-visible:ring-4 focus-visible:ring-rose-100 disabled:cursor-not-allowed disabled:opacity-50 data-[size=default]:h-[30px] data-[size=default]:w-[52px] data-[size=sm]:h-5 data-[size=sm]:w-9 data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=unchecked]:border-input data-[state=unchecked]:bg-input",
         className
       )}
       {...props}

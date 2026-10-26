@@ -284,7 +284,7 @@ function DashboardLayoutInner({
               type="button"
               variant="outline"
               size="icon"
-              className="absolute -right-4 top-6 z-10 hidden size-8 rounded-full border-border/70 bg-background shadow-sm md:flex"
+              className="absolute -right-4 top-6 z-10 hidden size-9 rounded-full border-border/70 bg-background shadow-sm md:flex"
               onClick={() => setCollapsed((current) => !current)}
               aria-label={
                 collapsed

@@ -4,9 +4,13 @@ import { Slot } from "radix-ui"
 
 import { cn } from "@/lib/utils"
 import { uiPresetClass } from "@/config/uiPreset"
+import { buttonTarget } from "@/lib/touchTarget"
 
 const buttonVariants = cva(
-  "inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  // Two heights for the whole suite: 44px on phones and touch screens, 36px on
+  // a desktop with a mouse, matching the inputs beside them. Both are minimums,
+  // so a caller's `h-8` or a preset's height can't take a button below them.
+  `${buttonTarget} inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4`,
   {
     variants: {
       variant: {
@@ -25,21 +29,19 @@ const buttonVariants = cva(
           "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
         link: "text-primary underline-offset-4 hover:underline",
       },
-      // The suite uses a touch-legal control rather than a separate mobile
-      // density, and that belongs HERE rather than at each call site. The
-      // smaller rungs are a *desktop* density: below `md` they all clamp to
-      // 44px, so `size="sm"` is correct on a phone by construction and no
-      // caller needs to patch a height back up. A rule every caller must
-      // remember is a rule that gets missed.
+      // Every rung shares one height per device: 44px on touch, 36px on a
+      // mouse desktop. The smaller rungs differ only in padding, gap and type
+      // size; `lg` is the one taller rung, for a page's main call to action.
+      // `md:` heights also apply on an iPad, where the touch floor lifts them.
       size: {
-        default: "h-11 px-6 py-2 has-[>svg]:px-4",
-        xs: "h-11 gap-1 rounded-md px-2 text-xs has-[>svg]:px-1.5 md:h-6 [&_svg:not([class*='size-'])]:size-3",
+        default: "h-11 px-6 py-2 has-[>svg]:px-4 md:h-9",
+        xs: "h-11 gap-1 rounded-md px-2 text-xs has-[>svg]:px-1.5 md:h-9 [&_svg:not([class*='size-'])]:size-3",
         sm: "h-11 gap-1.5 rounded-md px-3 has-[>svg]:px-2.5 md:h-9",
-        lg: "h-12 rounded-md px-8 has-[>svg]:px-6",
-        icon: "size-11",
-        "icon-xs": "size-11 rounded-md md:size-6 [&_svg:not([class*='size-'])]:size-3",
+        lg: "h-12 rounded-md px-8 has-[>svg]:px-6 md:h-10",
+        icon: "size-11 md:size-9",
+        "icon-xs": "size-11 rounded-md md:size-9 [&_svg:not([class*='size-'])]:size-3",
         "icon-sm": "size-11 md:size-9",
-        "icon-lg": "size-12",
+        "icon-lg": "size-12 md:size-10",
       },
     },
     defaultVariants: {

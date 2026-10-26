@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Check, X } from 'lucide-react';
+import { touchHitArea } from '@/lib/touchTarget';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/context/I18nContext';
 import { ComboboxField, comboboxItemClassName } from './combobox-field';
@@ -113,7 +114,7 @@ export function TagFilter({
       <button
         type="button"
         aria-label={t('tagFilter.clear', 'Clear tags')}
-        className="cursor-pointer text-muted-foreground transition hover:text-foreground"
+        className={cn(touchHitArea, 'relative cursor-pointer text-muted-foreground transition hover:text-foreground')}
         // mousedown, not click: keep the field from opening under the press.
         onMouseDown={(event) => {
           event.preventDefault();

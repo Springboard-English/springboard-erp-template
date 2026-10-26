@@ -1,3 +1,4 @@
+import { touchTargetHeight } from '@/lib/touchTarget';
 import { cn } from '@/lib/utils';
 import ChartLegend from '@/components/charts/ChartLegend';
 import { useChartPalette } from '@/components/charts/palette';
@@ -136,7 +137,7 @@ export default function FunnelBars({
                 <button
                   type="button"
                   onClick={() => onStageClick(stage)}
-                  className="w-full rounded-lg text-left transition-opacity hover:opacity-80"
+                  className={cn(touchTargetHeight, "w-full rounded-lg text-left transition-opacity hover:opacity-80")}
                 >
                   {row}
                 </button>

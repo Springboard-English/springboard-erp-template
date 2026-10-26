@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Check, Loader2 } from 'lucide-react';
+import { touchTargetHeight } from '@/lib/touchTarget';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/context/I18nContext';
 import { ComboboxField, comboboxItemClassName } from './combobox-field';
@@ -370,6 +371,7 @@ export function SearchableSelect({
               onClick={handleLoadMore}
               disabled={loadingMore || loading}
               className={cn(
+                touchTargetHeight,
                 'mt-1 flex w-full cursor-pointer items-center justify-center gap-2 rounded-sm px-2 py-1.5 text-sm text-muted-foreground outline-none transition',
                 'hover:bg-accent hover:text-accent-foreground',
                 'disabled:pointer-events-none disabled:opacity-50',

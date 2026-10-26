@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { ChevronDown, Loader2 } from 'lucide-react';
 import { Popover as PopoverPrimitive } from 'radix-ui';
+import { fieldHeight, touchTargetHeight } from '@/lib/touchTarget';
 import { cn } from '@/lib/utils';
 
 /** What {@link ComboboxField} hands its list renderer for one open popover. */
@@ -167,7 +168,8 @@ export function ComboboxField({
             onKeyDown={handleKeyDown}
             onBlur={() => setOpen(false)}
             className={cn(
-              'h-11 w-full min-w-0 cursor-pointer truncate rounded-md border border-input bg-background pr-9 pl-3 text-base shadow-xs outline-none transition md:text-sm',
+              fieldHeight,
+              'w-full min-w-0 cursor-pointer truncate rounded-md border border-input bg-background pr-9 pl-3 text-base shadow-xs outline-none transition md:text-sm',
               'placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50',
               'disabled:cursor-not-allowed disabled:opacity-50',
               open && 'cursor-text',
@@ -217,6 +219,7 @@ export function ComboboxField({
 /** Classes for one list row; `active` is the keyboard highlight. */
 export function comboboxItemClassName(active: boolean): string {
   return cn(
+    touchTargetHeight,
     'flex w-full min-w-0 cursor-pointer items-center justify-between gap-2 rounded-sm px-2 py-1.5 text-left text-sm outline-none transition',
     'disabled:pointer-events-none disabled:opacity-50',
     active && 'bg-accent text-accent-foreground',

@@ -101,7 +101,7 @@ function FieldControl({ field, value, onChange, form, invalid, compact = false, 
             );
         case "checkbox":
             return (
-                <label className="inline-flex min-h-11 items-center gap-2 text-sm md:min-h-9">
+                <label className="inline-flex min-h-11 items-center gap-2 text-sm md:pointer-fine:min-h-9">
                     <Checkbox
                         aria-label={label}
                         checked={value === true}
@@ -119,7 +119,7 @@ function FieldControl({ field, value, onChange, form, invalid, compact = false, 
                         {...common}
                         value={selected}
                         onChange={(event) => onChange(event.target.value)}
-                        className="h-11 w-full rounded-md border border-input bg-transparent px-3 text-base md:h-9 md:text-sm"
+                        className="h-11 w-full rounded-md border border-input bg-transparent px-3 text-base md:text-sm md:pointer-fine:h-9"
                     >
                         <option value="">{t("schemaForm.choose", "Choose...")}</option>
                         {options.map((option) => (

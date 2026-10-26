@@ -3,6 +3,7 @@ import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react"
 import { Select as SelectPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
+import { touchTargetHeight } from "@/lib/touchTarget"
 
 function Select({
   ...props
@@ -35,7 +36,8 @@ function SelectTrigger({
       data-slot="select-trigger"
       data-size={size}
       className={cn(
-        "flex w-fit items-center justify-between gap-2 rounded-md border-2 border-input bg-card px-4 py-2 text-sm font-semibold whitespace-nowrap shadow-xs transition-all duration-200 ease-soft outline-none focus-visible:-translate-y-px focus-visible:border-rose-400 focus-visible:ring-4 focus-visible:ring-rose-100 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-error data-[placeholder]:text-ink-300 data-[placeholder]:font-medium data-[size=default]:h-12 data-[size=sm]:h-9 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2 dark:bg-input/30 dark:hover:bg-input/50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 [&_svg:not([class*='text-'])]:text-muted-foreground",
+        touchTargetHeight,
+        "flex w-fit items-center justify-between gap-2 rounded-md border-2 border-input bg-card px-4 py-2 text-sm font-semibold whitespace-nowrap shadow-xs transition-all duration-200 ease-soft outline-none focus-visible:-translate-y-px focus-visible:border-rose-400 focus-visible:ring-4 focus-visible:ring-rose-100 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-error data-[placeholder]:text-ink-300 data-[placeholder]:font-medium data-[size=default]:h-12 data-[size=sm]:h-9 md:pointer-fine:data-[size=default]:h-9 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2 dark:bg-input/30 dark:hover:bg-input/50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 [&_svg:not([class*='text-'])]:text-muted-foreground",
         className
       )}
       {...props}
@@ -117,6 +119,7 @@ function SelectItem({
     <SelectPrimitive.Item
       data-slot="select-item"
       className={cn(
+        touchTargetHeight,
         "relative flex w-full cursor-default items-center gap-2 rounded-xs py-2 pr-8 pl-3 text-sm font-semibold outline-hidden select-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 [&_svg:not([class*='text-'])]:text-muted-foreground *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
         className
       )}

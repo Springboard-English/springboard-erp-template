@@ -52,15 +52,24 @@ rules that keep it that way; a per-app copy of any of them is the bug.
   need no JS and do not flash on first paint. Reach for `useIsMobile()` only
   when the decision is which component to *mount*, or when a layout mode has to
   be suppressed outright (see `DetailLayout`'s floating panel).
-- **44px is the control size, and the scale enforces it — you do not.** Every
-  `Button` size clamps to 44px below `md` and relaxes to its dense value above,
-  so `size="sm"` is already correct on a phone. **Never patch a height back up
-  at a call site.** That was the first design, and it did not hold: two of the
-  template's own components had to carry `h-11 md:h-9`, and the sign-in chrome
-  that forgot to was found by the Playwright suite rather than by review.
-  ⚠️ A **preset** height *replaces* the built-in one, mobile clamp included — so
-  a bare `h-9` in a `UIPreset` opts that app out of this rule silently. Keep the
-  `md:` split on anything under 44px.
+- **Two control heights, and the scale enforces them — you do not.** Every
+  control is 44px on a phone or any touch screen (iPads included, through
+  `pointer-coarse`) and 36px on a desktop with a mouse (`md:pointer-fine:`).
+  Every `Button` size shares those heights; `sm` and `xs` change only padding and
+  type, and `lg` is the one taller rung. `Input`, `SearchableSelect`,
+  `TagFilter` and `TagInput` match. **Never patch a height at a call site.**
+- **The floor is a minimum, so nothing can undercut it.** `Button` carries
+  `buttonTarget` (`min-h-11 min-w-11 md:pointer-fine:min-h-9 md:pointer-fine:min-w-9`);
+  a caller's `h-8` or a preset's `h-9` cannot shrink it, because `min-height`
+  beats `height`. The only way under it is an explicit `min-h-0 min-w-0`, kept
+  for inline icons and text links inside a sentence, which take
+  `touchHitArea` instead.
+- **Plain `<button>`s use the exported helpers** from `lib/touchTarget.ts`:
+  `buttonTarget` for anything drawn as a button (pill, segmented toggle, pager
+  arrow), `touchTargetHeight` for full-width rows and menu items (44px on touch
+  only), `fieldHeight` for a field-like trigger, and `touchHitArea` for a small
+  icon that must keep its look (an invisible tap area of at least 44px on touch;
+  the element must be `relative` or `absolute` and not use `after:`).
 - **16px is the minimum font size for a text input.** `Input`/`Textarea` are
   `text-base md:text-sm` for exactly this reason: iOS Safari auto-zooms any
   focused field under 16px, and the zoom is hard to escape inside a scroll-locked

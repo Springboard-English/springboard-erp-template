@@ -526,7 +526,7 @@ export function GuidesSidebarContent({ rawGuides, collapsed }: GuidesSidebarCont
           <button
             type="button"
             onClick={() => setSidebarView("files")}
-            className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+            className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 py-1.5 md:pointer-fine:min-h-9 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
           >
             <ArrowLeft className="size-3.5" />
             {t("guides.allGuides")}

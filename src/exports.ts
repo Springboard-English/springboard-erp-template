@@ -260,6 +260,7 @@ export type {
   DetailViewCollapsedState,
 } from "./utils/detailViewMode";
 
+export * from "./lib/touchTarget";
 export * from "./components/ui/avatar";
 export * from "./components/ui/badge";
 export * from "./components/ui/button";

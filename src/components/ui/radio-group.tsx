@@ -3,6 +3,7 @@ import { CircleIcon } from "lucide-react"
 import { RadioGroup as RadioGroupPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
+import { touchHitArea } from "@/lib/touchTarget"
 
 function RadioGroup({
   className,
@@ -25,7 +26,8 @@ function RadioGroupItem({
     <RadioGroupPrimitive.Item
       data-slot="radio-group-item"
       className={cn(
-        "aspect-square size-5 shrink-0 rounded-full border-2 border-input bg-card text-primary shadow-xs transition-all duration-200 ease-bounce outline-none focus-visible:border-rose-400 focus-visible:ring-4 focus-visible:ring-rose-100 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-error data-[state=checked]:border-rose-500 dark:bg-input/30",
+        touchHitArea,
+        "relative aspect-square size-5 shrink-0 rounded-full border-2 border-input bg-card text-primary shadow-xs transition-all duration-200 ease-bounce outline-none focus-visible:border-rose-400 focus-visible:ring-4 focus-visible:ring-rose-100 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-error data-[state=checked]:border-rose-500 dark:bg-input/30",
         className
       )}
       {...props}

@@ -2,6 +2,7 @@ import { useState, type ReactNode } from "react";
 import { LogOut, Monitor, Moon, Sun, UserCog, type LucideIcon } from "lucide-react";
 import { ACCOUNTS_PROFILE_URL } from "@/config/accounts";
 import { cn } from "@/lib/utils";
+import { touchHitArea } from "@/lib/touchTarget";
 import { Separator } from "@/components/ui/separator";
 import {
   Sheet,
@@ -46,6 +47,9 @@ function AppearanceToggle() {
             key={option.value}
             type="button"
             className={cn(
+              // The track's 4px padding sits inside the 44px row; the hit area
+              // covers it so the whole row height is tappable.
+              touchHitArea,
               "relative z-10 flex items-center justify-center gap-1.5 rounded-[8px] px-2 text-xs font-medium transition-all duration-150",
               selected
                 ? "bg-background text-foreground shadow-sm"

@@ -35,8 +35,10 @@ releasing is in `docs/releasing.md`.
   `configureUIPreset` at boot; add a slot when a new one is needed. Put only
   what differs in a preset.
 - **Follow the mobile contract.** One breakpoint, `md`. CSS before
-  `useIsMobile()`. `Button` sizes already clamp to 44px below `md`, so never
-  patch a height at a call site. Inputs stay 16px on mobile. Every table has a
+  `useIsMobile()`. Controls are 44px on touch and 36px on a mouse desktop, and
+  `Button` enforces it with a minimum, so never patch a height at a call site;
+  a plain `<button>` uses the `lib/touchTarget.ts` helpers. Inputs stay 16px on
+  mobile. Every table has a
   `MobileCardList` fallback. Bottom-fixed UI uses the safe-area inset; use `dvh`,
   not `vh`. Transient status goes through `GlobalStatusProvider`.
 - **Release in three steps:** bump `version` and push a matching `v<x.y.z>` tag,
@@ -72,7 +74,8 @@ releasing is in `docs/releasing.md`.
   hexes in `palette.ts`, and their slot order is the colour-vision safety.
 - Consumers must `@source` the whole `dist/` directory; `dist/index.js` is a
   re-export stub.
-- A `UIPreset` height replaces the 44px mobile clamp; keep the `md:` split.
+- The control floor is `md:pointer-fine:` for desktop, not plain `md:`, so an
+  iPad (wider than `md`, coarse pointer) keeps 44px.
 - Occasion dates live in `utils/occasion.ts` and `boot.js` (accounts uses
   `boot.js` too); change both.
 - The logo also lives in the API as rasters; change them together.

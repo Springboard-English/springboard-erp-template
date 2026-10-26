@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { X } from 'lucide-react';
+import { touchHitArea } from '@/lib/touchTarget';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/context/I18nContext';
 
@@ -115,7 +116,7 @@ export function TagInput({
     <div className={cn('flex flex-col gap-1', className)}>
       <div
         className={cn(
-          'flex min-h-11 w-full flex-wrap items-center gap-1.5 rounded-md border border-input bg-background px-2 py-1.5 text-sm shadow-xs transition',
+          'flex min-h-11 w-full flex-wrap md:pointer-fine:min-h-9 items-center gap-1.5 rounded-md border border-input bg-background px-2 py-1.5 text-sm shadow-xs transition',
           'focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50',
           disabled && 'cursor-not-allowed opacity-50',
         )}
@@ -134,7 +135,7 @@ export function TagInput({
                   event.stopPropagation();
                   remove(tag);
                 }}
-                className="cursor-pointer text-muted-foreground transition hover:text-foreground"
+                className={cn(touchHitArea, 'relative cursor-pointer text-muted-foreground transition hover:text-foreground')}
                 aria-label={t('tagInput.remove', 'Remove {tag}', { tag })}
               >
                 <X className="size-3" />
@@ -170,7 +171,7 @@ export function TagInput({
                 event.preventDefault();
                 commit(suggestion);
               }}
-              className="cursor-pointer rounded border border-dashed border-border px-2 py-0.5 text-xs text-muted-foreground transition hover:border-solid hover:bg-accent hover:text-accent-foreground"
+              className="min-h-11 cursor-pointer rounded border border-dashed border-border px-2 py-0.5 text-xs md:pointer-fine:min-h-0 text-muted-foreground transition hover:border-solid hover:bg-accent hover:text-accent-foreground"
             >
               {suggestion}
             </button>

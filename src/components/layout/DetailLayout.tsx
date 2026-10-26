@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import { touchHitArea, touchTargetHeight } from "@/lib/touchTarget";
 import { useI18n } from "@/context/I18nContext";
 import useIsMobile from "@/hooks/useIsMobile";
 import {
@@ -823,7 +824,9 @@ export function DetailClassHeaderLabel({
                 type="button"
                 size="icon"
                 variant="ghost"
-                className="h-5 w-5 p-0 text-muted-foreground hover:text-foreground"
+                // An inline icon inside a label: it keeps its size, opts out of
+                // the button floor and takes an invisible tap area on touch.
+                className={cn(touchHitArea, "relative h-5 min-h-0 w-5 min-w-0 p-0 text-muted-foreground hover:text-foreground")}
                 onClick={onOpenClass}
                 disabled={!normalizedClassKey}
             >
@@ -1093,6 +1096,7 @@ export function DetailTabs<T extends string>({
                             onChange(tab.value);
                         }}
                         className={cn(
+                            touchTargetHeight,
                             "group relative z-10 shrink-0 cursor-pointer whitespace-nowrap px-4 pb-2.5 pt-1 text-sm font-medium transition-colors duration-200",
                             resolvedActiveTab === tab.value
                                 ? "text-foreground"

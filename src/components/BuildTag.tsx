@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useI18n } from '@/context/I18nContext';
+import { touchHitArea } from '@/lib/touchTarget';
 import { cn } from '@/lib/utils';
 
 import ChangelogDialog from './changelog/ChangelogDialog';
@@ -114,7 +115,8 @@ export default function BuildTag({
       onClick={() => setHistoryOpen(true)}
       className={cn(
         tagClassName,
-        'cursor-pointer underline decoration-dotted decoration-muted-foreground/40 underline-offset-2 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
+        touchHitArea,
+        'relative cursor-pointer underline decoration-dotted decoration-muted-foreground/40 underline-offset-2 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
       )}
       title={t('changelog.open')}
       data-testid="build-tag"

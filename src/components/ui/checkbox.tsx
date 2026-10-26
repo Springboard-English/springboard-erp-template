@@ -3,6 +3,7 @@ import { CheckIcon } from "lucide-react"
 import { Checkbox as CheckboxPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
+import { touchHitArea } from "@/lib/touchTarget"
 
 function Checkbox({
   className,
@@ -12,7 +13,8 @@ function Checkbox({
     <CheckboxPrimitive.Root
       data-slot="checkbox"
       className={cn(
-        "peer size-[26px] shrink-0 rounded-[9px] border-2 border-input bg-card shadow-xs transition-all duration-200 ease-bounce outline-none focus-visible:border-rose-400 focus-visible:ring-4 focus-visible:ring-rose-100 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-error data-[state=checked]:border-rose-500 data-[state=checked]:bg-rose-500 data-[state=checked]:text-white dark:bg-input/30",
+        touchHitArea,
+        "peer relative size-[26px] shrink-0 rounded-[9px] border-2 border-input bg-card shadow-xs transition-all duration-200 ease-bounce outline-none focus-visible:border-rose-400 focus-visible:ring-4 focus-visible:ring-rose-100 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-error data-[state=checked]:border-rose-500 data-[state=checked]:bg-rose-500 data-[state=checked]:text-white dark:bg-input/30",
         className
       )}
       {...props}

@@ -230,7 +230,7 @@ export default function WidgetFrame({
                     {editing && sortable ? (
                         <button
                             type="button"
-                            className="flex size-11 shrink-0 cursor-grab touch-none items-center justify-center rounded-md text-muted-foreground hover:bg-muted md:size-8"
+                            className="flex size-11 shrink-0 cursor-grab touch-none items-center justify-center rounded-md text-muted-foreground hover:bg-muted md:pointer-fine:size-9"
                             aria-label={t("widgets.drag", undefined, { title })}
                             {...sortable.handleProps}
                         >

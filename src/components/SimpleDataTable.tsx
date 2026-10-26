@@ -11,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { touchTargetHeight } from '@/lib/touchTarget';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/context/I18nContext';
 
@@ -288,7 +289,7 @@ export default function SimpleDataTable<T>({
                     <button
                       type="button"
                       onClick={() => handleSortClick(column.id)}
-                      className={cn("inline-flex w-full cursor-pointer items-center justify-center gap-1 whitespace-nowrap text-center text-sm font-medium text-muted-foreground", classNames?.sortButton)}
+                      className={cn(touchTargetHeight, "inline-flex w-full cursor-pointer items-center justify-center gap-1 whitespace-nowrap text-center text-sm font-medium text-muted-foreground", classNames?.sortButton)}
                     >
                       <span>{column.header}</span>
                       {sortBy === column.id ? (

@@ -2,6 +2,7 @@ import { useMemo, useRef, useState, useEffect } from "react";
 import { Bell, ExternalLink, RefreshCw, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { touchHitArea } from "@/lib/touchTarget";
 import { useNotifications } from "@/context/NotificationContext";
 import { useI18n } from "@/context/I18nContext";
 import {
@@ -73,7 +74,7 @@ export default function NotificationBell({ viewAllPath }: NotificationBellProps)
             <button
                 type="button"
                 onClick={() => setOpen((current) => !current)}
-                className="relative flex h-8 w-8 items-center justify-center rounded-md border border-border/70 bg-muted/45 text-foreground transition-colors hover:bg-muted"
+                className="relative flex min-h-11 min-w-11 items-center justify-center rounded-md md:pointer-fine:min-h-9 md:pointer-fine:min-w-9 border border-border/70 bg-muted/45 text-foreground transition-colors hover:bg-muted"
                 aria-label={t("notificationBell.ariaLabel", undefined, {
                     suffix:
                         unreadCount > 0
@@ -93,7 +94,7 @@ export default function NotificationBell({ viewAllPath }: NotificationBellProps)
             {open && (
                 <div
                     className={cn(
-                        "animate-in fade-in-0 slide-in-from-top-2 absolute right-0 top-10 z-[60] w-[min(92vw,30rem)] overflow-hidden rounded-xl border border-border bg-popover text-popover-foreground shadow-xl duration-150",
+                        "animate-in fade-in-0 slide-in-from-top-2 absolute right-0 top-full mt-2 z-[60] w-[min(92vw,30rem)] overflow-hidden rounded-xl border border-border bg-popover text-popover-foreground shadow-xl duration-150",
                     )}
                 >
                     <div className="flex items-center justify-between border-b border-border/70 px-4 py-3">
@@ -108,7 +109,7 @@ export default function NotificationBell({ viewAllPath }: NotificationBellProps)
                                         allNotifications.forEach((n) => dismiss(n.appsheet_key));
                                         setOpen(false);
                                     }}
-                                    className="text-xs text-muted-foreground transition-colors hover:text-foreground"
+                                    className={cn(touchHitArea, "relative text-xs text-muted-foreground transition-colors hover:text-foreground")}
                                 >
                                     {t("common.clearAll")}
                                 </button>
@@ -117,7 +118,7 @@ export default function NotificationBell({ viewAllPath }: NotificationBellProps)
                                 type="button"
                                 onClick={refetch}
                                 disabled={isLoading}
-                                className="text-muted-foreground transition-colors hover:text-foreground disabled:opacity-40"
+                                className={cn(touchHitArea, "relative text-muted-foreground transition-colors hover:text-foreground disabled:opacity-40")}
                                 aria-label={t("notificationBell.refresh")}
                             >
                                 <RefreshCw
@@ -166,7 +167,7 @@ export default function NotificationBell({ viewAllPath }: NotificationBellProps)
                                     <button
                                         type="button"
                                         onClick={() => dismiss(n.appsheet_key)}
-                                        className="mt-0.5 shrink-0 text-muted-foreground transition-colors hover:text-foreground"
+                                        className={cn(touchHitArea, "relative mt-0.5 shrink-0 text-muted-foreground transition-colors hover:text-foreground")}
                                         aria-label={t("notificationBell.dismiss")}
                                     >
                                         <X className="size-3.5" />

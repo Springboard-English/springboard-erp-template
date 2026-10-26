@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Bell, CheckCheck, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { touchHitArea } from "@/lib/touchTarget";
 import {
     fetchUserNotifications,
     getNotificationPriorityKind,
@@ -117,7 +118,7 @@ export default function NotificationCenter() {
                         <button
                             type="button"
                             onClick={markAllRead}
-                            className="flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+                            className={cn(touchHitArea, "relative flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground")}
                         >
                             <CheckCheck className="size-3.5" />
                             Mark all as read
@@ -127,7 +128,7 @@ export default function NotificationCenter() {
                         type="button"
                         onClick={() => void load()}
                         disabled={isLoading}
-                        className="flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground disabled:opacity-40"
+                        className={cn(touchHitArea, "relative flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground disabled:opacity-40")}
                     >
                         <RefreshCw className={cn("size-3.5", isLoading && "animate-spin")} />
                         Refresh
@@ -211,7 +212,7 @@ export default function NotificationCenter() {
                                     <button
                                         type="button"
                                         onClick={() => markRead(n)}
-                                        className="mt-0.5 shrink-0 rounded-md border border-border/60 px-2 py-1 text-[11px] text-muted-foreground transition-colors hover:border-border hover:text-foreground"
+                                        className="mt-0.5 inline-flex min-h-11 shrink-0 items-center rounded-md border border-border/60 px-2 py-1 text-[11px] md:pointer-fine:min-h-9 text-muted-foreground transition-colors hover:border-border hover:text-foreground"
                                         title="Mark as read"
                                     >
                                         Mark read

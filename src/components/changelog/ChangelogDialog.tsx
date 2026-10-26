@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { History } from "lucide-react";
 
 import { useI18n } from "@/context/I18nContext";
+import { touchHitArea } from "@/lib/touchTarget";
 import { cn } from "@/lib/utils";
 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../ui/dialog";
@@ -174,7 +175,10 @@ export default function ChangelogDialog({
           <button
             type="button"
             onClick={() => setShowInternal((value) => !value)}
-            className="self-start text-xs font-medium text-muted-foreground underline decoration-muted-foreground/40 underline-offset-4 transition-colors hover:text-foreground"
+            className={cn(
+              touchHitArea,
+              "relative self-start text-xs font-medium text-muted-foreground underline decoration-muted-foreground/40 underline-offset-4 transition-colors hover:text-foreground",
+            )}
           >
             {showInternal
               ? t("changelog.hideInternal")

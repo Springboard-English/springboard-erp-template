@@ -1,6 +1,7 @@
 import { useId } from "react";
 import { BellRing, Share, SquarePlus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { touchHitArea } from "@/lib/touchTarget";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/context/I18nContext";
@@ -80,7 +81,8 @@ export default function PushNotificationsToggle({
                         type="button"
                         variant="link"
                         size="xs"
-                        className="h-auto p-0"
+                        // An inline text link: no button floor, an invisible tap area on touch.
+                        className={cn(touchHitArea, "relative h-auto min-h-0 min-w-0 p-0")}
                         disabled={push.busy}
                         onClick={() => void push.sendTest()}
                     >

@@ -3,6 +3,7 @@ import * as Popover from "@radix-ui/react-popover";
 import { Sparkles, X } from "lucide-react";
 
 import { useI18n } from "@/context/I18nContext";
+import { touchHitArea } from "@/lib/touchTarget";
 import { cn } from "@/lib/utils";
 
 import { parseWhatsNewNote } from "./changelog";
@@ -84,7 +85,10 @@ export default function WhatsNewNote({
               type="button"
               onClick={onDismiss}
               aria-label={t("changelog.note.dismiss")}
-              className="absolute right-2.5 top-2.5 rounded-sm p-0.5 text-muted-foreground/70 opacity-70 transition-opacity hover:opacity-100"
+              className={cn(
+                touchHitArea,
+                "absolute right-2.5 top-2.5 rounded-sm p-0.5 text-muted-foreground/70 opacity-70 transition-opacity hover:opacity-100",
+              )}
             >
               <X className="size-3.5" />
             </button>

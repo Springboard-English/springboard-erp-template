@@ -1,6 +1,7 @@
 import { AlertTriangle, X } from "lucide-react";
 import { useNotifications } from "@/context/NotificationContext";
 import { useI18n } from "@/context/I18nContext";
+import { touchHitArea } from "@/lib/touchTarget";
 
 export default function UrgentNotificationBanner() {
     const { t } = useI18n();
@@ -26,7 +27,7 @@ export default function UrgentNotificationBanner() {
                     <button
                         type="button"
                         onClick={() => dismiss(n.appsheet_key)}
-                        className="mt-0.5 shrink-0 opacity-60 transition-opacity hover:opacity-100"
+                        className={`${touchHitArea} relative mt-0.5 shrink-0 opacity-60 transition-opacity hover:opacity-100`}
                         aria-label={t("notification.dismiss")}
                     >
                         <X className="size-4" />

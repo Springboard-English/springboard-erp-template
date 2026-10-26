@@ -408,7 +408,7 @@ export default function MobileCardList<T>({
             type="button"
             disabled={!hasPrev}
             onClick={() => onPageChange?.(page - 1)}
-            className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex min-h-11 items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
           >
             <ChevronLeft className="size-4" />
             Previous
@@ -418,7 +418,7 @@ export default function MobileCardList<T>({
             type="button"
             disabled={!hasNext}
             onClick={() => onPageChange?.(page + 1)}
-            className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex min-h-11 items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
           >
             Next
             <ChevronRight className="size-4" />

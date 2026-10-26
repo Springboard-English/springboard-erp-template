@@ -1,4 +1,5 @@
 import { type ReactNode } from "react";
+import { touchHitArea } from "@/lib/touchTarget";
 
 export default function QuestionField({
   label,
@@ -25,7 +26,7 @@ export default function QuestionField({
             <button
               type="button"
               tabIndex={-1}
-              className="flex h-4 w-4 items-center justify-center rounded-full border border-border/60 bg-muted/60 text-[10px] font-bold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className={`${touchHitArea} relative flex h-4 w-4 items-center justify-center rounded-full border border-border/60 bg-muted/60 text-[10px] font-bold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground`}
             >
               i
             </button>

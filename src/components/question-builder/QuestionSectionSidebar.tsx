@@ -45,7 +45,7 @@ export default function QuestionSectionSidebar({
                 <button
                   type="button"
                   onClick={() => onSelectSection(section.id)}
-                  className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left"
+                  className="flex min-h-11 w-full items-center gap-2.5 px-3 py-2.5 text-left"
                 >
                   <span
                     className={cn(
