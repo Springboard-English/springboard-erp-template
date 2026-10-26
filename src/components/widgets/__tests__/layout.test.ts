@@ -7,6 +7,7 @@ import {
     normaliseLayout,
     removeEntry,
     unstack,
+    widgetRowSpan,
 } from "../layout";
 import type { WidgetDefinition, WidgetLayoutEntry, WidgetRegistry } from "../types";
 
@@ -117,5 +118,22 @@ describe("edits", () => {
         const stacked = addToStack(base, "1", def("b"));
         const childId = (stacked[0] as { stack: { id: string }[] }).stack[1].id;
         expect(removeEntry(stacked, childId)[0]).toMatchObject({ id: "1", widget: "a", size: "M" });
+    });
+});
+
+describe("widgetRowSpan", () => {
+    // 136px rows with 16px gaps: one row 136, two 288, three 440.
+    it("takes the fewest rows that hold the content", () => {
+        expect(widgetRowSpan(100, 136, 16, 1)).toBe(1);
+        expect(widgetRowSpan(136, 136, 16, 1)).toBe(1);
+        expect(widgetRowSpan(137, 136, 16, 1)).toBe(2);
+        expect(widgetRowSpan(288, 136, 16, 1)).toBe(2);
+        expect(widgetRowSpan(410, 136, 16, 1)).toBe(3);
+    });
+
+    it("never goes below the size's minimum, and falls back to it before measuring", () => {
+        expect(widgetRowSpan(100, 136, 16, 2)).toBe(2);
+        expect(widgetRowSpan(0, 136, 16, 2)).toBe(2);
+        expect(widgetRowSpan(500, 0, 16, 1)).toBe(1);
     });
 });

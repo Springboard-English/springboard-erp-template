@@ -161,6 +161,10 @@ An app passes a `registry` of `WidgetDefinition`s and a `defaults(user)`.
   the app's current defaults; saving a layout equal to the defaults stores `null`.
 - **Order, not coordinates.** The layout is a list packed with
   `grid-flow-row-dense`, so one saved layout fits four columns and two.
+- **Fixed rows, snapped heights.** Rows are a fixed 8.5rem, unlimited in
+  number. Each frame measures its header and content and spans the whole rows
+  they need (`widgetRowSpan`, at least two for L), so edges line up across
+  columns and nothing is clipped. A widget keeps itself short by paging.
 - **`normaliseLayout` repairs, it does not reject.** Unknown widgets, lost
   scopes and unsupported sizes are dropped or reset one at a time. Never rename
   a widget `id`: it is what users' saved layouts point at.

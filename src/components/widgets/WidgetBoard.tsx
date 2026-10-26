@@ -26,8 +26,10 @@ import type { WidgetDefaults, WidgetLayoutEntry, WidgetRegistry, WidgetSize } fr
 // rendered would remount every widget, closing any menu the user just opened.
 const WidgetSortableGrid = lazyWithPreload(() => import("./WidgetSortableGrid"));
 
-// Rows grow with their content; the minimum keeps an S tile square-ish.
-const GRID_CLASS = "grid grid-flow-row-dense auto-rows-[minmax(8.5rem,auto)] grid-cols-2 gap-3 md:grid-cols-4 md:gap-4";
+// Fixed rows, as many as the layout needs: every widget snaps to whole rows
+// (WidgetFrame measures how many), so edges line up across columns. One row
+// keeps an S tile square-ish.
+const GRID_CLASS = "grid grid-flow-row-dense auto-rows-[8.5rem] grid-cols-2 gap-3 md:grid-cols-4 md:gap-4";
 
 export interface WidgetBoardProps {
     /** Key in the user's `info` the layout is stored under — one per app, e.g. `dashboard_lms`. */

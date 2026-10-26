@@ -1,4 +1,14 @@
-import { Component, Suspense, useState, type CSSProperties, type HTMLAttributes, type ReactNode } from "react";
+import {
+    Component,
+    Suspense,
+    useLayoutEffect,
+    useRef,
+    useState,
+    type CSSProperties,
+    type HTMLAttributes,
+    type ReactNode,
+    type RefObject,
+} from "react";
 import { Link } from "react-router-dom";
 import { ArrowUpRight, GripVertical, MoreHorizontal, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -17,7 +27,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "../ui/tabs";
 import { useI18n } from "../../context/I18nContext";
 import type { UserInfo } from "../../api_calls/UserData";
-import { findWidget, stackSizes } from "./layout";
+import { WIDGET_MIN_ROWS, findWidget, stackSizes, widgetRowSpan } from "./layout";
 import { WidgetError, WidgetSkeleton } from "./WidgetBodies";
 import {
     isWidgetStack,
@@ -28,16 +38,77 @@ import {
 } from "./types";
 
 /**
- * Grid spans per size. A consumer's Tailwind must `@source` this package's whole
+ * Column spans per size; rows come from `useWidgetRowSpan`. A consumer's Tailwind must `@source` this package's whole
  * `dist/` directory: `dist/index.js` is only a re-export stub, and the classes
  * live in the chunks beside it.
  */
 export const WIDGET_SIZE_CLASS: Record<WidgetSize, string> = {
     S: "col-span-1",
     M: "col-span-2",
-    L: "col-span-2 row-span-2",
+    L: "col-span-2",
     XL: "col-span-2 md:col-span-4",
 };
+
+/** Numbers from computed style ("136px" → 136); 0 for "normal" or anything unparsable. */
+function px(value: string): number {
+    const parsed = parseFloat(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+}
+
+export interface WidgetRowSpan {
+    span: number;
+    itemRef: RefObject<HTMLDivElement | null>;
+    cardRef: RefObject<HTMLDivElement | null>;
+    headerRef: RefObject<HTMLDivElement | null>;
+    contentRef: RefObject<HTMLDivElement | null>;
+}
+
+/**
+ * The rows a frame spans on the board's fixed row grid: its header and content
+ * at their natural height, rounded up to whole rows, never below `minRows`.
+ * Re-measured whenever the header, the content or the board resizes.
+ */
+function useWidgetRowSpan(minRows: number, widgetId: string | null): WidgetRowSpan {
+    const itemRef = useRef<HTMLDivElement | null>(null);
+    const cardRef = useRef<HTMLDivElement | null>(null);
+    const headerRef = useRef<HTMLDivElement | null>(null);
+    const contentRef = useRef<HTMLDivElement | null>(null);
+    const [span, setSpan] = useState(minRows);
+
+    useLayoutEffect(() => {
+        const item = itemRef.current;
+        const card = cardRef.current;
+        const header = headerRef.current;
+        const content = contentRef.current;
+        const grid = item?.parentElement;
+        // jsdom and very old browsers have no ResizeObserver; the minimum stands.
+        if (!item || !card || !header || !content || !grid || typeof ResizeObserver === "undefined") {
+            setSpan(minRows);
+            return;
+        }
+        const measure = () => {
+            const gridStyle = getComputedStyle(grid);
+            const cardStyle = getComputedStyle(card);
+            const chrome =
+                px(cardStyle.paddingTop) +
+                px(cardStyle.paddingBottom) +
+                px(cardStyle.borderTopWidth) +
+                px(cardStyle.borderBottomWidth) +
+                px(cardStyle.rowGap);
+            const needed = header.offsetHeight + content.offsetHeight + chrome;
+            setSpan(widgetRowSpan(needed, px(gridStyle.gridAutoRows), px(gridStyle.rowGap), minRows));
+        };
+        measure();
+        const observer = new ResizeObserver(measure);
+        observer.observe(header);
+        observer.observe(content);
+        // The board changes its gap at `md`, which no content resize reports.
+        observer.observe(grid);
+        return () => observer.disconnect();
+    }, [minRows, widgetId]);
+
+    return { span, itemRef, cardRef, headerRef, contentRef };
+}
 
 /** What the drag layer hands each frame. Structural, so this module needs no dnd-kit import. */
 export interface WidgetSortableBinding {
@@ -128,6 +199,7 @@ export default function WidgetFrame({
     const children = isWidgetStack(entry) ? entry.stack : [{ id: entry.id, widget: entry.widget, config: entry.config }];
     const active = children.find((child) => child.id === storedTab) ?? children[0];
     const def = findWidget(registry, active.widget);
+    const rows = useWidgetRowSpan(WIDGET_MIN_ROWS[entry.size], def?.id ?? null);
     if (!def) return null;
 
     const titleOf = (d: AnyWidgetDefinition) => t(d.titleKey ?? d.title, d.title);
@@ -144,14 +216,17 @@ export default function WidgetFrame({
 
     return (
         <div
-            ref={sortable?.setNodeRef}
-            style={sortable?.style}
+            ref={(node) => {
+                rows.itemRef.current = node;
+                sortable?.setNodeRef(node);
+            }}
+            style={{ ...sortable?.style, gridRow: `span ${rows.span} / span ${rows.span}` }}
             className={cn(WIDGET_SIZE_CLASS[entry.size], "min-w-0", sortable?.isDragging && "z-10 opacity-60")}
             data-widget={def.id}
             {...frameAttributes?.(def.id)}
         >
-            <Card className={cn("h-full gap-3 py-3", editing && "border-dashed border-primary/50")}>
-                <div className="flex min-h-11 items-center gap-1 px-3">
+            <Card ref={rows.cardRef} className={cn("h-full gap-3 py-3", editing && "border-dashed border-primary/50")}>
+                <div ref={rows.headerRef} className="flex min-h-11 items-center gap-1 px-3">
                     {editing && sortable ? (
                         <button
                             type="button"
@@ -269,11 +344,14 @@ export default function WidgetFrame({
                 </div>
 
                 <div className={cn("min-h-0 flex-1 px-4", editing && "pointer-events-none select-none")}>
-                    <WidgetErrorBoundary resetKey={`${active.id}:${entry.size}`}>
-                        <Suspense fallback={<WidgetSkeleton size={entry.size} />}>
-                            <Render size={entry.size} config={active.config} user={user} preview={false} />
-                        </Suspense>
-                    </WidgetErrorBoundary>
+                    {/* Measured at its natural height, so the frame can take the rows it needs. */}
+                    <div ref={rows.contentRef}>
+                        <WidgetErrorBoundary resetKey={`${active.id}:${entry.size}`}>
+                            <Suspense fallback={<WidgetSkeleton size={entry.size} />}>
+                                <Render size={entry.size} config={active.config} user={user} preview={false} />
+                            </Suspense>
+                        </WidgetErrorBoundary>
+                    </div>
                 </div>
             </Card>
         </div>

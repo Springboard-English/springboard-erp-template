@@ -4,9 +4,10 @@ import type { UserInfo } from "../../api_calls/UserData";
 
 /**
  * A widget's footprint on the board, phone-home-screen style. S is one cell,
- * M two cells wide, L two by two, XL the full row at whatever height its
- * content needs. Below `md` the board has two columns, so M, L and XL all span
- * the full width and S takes half.
+ * M two cells wide, L two wide and at least two tall, XL the full width. The
+ * board's rows are fixed; a widget whose content needs more takes whole extra
+ * rows. Below `md` the board has two columns, so M, L and XL all span the full
+ * width and S takes half.
  */
 export type WidgetSize = "S" | "M" | "L" | "XL";
 
