@@ -264,6 +264,32 @@ draws `OccasionBackdrop` behind every page (flowers; trees). The dates live in
 `utils/occasion.ts` and again in `boot.js`, which runs before the app; change
 both, and accounts' `guilloche.js`. `?sb-occasion=womens-day` previews one.
 
+## Schema forms (`src/components/forms/`, since 4.20.0)
+
+A form described as JSON (`FormSchema`: sections and fields) instead of a
+dialog's hand-written state. `useSchemaForm(schema, { initial, lookups })` holds
+the values; `SchemaFields` renders sections as grids (one column on a phone);
+`SchemaFormDialog` adds tabs from `section.tab`, the caller's `extraTabs`, a ✓
+per complete tab and the "Still needed" list, and calls `onSubmit` only when
+nothing required is missing.
+
+- **Thirteen field types:** text, longText, number, money, date, datetime,
+  month, checkbox, choice, lookup, tags, list, formula. A `list` is a grid of
+  rows on desktop and a card per row on a phone, with optional `totals`.
+- **Formulas and `showIf` are expressions** (`expression.ts`), parsed here and
+  never `eval`ed, so a schema stored on a row stays data: arithmetic,
+  comparisons, `if`, `sum(list.column)`, `round`, `min`, `max`, `words`
+  (Vietnamese amount in words). Formulas re-run until nothing changes, so
+  order in the schema does not matter.
+- **`lookup` sources come from the app** (`lookups={{ employee: { load, get } }}`):
+  the package stays domain-free. `fills` copies keys of the record `get` returns
+  into other fields.
+- **`output("typed")`** keeps numbers for an API body; **`output("print")`**
+  formats them as a printed document shows them (`1.200.000`).
+- `parseFormSchema` reads untrusted JSON (a row's `info.form`), dropping what it
+  does not understand; `inferJinjaSchema` reads a form off a Jinja page's names.
+- `FormTableDialog` is unchanged; dialogs move over one at a time.
+
 ## Push notifications (`PushNotificationsToggle`, since 4.9.0)
 
 `<PushNotificationsToggle app="lms" serviceWorkerUrl="/sw.js" />` in an app's

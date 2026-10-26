@@ -172,6 +172,15 @@ export const ENGLISH_MESSAGES = {
   "widgets.gallery.add": "Add",
   "widgets.gallery.none": "There are no other widgets you can add.",
   "widgets.saveFailed": "Couldn't save your home: {message}",
+  "schemaForm.details": "Details",
+  "schemaForm.required": "Required",
+  "schemaForm.optional": "Optional",
+  "schemaForm.choose": "Choose...",
+  "schemaForm.addRow": "Add row",
+  "schemaForm.removeRow": "Remove row {row}",
+  "schemaForm.row": "Row {row}",
+  "schemaForm.total": "Total",
+  "schemaForm.missing": "Still needed: {fields}.",
 } as const;
 
 export const VIETNAMESE_MESSAGES = {
@@ -348,6 +357,15 @@ export const VIETNAMESE_MESSAGES = {
   "widgets.gallery.add": "Them",
   "widgets.gallery.none": "Khong con tien ich nao ban co the them.",
   "widgets.saveFailed": "Khong luu duoc trang chu: {message}",
+  "schemaForm.details": "Chi tiet",
+  "schemaForm.required": "Bat buoc",
+  "schemaForm.optional": "Khong bat buoc",
+  "schemaForm.choose": "Chon...",
+  "schemaForm.addRow": "Them dong",
+  "schemaForm.removeRow": "Xoa dong {row}",
+  "schemaForm.row": "Dong {row}",
+  "schemaForm.total": "Tong cong",
+  "schemaForm.missing": "Con thieu: {fields}.",
 } as const;
 
 export type TemplateI18nKey = keyof typeof ENGLISH_MESSAGES;

@@ -149,6 +149,30 @@ export { default as BaseFormDialog } from "./components/dialogs/BaseFormDialog";
 export { default as FormTableDialog, FormTableRow } from "./components/dialogs/FormTableDialog";
 export type { FormTableDialogTab } from "./components/dialogs/FormTableDialog";
 export { default as FormTableSection } from "./components/dialogs/FormTableSection";
+
+// Schema forms: a form described as JSON (stored on a row or declared in code),
+// rendered, validated and output by one hook and two components.
+export * from "./components/forms/schema";
+export { evaluateExpression, checkExpression, ExpressionError } from "./components/forms/expression";
+export type { ExprValue, ExprScope } from "./components/forms/expression";
+export { formatMoney, parseMoney, parseNumber, vietnameseAmountWords } from "./components/forms/formatting";
+export {
+    computeFormValues,
+    emptyFieldValue,
+    emptyListRow,
+    initialFormValues,
+    isFieldVisible,
+    missingFormFields,
+    outputFormValues,
+} from "./components/forms/schemaValues";
+export type { FormOutputMode, MissingField } from "./components/forms/schemaValues";
+export { inferJinjaSchema } from "./components/forms/jinjaSchema";
+export { useSchemaForm } from "./components/forms/useSchemaForm";
+export type { FormLookupSource, FormLookups, SchemaForm, UseSchemaFormOptions } from "./components/forms/useSchemaForm";
+export { SchemaFields } from "./components/forms/SchemaFields";
+export type { SchemaFieldsProps } from "./components/forms/SchemaFields";
+export { SchemaFormDialog } from "./components/forms/SchemaFormDialog";
+export type { SchemaFormDialogProps, SchemaFormTab } from "./components/forms/SchemaFormDialog";
 export { default as QuestionBuilder } from "./components/question-builder/QuestionBuilder";
 export type { QuestionBuilderProps } from "./components/question-builder/QuestionBuilder";
 export { default as QuestionList } from "./components/question-builder/QuestionList";
