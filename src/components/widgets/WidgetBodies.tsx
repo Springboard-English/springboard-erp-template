@@ -96,7 +96,7 @@ export function WidgetStat({
 }) {
     return (
         <div className="flex h-full flex-col justify-center">
-            {label ? <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">{label}</p> : null}
+            {label ? <p className="truncate text-sm font-medium text-muted-foreground">{label}</p> : null}
             <p className={cn("font-semibold leading-none text-foreground", size === "S" ? "mt-1 text-3xl" : "mt-2 text-4xl")}>
                 {value}
             </p>

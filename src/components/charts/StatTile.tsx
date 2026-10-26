@@ -29,7 +29,7 @@ export default function StatTile({
 }: StatTileProps) {
   const content = (
     <>
-      <div className="flex items-center gap-1.5">
+      <div className="flex min-w-0 items-center gap-1.5">
         {accentColor ? (
           <span
             aria-hidden
@@ -37,7 +37,7 @@ export default function StatTile({
             style={{ backgroundColor: accentColor }}
           />
         ) : null}
-        <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
+        <p className="min-w-0 truncate text-sm font-medium text-muted-foreground">
           {label}
         </p>
       </div>

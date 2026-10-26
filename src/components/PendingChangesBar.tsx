@@ -157,10 +157,10 @@ export default function PendingChangesBar({
             <table className="w-full text-sm">
               <thead className="sticky top-0 bg-muted/70">
                 <tr className="border-b border-border/70">
-                  <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                  <th className="whitespace-nowrap px-4 py-2.5 text-left text-sm font-medium text-muted-foreground">
                     {pendingKeyLabel}
                   </th>
-                  <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                  <th className="whitespace-nowrap px-4 py-2.5 text-left text-sm font-medium text-muted-foreground">
                     {pendingValueLabel}
                   </th>
                 </tr>
@@ -172,7 +172,7 @@ export default function PendingChangesBar({
                       <tr className="border-b border-border/70 bg-muted/45">
                         <td
                           colSpan={2}
-                          className="px-4 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground"
+                          className="px-4 py-2 text-sm font-semibold text-muted-foreground"
                         >
                           {group.section}
                         </td>

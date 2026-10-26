@@ -33,7 +33,7 @@ export function CardField({
 }) {
   return (
     <div className={cn("min-w-0 space-y-0.5", className)}>
-      <dt className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+      <dt className="truncate text-xs font-medium text-muted-foreground">
         {label}
       </dt>
       <dd className="text-sm text-foreground">{value ?? "-"}</dd>

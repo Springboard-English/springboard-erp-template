@@ -23,7 +23,7 @@ export function FormTableRow({ label = '', required = false, helperText, childre
                 <TableCell colSpan={2} className="block w-full px-3 py-3 md:table-cell">
                     {label && (
                         <div className="mb-2 space-y-1">
-                            <div className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                            <div className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground">
                                 <span>{label}</span>
                                 {required && (
                                     <span className="text-destructive" aria-hidden="true">
@@ -44,7 +44,7 @@ export function FormTableRow({ label = '', required = false, helperText, childre
         <TableRow className={cn('block border-b border-border/60 transition-colors hover:bg-accent/20 md:table-row', className)}>
             <TableCell
                 className={cn(
-                    'block w-full px-3 pt-3 pb-1.5 align-top text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground md:table-cell md:w-[160px] md:px-3 md:py-2.5',
+                    'block w-full px-3 pt-3 pb-1.5 align-top text-sm font-medium text-muted-foreground md:table-cell md:w-[160px] md:px-3 md:py-2.5',
                     align === 'center' ? 'md:align-middle' : 'md:align-top',
                 )}
             >

@@ -267,7 +267,7 @@ export default function SimpleDataTable<T>({
     <div
       ref={rootRef}
       className={cn(
-        "flex min-h-0 flex-col overflow-hidden rounded-2xl border border-border/70 bg-card shadow-[0_18px_40px_-28px_rgba(0,0,0,0.35)]",
+        "flex min-h-0 flex-col overflow-hidden rounded-2xl border border-border/70 bg-card shadow-md",
         className,
         classNames?.root,
       )}
@@ -288,7 +288,7 @@ export default function SimpleDataTable<T>({
                     <button
                       type="button"
                       onClick={() => handleSortClick(column.id)}
-                      className={cn("inline-flex w-full cursor-pointer items-center justify-center gap-1 text-center text-sm font-medium text-muted-foreground", classNames?.sortButton)}
+                      className={cn("inline-flex w-full cursor-pointer items-center justify-center gap-1 whitespace-nowrap text-center text-sm font-medium text-muted-foreground", classNames?.sortButton)}
                     >
                       <span>{column.header}</span>
                       {sortBy === column.id ? (
