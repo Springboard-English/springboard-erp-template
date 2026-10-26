@@ -288,7 +288,7 @@ export default function SimpleDataTable<T>({
                     <button
                       type="button"
                       onClick={() => handleSortClick(column.id)}
-                      className={cn("inline-flex w-full cursor-pointer items-center justify-center gap-1 text-center text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground", classNames?.sortButton)}
+                      className={cn("inline-flex w-full cursor-pointer items-center justify-center gap-1 text-center text-sm font-medium text-muted-foreground", classNames?.sortButton)}
                     >
                       <span>{column.header}</span>
                       {sortBy === column.id ? (

@@ -170,6 +170,7 @@ export {
   DetailHeader,
   DetailBreadcrumbs,
   DetailChip,
+  DetailMetaItem,
   DetailActionsMenu,
   DetailSummaryGrid,
   DetailSummaryItem,

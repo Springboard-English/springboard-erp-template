@@ -356,7 +356,7 @@ export function DetailBreadcrumbs({
     current: ReactNode;
     /** Sits beside the title, typically one `DetailChip`. */
     status?: ReactNode;
-    /** A row of `DetailChip`s under the title giving the record's gist. */
+    /** A row of `DetailMetaItem`s under the title giving the record's gist. */
     summary?: ReactNode;
 }) {
     const lastIndex = items.length - 1;
@@ -396,7 +396,7 @@ export function DetailBreadcrumbs({
                 {status}
             </div>
             {summary ? (
-                <div className="flex flex-wrap items-center gap-1.5 max-md:col-span-2 max-md:row-start-3">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground max-md:col-span-2 max-md:row-start-3">
                     {summary}
                 </div>
             ) : null}
@@ -407,7 +407,8 @@ export function DetailBreadcrumbs({
 export type DetailChipTone = "neutral" | "lav" | "mint" | "peach" | "sky" | "butter";
 
 const DETAIL_CHIP_TONES: Record<DetailChipTone, string> = {
-    neutral: "border-border bg-muted text-muted-foreground",
+    // Neutral is the tag style the list views already use.
+    neutral: "border-border bg-muted/40 text-foreground",
     lav: "border-lav-300/60 bg-lav-bg text-lav-700",
     mint: "border-mint-300/60 bg-mint-bg text-mint-700",
     peach: "border-peach-300/60 bg-peach-bg text-peach-700",
@@ -415,7 +416,7 @@ const DETAIL_CHIP_TONES: Record<DetailChipTone, string> = {
     butter: "border-butter-300/60 bg-butter-bg text-butter-700",
 };
 
-/** A small pastel pill for a status or a fact about the record. Tones need the app's `lav`/`mint`/`peach`/`sky`/`butter` colour tokens. */
+/** A tag shaped like the list views' tags, optionally tinted for a status. Tones need the app's `lav`/`mint`/`peach`/`sky`/`butter` colour tokens. */
 export function DetailChip({
     tone = "neutral",
     icon,
@@ -430,9 +431,32 @@ export function DetailChip({
     return (
         <span
             className={cn(
-                "inline-flex max-w-full items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium [&_svg]:size-3.5 [&_svg]:shrink-0",
+                "inline-flex max-w-full items-center gap-1.5 rounded border px-2 py-1 text-xs font-medium [&_svg]:size-3.5 [&_svg]:shrink-0",
                 DETAIL_CHIP_TONES[tone],
                 className,
+            )}
+        >
+            {icon}
+            <span className="truncate">{children}</span>
+        </span>
+    );
+}
+
+/** One fact in a detail header's summary row: a small icon and plain text. `warning` marks something missing. */
+export function DetailMetaItem({
+    icon,
+    children,
+    warning,
+}: {
+    icon?: ReactNode;
+    children: ReactNode;
+    warning?: boolean;
+}) {
+    return (
+        <span
+            className={cn(
+                "inline-flex min-w-0 items-center gap-1.5 [&_svg]:size-4 [&_svg]:shrink-0",
+                warning && "text-butter-700",
             )}
         >
             {icon}
@@ -594,7 +618,7 @@ export function DetailSummaryGrid({
 export function DetailSummaryItem({ label, value }: DetailStat) {
     return (
         <div className="space-y-1">
-            <div className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+            <div className="text-sm font-medium text-muted-foreground">
                 {label}
             </div>
             <div className="text-sm font-medium">{value}</div>
@@ -621,7 +645,7 @@ export function DetailTextBlock({
 }) {
     return (
         <DetailCard>
-            <div className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+            <div className="text-sm font-medium text-muted-foreground">
                 {label}
             </div>
             <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6">
@@ -703,7 +727,7 @@ export function DetailFieldsTable({
                                     <TableCell
                                         colSpan={2}
                                         className={cn(
-                                            "px-4 py-3 text-xs font-bold uppercase tracking-[0.18em] text-foreground",
+                                            "px-4 py-3 text-sm font-semibold text-foreground",
                                             row.sectionClassName,
                                         )}
                                     >
@@ -723,7 +747,7 @@ export function DetailFieldsTable({
                             >
                                 <TableCell
                                     className={cn(
-                                        "block w-full border-border/60 px-4 pt-4 pb-2 align-top text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground md:table-cell md:border-r md:px-4 md:py-3 md:align-middle",
+                                        "block w-full border-border/60 px-4 pt-4 pb-2 align-top text-sm font-medium text-muted-foreground md:table-cell md:border-r md:px-4 md:py-3 md:align-middle",
                                         labelColumnClassName ??
                                             "md:w-[220px]",
                                         row.labelClassName,
@@ -818,7 +842,7 @@ export function DetailActionPanel({
 }) {
     return (
         <aside className="rounded-3xl border border-border/70 bg-card p-5 shadow-md">
-            <div className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+            <div className="text-sm font-medium text-muted-foreground">
                 {title}
             </div>
             <div className="mt-3 flex flex-col gap-2">
