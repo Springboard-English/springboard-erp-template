@@ -126,7 +126,9 @@ describe("widgetRowSpan", () => {
     it("takes the fewest rows that hold the content", () => {
         expect(widgetRowSpan(100, 136, 16, 1)).toBe(1);
         expect(widgetRowSpan(136, 136, 16, 1)).toBe(1);
-        expect(widgetRowSpan(137, 136, 16, 1)).toBe(2);
+        // Within two pixels of a fit is a fit: zoom rounding, not real content.
+        expect(widgetRowSpan(137.5, 136, 16, 1)).toBe(1);
+        expect(widgetRowSpan(139, 136, 16, 1)).toBe(2);
         expect(widgetRowSpan(288, 136, 16, 1)).toBe(2);
         expect(widgetRowSpan(410, 136, 16, 1)).toBe(3);
     });

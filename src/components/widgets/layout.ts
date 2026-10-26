@@ -21,13 +21,17 @@ import {
 /** The fewest rows each size takes, whatever its content: L is two cells tall. */
 export const WIDGET_MIN_ROWS: Record<WidgetSize, number> = { S: 1, M: 1, L: 2, XL: 1 };
 
+const SNAP_TOLERANCE_PX = 2;
+
 /**
  * How many of the board's fixed rows a widget spans: enough for `contentPx`,
  * counting the gaps it bridges, and never fewer than `minRows`.
  */
 export function widgetRowSpan(contentPx: number, rowPx: number, gapPx: number, minRows: number): number {
     if (!(rowPx > 0) || !(contentPx > 0)) return minRows;
-    return Math.max(minRows, Math.ceil((contentPx + gapPx) / (rowPx + gapPx)));
+    // Sub-pixel rounding at browser zoom must not tip an exact fit into an extra row.
+    const fitted = Math.max(0, contentPx - SNAP_TOLERANCE_PX);
+    return Math.max(minRows, Math.ceil((fitted + gapPx) / (rowPx + gapPx)));
 }
 
 export function isWidgetAvailable(def: AnyWidgetDefinition, user: UserInfo): boolean {
