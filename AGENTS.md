@@ -73,6 +73,6 @@ releasing is in `docs/releasing.md`.
 - Consumers must `@source` the whole `dist/` directory; `dist/index.js` is a
   re-export stub.
 - A `UIPreset` height replaces the 44px mobile clamp; keep the `md:` split.
-- Occasion dates live in `utils/occasion.ts`, `boot.js` and accounts'
-  `guilloche.js`; change all three.
+- Occasion dates live in `utils/occasion.ts` and `boot.js` (accounts uses
+  `boot.js` too); change both.
 - The logo also lives in the API as rasters; change them together.

@@ -3,6 +3,8 @@ import { useHref, useNavigate } from "react-router-dom";
 
 import { fetchWithRefresh } from "../../api_calls/fetchWithRefresh";
 import type { UserInfo } from "../../api_calls/UserData";
+import LazyViewFallback from "../../components/LazyViewFallback";
+import { Button } from "../../components/ui/button";
 import { API_CONFIG } from "../../config/api";
 import { useAuth } from "../../context/AuthContext";
 import {
@@ -131,10 +133,10 @@ export default function OidcCallback({
 
     if (error) {
         return (
-            <div style={{ padding: "3rem", textAlign: "center" }}>
-                <p>{error}</p>
-                <button
-                    type="button"
+            <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-background px-6 text-center">
+                <p className="max-w-md text-sm text-foreground">{error}</p>
+                <Button
+                    variant="outline"
                     onClick={() =>
                         navigate(
                             stripBasename(
@@ -146,14 +148,14 @@ export default function OidcCallback({
                     }
                 >
                     {backLabel}
-                </button>
+                </Button>
             </div>
         );
     }
 
     if (underBootScreen) return null;
 
-    return (
-        <div style={{ padding: "3rem", textAlign: "center" }}>{pendingLabel}</div>
-    );
+    // No boot screen to sit under: the same spinner as any other wait, with
+    // the label for screen readers only.
+    return <LazyViewFallback fullScreen label={pendingLabel} />;
 }

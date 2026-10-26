@@ -78,10 +78,11 @@ describe("onSignedIn", () => {
 
     it("returning true suppresses the navigation", async () => {
         const onSignedIn = vi.fn(() => true);
-        const { queryByTestId, getByText } = landAfterSignIn(onSignedIn);
+        const { queryByTestId, getByRole } = landAfterSignIn(onSignedIn);
         await waitFor(() => expect(onSignedIn).toHaveBeenCalled());
         expect(queryByTestId("where")).toBeNull();
-        getByText("Signing you in…");
+        // Still the pending spinner, labelled for screen readers.
+        expect(getByRole("status").getAttribute("aria-label")).toBe("Signing you in…");
     });
 
     it("absent, navigates as usual", async () => {

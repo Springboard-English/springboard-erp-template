@@ -55,6 +55,7 @@ export { default as LocaleSelect } from "./theme/LocaleSelect";
 
 export { SitemarkIcon, LogoIcon } from "./components/CustomIcons";
 export { default as LazyViewFallback } from "./components/LazyViewFallback";
+export type { LazyViewFallbackProps } from "./components/LazyViewFallback";
 export { lazyWithPreload, usePreloadOnIdle } from "./utils/lazyWithPreload";
 export type { PreloadableComponent } from "./utils/lazyWithPreload";
 export { default as MultiSelectDropdown } from "./components/MultiSelectDropdown";

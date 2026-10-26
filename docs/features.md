@@ -248,11 +248,18 @@ place, and `DashboardLayout` lifts it away as the side nav slides in.
 - **Who takes it down:** `DashboardLayout` on mount (animated, once);
   `OidcCallback` holds it while it exchanges the code and drops it on an error;
   `boot.js` fades it ~1.5s after the app renders anything while no one holds it,
-  for pages that are neither. `holdBootScreen` / `dismissBootScreen` are
-  exported for an app page that needs the same.
+  for pages that are neither. `LazyViewFallback` holds it while mounted, so a
+  lazy chunk or an auth check that outlasts the failsafe never fades the card
+  onto a spinner; give it `fullScreen` where it stands in for a whole page.
+  `holdBootScreen` / `dismissBootScreen` are exported for an app page that
+  needs the same.
+- **No "Signing you in…" text.** Under the boot screen `OidcCallback` renders
+  nothing; without one it shows the full-screen `LazyViewFallback`, with
+  `pendingLabel` as its screen-reader label.
 - **Keep it in step with accounts.springboard.vn**: `boot.css` copies its
-  CardShell geometry and the template's colour tokens; `boot.js` draws the same
-  Morse guilloche with the day's message (accounts' `public/guilloche.js`).
+  CardShell geometry and the template's colour tokens. Accounts loads the
+  boot screen too: `boot.js` sets the guilloche variables its CardShell
+  reads, and CardShell takes the screen down as it mounts on the same pixels.
   Measure both cards after changing either: they must sit on the same pixels.
 
 ## Occasions (since 4.17.0)
@@ -261,8 +268,9 @@ place, and `DashboardLayout` lifts it away as the side nav slides in.
 backgrounds: `boot.js` swaps the guilloche's message, wave shape and colours
 (`data-sb-occasion` on `<html>`, styled in `boot.css`), and `DashboardLayout`
 draws `OccasionBackdrop` behind every page (flowers; trees). The dates live in
-`utils/occasion.ts` and again in `boot.js`, which runs before the app; change
-both, and accounts' `guilloche.js`. `?sb-occasion=womens-day` previews one.
+`utils/occasion.ts` and again in `boot.js`, which runs before the app (and
+draws accounts' sign-in backdrop too); change both.
+`?sb-occasion=womens-day` previews one.
 
 ## Schema forms (`src/components/forms/`, since 4.20.0)
 
