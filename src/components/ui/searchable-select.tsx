@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Check, ChevronDown, Loader2, Search } from 'lucide-react';
-import { Popover as PopoverPrimitive } from 'radix-ui';
+import { Check, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/context/I18nContext';
+import { ComboboxField, comboboxItemClassName } from './combobox-field';
 // Relative, not `@/`: this module's types are emitted, and tsc writes an import
 // specifier into a .d.ts verbatim — a consumer would resolve `@/` against its
 // OWN src and silently get `any`. `scripts/check-dts-portable.mjs` enforces it.
@@ -102,6 +102,11 @@ interface SearchableSelectProps {
   loadMoreLabel?: string;
 }
 
+/**
+ * A single-choice combobox over a static list or cursor-paged `loadOptions`.
+ * The field doubles as the search box: opening it selects the current label so
+ * typing replaces it, and the current choice is listed first and highlighted.
+ */
 export function SearchableSelect({
   id,
   value,
@@ -121,7 +126,10 @@ export function SearchableSelect({
 }: SearchableSelectProps) {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState('');
+  // `null` until the user types after opening: the field still shows the label
+  // and the list is unfiltered.
+  const [query, setQuery] = useState<string | null>(null);
+  const searchText = (query ?? '').trim();
   const normalizedValue = String(value ?? '');
   const isAsync = typeof loadOptions === 'function';
   const resolvedPlaceholder = placeholder ?? t('searchableSelect.placeholder');
@@ -163,7 +171,7 @@ export function SearchableSelect({
     if (isAsync) {
       return asyncOptions;
     }
-    const normalizedQuery = query.trim().toLowerCase();
+    const normalizedQuery = searchText.toLowerCase();
     if (!normalizedQuery) {
       return options;
     }
@@ -172,16 +180,16 @@ export function SearchableSelect({
       const haystack = `${option.label} ${option.keywords ?? ''} ${option.value}`.toLowerCase();
       return haystack.includes(normalizedQuery);
     });
-  }, [asyncOptions, isAsync, options, query]);
+  }, [asyncOptions, isAsync, options, searchText]);
 
   // Debounce the query for async mode.
   useEffect(() => {
     if (!isAsync) {
       return;
     }
-    const handle = setTimeout(() => setDebouncedQuery(query.trim()), SEARCH_DEBOUNCE_MS);
+    const handle = setTimeout(() => setDebouncedQuery(searchText), SEARCH_DEBOUNCE_MS);
     return () => clearTimeout(handle);
-  }, [isAsync, query]);
+  }, [isAsync, searchText]);
 
   const runFetch = useCallback(
     async (cursor: string | null, mode: 'reset' | 'more') => {
@@ -253,8 +261,17 @@ export function SearchableSelect({
     setLoadingMore(false);
   }, [isAsync, open]);
 
+  // The current choice leads the list, so the highlight opens on it. It is
+  // pinned even when it is not on a loaded page yet, until a search leaves it out.
+  const orderedOptions = useMemo(() => {
+    const rest = filteredOptions.filter((option) => option.value !== normalizedValue);
+    const selectedInList = filteredOptions.find((option) => option.value === normalizedValue);
+    const pinned = selectedInList ?? (searchText === '' ? selectedOption : undefined);
+    return pinned ? [pinned, ...rest] : rest;
+  }, [filteredOptions, normalizedValue, searchText, selectedOption]);
+
   const resetQuery = () => {
-    setQuery('');
+    setQuery(null);
     setDebouncedQuery('');
   };
 
@@ -272,122 +289,98 @@ export function SearchableSelect({
     resetQuery();
   };
 
-  const showEmpty = filteredOptions.length === 0 && !loading;
+  const showEmpty = orderedOptions.length === 0 && !loading;
 
   return (
-    <PopoverPrimitive.Root open={open} onOpenChange={setOpen}>
-      <PopoverPrimitive.Trigger asChild>
-        <button
-          id={id}
-          type="button"
-          disabled={disabled}
-          className={cn(
-            'flex h-11 w-full min-w-0 cursor-pointer items-center justify-between rounded-md border border-input bg-background px-3 text-sm shadow-xs outline-none transition',
-            'focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50',
-            'disabled:cursor-not-allowed disabled:opacity-50',
-            className,
-          )}
-          onClick={(event) => event.stopPropagation()}
+    <ComboboxField
+      id={id}
+      open={open}
+      onOpenChange={setOpen}
+      displayValue={selectedOption?.label ?? ''}
+      query={query}
+      onQueryChange={(next) => {
+        setQuery(next);
+        if (next === null) {
+          setDebouncedQuery('');
+        }
+      }}
+      placeholder={resolvedPlaceholder}
+      searchPlaceholder={resolvedSearchPlaceholder}
+      disabled={disabled}
+      loading={isAsync && loading}
+      className={className}
+      contentClassName={contentClassName}
+      itemCount={orderedOptions.length}
+      onPick={(index) => {
+        const option = orderedOptions[index];
+        if (option && !option.disabled) {
+          handleSelect(option);
+        }
+      }}
+    >
+      {({ activeIndex, setActiveIndex, itemId, listId }) => (
+        <div
+          id={listId}
+          role="listbox"
+          className="max-h-64 overflow-y-auto overscroll-contain pr-1 [scrollbar-gutter:stable] touch-pan-y"
+          style={{ WebkitOverflowScrolling: 'touch' }}
+          onWheelCapture={(event) => event.stopPropagation()}
         >
-          <span className={cn('min-w-0 flex-1 truncate text-left', !selectedOption && 'text-muted-foreground')}>
-            {selectedOption?.label ?? resolvedPlaceholder}
-          </span>
-          <ChevronDown className="ml-2 size-4 shrink-0 text-muted-foreground" />
-        </button>
-      </PopoverPrimitive.Trigger>
+          {error ? (
+            <div className="px-2 py-1.5 text-sm text-destructive">{error}</div>
+          ) : null}
 
-      <PopoverPrimitive.Portal>
-        <PopoverPrimitive.Content
-          sideOffset={4}
-          align="start"
-          className={cn(
-            'z-[60] w-(--radix-popover-trigger-width) min-w-[12rem] max-h-[min(18rem,var(--radix-popover-content-available-height))] overflow-hidden rounded-md border border-border bg-popover p-2 text-popover-foreground shadow-md',
-            'data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2',
-            'data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95',
-            'data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95',
-            contentClassName,
+          {showEmpty && !error ? (
+            <div className="px-2 py-1.5 text-sm text-muted-foreground">{resolvedEmptyMessage}</div>
+          ) : (
+            orderedOptions.map((option, index) => {
+              const isSelected = option.value === normalizedValue;
+
+              return (
+                <button
+                  key={option.value}
+                  id={itemId(index)}
+                  type="button"
+                  role="option"
+                  aria-selected={isSelected}
+                  tabIndex={-1}
+                  onClick={() => handleSelect(option)}
+                  onMouseMove={() => setActiveIndex(index)}
+                  disabled={option.disabled}
+                  className={cn(comboboxItemClassName(index === activeIndex), isSelected && 'font-medium')}
+                >
+                  <span className="min-w-0 flex-1 truncate">{option.label}</span>
+                  {isSelected ? <Check className="size-4 shrink-0" /> : null}
+                </button>
+              );
+            })
           )}
-          onOpenAutoFocus={(event) => event.preventDefault()}
-          onPointerDownOutside={resetQuery}
-          onEscapeKeyDown={resetQuery}
-          onClick={(event) => event.stopPropagation()}
-        >
-          <div className="relative mb-2">
-            <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
-            <input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder={resolvedSearchPlaceholder}
+
+          {isAsync && loading && orderedOptions.length === 0 ? (
+            <div className="flex items-center justify-center gap-2 px-2 py-3 text-sm text-muted-foreground">
+              <Loader2 className="size-3.5 animate-spin" />
+              {t('searchableSelect.loading')}
+            </div>
+          ) : null}
+
+          {isAsync && nextCursor && !error ? (
+            <button
+              type="button"
+              tabIndex={-1}
+              onClick={handleLoadMore}
+              disabled={loadingMore || loading}
               className={cn(
-                'h-10 w-full rounded-md border border-input bg-background pr-8 pl-8 text-sm shadow-xs outline-none transition',
-                'focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50',
+                'mt-1 flex w-full cursor-pointer items-center justify-center gap-2 rounded-sm px-2 py-1.5 text-sm text-muted-foreground outline-none transition',
+                'hover:bg-accent hover:text-accent-foreground',
+                'disabled:pointer-events-none disabled:opacity-50',
               )}
-              autoFocus
-            />
-            {isAsync && loading ? (
-              <Loader2 className="pointer-events-none absolute top-1/2 right-2.5 size-3.5 -translate-y-1/2 animate-spin text-muted-foreground" />
-            ) : null}
-          </div>
-
-          <div
-            className="max-h-56 overflow-y-auto overscroll-contain pr-1 [scrollbar-gutter:stable] touch-pan-y"
-            style={{ WebkitOverflowScrolling: 'touch' }}
-            onWheelCapture={(event) => event.stopPropagation()}
-          >
-            {error ? (
-              <div className="px-2 py-1.5 text-sm text-destructive">{error}</div>
-            ) : null}
-
-            {showEmpty && !error ? (
-              <div className="px-2 py-1.5 text-sm text-muted-foreground">{resolvedEmptyMessage}</div>
-            ) : (
-              filteredOptions.map((option) => {
-                const isSelected = option.value === normalizedValue;
-
-                return (
-                  <button
-                    key={option.value}
-                    type="button"
-                    onClick={() => handleSelect(option)}
-                    disabled={option.disabled}
-                    className={cn(
-                      'flex w-full min-w-0 cursor-pointer items-center justify-between rounded-sm px-2 py-1.5 text-left text-sm outline-none transition',
-                      'hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:text-accent-foreground',
-                      'disabled:pointer-events-none disabled:opacity-50',
-                    )}
-                  >
-                    <span className="min-w-0 flex-1 truncate">{option.label}</span>
-                    {isSelected ? <Check className="ml-2 size-4 shrink-0" /> : null}
-                  </button>
-                );
-              })
-            )}
-
-            {isAsync && loading && filteredOptions.length === 0 ? (
-              <div className="flex items-center justify-center gap-2 px-2 py-3 text-sm text-muted-foreground">
-                <Loader2 className="size-3.5 animate-spin" />
-                {t('searchableSelect.loading')}
-              </div>
-            ) : null}
-
-            {isAsync && nextCursor && !error ? (
-              <button
-                type="button"
-                onClick={handleLoadMore}
-                disabled={loadingMore || loading}
-                className={cn(
-                  'mt-1 flex w-full cursor-pointer items-center justify-center gap-2 rounded-sm px-2 py-1.5 text-sm text-muted-foreground outline-none transition',
-                  'hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:text-accent-foreground',
-                  'disabled:pointer-events-none disabled:opacity-50',
-                )}
-              >
-                {loadingMore ? <Loader2 className="size-3.5 animate-spin" /> : null}
-                {resolvedLoadMoreLabel}
-              </button>
-            ) : null}
-          </div>
-        </PopoverPrimitive.Content>
-      </PopoverPrimitive.Portal>
-    </PopoverPrimitive.Root>
+            >
+              {loadingMore ? <Loader2 className="size-3.5 animate-spin" /> : null}
+              {resolvedLoadMoreLabel}
+            </button>
+          ) : null}
+        </div>
+      )}
+    </ComboboxField>
   );
 }

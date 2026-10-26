@@ -59,8 +59,8 @@ function renderDialog(field: PatchFieldConfig, onSubmit = vi.fn()) {
     </I18nProvider>,
   );
 
-  // The trigger renders the placeholder until something is chosen.
-  return screen.getByRole("button", { name: `-- ${field.label} --` });
+  // The field is the combobox's search box as well as its trigger.
+  return screen.getByRole("combobox");
 }
 
 describe("PatchRecordDialog select fields", () => {
@@ -84,15 +84,15 @@ describe("PatchRecordDialog select fields", () => {
       query: "",
     });
 
-    expect(await screen.findByRole("button", { name: "Employee 1" })).toBeInTheDocument();
+    expect(await screen.findByRole("option", { name: "Employee 1" })).toBeInTheDocument();
     // Page one stops at 25; the 30th row is behind "Load more".
-    expect(screen.queryByRole("button", { name: "Employee 30" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("option", { name: "Employee 30" })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Load more" }));
 
     await waitFor(() => expect(loadOptions).toHaveBeenCalledTimes(2));
     expect(loadOptions.mock.calls[1]?.[0]).toMatchObject({ cursor: "25" });
-    expect(await screen.findByRole("button", { name: "Employee 30" })).toBeInTheDocument();
+    expect(await screen.findByRole("option", { name: "Employee 30" })).toBeInTheDocument();
   });
 
   it("pins the clear entry to the unfiltered first page only", async () => {
@@ -106,17 +106,17 @@ describe("PatchRecordDialog select fields", () => {
     });
 
     await user.click(trigger);
-    // One in the list, one on the trigger.
-    await waitFor(() => expect(screen.getAllByText(CLEAR_ENTRY)).toHaveLength(2));
+    // Listed once; the field shows it as its value, not as text.
+    await waitFor(() => expect(screen.getAllByText(CLEAR_ENTRY)).toHaveLength(1));
 
     // A sentinel repeated on page two reads as a result.
     await user.click(screen.getByRole("button", { name: "Load more" }));
     await waitFor(() => expect(loadOptions).toHaveBeenCalledTimes(2));
-    expect(screen.getAllByText(CLEAR_ENTRY)).toHaveLength(2);
+    expect(screen.getAllByText(CLEAR_ENTRY)).toHaveLength(1);
 
     // And it must not survive a search that excludes it.
-    await user.type(screen.getByPlaceholderText("Search employee..."), "Employee 3");
-    await waitFor(() => expect(screen.getAllByText(CLEAR_ENTRY)).toHaveLength(1));
+    await user.type(trigger, "Employee 3");
+    await waitFor(() => expect(screen.queryByText(CLEAR_ENTRY)).not.toBeInTheDocument());
   });
 
   it("keeps the chosen label once the loaded pages are discarded", async () => {
@@ -129,11 +129,11 @@ describe("PatchRecordDialog select fields", () => {
     });
 
     await user.click(trigger);
-    await user.click(await screen.findByRole("button", { name: "Employee 2" }));
+    await user.click(await screen.findByRole("option", { name: "Employee 2" }));
 
-    // The popover is closed and its pages are gone; the trigger must still not
+    // The popover is closed and its pages are gone; the field must still not
     // fall back to rendering `emp-2`.
-    await waitFor(() => expect(trigger).toHaveTextContent("Employee 2"));
+    await waitFor(() => expect(trigger).toHaveValue("Employee 2"));
   });
 
   it("still takes a static option list for a genuinely finite choice", async () => {
@@ -150,8 +150,8 @@ describe("PatchRecordDialog select fields", () => {
 
     await user.click(trigger);
 
-    expect(await screen.findAllByRole("button", { name: "Open" })).toHaveLength(1);
-    expect(screen.getByRole("button", { name: "Done" })).toBeInTheDocument();
+    expect(await screen.findAllByRole("option", { name: "Open" })).toHaveLength(1);
+    expect(screen.getByRole("option", { name: "Done" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Load more" })).not.toBeInTheDocument();
   });
 
@@ -169,7 +169,7 @@ describe("PatchRecordDialog select fields", () => {
     );
 
     await user.click(trigger);
-    await user.click(await screen.findByRole("button", { name: "Employee 2" }));
+    await user.click(await screen.findByRole("option", { name: "Employee 2" }));
     await user.click(screen.getByRole("button", { name: "Save" }));
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalledWith({ employeeKey: "emp-2" }));
