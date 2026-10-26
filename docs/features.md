@@ -324,3 +324,17 @@ registers, removes and tests the device (`api_calls/pushNotifications.ts`,
 - **On mount the hook re-registers an existing subscription.** Registration is
   idempotent on the endpoint, and re-sending repairs a server row lost after a
   410 and moves a shared device to whoever is signed in now.
+
+## Profile pictures (`UserAvatar`, since 4.22.0)
+
+`UserAvatar` draws a person's picture in a circle, or their initials
+(`userInitials`) when they have none or it does not load. It reads
+`picture_url`, which `fetchCurrentUser` takes from `GET /v2/users/me`; the
+phone menu uses it, and each app's account panel should too, in place of its
+hand-rolled initials.
+
+- **The URL is public and never expires.** Every user record from the API
+  carries it, lists included, so an app can pass a list row straight to
+  `UserAvatar` (`{ name, picture_url }`).
+- Setting the picture is the accounts console's (Profile page), which calls
+  `setAuthenticatedUser` with the record the upload returns.

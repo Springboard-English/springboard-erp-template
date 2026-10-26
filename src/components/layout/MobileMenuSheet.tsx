@@ -3,6 +3,7 @@ import { LogOut, Monitor, Moon, Sun, UserCog, type LucideIcon } from "lucide-rea
 import { ACCOUNTS_PROFILE_URL } from "@/config/accounts";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
+import UserAvatar from "@/components/UserAvatar";
 import {
   Sheet,
   SheetContent,
@@ -91,14 +92,6 @@ export default function MobileMenuSheet({
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const name = user?.name;
-  const initials = name
-    ? name
-        .split(" ")
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((part) => part[0]?.toUpperCase())
-        .join("")
-    : "?";
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -159,9 +152,7 @@ export default function MobileMenuSheet({
           ) : null}
 
           <div className="flex items-center gap-3">
-            <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-muted text-base font-semibold tracking-tight">
-              {initials}
-            </div>
+            <UserAvatar user={user} className="size-12" fallbackClassName="text-base" />
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold">
                 {name ?? t("app.loading", "Loading...")}
