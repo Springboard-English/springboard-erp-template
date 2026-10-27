@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-quer
 import { describe, expect, it, vi } from "vitest";
 
 import { I18nProvider } from "@/context/I18nContext";
-import { PullToRefreshProvider, usePullToRefresh } from "../PullToRefreshContext";
+import { PullToRefreshProvider, usePageRefresh, usePullToRefresh } from "../PullToRefreshContext";
 
 /** Drags one finger from `fromY` to `toY` on the page and lifts it. */
 function pull(fromY: number, toY: number) {
@@ -61,6 +61,27 @@ describe("PullToRefreshProvider", () => {
 
         await act(async () => pull(0, 200));
         expect(onRefresh).toHaveBeenCalledTimes(1);
+    });
+
+    it("runs the same refresh from usePageRefresh, for the layout's button", async () => {
+        const fetcher = vi.fn().mockResolvedValue("rows");
+        let refresh: (() => Promise<void>) | null = null;
+        function Grab() {
+            refresh = usePageRefresh().refresh;
+            return null;
+        }
+        renderWith(
+            <>
+                <QueryPage fetcher={fetcher} />
+                <Grab />
+            </>,
+        );
+        await act(async () => {});
+
+        await act(async () => {
+            await refresh!();
+        });
+        expect(fetcher).toHaveBeenCalledTimes(2);
     });
 
     it("does nothing when turned off", async () => {

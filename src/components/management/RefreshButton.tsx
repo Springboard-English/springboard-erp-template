@@ -13,6 +13,8 @@ export interface RefreshButtonProps {
 }
 
 /**
+ * @deprecated `DashboardLayout` draws one Refresh in its header for every page.
+ *
  * A list page's Refresh, shown from `md` up. Phones hide it: there the
  * layout's pull-to-refresh reloads every page, with nothing to wire.
  */
