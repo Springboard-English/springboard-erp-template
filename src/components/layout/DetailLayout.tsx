@@ -377,7 +377,11 @@ export function DetailBreadcrumbs({
                             {item.onClick ? (
                                 <button
                                     type="button"
-                                    className="underline-offset-4 md:hover:text-foreground md:hover:underline max-md:-ml-1.5 max-md:inline-flex max-md:min-h-11 max-md:min-w-0 max-md:items-center"
+                                    className={cn(
+                                        // a tablet keeps the small text link, with a 44px tap area around it
+                                        touchHitArea,
+                                        "relative underline-offset-4 md:hover:text-foreground md:hover:underline max-md:-ml-1.5 max-md:inline-flex max-md:min-h-11 max-md:min-w-0 max-md:items-center",
+                                    )}
                                     onClick={item.onClick}
                                 >
                                     <ChevronLeft className="size-6 shrink-0 md:hidden" aria-hidden="true" />
