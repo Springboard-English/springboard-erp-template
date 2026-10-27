@@ -230,6 +230,8 @@ export type { RefreshButtonProps } from "./components/management/RefreshButton";
 export {
   PullToRefreshProvider,
   usePullToRefresh,
+  usePageRefresh,
+  type PageRefresh,
   type RefreshHandler,
 } from "./context/PullToRefreshContext";
 export type { AdvancedFiltersToggleProps } from "./components/management/AdvancedFiltersToggle";

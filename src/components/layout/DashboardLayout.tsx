@@ -7,7 +7,7 @@ import {
   type ReactNode,
 } from "react";
 import { animated, easings, useSpring } from "@react-spring/web";
-import { ChevronsLeft, ChevronsRight } from "lucide-react";
+import { ChevronsLeft, ChevronsRight, RefreshCw } from "lucide-react";
 import { Outlet, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,7 @@ import MobileBottomBar, {
 import MobileMenuSheet from "@/components/layout/MobileMenuSheet";
 import OccasionBackdrop from "@/components/layout/OccasionBackdrop";
 import { useGlobalStatusOptional } from "@/context/GlobalStatusContext";
-import { PullToRefreshProvider } from "@/context/PullToRefreshContext";
+import { PullToRefreshProvider, usePageRefresh } from "@/context/PullToRefreshContext";
 import { dismissBootScreen, isBootScreenShowing } from "@/boot/bootScreen";
 
 export interface DashboardNavItem {
@@ -85,6 +85,35 @@ export interface DashboardLayoutProps {
   pullToRefresh?: boolean;
 }
 
+
+/**
+ * The desktop header's Refresh: runs the same page refresh as a pull on a
+ * touch screen, so no page wires its own. Spins until the refetch settles.
+ */
+function LayoutRefreshButton({ refresh }: { refresh: () => Promise<void> }) {
+  const { t } = useI18n();
+  const [running, setRunning] = useState(false);
+  const label = t("common.refresh");
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      size="icon"
+      className="rounded-full border-border/70 bg-background/80 shadow-sm backdrop-blur"
+      aria-label={label}
+      title={label}
+      disabled={running}
+      onClick={() => {
+        setRunning(true);
+        void refresh()
+          .catch(() => undefined)
+          .finally(() => setRunning(false));
+      }}
+    >
+      <RefreshCw className={cn("size-4", running && "animate-spin")} />
+    </Button>
+  );
+}
 
 function GlobalStatusMobileBar() {
   // Optional: Leap and any other app without the provider render no bar at all.
@@ -267,23 +296,32 @@ function DashboardLayoutInner({
   // account panel, and the sheet already draws identity and sign-out itself, so
   // passing it through would show the name, the email and a Logout button
   // twice. An app that wants something else in the sheet passes `mobileMenu`.
+  const pageRefresh = usePageRefresh();
+
   const defaultMenuBody = headerContent ? (
     <div className="space-y-3">{headerContent}</div>
   ) : null;
 
   return (
     <>
-      {headerContent ? (
+      {headerContent || pageRefresh.available ? (
         <div
           className={cn(
             "pointer-events-none fixed inset-x-0 top-0 z-50 hidden h-12 items-center md:flex",
             entering && "sb-enter-fade",
           )}
         >
-          <div className="pointer-events-none flex h-full w-full items-center justify-end px-6">
-            <div className={cn("pointer-events-auto", classNames?.header)}>
-              {headerContent}
-            </div>
+          <div className="pointer-events-none flex h-full w-full items-center justify-end gap-2 px-6">
+            {pageRefresh.available ? (
+              <div className="pointer-events-auto">
+                <LayoutRefreshButton refresh={pageRefresh.refresh} />
+              </div>
+            ) : null}
+            {headerContent ? (
+              <div className={cn("pointer-events-auto", classNames?.header)}>
+                {headerContent}
+              </div>
+            ) : null}
           </div>
         </div>
       ) : null}

@@ -18,6 +18,15 @@ export type RefreshHandler = () => unknown;
 
 interface PullToRefreshContextValue {
   register: (handler: RefreshHandler) => () => void;
+  /** Runs the page's refresh: the newest registered handler, else every active query. */
+  refresh: () => Promise<void>;
+  /** False when there is nothing to refresh: no handler and no QueryClient. */
+  available: boolean;
+}
+
+export interface PageRefresh {
+  refresh: () => Promise<void>;
+  available: boolean;
 }
 
 const PullToRefreshContext = createContext<PullToRefreshContextValue | null>(null);
@@ -33,11 +42,11 @@ export interface PullToRefreshProviderProps {
 }
 
 /**
- * A downward pull from the top of the page refreshes it on a touch screen.
- * By default it refetches every active TanStack query, so any page that loads
- * through a query gets it with no wiring. A page with data outside the query
- * cache registers its own handler with `usePullToRefresh`; the newest wins.
- * `DashboardLayout` mounts one.
+ * Refreshes the page: a downward pull from the top on a touch screen, or the
+ * layout's Refresh button. By default it refetches every active TanStack query,
+ * so any page that loads through a query gets it with no wiring. A page with
+ * data outside the query cache registers its own handler with
+ * `usePullToRefresh`; the newest wins. `DashboardLayout` mounts one.
  */
 export function PullToRefreshProvider({ children, enabled = true }: PullToRefreshProviderProps) {
   const queryClient = useContext(QueryClientContext);
@@ -58,8 +67,12 @@ export function PullToRefreshProvider({ children, enabled = true }: PullToRefres
     stack.current[stack.current.length - 1] ??
     (queryClient ? () => queryClient.refetchQueries({ type: "active" }) : null);
 
-  const value = useMemo(() => ({ register }), [register]);
-  const active = enabled && (registered > 0 || queryClient !== undefined);
+  const available = registered > 0 || queryClient !== undefined;
+  const refresh = useCallback(async () => {
+    await handlerRef.current?.();
+  }, []);
+  const value = useMemo(() => ({ register, refresh, available }), [register, refresh, available]);
+  const active = enabled && available;
 
   return (
     <PullToRefreshContext.Provider value={value}>
@@ -67,6 +80,17 @@ export function PullToRefreshProvider({ children, enabled = true }: PullToRefres
       {active ? <PullIndicator handlerRef={handlerRef} /> : null}
     </PullToRefreshContext.Provider>
   );
+}
+
+/**
+ * The page's refresh, the same one a pull runs: the layout's Refresh button
+ * calls it. Outside a `PullToRefreshProvider` it is unavailable and does nothing.
+ */
+export function usePageRefresh(): PageRefresh {
+  const context = useContext(PullToRefreshContext);
+  return context
+    ? { refresh: context.refresh, available: context.available }
+    : { refresh: async () => {}, available: false };
 }
 
 /**
