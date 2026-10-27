@@ -223,6 +223,8 @@ export { default as AdvancedFiltersPanel } from "./components/management/Advance
 export type { AdvancedFiltersPanelProps } from "./components/management/AdvancedFiltersPanel";
 export { default as AdvancedFiltersToggle } from "./components/management/AdvancedFiltersToggle";
 export { default as ExportCsvButton } from "./components/management/ExportCsvButton";
+export { default as MoreActionsMenu } from "./components/management/MoreActionsMenu";
+export type { MoreActionItem, MoreActionsMenuProps } from "./components/management/MoreActionsMenu";
 export { default as RefreshButton } from "./components/management/RefreshButton";
 export type { RefreshButtonProps } from "./components/management/RefreshButton";
 export {

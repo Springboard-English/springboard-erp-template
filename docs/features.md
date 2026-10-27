@@ -100,7 +100,8 @@ rules that keep it that way; a per-app copy of any of them is the bug.
 - **A list page's toolbar folds itself on a phone.** Use the template's pieces
   and the row needs no `md:` branches of its own: `AdvancedFiltersPanel` is a
   popover on desktop and a full-screen dialog below `md`; `ExportCsvButton` is a
-  button on desktop and a "⋯" menu below `md`; `RefreshButton` is hidden below
+  button on desktop and a "⋯" `MoreActionsMenu` below `md` (a page with its own
+  export puts that in a `MoreActionsMenu` with `md:hidden` itself); `RefreshButton` is hidden below
   `md`, and its `onRefresh` runs on a pull down from the top of the page
   instead. The pull works on any touch screen (iPads keep the button too), and
   only while a `RefreshButton` or `usePullToRefresh` is mounted, inside
