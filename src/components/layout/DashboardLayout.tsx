@@ -20,6 +20,7 @@ import MobileBottomBar, {
 import MobileMenuSheet from "@/components/layout/MobileMenuSheet";
 import OccasionBackdrop from "@/components/layout/OccasionBackdrop";
 import { useGlobalStatusOptional } from "@/context/GlobalStatusContext";
+import { PullToRefreshProvider } from "@/context/PullToRefreshContext";
 import { dismissBootScreen, isBootScreenShowing } from "@/boot/bootScreen";
 
 export interface DashboardNavItem {
@@ -79,8 +80,6 @@ export interface DashboardLayoutProps {
   maxContentClassName?: string;
 }
 
-const ITEM_STRIDE = 44 + 4; // h-11 button + gap-1
-const NAV_PADDING_TOP = 8; // p-2 container
 
 function GlobalStatusMobileBar() {
   // Optional: Leap and any other app without the provider render no bar at all.
@@ -119,15 +118,33 @@ function SideNavList({
   onTabSelect: (id: string) => void;
   classNames?: DashboardLayoutClassNames;
 }) {
-  const activeIndex = navItems.findIndex((item) => item.id === activeTab);
+  const navRef = useRef<HTMLElement>(null);
+  const [box, setBox] = useState<{ y: number; height: number } | null>(null);
+
+  // Measured, not computed: the button is 44px on touch and 36px on a mouse desktop.
+  useLayoutEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+    const measure = () => {
+      const active = nav.querySelector<HTMLElement>('[aria-current="page"]');
+      setBox(active ? { y: active.offsetTop, height: active.offsetHeight } : null);
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(nav);
+    return () => observer.disconnect();
+  }, [activeTab, navItems, collapsed]);
+
   const indicatorSpring = useSpring({
-    y: activeIndex >= 0 ? NAV_PADDING_TOP + activeIndex * ITEM_STRIDE : -60,
-    opacity: activeIndex >= 0 ? 1 : 0,
+    y: box?.y ?? -60,
+    height: box?.height ?? 44,
+    opacity: box ? 1 : 0,
     config: { tension: 300, friction: 26 },
   });
 
   return (
     <nav
+      ref={navRef}
       className={cn(
         "animate-in fade-in-0 slide-in-from-bottom-2 relative flex flex-col gap-1 p-2 duration-200",
         classNames?.nav,
@@ -136,11 +153,12 @@ function SideNavList({
       <animated.div
         aria-hidden="true"
         className={cn(
-          "pointer-events-none absolute inset-x-2 h-11 rounded-xl bg-secondary",
+          "pointer-events-none absolute inset-x-2 rounded-xl bg-secondary",
           classNames?.navIndicator,
         )}
         style={{
           transform: indicatorSpring.y.to((y) => `translateY(${y}px)`),
+          height: indicatorSpring.height,
           opacity: indicatorSpring.opacity,
           top: 0,
         }}
@@ -412,7 +430,9 @@ export default function DashboardLayout({
 }: DashboardLayoutProps) {
   return (
     <AppTheme disableCustomTheme={disableCustomTheme}>
-      <DashboardLayoutInner {...props} />
+      <PullToRefreshProvider>
+        <DashboardLayoutInner {...props} />
+      </PullToRefreshProvider>
     </AppTheme>
   );
 }

@@ -1,6 +1,13 @@
 import { useState } from "react";
-import { Download } from "lucide-react";
+import { Download, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import useIsMobile from "@/hooks/useIsMobile";
 import { useI18n } from "@/context/I18nContext";
 import { useGlobalStatus } from "@/context/GlobalStatusContext";
 import {
@@ -39,6 +46,11 @@ type ExportCsvButtonProps<T> = {
       }
 );
 
+/**
+ * Downloads the filtered rows as CSV. On a desktop it is an "Export CSV"
+ * button; on a phone it folds into a "⋯" menu so the toolbar row keeps room
+ * for search and Filters.
+ */
 export default function ExportCsvButton<T>({
     columns,
     fetchAll,
@@ -49,6 +61,7 @@ export default function ExportCsvButton<T>({
     const { t } = useI18n();
     const { setStatus, clearStatus } = useGlobalStatus();
     const [isExporting, setIsExporting] = useState(false);
+    const isMobile = useIsMobile();
 
     const runExport = async () => {
         try {
@@ -95,6 +108,35 @@ export default function ExportCsvButton<T>({
             setIsExporting(false);
         }
     };
+
+    // A phone's toolbar row has room for search and Filters only; export is rare there.
+    if (isMobile) {
+        return (
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        aria-label={t("common.moreActions")}
+                        title={t("common.moreActions")}
+                        disabled={isExporting}
+                    >
+                        <MoreHorizontal className="size-4" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    <DropdownMenuItem
+                        disabled={disabled || isExporting}
+                        onSelect={() => void runExport()}
+                    >
+                        <Download className="size-4" />
+                        {t("app.common.exportCsv", "Export CSV")}
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+        );
+    }
 
     return (
         <Button

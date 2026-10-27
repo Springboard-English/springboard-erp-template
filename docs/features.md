@@ -97,6 +97,15 @@ rules that keep it that way; a per-app copy of any of them is the bug.
   phone. Use `useGlobalStatusOptional()` in chrome that must render with or
   without a provider. `StatusBanner` is a different thing — an in-flow banner
   for a form or a page, not app-wide feedback.
+- **A list page's toolbar folds itself on a phone.** Use the template's pieces
+  and the row needs no `md:` branches of its own: `AdvancedFiltersPanel` is a
+  popover on desktop and a full-screen dialog below `md`; `ExportCsvButton` is a
+  button on desktop and a "⋯" menu below `md`; `RefreshButton` is hidden below
+  `md`, and its `onRefresh` runs on a pull down from the top of the page
+  instead. The pull works on any touch screen (iPads keep the button too), and
+  only while a `RefreshButton` or `usePullToRefresh` is mounted, inside
+  `DashboardLayout`. The toolbar grid on a phone is
+  `grid-cols-[minmax(0,1fr)_auto_auto]`: search, Filters, "⋯".
 
 ## Charts (`src/components/charts/`, since 1.10.0)
 
