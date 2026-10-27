@@ -78,6 +78,11 @@ export interface DashboardLayoutProps {
   classNames?: DashboardLayoutClassNames;
   /** Max width of the centered content column. Defaults to 1700px. */
   maxContentClassName?: string;
+  /**
+   * Pull down from the top of any page to refetch its active queries, on a
+   * touch screen. On by default; `false` hands the gesture back to the browser.
+   */
+  pullToRefresh?: boolean;
 }
 
 
@@ -209,7 +214,7 @@ function DashboardLayoutInner({
   defaultCollapsed = true,
   classNames,
   maxContentClassName = "max-w-[1700px]",
-}: Omit<DashboardLayoutProps, "disableCustomTheme">) {
+}: Omit<DashboardLayoutProps, "disableCustomTheme" | "pullToRefresh">) {
   const { t } = useI18n();
   const location = useLocation();
   const mainScrollRef = useRef<HTMLElement | null>(null);
@@ -426,11 +431,12 @@ function DashboardLayoutInner({
 
 export default function DashboardLayout({
   disableCustomTheme,
+  pullToRefresh = true,
   ...props
 }: DashboardLayoutProps) {
   return (
     <AppTheme disableCustomTheme={disableCustomTheme}>
-      <PullToRefreshProvider>
+      <PullToRefreshProvider enabled={pullToRefresh}>
         <DashboardLayoutInner {...props} />
       </PullToRefreshProvider>
     </AppTheme>

@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import { RefreshCw } from "lucide-react";
+import { QueryClientContext } from "@tanstack/react-query";
 import { useI18n } from "@/context/I18nContext";
 import { cn } from "@/lib/utils";
 
@@ -25,31 +26,45 @@ const MAX_PULL = 120;
 const TRIGGER_AT = 64;
 const HOLD_AT = 48;
 
+export interface PullToRefreshProviderProps {
+  children: ReactNode;
+  /** `false` turns the pull off; the browser keeps its own pull-to-reload. */
+  enabled?: boolean;
+}
+
 /**
- * Lets a page register its refresh so a downward pull from the top of the page
- * runs it on a touch screen. `DashboardLayout` mounts one; without a
- * registered handler a pull does nothing and the browser keeps its own.
+ * A downward pull from the top of the page refreshes it on a touch screen.
+ * By default it refetches every active TanStack query, so any page that loads
+ * through a query gets it with no wiring. A page with data outside the query
+ * cache registers its own handler with `usePullToRefresh`; the newest wins.
+ * `DashboardLayout` mounts one.
  */
-export function PullToRefreshProvider({ children }: { children: ReactNode }) {
-  const handlerRef = useRef<RefreshHandler | null>(null);
-  const [enabled, setEnabled] = useState(false);
+export function PullToRefreshProvider({ children, enabled = true }: PullToRefreshProviderProps) {
+  const queryClient = useContext(QueryClientContext);
+  const stack = useRef<RefreshHandler[]>([]);
+  const [registered, setRegistered] = useState(0);
 
   const register = useCallback((handler: RefreshHandler) => {
-    handlerRef.current = handler;
-    setEnabled(true);
+    stack.current = [...stack.current, handler];
+    setRegistered(stack.current.length);
     return () => {
-      if (handlerRef.current !== handler) return;
-      handlerRef.current = null;
-      setEnabled(false);
+      stack.current = stack.current.filter((entry) => entry !== handler);
+      setRegistered(stack.current.length);
     };
   }, []);
 
+  const handlerRef = useRef<RefreshHandler | null>(null);
+  handlerRef.current =
+    stack.current[stack.current.length - 1] ??
+    (queryClient ? () => queryClient.refetchQueries({ type: "active" }) : null);
+
   const value = useMemo(() => ({ register }), [register]);
+  const active = enabled && (registered > 0 || queryClient !== undefined);
 
   return (
     <PullToRefreshContext.Provider value={value}>
       {children}
-      {enabled ? <PullIndicator handlerRef={handlerRef} /> : null}
+      {active ? <PullIndicator handlerRef={handlerRef} /> : null}
     </PullToRefreshContext.Provider>
   );
 }

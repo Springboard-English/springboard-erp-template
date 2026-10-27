@@ -2,7 +2,7 @@ import { useState } from "react";
 import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/context/I18nContext";
-import { usePullToRefresh, type RefreshHandler } from "../../context/PullToRefreshContext";
+import { type RefreshHandler } from "../../context/PullToRefreshContext";
 import { cn } from "@/lib/utils";
 
 export interface RefreshButtonProps {
@@ -13,13 +13,12 @@ export interface RefreshButtonProps {
 }
 
 /**
- * A list page's Refresh. Shown from `md` up; on a phone it is hidden and the
- * same `onRefresh` runs on a pull down from the top of the page instead.
+ * A list page's Refresh, shown from `md` up. Phones hide it: there the
+ * layout's pull-to-refresh reloads every page, with nothing to wire.
  */
 export default function RefreshButton({ onRefresh, disabled = false, className }: RefreshButtonProps) {
   const { t } = useI18n();
   const [running, setRunning] = useState(false);
-  usePullToRefresh(onRefresh);
 
   const run = () => {
     setRunning(true);
