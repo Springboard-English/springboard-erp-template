@@ -1,7 +1,11 @@
-import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
 import useIsMobile from '@/hooks/useIsMobile';
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { pageSelectionState, togglePageSelection, toggleRowSelection } from '@/lib/rowSelection';
+// Relative: this type reaches the published .d.ts, where `@/` does not resolve.
+import type { RowSelection } from '../lib/rowSelection';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import {
   Table,
@@ -87,8 +91,19 @@ export interface SimpleDataTableProps<T> {
   onLoadingChange?: (key: string, loading: boolean, message?: string) => void;
   hoveredRow?: T | null;
   onHoveredRowChange?: (row: T | null) => void;
+  /**
+   * Adds a tick-box column, with a header box for the rows on this page.
+   * Kept by `rowKey`, so ticks survive paging. Row clicks still go to
+   * `onRowClick`; with no `onRowClick` a row click toggles its tick.
+   */
+  selection?: RowSelection<T>;
 }
 
+/**
+ * The suite's desktop table: sortable headers, client or server paging, a
+ * loading skeleton, an empty state and, with `selection`, a tick-box column.
+ * Pair it with a `MobileCardList` and set `desktopOnly`.
+ */
 export default function SimpleDataTable<T>({
   columns,
   rows,
@@ -114,6 +129,7 @@ export default function SimpleDataTable<T>({
   onLoadingChange,
   hoveredRow = null,
   onHoveredRowChange,
+  selection,
 }: SimpleDataTableProps<T>) {
   const isMobileViewport = useIsMobile();
   const { t } = useI18n();
@@ -167,20 +183,76 @@ export default function SimpleDataTable<T>({
 
   const hoveredRowKey = hoveredRow ? rowKey(hoveredRow) : null;
 
+  const selectedKeys = useMemo(
+    () => new Set((selection?.selected ?? []).map(rowKey)),
+    [selection?.selected, rowKey],
+  );
+  const canSelectRow = (row: T) =>
+    Boolean(selection) && !selection?.disabled && (selection?.isSelectable?.(row) ?? true);
+  const toggleRow = (row: T) => {
+    if (!selection || !canSelectRow(row)) return;
+    selection.onChange(toggleRowSelection(selection.selected, row, rowKey));
+  };
+  const pageState = selection
+    ? pageSelectionState(selection.selected, paginatedRows, rowKey, selection.isSelectable)
+    : null;
+
+  // Prepended as an ordinary column, so the skeleton, empty state and preset
+  // styling all count it without a special case.
+  const selectionColumn: SimpleDataTableColumn<T> | null = selection
+    ? {
+        id: '__select',
+        className: 'w-12',
+        cellClassName: 'w-12',
+        header: (
+          <span className="inline-flex items-center justify-center" title={selection.disabled ? selection.disabledReason : undefined}>
+            <Checkbox
+              aria-label={t('rowSelection.selectPage')}
+              checked={pageState?.checked ?? false}
+              disabled={selection.disabled || !pageState || pageState.selectableCount === 0}
+              onCheckedChange={() =>
+                selection.onChange(
+                  togglePageSelection(selection.selected, paginatedRows, rowKey, selection.isSelectable),
+                )
+              }
+            />
+          </span>
+        ),
+        render: (row) => (
+          <span
+            className="inline-flex items-center justify-center"
+            title={selection.disabled ? selection.disabledReason : undefined}
+            // The tick is its own control; it must not also open the row.
+            onClick={(event) => event.stopPropagation()}
+          >
+            <Checkbox
+              aria-label={t('rowSelection.selectRow')}
+              checked={selectedKeys.has(rowKey(row))}
+              disabled={!canSelectRow(row)}
+              onCheckedChange={() => toggleRow(row)}
+            />
+          </span>
+        ),
+      }
+    : null;
+  const tableColumns = selectionColumn ? [selectionColumn, ...columns] : columns;
+  const handleRowClick = onRowClick ?? (selection ? toggleRow : undefined);
+
   const renderTableRow = (row: T) => (
     <TableRow
       key={rowKey(row)}
+      data-state={selection && selectedKeys.has(rowKey(row)) ? 'selected' : undefined}
       className={cn(
         'odd:bg-transparent even:bg-muted/20',
-        onRowClick && 'cursor-pointer',
+        handleRowClick && 'cursor-pointer',
         hoveredRowKey === rowKey(row) && 'bg-muted/35',
         classNames?.row,
       )}
-      onClick={onRowClick ? () => onRowClick(row) : undefined}
+      onClick={handleRowClick ? () => handleRowClick(row) : undefined}
       onMouseEnter={onHoveredRowChange ? () => onHoveredRowChange(row) : undefined}
       onFocus={onHoveredRowChange ? () => onHoveredRowChange(row) : undefined}
     >
-      {columns.map((column) => (
+      {tableColumns.map((column) => (
         <TableCell key={column.id} className={cn(column.cellClassName, classNames?.cell)}>
           {column.render(row)}
         </TableCell>
@@ -280,7 +352,7 @@ export default function SimpleDataTable<T>({
         <Table containerClassName="overflow-x-visible">
           <TableHeader>
             <TableRow className={cn("hover:bg-transparent", classNames?.headRow)}>
-              {columns.map((column) => (
+              {tableColumns.map((column) => (
                 <TableHead
                   key={column.id}
                   className={cn('sticky top-0 z-[1] bg-card text-center', column.className, classNames?.headCell)}
@@ -311,7 +383,7 @@ export default function SimpleDataTable<T>({
             {loading ? (
               Array.from({ length: skeletonRowCount }).map((_, index) => (
                 <TableRow key={`loading-skeleton-${index}`} className="hover:bg-transparent">
-                  {columns.map((column) => (
+                  {tableColumns.map((column) => (
                     <TableCell key={`${column.id}-skeleton-${index}`} className={column.cellClassName}>
                       <div className="h-4 w-full animate-pulse rounded bg-muted/60" />
                     </TableCell>
@@ -321,7 +393,7 @@ export default function SimpleDataTable<T>({
             ) : paginatedRows.length === 0 ? (
               <TableRow className="hover:bg-transparent">
                 <TableCell
-                  colSpan={columns.length}
+                  colSpan={tableColumns.length}
                   className={cn("py-10 text-center text-sm text-muted-foreground", classNames?.emptyCell)}
                 >
                   {resolvedEmptyMessage}

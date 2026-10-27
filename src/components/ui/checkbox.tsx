@@ -1,10 +1,11 @@
 import * as React from "react"
-import { CheckIcon } from "lucide-react"
+import { CheckIcon, MinusIcon } from "lucide-react"
 import { Checkbox as CheckboxPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
 import { touchHitArea } from "@/lib/touchTarget"
 
+/** The suite's checkbox: Radix's, 26px with a 44px tap area on touch, drawing a dash when `checked` is `"indeterminate"`. */
 function Checkbox({
   className,
   ...props
@@ -14,7 +15,7 @@ function Checkbox({
       data-slot="checkbox"
       className={cn(
         touchHitArea,
-        "peer relative size-[26px] shrink-0 rounded-[9px] border-2 border-input bg-card shadow-xs transition-all duration-200 ease-bounce outline-none focus-visible:border-rose-400 focus-visible:ring-4 focus-visible:ring-rose-100 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-error data-[state=checked]:border-rose-500 data-[state=checked]:bg-rose-500 data-[state=checked]:text-white dark:bg-input/30",
+        "peer relative size-[26px] shrink-0 rounded-[9px] border-2 border-input bg-card shadow-xs transition-all duration-200 ease-bounce outline-none focus-visible:border-rose-400 focus-visible:ring-4 focus-visible:ring-rose-100 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-error data-[state=checked]:border-rose-500 data-[state=checked]:bg-rose-500 data-[state=checked]:text-white data-[state=indeterminate]:border-rose-500 data-[state=indeterminate]:bg-rose-500 data-[state=indeterminate]:text-white dark:bg-input/30",
         className
       )}
       {...props}
@@ -23,7 +24,11 @@ function Checkbox({
         data-slot="checkbox-indicator"
         className="grid place-content-center text-current transition-none"
       >
-        <CheckIcon className="size-4" strokeWidth={3} />
+        {props.checked === "indeterminate" ? (
+          <MinusIcon className="size-4" strokeWidth={3} />
+        ) : (
+          <CheckIcon className="size-4" strokeWidth={3} />
+        )}
       </CheckboxPrimitive.Indicator>
     </CheckboxPrimitive.Root>
   )
