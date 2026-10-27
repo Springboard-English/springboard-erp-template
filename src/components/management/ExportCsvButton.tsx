@@ -1,12 +1,7 @@
 import { useState } from "react";
-import { Download, MoreHorizontal } from "lucide-react";
+import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import MoreActionsMenu from "./MoreActionsMenu";
 import useIsMobile from "@/hooks/useIsMobile";
 import { useI18n } from "@/context/I18nContext";
 import { useGlobalStatus } from "@/context/GlobalStatusContext";
@@ -112,29 +107,17 @@ export default function ExportCsvButton<T>({
     // A phone's toolbar row has room for search and Filters only; export is rare there.
     if (isMobile) {
         return (
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        aria-label={t("common.moreActions")}
-                        title={t("common.moreActions")}
-                        disabled={isExporting}
-                    >
-                        <MoreHorizontal className="size-4" />
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                        disabled={disabled || isExporting}
-                        onSelect={() => void runExport()}
-                    >
-                        <Download className="size-4" />
-                        {t("app.common.exportCsv", "Export CSV")}
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
+            <MoreActionsMenu
+                disabled={isExporting}
+                items={[
+                    {
+                        label: t("app.common.exportCsv", "Export CSV"),
+                        icon: <Download className="size-4" />,
+                        disabled,
+                        onSelect: () => void runExport(),
+                    },
+                ]}
+            />
         );
     }
 
