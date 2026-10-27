@@ -5,6 +5,8 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { I18nProvider } from "@/context/I18nContext";
 import type { UserInfo } from "../../../api_calls/UserData";
 import type { WidgetDefaults, WidgetDefinition, WidgetRegistry } from "../types";
+import { WidgetFooter } from "../WidgetFooter";
+import { WidgetList } from "../WidgetBodies";
 
 const patchCurrentUserInfo = vi.fn();
 const setAuthenticatedUser = vi.fn();
@@ -46,6 +48,25 @@ const REGISTRY: WidgetRegistry = [
         render: () => {
             throw new Error("boom");
         },
+    }),
+    widget("list", {
+        render: ({ size }) => (
+            <WidgetList
+                size={size}
+                moreHref="/all"
+                rows={[1, 2, 3, 4].map((n) => ({ key: String(n), title: `row ${n}` }))}
+            />
+        ),
+    }),
+    widget("footer", {
+        render: () => (
+            <div>
+                <p>footer body</p>
+                <WidgetFooter>
+                    <p>footer pager</p>
+                </WidgetFooter>
+            </div>
+        ),
     }),
 ];
 
@@ -130,6 +151,28 @@ describe("WidgetBoard", () => {
         });
         expect(screen.getByRole("alert")).toHaveTextContent("This widget couldn't load.");
         expect(screen.getByText("body a at M")).toBeInTheDocument();
+    });
+
+    it("puts a widget's footer at the bottom of its card, after the content", () => {
+        renderBoard({ dashboard_test: { v: 1, items: [{ id: "f", widget: "footer", size: "M" }] } });
+        const body = screen.getByText("footer body");
+        const pager = screen.getByText("footer pager");
+        // Portalled out of the content into the card's last child.
+        expect(body.contains(pager)).toBe(false);
+        expect(pager.closest("[data-slot='card']")?.lastElementChild).toBe(pager.parentElement);
+        expect(body.compareDocumentPosition(pager) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
+
+    it("pages a long list with back and next instead of a +N more link", async () => {
+        const user = userEvent.setup();
+        renderBoard({ dashboard_test: { v: 1, items: [{ id: "l", widget: "list", size: "M" }] } });
+        expect(screen.getByText("row 1")).toBeInTheDocument();
+        expect(screen.queryByText("row 4")).not.toBeInTheDocument();
+        expect(screen.queryByText(/more/)).not.toBeInTheDocument();
+        expect(screen.getByText("Page 1 of 2")).toBeInTheDocument();
+        await user.click(screen.getByRole("button", { name: "Next" }));
+        expect(screen.getByText("row 4")).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: "Next" })).toBeDisabled();
     });
 
     it("adds from the gallery, which offers only widgets the user may use", async () => {

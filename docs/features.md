@@ -174,6 +174,11 @@ An app passes a `registry` of `WidgetDefinition`s and a `defaults(user)`.
   number. Each frame measures its header and content and spans the whole rows
   they need (`widgetRowSpan`, at least two for L), so edges line up across
   columns and nothing is clipped. A widget keeps itself short by paging.
+- **Navigation sits on the card's bottom edge.** A widget wraps its pager or
+  "View all" link in `WidgetFooter`, which portals it into the frame's footer
+  slot, so it lines up across widgets however tall the content is.
+  `WidgetList` pages its rows with back and next there; widgets never show a
+  "+N more" or show-all link (the header's Open arrow goes to the full page).
 - **`normaliseLayout` repairs, it does not reject.** Unknown widgets, lost
   scopes and unsupported sizes are dropped or reset one at a time. Never rename
   a widget `id`: it is what users' saved layouts point at.

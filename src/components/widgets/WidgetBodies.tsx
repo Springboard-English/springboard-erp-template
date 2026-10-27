@@ -1,17 +1,18 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { AlertCircle, RotateCw } from "lucide-react";
+import { AlertCircle, ChevronLeft, ChevronRight, RotateCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import { useI18n } from "../../context/I18nContext";
 import type { WidgetSize } from "./types";
+import { WidgetFooter } from "./WidgetFooter";
 
 /**
  * Generic insides for a widget, so an app's widget is its query plus a few
  * lines of mapping. Nothing here knows a domain.
  */
 
-const LIST_ROWS: Record<WidgetSize, number> = { S: 1, M: 3, L: 7, XL: Number.POSITIVE_INFINITY };
+const LIST_ROWS: Record<WidgetSize, number> = { S: 1, M: 3, L: 7, XL: 12 };
 
 export function WidgetEmpty({ message, className }: { message?: ReactNode; className?: string }) {
     const { t } = useI18n();
@@ -115,13 +116,13 @@ export interface WidgetListRow {
 }
 
 /**
- * Rows capped by size — 1 / 3 / 7 / all — with "+N more" linking to the full
- * page. A widget is a glance; the list it summarises is one tap away.
+ * Rows a page at a time by size (1 / 3 / 7 / 12), with back and next on the
+ * card's bottom edge. `moreHref` is accepted for older callers and ignored:
+ * the frame's Open arrow already links to the full page.
  */
 export function WidgetList({
     rows,
     size,
-    moreHref,
     emptyMessage,
 }: {
     rows: WidgetListRow[];
@@ -130,10 +131,14 @@ export function WidgetList({
     emptyMessage?: ReactNode;
 }) {
     const { t } = useI18n();
+    const [requested, setPage] = useState(0);
     if (rows.length === 0) return <WidgetEmpty message={emptyMessage} />;
 
-    const shown = rows.slice(0, LIST_ROWS[size]);
-    const hidden = rows.length - shown.length;
+    const perPage = LIST_ROWS[size];
+    const pageCount = Math.ceil(rows.length / perPage);
+    // A refresh that shrinks the list keeps a valid page.
+    const page = Math.min(requested, pageCount - 1);
+    const shown = rows.slice(page * perPage, (page + 1) * perPage);
     const rowClass = "flex min-h-11 w-full items-center gap-3 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-muted/50";
 
     return (
@@ -164,10 +169,34 @@ export function WidgetList({
                     );
                 })}
             </ul>
-            {hidden > 0 && moreHref ? (
-                <Link to={moreHref} className="mt-1 px-2 py-2 text-sm font-medium text-primary hover:underline">
-                    {t("widgets.more", undefined, { count: hidden })}
-                </Link>
+            {pageCount > 1 ? (
+                <WidgetFooter>
+                    <div className="flex items-center justify-end gap-1">
+                        <Button
+                            type="button"
+                            size="icon-sm"
+                            variant="outline"
+                            aria-label={t("widgets.previous")}
+                            disabled={page === 0}
+                            onClick={() => setPage(page - 1)}
+                        >
+                            <ChevronLeft aria-hidden />
+                        </Button>
+                        <span className="min-w-16 text-center text-sm text-muted-foreground">
+                            {t("widgets.pageOf", undefined, { page: page + 1, total: pageCount })}
+                        </span>
+                        <Button
+                            type="button"
+                            size="icon-sm"
+                            variant="outline"
+                            aria-label={t("widgets.next")}
+                            disabled={page >= pageCount - 1}
+                            onClick={() => setPage(page + 1)}
+                        >
+                            <ChevronRight aria-hidden />
+                        </Button>
+                    </div>
+                </WidgetFooter>
             ) : null}
         </div>
     );

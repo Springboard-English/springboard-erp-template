@@ -398,6 +398,7 @@ export {
   WidgetStat,
 } from "./components/widgets/WidgetBodies";
 export type { WidgetListRow, WidgetQueryLike } from "./components/widgets/WidgetBodies";
+export { WidgetFooter } from "./components/widgets/WidgetFooter";
 export {
   availableWidgets,
   isWidgetAvailable,

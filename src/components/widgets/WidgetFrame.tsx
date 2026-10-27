@@ -29,6 +29,7 @@ import { useI18n } from "../../context/I18nContext";
 import type { UserInfo } from "../../api_calls/UserData";
 import { WIDGET_MIN_ROWS, findWidget, stackSizes, widgetRowSpan } from "./layout";
 import { WidgetError, WidgetSkeleton } from "./WidgetBodies";
+import { WidgetFooterContext } from "./WidgetFooter";
 import {
     isWidgetStack,
     type AnyWidgetDefinition,
@@ -61,18 +62,20 @@ export interface WidgetRowSpan {
     cardRef: RefObject<HTMLDivElement | null>;
     headerRef: RefObject<HTMLDivElement | null>;
     contentRef: RefObject<HTMLDivElement | null>;
+    footerRef: RefObject<HTMLDivElement | null>;
 }
 
 /**
- * The rows a frame spans on the board's fixed row grid: its header and content
- * at their natural height, rounded up to whole rows, never below `minRows`.
- * Re-measured whenever the header, the content or the board resizes.
+ * The rows a frame spans on the board's fixed row grid: its header, content
+ * and footer at their natural height, rounded up to whole rows, never below
+ * `minRows`. Re-measured whenever any of them or the board resizes.
  */
 function useWidgetRowSpan(minRows: number, widgetId: string | null): WidgetRowSpan {
     const itemRef = useRef<HTMLDivElement | null>(null);
     const cardRef = useRef<HTMLDivElement | null>(null);
     const headerRef = useRef<HTMLDivElement | null>(null);
     const contentRef = useRef<HTMLDivElement | null>(null);
+    const footerRef = useRef<HTMLDivElement | null>(null);
     const [span, setSpan] = useState(minRows);
 
     useLayoutEffect(() => {
@@ -80,6 +83,7 @@ function useWidgetRowSpan(minRows: number, widgetId: string | null): WidgetRowSp
         const card = cardRef.current;
         const header = headerRef.current;
         const content = contentRef.current;
+        const footer = footerRef.current;
         const grid = item?.parentElement;
         // jsdom and very old browsers have no ResizeObserver; the minimum stands.
         if (!item || !card || !header || !content || !grid || typeof ResizeObserver === "undefined") {
@@ -95,19 +99,23 @@ function useWidgetRowSpan(minRows: number, widgetId: string | null): WidgetRowSp
                 px(cardStyle.borderTopWidth) +
                 px(cardStyle.borderBottomWidth) +
                 px(cardStyle.rowGap);
-            const needed = header.offsetHeight + content.offsetHeight + chrome;
+            // An empty footer is display:none (0 high) and takes no gap.
+            const footerHeight = footer?.offsetHeight ?? 0;
+            const footerSpace = footerHeight > 0 ? footerHeight + px(cardStyle.rowGap) : 0;
+            const needed = header.offsetHeight + content.offsetHeight + footerSpace + chrome;
             setSpan(widgetRowSpan(needed, px(gridStyle.gridAutoRows), px(gridStyle.rowGap), minRows));
         };
         measure();
         const observer = new ResizeObserver(measure);
         observer.observe(header);
         observer.observe(content);
+        if (footer) observer.observe(footer);
         // The board changes its gap at `md`, which no content resize reports.
         observer.observe(grid);
         return () => observer.disconnect();
     }, [minRows, widgetId]);
 
-    return { span, itemRef, cardRef, headerRef, contentRef };
+    return { span, itemRef, cardRef, headerRef, contentRef, footerRef };
 }
 
 /** What the drag layer hands each frame. Structural, so this module needs no dnd-kit import. */
@@ -195,6 +203,7 @@ export default function WidgetFrame({
     const stack = isWidgetStack(entry) ? entry : null;
     const tabKey = `widgets:${storageKey}:${entry.id}`;
     const [storedTab, setStoredTab] = useState(() => (stack ? readActiveTab(tabKey) : null));
+    const [footerNode, setFooterNode] = useState<HTMLDivElement | null>(null);
 
     const children = isWidgetStack(entry) ? entry.stack : [{ id: entry.id, widget: entry.widget, config: entry.config }];
     const active = children.find((child) => child.id === storedTab) ?? children[0];
@@ -346,13 +355,24 @@ export default function WidgetFrame({
                 <div className={cn("min-h-0 flex-1 px-4", editing && "pointer-events-none select-none")}>
                     {/* Measured at its natural height, so the frame can take the rows it needs. */}
                     <div ref={rows.contentRef}>
-                        <WidgetErrorBoundary resetKey={`${active.id}:${entry.size}`}>
-                            <Suspense fallback={<WidgetSkeleton size={entry.size} />}>
-                                <Render size={entry.size} config={active.config} user={user} preview={false} />
-                            </Suspense>
-                        </WidgetErrorBoundary>
+                        <WidgetFooterContext.Provider value={footerNode}>
+                            <WidgetErrorBoundary resetKey={`${active.id}:${entry.size}`}>
+                                <Suspense fallback={<WidgetSkeleton size={entry.size} />}>
+                                    <Render size={entry.size} config={active.config} user={user} preview={false} />
+                                </Suspense>
+                            </WidgetErrorBoundary>
+                        </WidgetFooterContext.Provider>
                     </div>
                 </div>
+
+                {/* Where `WidgetFooter` puts a widget's pager and links: the card's bottom edge. */}
+                <div
+                    ref={(node) => {
+                        rows.footerRef.current = node;
+                        setFooterNode(node);
+                    }}
+                    className={cn("px-4 empty:hidden", editing && "pointer-events-none select-none")}
+                />
             </Card>
         </div>
     );
