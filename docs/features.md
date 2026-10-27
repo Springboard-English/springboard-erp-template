@@ -172,7 +172,7 @@ An app passes a `registry` of `WidgetDefinition`s and a `defaults(user)`.
   `grid-flow-row-dense`, so one saved layout fits four columns and two.
 - **Fixed rows, snapped heights.** Rows are a fixed 8.5rem, unlimited in
   number. Each frame measures its header and content and spans the whole rows
-  they need (`widgetRowSpan`, at least two for L), so edges line up across
+  they need (`widgetRowSpan`, at least five for L, so side-by-side L cards end level), so edges line up across
   columns and nothing is clipped. A widget keeps itself short by paging.
 - **Navigation sits on the card's bottom edge.** A widget wraps its pager or
   "View all" link in `WidgetFooter`, which portals it into the frame's footer

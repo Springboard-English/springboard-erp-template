@@ -18,8 +18,11 @@ import {
  * board can make. Kept free of React so all of it is unit-testable.
  */
 
-/** The fewest rows each size takes, whatever its content: L is two cells tall. */
-export const WIDGET_MIN_ROWS: Record<WidgetSize, number> = { S: 1, M: 1, L: 2, XL: 1 };
+/**
+ * The fewest rows each size takes, whatever its content. L is five cells tall,
+ * so two L widgets side by side end on one line with their pagers level.
+ */
+export const WIDGET_MIN_ROWS: Record<WidgetSize, number> = { S: 1, M: 1, L: 5, XL: 1 };
 
 const SNAP_TOLERANCE_PX = 2;
 
