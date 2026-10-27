@@ -1,7 +1,13 @@
-import { createContext, useContext, useLayoutEffect, useState } from "react";
+import { createContext, useContext, useLayoutEffect, useRef, useState } from "react";
 
-/** The frame's content area, which fills the card between header and footer; null outside a frame. */
-export const WidgetBodyContext = createContext<HTMLElement | null>(null);
+/** The frame's content area and the height its minimum rows leave for content. */
+export interface WidgetBody {
+    node: HTMLElement;
+    budget: number;
+}
+
+/** The frame's content area; null outside a frame (the gallery's previews). */
+export const WidgetBodyContext = createContext<WidgetBody | null>(null);
 
 export interface FitRowsOptions {
     /** Fit only when true; a size whose card grows with its content (M, XL) passes false. */
@@ -23,14 +29,16 @@ export interface FitRows {
 const FIT_SAFETY_PX = 2;
 
 /**
- * How many items of a widget's list fit in the card's free height: whole rows
- * from the list's first row to the content area's bottom, times the list's
- * grid columns. Re-measured when the card, the list or the board resizes.
+ * How many items of a widget's list fit the card's minimum box: whole rows
+ * from the list's first row down to where that box's content area ends, times
+ * the list's grid columns. Re-measured when the list, the content area or the
+ * board resizes.
  */
 export function useFitRows({ enabled = true, fallback, max }: FitRowsOptions): FitRows {
     const body = useContext(WidgetBodyContext);
     const [list, setList] = useState<HTMLElement | null>(null);
     const [fit, setFit] = useState<number | null>(null);
+    const pitchRef = useRef<number | null>(null);
 
     useLayoutEffect(() => {
         // jsdom and very old browsers have no ResizeObserver; the fallback stands.
@@ -48,19 +56,21 @@ export function useFitRows({ enabled = true, fallback, max }: FitRowsOptions): F
                 : 1;
             const firstBox = first.getBoundingClientRect();
             if (firstBox.height <= 0) return;
-            // Row pitch from the next row when there is one, so borders and gaps count.
+            // Row pitch from the next row, so borders and gaps count. A one-row page (often the
+            // last) reuses the pitch last seen: estimating it there would change the page size,
+            // re-slice the pages and flip back, over and over.
             const nextRow = items[columns];
-            const pitch = nextRow
-                ? nextRow.getBoundingClientRect().top - firstBox.top
-                : firstBox.height + (parseFloat(style.rowGap) || 0);
+            if (nextRow) pitchRef.current = nextRow.getBoundingClientRect().top - firstBox.top;
+            const pitch = pitchRef.current ?? firstBox.height + (parseFloat(style.rowGap) || 0);
             if (pitch <= 0) return;
-            const bodyBottom = body.getBoundingClientRect().bottom - (parseFloat(getComputedStyle(body).paddingBottom) || 0);
-            const room = bodyBottom - firstBox.bottom - FIT_SAFETY_PX;
+            // Fit to the minimum box, never the card's current height: a card that grew because
+            // the list overflowed would otherwise make room for more rows, and so on.
+            const room = body.node.getBoundingClientRect().top + body.budget - firstBox.bottom - FIT_SAFETY_PX;
             setFit((1 + Math.max(0, Math.floor(room / pitch))) * columns);
         };
         measure();
         const observer = new ResizeObserver(measure);
-        observer.observe(body);
+        observer.observe(body.node);
         observer.observe(list);
         return () => observer.disconnect();
     }, [body, enabled, list]);

@@ -2,6 +2,7 @@ import {
     Component,
     Suspense,
     useLayoutEffect,
+    useMemo,
     useRef,
     useState,
     type CSSProperties,
@@ -59,6 +60,8 @@ function px(value: string): number {
 
 export interface WidgetRowSpan {
     span: number;
+    /** The content height that fits the frame's minimum rows. */
+    bodyBudget: number;
     itemRef: RefObject<HTMLDivElement | null>;
     cardRef: RefObject<HTMLDivElement | null>;
     headerRef: RefObject<HTMLDivElement | null>;
@@ -78,6 +81,7 @@ function useWidgetRowSpan(minRows: number, widgetId: string | null): WidgetRowSp
     const contentRef = useRef<HTMLDivElement | null>(null);
     const footerRef = useRef<HTMLDivElement | null>(null);
     const [span, setSpan] = useState(minRows);
+    const [bodyBudget, setBodyBudget] = useState(0);
 
     useLayoutEffect(() => {
         const item = itemRef.current;
@@ -103,8 +107,13 @@ function useWidgetRowSpan(minRows: number, widgetId: string | null): WidgetRowSp
             // An empty footer is display:none (0 high) and takes no gap.
             const footerHeight = footer?.offsetHeight ?? 0;
             const footerSpace = footerHeight > 0 ? footerHeight + px(cardStyle.rowGap) : 0;
-            const needed = header.offsetHeight + content.offsetHeight + footerSpace + chrome;
-            setSpan(widgetRowSpan(needed, px(gridStyle.gridAutoRows), px(gridStyle.rowGap), minRows));
+            const fixed = header.offsetHeight + footerSpace + chrome;
+            const rowPx = px(gridStyle.gridAutoRows);
+            const gapPx = px(gridStyle.rowGap);
+            setSpan(widgetRowSpan(fixed + content.offsetHeight, rowPx, gapPx, minRows));
+            // The content height the minimum box holds. Fitting to this, not to the card's current
+            // height, keeps a fitted list from chasing a card that grew because the list did.
+            setBodyBudget(Math.max(0, minRows * rowPx + (minRows - 1) * gapPx - fixed));
         };
         measure();
         const observer = new ResizeObserver(measure);
@@ -116,7 +125,7 @@ function useWidgetRowSpan(minRows: number, widgetId: string | null): WidgetRowSp
         return () => observer.disconnect();
     }, [minRows, widgetId]);
 
-    return { span, itemRef, cardRef, headerRef, contentRef, footerRef };
+    return { span, bodyBudget, itemRef, cardRef, headerRef, contentRef, footerRef };
 }
 
 /** What the drag layer hands each frame. Structural, so this module needs no dnd-kit import. */
@@ -211,6 +220,10 @@ export default function WidgetFrame({
     const active = children.find((child) => child.id === storedTab) ?? children[0];
     const def = findWidget(registry, active.widget);
     const rows = useWidgetRowSpan(WIDGET_MIN_ROWS[entry.size], def?.id ?? null);
+    const bodyContext = useMemo(
+        () => (bodyNode ? { node: bodyNode, budget: rows.bodyBudget } : null),
+        [bodyNode, rows.bodyBudget],
+    );
     if (!def) return null;
 
     const titleOf = (d: AnyWidgetDefinition) => t(d.titleKey ?? d.title, d.title);
@@ -358,7 +371,7 @@ export default function WidgetFrame({
                 <div ref={setBodyNode} className={cn("min-h-0 flex-1 px-4", editing && "pointer-events-none select-none")}>
                     {/* Measured at its natural height, so the frame can take the rows it needs. */}
                     <div ref={rows.contentRef}>
-                        <WidgetBodyContext.Provider value={bodyNode}>
+                        <WidgetBodyContext.Provider value={bodyContext}>
                             <WidgetFooterContext.Provider value={footerNode}>
                                 <WidgetErrorBoundary resetKey={`${active.id}:${entry.size}`}>
                                     <Suspense fallback={<WidgetSkeleton size={entry.size} />}>
