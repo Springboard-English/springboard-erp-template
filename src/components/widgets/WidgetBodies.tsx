@@ -6,6 +6,7 @@ import { Button } from "../ui/button";
 import { useI18n } from "../../context/I18nContext";
 import type { WidgetSize } from "./types";
 import { WidgetFooter } from "./WidgetFooter";
+import { useFitRows } from "./useFitRows";
 
 /**
  * Generic insides for a widget, so an app's widget is its query plus a few
@@ -116,8 +117,8 @@ export interface WidgetListRow {
 }
 
 /**
- * Rows a page at a time by size (1 / 3 / 7 / 12), with back and next on the
- * card's bottom edge. `moreHref` is accepted for older callers and ignored:
+ * Rows a page at a time (1 / 3 at S / M, as many as fit the card at L, 12 at
+ * XL), with back and next on the card's bottom edge. `moreHref` is accepted for older callers and ignored:
  * the frame's Open arrow already links to the full page.
  */
 export function WidgetList({
@@ -132,9 +133,11 @@ export function WidgetList({
 }) {
     const { t } = useI18n();
     const [requested, setPage] = useState(0);
+    // L has a fixed height to fill; the other sizes grow with their rows.
+    const fitted = useFitRows({ enabled: size === "L", fallback: LIST_ROWS[size] });
+    const perPage = fitted.count;
     if (rows.length === 0) return <WidgetEmpty message={emptyMessage} />;
 
-    const perPage = LIST_ROWS[size];
     const pageCount = Math.ceil(rows.length / perPage);
     // A refresh that shrinks the list keeps a valid page.
     const page = Math.min(requested, pageCount - 1);
@@ -143,7 +146,7 @@ export function WidgetList({
 
     return (
         <div className="flex flex-col">
-            <ul className="flex flex-col divide-y divide-border/60">
+            <ul ref={fitted.ref} className="flex flex-col divide-y divide-border/60">
                 {shown.map((row) => {
                     const body = (
                         <>

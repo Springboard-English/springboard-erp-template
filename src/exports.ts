@@ -408,6 +408,8 @@ export {
 } from "./components/widgets/WidgetBodies";
 export type { WidgetListRow, WidgetQueryLike } from "./components/widgets/WidgetBodies";
 export { WidgetFooter } from "./components/widgets/WidgetFooter";
+export { useFitRows } from "./components/widgets/useFitRows";
+export type { FitRows, FitRowsOptions } from "./components/widgets/useFitRows";
 export {
   availableWidgets,
   isWidgetAvailable,

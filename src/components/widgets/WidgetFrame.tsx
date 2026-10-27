@@ -30,6 +30,7 @@ import type { UserInfo } from "../../api_calls/UserData";
 import { WIDGET_MIN_ROWS, findWidget, stackSizes, widgetRowSpan } from "./layout";
 import { WidgetError, WidgetSkeleton } from "./WidgetBodies";
 import { WidgetFooterContext } from "./WidgetFooter";
+import { WidgetBodyContext } from "./useFitRows";
 import {
     isWidgetStack,
     type AnyWidgetDefinition,
@@ -204,6 +205,7 @@ export default function WidgetFrame({
     const tabKey = `widgets:${storageKey}:${entry.id}`;
     const [storedTab, setStoredTab] = useState(() => (stack ? readActiveTab(tabKey) : null));
     const [footerNode, setFooterNode] = useState<HTMLDivElement | null>(null);
+    const [bodyNode, setBodyNode] = useState<HTMLDivElement | null>(null);
 
     const children = isWidgetStack(entry) ? entry.stack : [{ id: entry.id, widget: entry.widget, config: entry.config }];
     const active = children.find((child) => child.id === storedTab) ?? children[0];
@@ -352,16 +354,19 @@ export default function WidgetFrame({
                     ) : null}
                 </div>
 
-                <div className={cn("min-h-0 flex-1 px-4", editing && "pointer-events-none select-none")}>
+                {/* The space the card leaves for content; `useFitRows` fits a list to it. */}
+                <div ref={setBodyNode} className={cn("min-h-0 flex-1 px-4", editing && "pointer-events-none select-none")}>
                     {/* Measured at its natural height, so the frame can take the rows it needs. */}
                     <div ref={rows.contentRef}>
-                        <WidgetFooterContext.Provider value={footerNode}>
-                            <WidgetErrorBoundary resetKey={`${active.id}:${entry.size}`}>
-                                <Suspense fallback={<WidgetSkeleton size={entry.size} />}>
-                                    <Render size={entry.size} config={active.config} user={user} preview={false} />
-                                </Suspense>
-                            </WidgetErrorBoundary>
-                        </WidgetFooterContext.Provider>
+                        <WidgetBodyContext.Provider value={bodyNode}>
+                            <WidgetFooterContext.Provider value={footerNode}>
+                                <WidgetErrorBoundary resetKey={`${active.id}:${entry.size}`}>
+                                    <Suspense fallback={<WidgetSkeleton size={entry.size} />}>
+                                        <Render size={entry.size} config={active.config} user={user} preview={false} />
+                                    </Suspense>
+                                </WidgetErrorBoundary>
+                            </WidgetFooterContext.Provider>
+                        </WidgetBodyContext.Provider>
                     </div>
                 </div>
 
