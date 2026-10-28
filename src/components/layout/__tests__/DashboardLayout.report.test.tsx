@@ -93,3 +93,24 @@ describe("DashboardLayout reportProblem", () => {
     expect(document.querySelector(".animate-pulse")).toBeNull();
   });
 });
+
+describe("DashboardLayout phone bottom bar", () => {
+  it("keeps four tabs and moves the rest into the Menu sheet, so Menu stays on screen", async () => {
+    const user = userEvent.setup();
+    const many = ["One", "Two", "Three", "Four", "Five", "Six"].map((label) => ({
+      id: label.toLowerCase(),
+      label,
+    }));
+    renderLayout({ navItems: many });
+
+    // The side nav draws every tab once; the bar adds the first four.
+    expect(screen.getAllByRole("button", { name: "Four" })).toHaveLength(2);
+    expect(screen.getAllByRole("button", { name: "Five" })).toHaveLength(1);
+
+    await user.click(screen.getByRole("button", { name: "Open menu" }));
+    const sheet = await screen.findByRole("dialog");
+    expect(within(sheet).getByRole("button", { name: "Five" })).toBeInTheDocument();
+    expect(within(sheet).getByRole("button", { name: "Six" })).toBeInTheDocument();
+    expect(within(sheet).queryByRole("button", { name: "Four" })).toBeNull();
+  });
+});

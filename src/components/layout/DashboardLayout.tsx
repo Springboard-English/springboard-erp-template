@@ -29,6 +29,9 @@ import {
   type ReportProblemConfig,
 } from "../report/ReportProblem";
 
+/** Tabs the phone bottom bar shows before the rest move into the Menu sheet. */
+const MAX_BOTTOM_BAR_ITEMS = 4;
+
 export interface DashboardNavItem {
   /** Stable id passed back to onTabSelect and compared against activeTab. */
   id: string;
@@ -292,14 +295,19 @@ function DashboardLayoutInner({
 
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const barItems = navItems.filter((item) => !item.hideOnMobile);
+  const shownItems = navItems.filter((item) => !item.hideOnMobile);
+  // Past this many tabs the row outgrows a phone and pushes Menu off-screen.
+  const barItems = shownItems.slice(0, MAX_BOTTOM_BAR_ITEMS);
   const mobileItems: MobileBottomBarItem[] = barItems.map((item) => ({
     id: item.id,
     label: item.label,
     icon: item.icon,
   }));
   // Anything the bar drops would otherwise have no entry point on a phone.
-  const overflowItems = navItems.filter((item) => item.hideOnMobile);
+  const overflowItems = [
+    ...shownItems.slice(MAX_BOTTOM_BAR_ITEMS),
+    ...navItems.filter((item) => item.hideOnMobile),
+  ];
 
   // `headerContent` is `md:flex`-only, so whatever an app puts there — its
   // notifications, its own controls — has no home on a phone. Surface it.
