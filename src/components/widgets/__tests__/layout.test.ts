@@ -7,6 +7,7 @@ import {
     normaliseLayout,
     removeEntry,
     unstack,
+    widgetMinRows,
     widgetRowSpan,
 } from "../layout";
 import type { WidgetDefinition, WidgetLayoutEntry, WidgetRegistry } from "../types";
@@ -137,5 +138,33 @@ describe("widgetRowSpan", () => {
         expect(widgetRowSpan(100, 136, 16, 2)).toBe(2);
         expect(widgetRowSpan(0, 136, 16, 2)).toBe(2);
         expect(widgetRowSpan(500, 0, 16, 1)).toBe(1);
+    });
+});
+
+describe("widgetMinRows", () => {
+    const registry: WidgetRegistry = [
+        def("plain", { sizes: ["L", "XL"] }),
+        def("short", { sizes: ["L", "XL"], rows: { XL: 3 } }),
+        def("tall", { sizes: ["L", "XL"], rows: { XL: 4, L: 2 } }),
+    ];
+
+    it("uses the size's minimum unless the widget sets its own rows", () => {
+        expect(widgetMinRows({ id: "1", widget: "plain", size: "XL" }, registry)).toBe(1);
+        expect(widgetMinRows({ id: "1", widget: "short", size: "XL" }, registry)).toBe(3);
+        // Never below the size's minimum: L stays five tall.
+        expect(widgetMinRows({ id: "1", widget: "tall", size: "L" }, registry)).toBe(5);
+    });
+
+    it("gives a stack the most rows any of its tabs asks for", () => {
+        const stack: WidgetLayoutEntry = {
+            id: "s",
+            size: "XL",
+            stack: [
+                { id: "x", widget: "plain" },
+                { id: "y", widget: "short" },
+                { id: "z", widget: "tall" },
+            ],
+        };
+        expect(widgetMinRows(stack, registry)).toBe(4);
     });
 });

@@ -190,13 +190,16 @@ An app passes a `registry` of `WidgetDefinition`s and a `defaults(user)`.
   number. Each frame measures its header and content and spans the whole rows
   they need (`widgetRowSpan`, at least five for L, so side-by-side L cards end level), so edges line up across
   columns and nothing is clipped. A widget keeps itself short by paging.
+  A definition's `rows` sets its own box per size (`{ XL: 3 }`); a stack takes
+  the most any tab asks for, so every tab shares one height.
 - **Navigation sits on the card's bottom edge.** A widget wraps its pager or
   "View all" link in `WidgetFooter`, which portals it into the frame's footer
   slot, so it lines up across widgets however tall the content is.
   `useFitRows` sizes a page to the card: whole rows from the list's first row
   to the content area's bottom, times the list's grid columns, re-measured on
-  resize. Use it only at a size with a fixed box (L); M and XL grow with their
-  content, so fitting there would just keep whatever fits now.
+  resize. Use it only at a size with a fixed box (L, or any size the definition
+  gives `rows`); without one the card grows with its content, so fitting there
+  would just keep whatever fits now.
   `WidgetList` pages its rows with back and next there; widgets never show a
   "+N more" or show-all link (the header's Open arrow goes to the full page).
 - **`normaliseLayout` repairs, it does not reject.** Unknown widgets, lost

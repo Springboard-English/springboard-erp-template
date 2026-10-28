@@ -35,6 +35,12 @@ export interface WidgetDefinition<C = unknown> {
     icon?: LucideIcon;
     sizes: readonly WidgetSize[];
     defaultSize: WidgetSize;
+    /**
+     * Board rows the card takes at each size, overriding `WIDGET_MIN_ROWS`. A list
+     * fitted with `useFitRows` pages to this box, so the card holds this height
+     * whatever the data. A stack takes the most any of its tabs asks for.
+     */
+    rows?: Partial<Record<WidgetSize, number>>;
     /** Every scope listed is required. */
     scopes?: readonly string[];
     accountTypes?: readonly string[];
