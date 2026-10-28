@@ -79,6 +79,8 @@ export { default as StatusBanner } from "./components/StatusBanner";
 export { default as BuildTag } from "./components/BuildTag";
 export type { BuildTagProps } from "./components/BuildTag";
 export { default as ManageAccountLink } from "./components/ManageAccountLink";
+export { default as UserAvatar, userInitials } from "./components/UserAvatar";
+export type { UserAvatarProps } from "./components/UserAvatar";
 export type { ManageAccountLinkProps } from "./components/ManageAccountLink";
 export { ACCOUNTS_PROFILE_URL } from "./config/accounts";
 // The changelog. `BuildTag` already wires all of it together — pass it the

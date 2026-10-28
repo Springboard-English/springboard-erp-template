@@ -22,6 +22,8 @@ export interface UserInfo {
     username: string;
     sub: string;
     account_type: string;
+    /** The profile picture's public URL; absent or null for none. */
+    picture_url?: string | null;
     [key: string]: unknown;
 }
 
@@ -57,6 +59,7 @@ function toUserInfo(raw: unknown): UserInfo | null {
         username,
         sub,
         account_type: accountType,
+        picture_url: typeof item.picture_url === "string" ? item.picture_url : null,
     };
 }
 
