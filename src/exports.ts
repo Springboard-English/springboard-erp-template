@@ -360,6 +360,7 @@ export {
   isInformativeNotification,
   isUrgentNotification,
   markNotificationRead,
+  safeNotificationLink,
   shouldMarkNotificationReadOnView,
 } from "./api_calls/notifications";
 export { default as NotificationBell } from "./components/notifications/NotificationBell";
@@ -390,6 +391,50 @@ export type {
 export { default as NotificationCenter } from "./components/notifications/NotificationCenter";
 export { default as ImmediateNotificationDialog } from "./components/notifications/ImmediateNotificationDialog";
 export { default as UrgentNotificationBanner } from "./components/notifications/UrgentNotificationBanner";
+export { default as NotificationLink } from "./components/notifications/NotificationLink";
+export type { NotificationLinkProps } from "./components/notifications/NotificationLink";
+
+// "Report a problem": `DashboardLayout`'s `reportProblem` prop mounts it in the
+// shell; the provider and buttons are for a shell that is not DashboardLayout.
+export {
+  defaultReportCategory,
+  ReportProblemButton,
+  ReportProblemMenuButton,
+  ReportProblemProvider,
+  reportContextLabel,
+  useReportProblem,
+} from "./components/report/ReportProblem";
+export type {
+  ReportProblemButtonProps,
+  ReportProblemConfig,
+  ReportProblemContextValue,
+  ReportProblemMenuButtonProps,
+  ReportProblemProviderProps,
+} from "./components/report/ReportProblem";
+export {
+  default as ReportDialog,
+  isAcceptedReportAttachment,
+  MAX_REPORT_ATTACHMENT_BYTES,
+  MAX_REPORT_EVIDENCE,
+  REPORT_ATTACHMENT_TYPES,
+} from "./components/report/ReportDialog";
+export type { ReportDialogProps, ReportProblemCategory } from "./components/report/ReportDialog";
+export { dataUrlToBlob, submitReport } from "./components/report/submitReport";
+export type { ReportSubmission, SubmittedReport } from "./components/report/submitReport";
+export {
+  createFeedbackTicket,
+  requestFeedbackTicketUpload,
+  uploadFeedbackTicketFile,
+} from "./api_calls/feedbackTickets";
+export type {
+  FeedbackTicket,
+  FeedbackTicketAttachmentRef,
+  FeedbackTicketCategory,
+  FeedbackTicketCreate,
+  FeedbackTicketPriority,
+  FeedbackTicketReportType,
+  FeedbackTicketUploadTicket,
+} from "./api_calls/feedbackTickets";
 
 export { default as TrendChart } from "./components/charts/TrendChart";
 export type { TrendPoint, TrendSeries } from "./components/charts/TrendChart";

@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { touchHitArea } from "@/lib/touchTarget";
 import { useNotifications } from "@/context/NotificationContext";
 import { useI18n } from "@/context/I18nContext";
+import NotificationLink from "./NotificationLink";
 import {
     getNotificationPriorityKind,
     shouldMarkNotificationReadOnView,
@@ -158,6 +159,7 @@ export default function NotificationBell({ viewAllPath }: NotificationBellProps)
                                                 {n.description}
                                             </p>
                                         )}
+                                        <NotificationLink link={n.link} />
                                         {n.created_at && (
                                             <p className="mt-1 text-[11px] text-muted-foreground/70">
                                                 {formatTimestamp(n.created_at)}

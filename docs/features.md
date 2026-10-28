@@ -414,3 +414,33 @@ registers, removes and tests the device (`api_calls/pushNotifications.ts`,
 - **On mount the hook re-registers an existing subscription.** Registration is
   idempotent on the endpoint, and re-sending repairs a server row lost after a
   410 and moves a shared device to whoever is signed in now.
+- **A notice's `link`** (for example a filed report's ticket page) shows as an
+  "Open" link in a new tab in `NotificationBell`, `NotificationCenter`,
+  `UrgentNotificationBanner` and `ImmediateNotificationDialog`
+  (`NotificationLink`). Only an absolute http(s) URL renders
+  (`safeNotificationLink`); the fetcher drops anything else.
+
+## Report a problem (`src/components/report/`)
+
+`<DashboardLayout reportProblem={{ app: "erp-hrm", enabled: isEmployee }}>`
+adds "Report a problem" to the shell: a ghost icon button in the desktop header
+and a full-width button in the phone menu sheet. The sheet draws it itself,
+beside Manage account and Log out, so an app that overrides `mobileMenu` keeps
+it. There is no floating launcher.
+
+- **The app decides who may report** through `enabled`; the package does not
+  gate on role. Leave the prop out, or pass `enabled: false`, for no entry point.
+- **The form** files a ticket in one `POST /v2/feedback-tickets` after uploading
+  up to five PNG/JPEG screenshots (10 MB each) through `upload-url` and a plain
+  `PUT` to the signed URL (`api_calls/feedbackTickets.ts`). Screenshot mode
+  hides the dialog behind a capture bar so the reporter can go to the broken
+  screen; the capture can be marked up and cropped.
+- **The context** appended to the description is `"<app> · <path>"`, read from
+  react-router. The Area starts on `defaultCategory`, else `lms` for the LMS
+  and `process` elsewhere. A feature request is a report type, not an Area.
+- **A shell that is not `DashboardLayout`** mounts `ReportProblemProvider`
+  (same config) under its router and places `ReportProblemButton` (header) and
+  `ReportProblemMenuButton` (menu); `useReportProblem()?.open()` opens it from
+  anything else.
+- `modern-screenshot` is loaded by dynamic import on the first capture, so the
+  barrel stays importable from Node.
