@@ -13,6 +13,7 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { useI18n } from "@/context/I18nContext";
 import { useColorMode } from "@/theme/AppTheme";
+import { ReportProblemMenuButton } from "@/components/report/ReportProblem";
 import type { DashboardNavItem } from "./DashboardLayout";
 
 // The mobile counterpart of the side nav. Below `md` the sidebar is
@@ -200,6 +201,10 @@ export default function MobileMenuSheet({
           ) : null}
 
           <Separator />
+
+          {/* Drawn by the sheet, not the app's `mobileMenu`, so an override keeps it.
+              Nothing renders unless an enabled ReportProblemProvider is above. */}
+          <ReportProblemMenuButton onBeforeOpen={() => onOpenChange(false)} />
 
           {user && user.account_type !== "guest" ? (
             <a

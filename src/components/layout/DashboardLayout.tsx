@@ -22,6 +22,12 @@ import OccasionBackdrop from "@/components/layout/OccasionBackdrop";
 import { useGlobalStatusOptional } from "@/context/GlobalStatusContext";
 import { PullToRefreshProvider, usePageRefresh } from "@/context/PullToRefreshContext";
 import { dismissBootScreen, isBootScreenShowing } from "@/boot/bootScreen";
+import {
+  ReportProblemButton,
+  ReportProblemProvider,
+  useReportProblem,
+  type ReportProblemConfig,
+} from "../report/ReportProblem";
 
 export interface DashboardNavItem {
   /** Stable id passed back to onTabSelect and compared against activeTab. */
@@ -83,6 +89,12 @@ export interface DashboardLayoutProps {
    * touch screen. On by default; `false` hands the gesture back to the browser.
    */
   pullToRefresh?: boolean;
+  /**
+   * "Report a problem": an icon button in the desktop header and a button in
+   * the phone menu sheet, which the sheet draws itself so a `mobileMenu`
+   * override keeps it. The app gates who sees it with `enabled`.
+   */
+  reportProblem?: ReportProblemConfig;
 }
 
 
@@ -243,7 +255,7 @@ function DashboardLayoutInner({
   defaultCollapsed = true,
   classNames,
   maxContentClassName = "max-w-[1700px]",
-}: Omit<DashboardLayoutProps, "disableCustomTheme" | "pullToRefresh">) {
+}: Omit<DashboardLayoutProps, "disableCustomTheme" | "pullToRefresh" | "reportProblem">) {
   const { t } = useI18n();
   const location = useLocation();
   const mainScrollRef = useRef<HTMLElement | null>(null);
@@ -297,6 +309,7 @@ function DashboardLayoutInner({
   // passing it through would show the name, the email and a Logout button
   // twice. An app that wants something else in the sheet passes `mobileMenu`.
   const pageRefresh = usePageRefresh();
+  const report = useReportProblem();
 
   const defaultMenuBody = headerContent ? (
     <div className="space-y-3">{headerContent}</div>
@@ -304,7 +317,7 @@ function DashboardLayoutInner({
 
   return (
     <>
-      {headerContent || pageRefresh.available ? (
+      {headerContent || pageRefresh.available || report ? (
         <div
           className={cn(
             "pointer-events-none fixed inset-x-0 top-0 z-50 hidden h-12 items-center md:flex",
@@ -315,6 +328,11 @@ function DashboardLayoutInner({
             {pageRefresh.available ? (
               <div className="pointer-events-auto">
                 <LayoutRefreshButton refresh={pageRefresh.refresh} />
+              </div>
+            ) : null}
+            {report ? (
+              <div className="pointer-events-auto">
+                <ReportProblemButton />
               </div>
             ) : null}
             {headerContent ? (
@@ -467,15 +485,24 @@ function DashboardLayoutInner({
   );
 }
 
+/** The app shell: side nav and floating header on desktop, bottom bar and menu sheet on a phone. */
 export default function DashboardLayout({
   disableCustomTheme,
   pullToRefresh = true,
+  reportProblem,
   ...props
 }: DashboardLayoutProps) {
   return (
     <AppTheme disableCustomTheme={disableCustomTheme}>
       <PullToRefreshProvider enabled={pullToRefresh}>
-        <DashboardLayoutInner {...props} />
+        {/* Always mounted, so the page below keeps its state when an app turns reporting on after sign-in. */}
+        <ReportProblemProvider
+          app={reportProblem?.app ?? ""}
+          defaultCategory={reportProblem?.defaultCategory}
+          enabled={Boolean(reportProblem) && reportProblem?.enabled !== false}
+        >
+          <DashboardLayoutInner {...props} />
+        </ReportProblemProvider>
       </PullToRefreshProvider>
     </AppTheme>
   );

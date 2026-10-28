@@ -10,6 +10,7 @@ import {
 } from "@/api_calls/notifications";
 import type { UserNotification } from "@/api_calls/notifications";
 import { useAuth } from "@/context/AuthContext";
+import NotificationLink from "./NotificationLink";
 
 function priorityBadgeClass(priority: string | null) {
     const normalized = (priority ?? "").trim().toUpperCase();
@@ -188,6 +189,7 @@ export default function NotificationCenter() {
                                             {n.description}
                                         </p>
                                     )}
+                                    <NotificationLink link={n.link} className="mb-1" />
                                     <div className="flex flex-wrap items-center gap-x-4 gap-y-0.5 text-[11px] text-muted-foreground/70">
                                         {n.created_at && (
                                             <span>Sent: {formatTimestamp(n.created_at)}</span>

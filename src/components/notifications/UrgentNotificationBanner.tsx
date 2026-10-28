@@ -2,6 +2,7 @@ import { AlertTriangle, X } from "lucide-react";
 import { useNotifications } from "@/context/NotificationContext";
 import { useI18n } from "@/context/I18nContext";
 import { touchHitArea } from "@/lib/touchTarget";
+import NotificationLink from "./NotificationLink";
 
 export default function UrgentNotificationBanner() {
     const { t } = useI18n();
@@ -23,6 +24,7 @@ export default function UrgentNotificationBanner() {
                         {n.description && (
                             <p className="mt-0.5 text-sm opacity-80">{n.description}</p>
                         )}
+                        <NotificationLink link={n.link} className="text-current" />
                     </div>
                     <button
                         type="button"

@@ -3,6 +3,7 @@ import { Dialog as DialogPrimitive } from "radix-ui";
 import { useNotifications } from "@/context/NotificationContext";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/context/I18nContext";
+import NotificationLink from "./NotificationLink";
 
 export default function ImmediateNotificationDialog() {
     const { t } = useI18n();
@@ -41,6 +42,8 @@ export default function ImmediateNotificationDialog() {
                                 {current.description}
                             </p>
                         )}
+
+                        <NotificationLink link={current.link} className="mt-3 text-sm" />
                     </div>
 
                     <div className="flex justify-center border-t border-border/60 px-6 py-4">

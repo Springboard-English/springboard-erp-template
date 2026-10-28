@@ -18,6 +18,19 @@ export interface UserNotification {
     sender_key: string | null;
     read_status: boolean | null;
     read_at: string | null;
+    /** Where the notice points (an absolute http(s) URL), e.g. a filed report's ticket page. */
+    link?: string | null;
+}
+
+/** Returns `value` only when it parses as an absolute http(s) URL, so a stored `javascript:` link never renders. */
+export function safeNotificationLink(value: unknown): string | null {
+    if (typeof value !== "string" || !value.trim()) return null;
+    try {
+        const url = new URL(value.trim());
+        return url.protocol === "https:" || url.protocol === "http:" ? url.toString() : null;
+    } catch {
+        return null;
+    }
 }
 
 export function getNotificationPriorityKind(
@@ -99,6 +112,7 @@ function toUserNotification(raw: unknown): UserNotification | null {
         sender_key: typeof item.sender_key === "string" ? item.sender_key : null,
         read_status: typeof item.read_status === "boolean" ? item.read_status : null,
         read_at: typeof item.read_at === "string" ? item.read_at : null,
+        link: safeNotificationLink(item.link),
     };
 }
 
