@@ -63,12 +63,23 @@ export default function NotificationBell({ viewAllPath }: NotificationBellProps)
         return () => document.removeEventListener("mousedown", handlePointerDown);
     }, [open]);
 
+    // Marking read hides a notification, so informative ones shown while open are only
+    // collected here and marked read when the centre closes.
+    const seenWhileOpen = useRef<Set<string>>(new Set());
+
     useEffect(() => {
         if (!open) return;
         informative
             .filter((notification) => shouldMarkNotificationReadOnView(notification))
-            .forEach((notification) => markSeen(notification.appsheet_key));
-    }, [informative, markSeen, open]);
+            .forEach((notification) => seenWhileOpen.current.add(notification.appsheet_key));
+    }, [informative, open]);
+
+    useEffect(() => {
+        if (open) return;
+        const keys = [...seenWhileOpen.current];
+        seenWhileOpen.current.clear();
+        keys.forEach((key) => markSeen(key));
+    }, [markSeen, open]);
 
     return (
         <div ref={rootRef} className="relative">

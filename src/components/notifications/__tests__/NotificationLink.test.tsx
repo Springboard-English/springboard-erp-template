@@ -3,8 +3,9 @@ import userEvent from "@testing-library/user-event";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type { UserNotification } from "@/api_calls/notifications";
 
-const { fetchWithRefreshMock, notificationsState } = vi.hoisted(() => ({
+const { fetchWithRefreshMock, markSeenMock, notificationsState } = vi.hoisted(() => ({
   fetchWithRefreshMock: vi.fn(),
+  markSeenMock: vi.fn(),
   notificationsState: { informative: [] as unknown[] },
 }));
 
@@ -17,7 +18,7 @@ vi.mock("@/context/NotificationContext", () => ({
     unreadCount: notificationsState.informative.length,
     isLoading: false,
     dismiss: vi.fn(),
-    markSeen: vi.fn(),
+    markSeen: markSeenMock,
     refetch: vi.fn(),
   }),
 }));
@@ -49,7 +50,10 @@ function notice(key: string, link: string | null): UserNotification {
 const originalBase = API_CONFIG.baseURL;
 beforeAll(() => configureApi({ baseUrl: "https://api.test" }));
 afterAll(() => configureApi({ baseUrl: originalBase }));
-beforeEach(() => fetchWithRefreshMock.mockReset());
+beforeEach(() => {
+  fetchWithRefreshMock.mockReset();
+  markSeenMock.mockReset();
+});
 
 describe("fetchUserNotifications", () => {
   it("keeps an http(s) link and drops anything else", async () => {
@@ -105,5 +109,23 @@ describe("NotificationBell", () => {
     expect(links[0]).toHaveAttribute("href", "https://ops.springboard.vn/support/t1");
     expect(links[0]).toHaveAttribute("target", "_blank");
     expect(links[0].getAttribute("rel")).toContain("noopener");
+  });
+
+  it("marks informative notices read only when the centre closes", async () => {
+    const user = userEvent.setup();
+    notificationsState.informative = [notice("a", null), notice("b", null)];
+    render(
+      <I18nProvider locale="en">
+        <NotificationBell />
+      </I18nProvider>,
+    );
+    const bell = screen.getByRole("button", { name: /Notifications/ });
+
+    await user.click(bell);
+    expect(screen.getByText("Notice a")).toBeInTheDocument();
+    expect(markSeenMock).not.toHaveBeenCalled();
+
+    await user.click(bell);
+    expect(markSeenMock.mock.calls.map(([key]) => key)).toEqual(["a", "b"]);
   });
 });
