@@ -205,7 +205,9 @@ export default function SimpleDataTable<T>({
         className: 'w-12',
         cellClassName: 'w-12',
         header: (
-          <span className="inline-flex items-center justify-center" title={selection.disabled ? selection.disabledReason : undefined}>
+          // `flex`, not `inline-flex`: inline, the box sits on the text baseline,
+          // which moves when the tick draws, and the row height moves with it.
+          <span className="flex items-center justify-center" title={selection.disabled ? selection.disabledReason : undefined}>
             <Checkbox
               aria-label={t('rowSelection.selectPage')}
               checked={pageState?.checked ?? false}
@@ -220,7 +222,7 @@ export default function SimpleDataTable<T>({
         ),
         render: (row) => (
           <span
-            className="inline-flex items-center justify-center"
+            className="flex items-center justify-center"
             title={selection.disabled ? selection.disabledReason : undefined}
             // The tick is its own control; it must not also open the row.
             onClick={(event) => event.stopPropagation()}

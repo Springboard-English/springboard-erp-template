@@ -325,6 +325,9 @@ export default function PendingChangesBar({
             // tables' pager. Inheriting is what makes "hidden" mean
             // untouchable.
             "relative flex min-h-[3.75rem] items-center justify-between gap-3 rounded-[999px] border border-border/70 px-4 py-2 shadow-[0_18px_40px_-20px_rgba(15,23,42,0.4)] backdrop-blur-md",
+            // A phone's action buttons fill the row, so the count takes a line of its own.
+            actionsMode &&
+              "max-md:flex-col max-md:items-stretch max-md:gap-2 max-md:rounded-[28px] max-md:py-3",
             dimmed ? "bg-muted/80 opacity-80 shadow-none" : "bg-card/96",
           )}
         >
@@ -396,6 +399,8 @@ export default function PendingChangesBar({
                   </Button>
                 ))}
                 <DetailActionsMenu
+                  // Upward: below the bar is the phone's bottom nav.
+                  side="top"
                   actions={menuActions.map((action) => ({
                     label: action.label,
                     icon: action.icon,

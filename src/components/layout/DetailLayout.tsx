@@ -479,8 +479,14 @@ export interface DetailMenuAction {
     destructive?: boolean;
 }
 
-/** A "⋯" button opening a menu of the page's less common actions, so a destructive one is never a single click away. */
-export function DetailActionsMenu({ actions }: { actions: DetailMenuAction[] }) {
+/** A "⋯" button opening a menu of the page's less common actions, so a destructive one is never a single click away. `side` picks where the menu opens; a bottom-fixed bar passes `"top"`. */
+export function DetailActionsMenu({
+    actions,
+    side = "bottom",
+}: {
+    actions: DetailMenuAction[];
+    side?: "top" | "bottom";
+}) {
     const { t } = useI18n();
     if (actions.length === 0) {
         return null;
@@ -505,7 +511,7 @@ export function DetailActionsMenu({ actions }: { actions: DetailMenuAction[] }) 
                     <MoreHorizontal aria-hidden />
                 </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-44">
+            <DropdownMenuContent side={side} align="end" className="min-w-44">
                 {regular.map(renderItem)}
                 {regular.length > 0 && destructive.length > 0 ? <DropdownMenuSeparator /> : null}
                 {destructive.map(renderItem)}
