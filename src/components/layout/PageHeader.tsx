@@ -13,7 +13,7 @@ export interface PageHeaderBackItem {
 // Every page head is the same grid, so a list page and a detail page put the
 // back link, title, actions, summary and the tab bar under them in one place.
 // Desktop rows: back link (always 20px, empty on a list), title with the
-// actions on its right, summary (always 20px). Phone: the back link and the
+// actions on its right, summary (always 16px). Phone: the back link and the
 // actions share a nav-bar row above a large title.
 const ROOT_CLASS =
     "mb-4 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 md:grid-cols-[minmax(min-content,1fr)_minmax(0,auto)] md:gap-x-4";
@@ -136,14 +136,15 @@ export function PageHeaderActions({
 
 /**
  * The sub-heading row under the title: a few facts about the record or the
- * list. On desktop it is always 20px tall, empty or not, so the tab bar under
+ * list. On desktop it is always 16px tall, empty or not, so the tab bar under
  * the header sits at the same height on every page.
  */
 export function PageHeaderSummary({ children }: { children?: ReactNode }) {
     return (
         <div
             className={cn(
-                "col-span-2 row-start-3 flex min-w-0 flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground md:min-h-5",
+                // Small print, so the 16px row a page leaves empty reads as spacing rather than a gap.
+                "col-span-2 row-start-3 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground md:min-h-4",
                 !children && "max-md:hidden",
             )}
         >

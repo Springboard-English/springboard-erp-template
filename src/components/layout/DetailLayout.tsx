@@ -433,7 +433,7 @@ export function DetailMetaItem({
     return (
         <span
             className={cn(
-                "inline-flex min-w-0 items-center gap-1.5 [&_svg]:size-4 [&_svg]:shrink-0",
+                "inline-flex min-w-0 items-center gap-1 [&_svg]:size-3.5 [&_svg]:shrink-0",
                 warning && "text-butter-700",
             )}
         >
