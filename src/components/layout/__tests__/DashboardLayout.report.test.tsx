@@ -48,7 +48,7 @@ describe("DashboardLayout reportProblem", () => {
     const button = screen.getByRole("button", { name: "Report a problem" });
     expect(button).toHaveAttribute("data-variant", "ghost");
     expect(button).toHaveAttribute("data-size", "icon-sm");
-    expect(button.querySelector("svg.lucide-bug")).not.toBeNull();
+    expect(button.querySelector("svg.lucide-message-circle-warning")).not.toBeNull();
 
     await user.click(button);
     const dialog = await screen.findByRole("dialog");
