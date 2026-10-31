@@ -44,6 +44,8 @@ export interface DashboardNavItem {
   icon?: ReactNode;
   /** Hide from the mobile bottom bar (still shown in the side nav). */
   hideOnMobile?: boolean;
+  /** Shorter label for the phone bottom bar, for a name that would truncate. */
+  mobileLabel?: string;
 }
 
 export interface DashboardLayoutClassNames {
@@ -322,7 +324,7 @@ function DashboardLayoutInner({
   const barItems = shownItems.slice(0, MAX_BOTTOM_BAR_ITEMS);
   const mobileItems: MobileBottomBarItem[] = barItems.map((item) => ({
     id: item.id,
-    label: item.label,
+    label: item.mobileLabel ?? item.label,
     icon: item.icon,
   }));
   // Anything the bar drops would otherwise have no entry point on a phone.
