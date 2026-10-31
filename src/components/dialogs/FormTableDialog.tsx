@@ -26,6 +26,8 @@ type FormTableDialogProps = {
     onSubmit: () => void | Promise<void>;
     children?: ReactNode;
     tabs?: FormTableDialogTab[];
+    /** The tab shown each time the dialog opens. */
+    initialTab?: number;
 };
 
 export default function FormTableDialog({
@@ -41,15 +43,16 @@ export default function FormTableDialog({
     onSubmit,
     children,
     tabs,
+    initialTab = 0,
 }: FormTableDialogProps) {
     const { t } = useI18n();
-    const [activeTab, setActiveTab] = useState(0);
+    const [activeTab, setActiveTab] = useState(initialTab);
 
     useEffect(() => {
         if (!open) {
-            setActiveTab(0);
+            setActiveTab(initialTab);
         }
-    }, [open]);
+    }, [open, initialTab]);
 
     const tabBar = tabs && tabs.length > 1 ? (
         <div className="-mx-4 flex gap-1 border-t border-border/40 px-3 py-2 sm:-mx-5 sm:px-4">

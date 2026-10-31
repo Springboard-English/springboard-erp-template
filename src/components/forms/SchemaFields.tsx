@@ -59,6 +59,7 @@ function FieldControl({ field, value, onChange, form, invalid, compact = false, 
                 <Textarea
                     {...common}
                     rows={field.rows ?? 3}
+                    maxLength={field.maxLength}
                     value={typeof value === "string" ? value : ""}
                     onChange={(event) => onChange(event.target.value)}
                 />
@@ -186,6 +187,7 @@ function FieldControl({ field, value, onChange, form, invalid, compact = false, 
             return (
                 <Input
                     {...common}
+                    maxLength={field.maxLength}
                     className={compact ? "h-9 md:h-9" : undefined}
                     value={typeof value === "string" ? value : ""}
                     onChange={(event) => onChange(event.target.value)}

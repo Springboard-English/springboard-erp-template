@@ -22,6 +22,8 @@ export interface SchemaFormDialogProps {
     head?: ReactNode;
     /** Tabs after the schema's own, e.g. Signers and Preview. */
     extraTabs?: SchemaFormTab[];
+    /** The tab shown each time the dialog opens. */
+    initialTab?: number;
     submitLabel?: string;
     saving?: boolean;
     /** An error from the submit itself; a missing field is reported by the dialog. */
@@ -63,6 +65,7 @@ export function SchemaFormDialog({
     form,
     head,
     extraTabs = [],
+    initialTab,
     submitLabel,
     saving = false,
     error,
@@ -118,6 +121,7 @@ export function SchemaFormDialog({
             onClose={onClose}
             onSubmit={submit}
             tabs={dialogTabs}
+            initialTab={initialTab}
         />
     );
 }

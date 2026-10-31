@@ -70,6 +70,8 @@ export interface FormField {
     step?: number;
     /** longText: visible rows. */
     rows?: number;
+    /** text, longText: the most characters the input takes. */
+    maxLength?: number;
     /** checkbox: the text beside the box; the label when absent. */
     text?: string;
     /** choice: the allowed values. */
@@ -160,6 +162,7 @@ function parseField(raw: unknown, inList: boolean): FormField | null {
     if (asNumber(raw.max) !== undefined) field.max = raw.max as number;
     if (asNumber(raw.step) !== undefined) field.step = raw.step as number;
     if (asNumber(raw.rows) !== undefined) field.rows = raw.rows as number;
+    if (asNumber(raw.maxLength) !== undefined) field.maxLength = raw.maxLength as number;
     if (asString(raw.text)) field.text = raw.text as string;
     if (raw.display === "buttons" || raw.display === "select") field.display = raw.display;
     if (asString(raw.source)) field.source = raw.source as string;
