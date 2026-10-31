@@ -120,6 +120,8 @@ export type {
 } from "./components/changelog/types";
 export { default as DashboardLayout } from "./components/layout/DashboardLayout";
 export type { DashboardLayoutProps, DashboardNavItem, DashboardLayoutClassNames } from "./components/layout/DashboardLayout";
+export { default as PageHeader } from "./components/layout/PageHeader";
+export type { PageHeaderProps, PageHeaderBackItem } from "./components/layout/PageHeader";
 export { default as AppHeader } from "./components/layout/AppHeader";
 export type { AppHeaderProps } from "./components/layout/AppHeader";
 export { default as SimpleDataTable } from "./components/SimpleDataTable";

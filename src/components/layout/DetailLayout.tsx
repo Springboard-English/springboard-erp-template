@@ -9,7 +9,15 @@ import {
 } from "react";
 import { animated, useSpring } from "@react-spring/web";
 
-import { ArrowLeft, ChevronLeft, ChevronRight, Expand, MoreHorizontal, PanelRight } from "lucide-react";
+import { ChevronRight, Expand, MoreHorizontal, PanelRight } from "lucide-react";
+import {
+    PageHeaderActions,
+    PageHeaderBack,
+    PageHeaderRoot,
+    PageHeaderSummary,
+    PageHeaderTitle,
+    useInPageHeaderGrid,
+} from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
 import {
     DropdownMenu,
@@ -343,9 +351,9 @@ export function DetailView({
 
 /**
  * Detail page title with its parent pages shown above it as a small
- * "← Parent / Child" back link. On a phone it becomes a navigation bar: only
- * the nearest parent, as a full-height "‹ Parent" tap target, over a large
- * title. Items with an `onClick` are clickable; the title is the page's `h2`.
+ * "← Parent / Child" back link, drawn into `DetailHeader`'s grid (the one
+ * `PageHeader` uses), so a record page lines up with a list page. On a phone
+ * it becomes a navigation bar: only the nearest parent over a large title.
  */
 export function DetailBreadcrumbs({
     items,
@@ -360,53 +368,18 @@ export function DetailBreadcrumbs({
     /** A row of `DetailMetaItem`s under the title giving the record's gist. */
     summary?: ReactNode;
 }) {
-    const lastIndex = items.length - 1;
-    return (
-        // On a phone the nav and title join DetailHeader's grid, so the actions share the nav's row.
-        <div className="space-y-2 max-md:contents">
-            {items.length > 0 ? (
-                <nav className="flex min-w-0 flex-wrap items-center gap-1 text-xs text-muted-foreground max-md:col-start-1 max-md:row-start-1 max-md:min-h-11 max-md:text-base max-md:text-primary">
-                    <ArrowLeft className="size-3 max-md:hidden" aria-hidden="true" />
-                    {items.map((item, index) => (
-                        // Native apps name only the screen you came from, so a phone hides the rest of the trail.
-                        <div
-                            key={`${item.label}-${index}`}
-                            className={cn("contents", index < lastIndex && "max-md:hidden")}
-                        >
-                            {index > 0 ? <span aria-hidden="true" className="max-md:hidden">/</span> : null}
-                            {item.onClick ? (
-                                <button
-                                    type="button"
-                                    className={cn(
-                                        // a tablet keeps the small text link, with a 44px tap area around it
-                                        touchHitArea,
-                                        "relative underline-offset-4 md:hover:text-foreground md:hover:underline max-md:-ml-1.5 max-md:inline-flex max-md:min-h-11 max-md:min-w-0 max-md:items-center",
-                                    )}
-                                    onClick={item.onClick}
-                                >
-                                    <ChevronLeft className="size-6 shrink-0 md:hidden" aria-hidden="true" />
-                                    <span className="truncate">{item.label}</span>
-                                </button>
-                            ) : (
-                                <span className="truncate">{item.label}</span>
-                            )}
-                        </div>
-                    ))}
-                </nav>
-            ) : null}
-            <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 max-md:col-span-2 max-md:row-start-2">
-                <h2 className="min-w-0 break-words text-xl font-semibold tracking-tight max-md:text-2xl max-md:font-bold">
-                    {current}
-                </h2>
-                {status}
-            </div>
-            {summary ? (
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground max-md:col-span-2 max-md:row-start-3">
-                    {summary}
-                </div>
-            ) : null}
-        </div>
+    const inGrid = useInPageHeaderGrid();
+    const slots = (
+        <>
+            <PageHeaderBack items={items} />
+            <PageHeaderTitle status={status} hasBack={items.length > 0}>
+                {current}
+            </PageHeaderTitle>
+            <PageHeaderSummary>{summary}</PageHeaderSummary>
+        </>
     );
+    // Drawn on its own, outside a DetailHeader, it brings the grid but leaves spacing to the caller.
+    return inGrid ? slots : <PageHeaderRoot className="mb-0">{slots}</PageHeaderRoot>;
 }
 
 export type DetailChipTone = "neutral" | "lav" | "mint" | "peach" | "sky" | "butter";
@@ -520,6 +493,11 @@ export function DetailActionsMenu({
     );
 }
 
+/**
+ * The head of a record page: `breadcrumbs` (a `DetailBreadcrumbs`) and the
+ * page's actions in the same grid as `PageHeader`, with the floating-view
+ * toggle ahead of the actions on desktop.
+ */
 export function DetailHeader({
     breadcrumbs,
     actions,
@@ -538,22 +516,14 @@ export function DetailHeader({
         !isMobile && detailViewContext?.floating && !detailViewContext.collapsed;
     const showFloatingAction =
         !isMobile && detailViewContext && !detailViewContext.floating;
+    const hasActions = Boolean(actions) || showExpandAction || showFloatingAction;
 
     return (
-        <div
-            data-detail-header
-            className={cn(
-                "flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between",
-                // Phone: a nav bar row (back left, actions right) above the title.
-                "max-md:grid max-md:grid-cols-[minmax(0,1fr)_auto] max-md:items-center max-md:gap-x-3 max-md:gap-y-1",
-                className,
-            )}
-        >
-            <div className="min-w-0 flex-1 max-md:contents">
-                {breadcrumbs}
-            </div>
-            {actions ? (
-                <div className="flex shrink-0 items-center gap-2 self-start max-md:col-start-2 max-md:row-start-1 max-md:self-center">
+        <PageHeaderRoot data-detail-header className={className}>
+            {breadcrumbs}
+            {hasActions ? (
+                // A record page always has a way back, so its phone actions share the back link's row.
+                <PageHeaderActions hasBack>
                     {showExpandAction ? (
                         <Button
                             type="button"
@@ -581,38 +551,9 @@ export function DetailHeader({
                         </Button>
                     ) : null}
                     {actions}
-                </div>
-            ) : showExpandAction || showFloatingAction ? (
-                <div className="flex shrink-0 items-center gap-2 self-start">
-                    {showExpandAction ? (
-                        <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            onClick={() =>
-                                detailViewContext.expandToNormalView()
-                            }
-                        >
-                            <Expand className="mr-2 h-4 w-4" />
-                            {t("detail.expandView")}
-                        </Button>
-                    ) : null}
-                    {showFloatingAction ? (
-                        <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            onClick={() =>
-                                detailViewContext.switchToFloatingView()
-                            }
-                        >
-                            <PanelRight className="mr-2 h-4 w-4" />
-                            {t("detail.floatingView")}
-                        </Button>
-                    ) : null}
-                </div>
+                </PageHeaderActions>
             ) : null}
-        </div>
+        </PageHeaderRoot>
     );
 }
 
