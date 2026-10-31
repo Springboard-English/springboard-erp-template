@@ -8,6 +8,10 @@ import {
 } from "react";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { isRowSelected, toggleRowSelection } from "@/lib/rowSelection";
+// Relative: this type reaches the published .d.ts, where `@/` does not resolve.
+import type { RowSelection } from "../lib/rowSelection";
 import { cn } from "../lib/utils";
 import EmptyState from "@/components/EmptyState";
 import { useI18n } from "@/context/I18nContext";
@@ -85,8 +89,21 @@ export interface MobileCardListProps<T> {
   error?: string | null;
   onRetry?: () => void;
   className?: string;
+  /** The same selection the desktop table takes. It only shows while `selectMode` is on. */
+  selection?: RowSelection<T>;
+  /**
+   * Select mode, owned by the caller (e.g. a "Select" button in the toolbar).
+   * While on, each card shows a tick box and a tap ticks it instead of
+   * opening it; the card's own controls take no taps.
+   */
+  selectMode?: boolean;
 }
 
+/**
+ * The phone's version of a table: a virtualised list of the caller's cards,
+ * with infinite scroll by default, skeleton, empty and error states. With
+ * `selection` and `selectMode`, tapping a card ticks it.
+ */
 export default function MobileCardList<T>({
   rows,
   rowKey,
@@ -105,6 +122,8 @@ export default function MobileCardList<T>({
   error,
   onRetry,
   className,
+  selection,
+  selectMode = false,
 }: MobileCardListProps<T>) {
   // This component only ever renders on a phone, and prev/next buttons are the
   // wrong shape there — so infinite scroll is the default and paging is the
@@ -299,6 +318,58 @@ export default function MobileCardList<T>({
     getItemKey: (index) => rowKey(activeRows[index]),
   });
 
+  const selecting = Boolean(selection) && selectMode;
+
+  // One card in select mode: a 44px tick column beside the caller's card. The
+  // card stops taking taps (`pointer-events-none`), so a tap anywhere ticks
+  // instead of opening; its text still names the checkbox for screen readers.
+  const renderSelectableCard = (row: T) => {
+    if (!selection) return renderCard(row);
+    const checked = isRowSelected(selection.selected, row, rowKey);
+    const selectable = !selection.disabled && (selection.isSelectable?.(row) ?? true);
+    const toggle = () => {
+      if (selectable) {
+        selection.onChange(toggleRowSelection(selection.selected, row, rowKey));
+      }
+    };
+    return (
+      <div
+        role="checkbox"
+        aria-checked={checked}
+        aria-disabled={!selectable}
+        tabIndex={selectable ? 0 : -1}
+        onClick={toggle}
+        onKeyDown={(event) => {
+          if (event.key === " " || event.key === "Enter") {
+            event.preventDefault();
+            toggle();
+          }
+        }}
+        className={cn(
+          "flex items-stretch gap-1 rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          selectable ? "cursor-pointer" : "opacity-60",
+        )}
+      >
+        <span className="flex min-h-11 w-11 shrink-0 items-center justify-center" aria-hidden>
+          <Checkbox
+            checked={checked}
+            disabled={!selectable}
+            tabIndex={-1}
+            className="pointer-events-none"
+          />
+        </span>
+        <div
+          className={cn(
+            "pointer-events-none min-w-0 flex-1 rounded-2xl",
+            checked && "ring-2 ring-primary",
+          )}
+        >
+          {renderCard(row)}
+        </div>
+      </div>
+    );
+  };
+
   // `md:hidden` alone only *hides* the list on desktop — it still mounts, and
   // with it the scroll listener and the accumulated-row state. Gate the render
   // too. It must stay below every hook so the hook order is stable across the
@@ -348,6 +419,11 @@ export default function MobileCardList<T>({
   }
 
   return (
+    <>
+    {/* Outside the list, so the virtualizer's measured start stays the first card's. */}
+    {selecting && selection?.disabled && selection.disabledReason ? (
+      <p className="pb-3 text-sm text-muted-foreground md:hidden">{selection.disabledReason}</p>
+    ) : null}
     <div ref={listRef} className={cn("md:hidden", className)}>
       {/* The spacer carries the full height of every row, measured or
           estimated, so the scrollbar and the load-more trigger both see the
@@ -367,7 +443,9 @@ export default function MobileCardList<T>({
             className="absolute left-0 top-0 w-full pb-3"
             style={{ transform: `translateY(${item.start - scrollMargin}px)` }}
           >
-            {renderCard(activeRows[item.index])}
+            {selecting
+              ? renderSelectableCard(activeRows[item.index])
+              : renderCard(activeRows[item.index])}
           </div>
         ))}
       </div>
@@ -425,5 +503,6 @@ export default function MobileCardList<T>({
         </div>
       ) : null}
     </div>
+    </>
   );
 }

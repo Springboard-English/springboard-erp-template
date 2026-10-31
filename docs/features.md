@@ -114,6 +114,58 @@ rules that keep it that way; a per-app copy of any of them is the bug.
   icon in its header that runs the same refresh as the pull (`usePageRefresh`).
   Pages don't draw their own; `RefreshButton` is deprecated.
 
+## Pending actions on the bar (`PendingChangesBar`, since 4.30.0)
+
+The bar that holds unsaved edits also holds *pending actions*: rows a user
+ticked and has not yet acted on (send a message to these parents, delete these
+rows). One bar, so a page never shows two floating strips.
+
+- **Edit pages are unchanged.** Without `actions` the bar is Review, Cancel and
+  Save as before. `saveConfirm` puts a dialog in front of Save, and `onSave`
+  then receives the prepared value.
+- **`actions` replaces Save.** `onCancel` stays the secondary button (label it
+  "Clear" with `cancelLabel`); `countLabel` replaces "N unsaved changes" ("3
+  assessments selected"). `pendingItems` still drives the Review list.
+- **Each action may carry a `confirm`.** `prepare` runs every time the dialog
+  opens (a dry run, a recipient count, blockers from the server) with a
+  loading line, and a throw shows its message with Try again. `description`
+  and `confirmLabel` can be functions of the prepared value, `canConfirm`
+  blocks the button, and `onRun` receives the value. The dialog stays open
+  and refuses to close while `onRun` runs, closes when it resolves, and shows
+  the error and stays open when it throws. An action without `confirm` runs on
+  click with a spinner in its button.
+- **Write actions with `definePendingBarAction`.** It infers the prepared type
+  from `prepare`, so each action is checked on its own and a list can mix them.
+- **The phone bar stays on one line.** In actions mode, Review and Clear drop
+  to icons below `md`, the first non-`overflow` action keeps its label, and
+  every other action moves to the "⋯" menu (`DetailActionsMenu`, destructive
+  ones last under a divider). `overflow: true` puts an action there on desktop
+  too.
+
+## Row selection (`SimpleDataTable`, `MobileCardList`, since 4.30.0)
+
+Both take the same `selection: RowSelection<T>` (`selected`, `onChange`,
+`isSelectable`, `disabled`, `disabledReason`). The caller owns the list; the
+components compare rows by `rowKey`, so ticks survive paging, refetches and
+the switch between table and cards.
+
+- **Desktop:** a tick column comes first. The header box covers the rows on
+  the current page only, and shows a dash when part of it is ticked; ticking
+  the page never selects rows that have not been loaded. Rows that fail
+  `isSelectable` are greyed out and skipped by the header box. A row click
+  still calls `onRowClick`; with no `onRowClick` it toggles the tick.
+- **Phone:** `MobileCardList` shows ticks only in select mode, which the
+  caller owns (`selectMode`, usually behind a "Select" button). In select mode a
+  tap anywhere on a card ticks it instead of opening it, and the tick column is
+  44px wide. Out of select mode cards open as before.
+- `disabled` greys out every box; `disabledReason` is the tooltip on desktop
+  and a line above the cards on a phone.
+- The logic is pure and exported (`toggleRowSelection`, `pageSelectionState`,
+  `togglePageSelection`, `isRowSelected`), tested in `lib/rowSelection.test.ts`.
+- The usual pairing is a selection on the table and cards, and a
+  `PendingChangesBar` with `actions` whose `pendingCount` is
+  `selection.selected.length` and whose `onCancel` clears it.
+
 ## Charts (`src/components/charts/`, since 1.10.0)
 
 `TrendChart`, `FunnelBars`, `CategoryBars`, `DonutChart`, `StatTile` and

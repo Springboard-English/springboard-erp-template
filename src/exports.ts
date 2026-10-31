@@ -67,7 +67,16 @@ export type { MultiSelectDropdownProps } from "./components/MultiSelectDropdown"
 export { default as PatchRecordDialog } from "./components/PatchRecordDialog";
 export type { PatchFieldType, PatchFieldOption, PatchFieldConfig } from "./components/PatchRecordDialog";
 export { default as PendingChangesBar } from "./components/PendingChangesBar";
-export type { PendingChangesBarProps, PendingChangeItem } from "./components/PendingChangesBar";
+export type {
+  PendingChangesBarProps,
+  PendingChangeItem,
+  PendingBarAction,
+  AnyPendingBarAction,
+  AnyPendingBarConfirm,
+} from "./components/PendingChangesBar";
+export { definePendingBarAction } from "./components/PendingChangesBar";
+export { default as PendingBarConfirmDialog } from "./components/PendingBarConfirmDialog";
+export type { PendingBarConfirm, PendingBarConfirmDialogProps } from "./components/PendingBarConfirmDialog";
 export {
   PENDING_CHANGES_BAR_DEFAULT_SAVE_LABEL,
   PENDING_CHANGES_BAR_DEFAULT_CANCEL_LABEL,
@@ -117,6 +126,13 @@ export { default as SimpleDataTable } from "./components/SimpleDataTable";
 export type { SimpleDataTableColumn, SimpleDataTableSortOrder, SimpleDataTableProps, SimpleDataTableClassNames } from "./components/SimpleDataTable";
 export { default as MobileCardList, CardField } from "./components/MobileCardList";
 export type { MobileCardListProps } from "./components/MobileCardList";
+export {
+  isRowSelected,
+  toggleRowSelection,
+  pageSelectionState,
+  togglePageSelection,
+} from "./lib/rowSelection";
+export type { RowSelection, RowSelectionCheckedState, PageSelectionState } from "./lib/rowSelection";
 export { default as MobileBottomBar } from "./components/MobileBottomBar";
 export type { MobileBottomBarItem, MobileBottomBarProps } from "./components/MobileBottomBar";
 export { default as MobileMenuSheet } from "./components/layout/MobileMenuSheet";
