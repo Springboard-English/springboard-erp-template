@@ -123,9 +123,7 @@ export default function MobileMenuSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="bottom"
-        // pb clears the iOS home indicator; without it the sign-out row sits
-        // inside the gesture strip.
-        className="max-h-[85dvh] overflow-y-auto rounded-t-3xl border-border/70 bg-card px-0 pt-0 pb-[calc(2rem+env(safe-area-inset-bottom))]"
+        className="max-h-[85dvh] overflow-y-auto rounded-t-3xl border-border/70 bg-card px-0 pt-0 pb-0"
       >
         <div className="flex justify-center pt-3 pb-2">
           <div className="h-1 w-10 rounded-full bg-border" />
@@ -135,7 +133,24 @@ export default function MobileMenuSheet({
           <SheetTitle>{t("mobileBottomBar.menu", "Menu")}</SheetTitle>
         </SheetHeader>
 
-        <div className="space-y-5 px-5">
+        <div className="space-y-4 px-5 pb-4">
+          {/* pr clears the sheet's close button. */}
+          <div className="flex items-center gap-3 pr-8">
+            <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-muted text-base font-semibold tracking-tight">
+              {initials}
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold">
+                {name ?? t("app.loading", "Loading...")}
+              </p>
+              <p className="truncate text-xs text-muted-foreground">
+                {user?.username}
+              </p>
+            </div>
+          </div>
+
+          <Separator />
+
           {overflowItems.length > 0 ? (
             <>
               <div className="grid grid-cols-3 gap-1">
@@ -163,71 +178,58 @@ export default function MobileMenuSheet({
             </>
           ) : null}
 
-          <div className="flex items-center gap-3">
-            <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-muted text-base font-semibold tracking-tight">
-              {initials}
-            </div>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold">
-                {name ?? t("app.loading", "Loading...")}
-              </p>
-              <p className="truncate text-xs text-muted-foreground">
-                {user?.username}
-              </p>
-            </div>
+          {/* Drawn by the sheet, not the app's `mobileMenu`, so an override keeps
+              the report button. It renders nothing unless an enabled
+              ReportProblemProvider is above. */}
+          <div className="space-y-2 empty:hidden">
+            {children}
+            <ReportProblemMenuButton
+              className="justify-start gap-2"
+              size="sm"
+              onBeforeOpen={() => onOpenChange(false)}
+            />
           </div>
-
-          {children ? (
-            <>
-              <Separator />
-              {children}
-            </>
-          ) : null}
 
           {/* Only offered when an AppTheme is above: without one the context
               default carries a no-op `setMode`, so the control would render and
               do nothing. Leap is light-only and mounts no AppTheme. */}
           {colorMode.isConfigured ? (
-            <>
-              <Separator />
-
-              <div className="space-y-2">
-                <p className="text-xs font-medium text-muted-foreground">
-                  {t("app.appearance.label", "Appearance")}
-                </p>
-                <AppearanceToggle />
-              </div>
-            </>
+            <div className="space-y-2">
+              <p className="text-xs font-medium text-muted-foreground">
+                {t("app.appearance.label", "Appearance")}
+              </p>
+              <AppearanceToggle />
+            </div>
           ) : null}
+        </div>
 
-          <Separator />
-
-          {/* Drawn by the sheet, not the app's `mobileMenu`, so an override keeps it.
-              Nothing renders unless an enabled ReportProblemProvider is above. */}
-          <ReportProblemMenuButton onBeforeOpen={() => onOpenChange(false)} />
-
+        {/* Pinned, so a long menu never scrolls sign-out out of reach. pb clears
+            the iOS home indicator. */}
+        <div className="sticky bottom-0 z-10 flex gap-2 border-t border-border/70 bg-card px-5 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
           {user && user.account_type !== "guest" ? (
             <a
               href={ACCOUNTS_PROFILE_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors hover:bg-muted"
+              className="flex min-h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors hover:bg-muted"
             >
-              <UserCog className="size-4" />
-              {t("account.manage", "Manage account")}
+              <UserCog className="size-4 shrink-0" />
+              <span className="truncate">{t("account.manage", "Manage account")}</span>
             </a>
           ) : null}
 
           <button
             type="button"
             disabled={isLoggingOut}
-            className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50"
+            className="flex min-h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50"
             onClick={handleLogout}
           >
-            <LogOut className="size-4" />
-            {isLoggingOut
-              ? t("app.loggingOut", "Logging out...")
-              : t("app.logout", "Log out")}
+            <LogOut className="size-4 shrink-0" />
+            <span className="truncate">
+              {isLoggingOut
+                ? t("app.loggingOut", "Logging out...")
+                : t("app.logout", "Log out")}
+            </span>
           </button>
         </div>
       </SheetContent>
