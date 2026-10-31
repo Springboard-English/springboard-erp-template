@@ -428,7 +428,7 @@ export default function SimpleDataTable<T>({
 
         <div className={cn("flex flex-col gap-3 sm:flex-row sm:items-center", alignPaginationToLeft ? "sm:ml-4" : "")}>
           <label className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span>{t('simpleDataTable.rows')}</span>
+            <span className="whitespace-nowrap">{t('simpleDataTable.rows')}</span>
             <SearchableSelect
               value={pageSize}
               onValueChange={(value) => onPageSizeChange(Number(value))}
