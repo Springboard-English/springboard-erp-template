@@ -33,6 +33,9 @@ import {
 /** Tabs the phone bottom bar shows before the rest move into the Menu sheet. */
 const MAX_BOTTOM_BAR_ITEMS = 4;
 
+/** The title `index.html` shipped, before the shell added the page to it. */
+let shellBaseTitle: string | null = null;
+
 export interface DashboardNavItem {
   /** Stable id passed back to onTabSelect and compared against activeTab. */
   id: string;
@@ -271,11 +274,12 @@ function DashboardLayoutInner({
   const mainScrollRef = useRef<HTMLElement | null>(null);
 
   // The tab title reads "Page · App · Springboard English"; index.html holds the part after the page.
-  const [baseTitle] = useState(() => document.title);
   const activeLabel = navItems.find((item) => item.id === activeTab)?.label;
   useEffect(() => {
-    document.title = activeLabel ? `${activeLabel} · ${baseTitle}` : baseTitle;
-  }, [activeLabel, baseTitle]);
+    // Read once per page load: a remounted shell would otherwise prefix its own title.
+    shellBaseTitle ??= document.title;
+    document.title = activeLabel ? `${activeLabel} · ${shellBaseTitle}` : shellBaseTitle;
+  }, [activeLabel]);
 
   // Mounting over the boot screen (springboardBoot() in the app's vite config):
   // play the entrance once while the boot card lifts away. Read once, so a

@@ -152,7 +152,7 @@ export default function ChangelogDialog({
             days.map((day) => (
               <section key={day.date} className="mb-4 last:mb-0">
                 <div className="sticky top-0 z-10 flex items-center gap-3 bg-background/95 py-1.5 backdrop-blur">
-                  <h3 className="text-[11px] font-semiboldst text-muted-foreground/60">
+                  <h3 className="text-[11px] font-semibold text-muted-foreground/60">
                     {formatDay(formatter, day.date)}
                   </h3>
                   <div className="h-px flex-1 bg-border/40" />
