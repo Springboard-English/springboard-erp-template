@@ -86,7 +86,7 @@ export default function SectionMarkdown({
 
           return (
             <div className={cn("mt-4 rounded-xl border px-3 py-3 text-sm leading-6", toneClass)}>
-              <span className="mr-2 inline-flex rounded border border-current/30 px-1.5 py-0.5 text-[10px] font-bold tracking-wide">
+              <span className="mr-2 inline-flex rounded border border-current/30 px-1.5 py-0.5 text-xs font-bold tracking-wide">
                 {callout.type}
               </span>
               <span>{callout.content}</span>
@@ -133,7 +133,7 @@ export default function SectionMarkdown({
         thead: ({ children }) => <TableHeader>{children}</TableHeader>,
         tbody: ({ children }) => <TableBody>{children}</TableBody>,
         tr: ({ children }) => <TableRow>{children}</TableRow>,
-        th: ({ children }) => <TableHead className="bg-muted/40 text-[11px] font-semibold">{children}</TableHead>,
+        th: ({ children }) => <TableHead className="bg-muted/40 text-xs font-semibold">{children}</TableHead>,
         td: ({ children }) => <TableCell>{children}</TableCell>,
         img: ({ src, alt }) => {
           const resolvedSrc = typeof src === "string" ? src.trim() : "";

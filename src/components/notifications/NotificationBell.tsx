@@ -155,7 +155,7 @@ export default function NotificationBell({ viewAllPath }: NotificationBellProps)
                                             </p>
                                             <span
                                                 className={cn(
-                                                    "shrink-0 rounded border px-1.5 py-0.5 text-[10px] font-semibold",
+                                                    "shrink-0 rounded border px-1.5 py-0.5 text-xs font-semibold",
                                                     priorityBadgeClass(n.priority),
                                                 )}
                                             >
@@ -172,7 +172,7 @@ export default function NotificationBell({ viewAllPath }: NotificationBellProps)
                                         )}
                                         <NotificationLink link={n.link} />
                                         {n.created_at && (
-                                            <p className="mt-1 text-[11px] text-muted-foreground/70">
+                                            <p className="mt-1 text-xs text-muted-foreground">
                                                 {formatTimestamp(n.created_at)}
                                             </p>
                                         )}

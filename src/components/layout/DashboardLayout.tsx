@@ -15,6 +15,7 @@ import { useI18n } from "@/context/I18nContext";
 import AppTheme from "@/theme/AppTheme";
 import LazyViewFallback from "@/components/LazyViewFallback";
 import { ConfirmDialogHost } from "@/components/dialogs/ConfirmDialog";
+import { GlobalStatusRetry } from "@/components/GlobalStatusQueryBridge";
 import MobileBottomBar, {
   type MobileBottomBarItem,
 } from "@/components/MobileBottomBar";
@@ -158,7 +159,10 @@ function GlobalStatusMobileBar() {
       )}
       aria-live="polite"
     >
-      <p className="truncate">{status.message}</p>
+      <div className="flex items-center justify-between gap-3">
+        <p className="min-w-0 truncate">{status.message}</p>
+        {status.retry ? <GlobalStatusRetry /> : null}
+      </div>
     </div>
   );
 }

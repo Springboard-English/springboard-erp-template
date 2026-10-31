@@ -266,7 +266,7 @@ export default function WidgetFrame({
 
                     {stack ? (
                         <Tabs value={active.id} onValueChange={selectTab} className="min-w-0 flex-1">
-                            <TabsList variant="line" className="max-w-full justify-start overflow-x-auto">
+                            <TabsList variant="line" className="max-w-full justify-start overflow-x-auto mask-r-from-85% md:mask-none">
                                 {stack.stack.map((child) => {
                                     const childDef = findWidget(registry, child.widget);
                                     return childDef ? (

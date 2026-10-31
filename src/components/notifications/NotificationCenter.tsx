@@ -177,7 +177,7 @@ export default function NotificationCenter() {
                                         </p>
                                         <span
                                             className={cn(
-                                                "rounded border px-1.5 py-0.5 text-[10px] font-semibold",
+                                                "rounded border px-1.5 py-0.5 text-xs font-semibold",
                                                 priorityBadgeClass(n.priority),
                                             )}
                                         >
@@ -190,7 +190,7 @@ export default function NotificationCenter() {
                                         </p>
                                     )}
                                     <NotificationLink link={n.link} className="mb-1" />
-                                    <div className="flex flex-wrap items-center gap-x-4 gap-y-0.5 text-[11px] text-muted-foreground/70">
+                                    <div className="flex flex-wrap items-center gap-x-4 gap-y-0.5 text-xs text-muted-foreground/70">
                                         {n.created_at && (
                                             <span>Sent: {formatTimestamp(n.created_at)}</span>
                                         )}

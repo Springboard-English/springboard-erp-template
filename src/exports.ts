@@ -321,7 +321,7 @@ export {
   useGlobalStatusOptional,
 } from "./context/GlobalStatusContext";
 export type { GlobalStatus, GlobalStatusTone } from "./context/GlobalStatusContext";
-export { default as GlobalStatusQueryBridge } from "./components/GlobalStatusQueryBridge";
+export { default as GlobalStatusQueryBridge, GlobalStatusRetry } from "./components/GlobalStatusQueryBridge";
 
 export { NotificationProvider, useNotifications } from "./context/NotificationContext";
 export type { NotificationContextValue } from "./context/NotificationContext";

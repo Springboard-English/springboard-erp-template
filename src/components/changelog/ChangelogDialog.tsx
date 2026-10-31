@@ -46,7 +46,7 @@ function KindBadge({ kind }: { kind: ChangelogChangeKind }) {
   return (
     <span
       className={cn(
-        "inline-flex shrink-0 items-center rounded border px-1.5 py-0.5 text-[10px] font-bold",
+        "inline-flex shrink-0 items-center rounded border px-1.5 py-0.5 text-xs font-bold",
         KIND_CLASSES[kind],
       )}
     >
@@ -92,12 +92,12 @@ function ChangeRow({ change, current }: { change: ChangelogChange; current: bool
           {change.summary}
         </p>
         {current ? (
-          <p className="mt-0.5 text-[11px] font-semibold text-primary/80">
+          <p className="mt-0.5 text-xs font-semibold text-primary/80">
             {t("changelog.currentBuild")}
           </p>
         ) : null}
       </div>
-      <span className="shrink-0 font-mono text-[11px] leading-6 text-muted-foreground/70" title={change.sha}>
+      <span className="shrink-0 font-mono text-xs leading-6 text-muted-foreground/70" title={change.sha}>
         {change.shortSha}
       </span>
     </li>
@@ -152,7 +152,7 @@ export default function ChangelogDialog({
             days.map((day) => (
               <section key={day.date} className="mb-4 last:mb-0">
                 <div className="sticky top-0 z-10 flex items-center gap-3 bg-background/95 py-1.5 backdrop-blur">
-                  <h3 className="text-[11px] font-semibold text-muted-foreground/60">
+                  <h3 className="text-xs font-semibold text-muted-foreground/60">
                     {formatDay(formatter, day.date)}
                   </h3>
                   <div className="h-px flex-1 bg-border/40" />

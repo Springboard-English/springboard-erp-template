@@ -1054,7 +1054,8 @@ export function DetailTabs<T extends string>({
     }, [updatePill]);
 
     return (
-        <div className={cn("w-full overflow-x-auto", className, classNames?.root)}>
+        // The fade tells a phone there are more tabs past the edge.
+        <div className={cn("w-full overflow-x-auto mask-r-from-90% md:mask-none", className, classNames?.root)}>
             {/* The bottom border is the track; it spans the full width even when the tabs don't */}
             <div ref={tabListRef} className={cn("relative flex min-w-max border-b border-border", classNames?.list)}>
                 {/* Spring-animated active underline, sitting over the track */}

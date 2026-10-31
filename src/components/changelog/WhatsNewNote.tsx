@@ -108,7 +108,7 @@ export default function WhatsNewNote({
               </Suspense>
             </div>
 
-            <p className="mt-3 text-[11px] text-muted-foreground/70">{t("changelog.note.hint")}</p>
+            <p className="mt-3 text-xs text-muted-foreground/70">{t("changelog.note.hint")}</p>
           </div>
           <Popover.Arrow className="fill-background" width={14} height={7} />
         </Popover.Content>

@@ -68,7 +68,7 @@ function FiltersPopover({
             )}
           >
             <div className="mb-3 flex items-center gap-2.5">
-              <span className="text-[11px] font-semibold text-muted-foreground/50">
+              <span className="text-xs font-semibold text-muted-foreground/50">
                 {t("common.filters")}
               </span>
               <div className="h-px flex-1 bg-border/40" />
