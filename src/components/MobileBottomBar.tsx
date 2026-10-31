@@ -75,7 +75,7 @@ export default function MobileBottomBar({
               key={item.id}
               type="button"
               className={cn(
-                "flex flex-1 flex-col items-center justify-center gap-1 px-1 py-2 transition-colors",
+                "flex min-w-0 flex-1 flex-col items-center justify-center gap-1 px-1 py-2 transition-colors",
                 isActive
                   ? "text-foreground"
                   : "text-muted-foreground hover:text-foreground",
@@ -85,7 +85,7 @@ export default function MobileBottomBar({
               aria-current={isActive ? "page" : undefined}
             >
               {item.icon}
-              <span className="text-[10px] font-medium leading-none">
+              <span className="max-w-full truncate text-xs font-medium leading-tight">
                 {item.label}
               </span>
             </button>
@@ -100,7 +100,7 @@ export default function MobileBottomBar({
             aria-label={resolvedMenuButtonAriaLabel}
           >
             {menuButtonIcon ?? <User className="size-5" />}
-            <span className="text-[10px] font-medium leading-none">
+            <span className="max-w-full truncate text-xs font-medium leading-tight">
               {resolvedMenuButtonLabel}
             </span>
           </button>

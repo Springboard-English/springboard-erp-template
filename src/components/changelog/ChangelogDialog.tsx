@@ -46,7 +46,7 @@ function KindBadge({ kind }: { kind: ChangelogChangeKind }) {
   return (
     <span
       className={cn(
-        "inline-flex shrink-0 items-center rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide",
+        "inline-flex shrink-0 items-center rounded border px-1.5 py-0.5 text-[10px] font-bold",
         KIND_CLASSES[kind],
       )}
     >
@@ -152,7 +152,7 @@ export default function ChangelogDialog({
             days.map((day) => (
               <section key={day.date} className="mb-4 last:mb-0">
                 <div className="sticky top-0 z-10 flex items-center gap-3 bg-background/95 py-1.5 backdrop-blur">
-                  <h3 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+                  <h3 className="text-[11px] font-semiboldst text-muted-foreground/60">
                     {formatDay(formatter, day.date)}
                   </h3>
                   <div className="h-px flex-1 bg-border/40" />

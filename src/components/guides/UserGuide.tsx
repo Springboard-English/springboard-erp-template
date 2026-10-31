@@ -234,7 +234,7 @@ function GuideHero({ guide }: { guide: GuideRecord }) {
       <div className="relative">
         <div className="mb-3 flex items-center gap-1.5">
           <BookOpenText className="size-3.5 text-primary/70" />
-          <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{t("guides.userGuide")}</span>
+          <span className="text-[10px] font-semibold text-muted-foreground">{t("guides.userGuide")}</span>
         </div>
         <h1 className="text-2xl font-bold text-foreground">{guide.title}</h1>
         {guide.description ? <p className="mt-3 max-w-3xl text-sm leading-7 text-foreground/75">{guide.description}</p> : null}
@@ -465,7 +465,7 @@ export function GuidesSidebarContent({ rawGuides, collapsed }: GuidesSidebarCont
         <div className="space-y-1.5">
           {!collapsed ? (
             <div className="px-2 pb-1">
-              <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">{t("guides.allFiles")}</span>
+              <span className="text-[10px] font-semibold text-muted-foreground/60">{t("guides.allFiles")}</span>
             </div>
           ) : null}
 
@@ -534,7 +534,7 @@ export function GuidesSidebarContent({ rawGuides, collapsed }: GuidesSidebarCont
 
           <div className="flex items-center gap-1.5 px-2">
             <ListTree className="size-3 text-muted-foreground/60" />
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">{t("guides.contents")}</span>
+            <span className="text-[10px] font-semibold text-muted-foreground/60">{t("guides.contents")}</span>
           </div>
 
           <div className="space-y-1">

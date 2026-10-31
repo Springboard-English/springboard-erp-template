@@ -283,13 +283,13 @@ export default function SimpleDataTable<T>({
               {columns.map((column) => (
                 <TableHead
                   key={column.id}
-                  className={cn('sticky top-0 z-[1] bg-card text-center', column.className, classNames?.headCell)}
+                  className={cn('sticky top-0 z-[1] bg-card text-left', column.className, classNames?.headCell)}
                 >
                   {column.sortable && onSortChange ? (
                     <button
                       type="button"
                       onClick={() => handleSortClick(column.id)}
-                      className={cn(touchTargetHeight, "inline-flex w-full cursor-pointer items-center justify-center gap-1 whitespace-nowrap text-center text-sm font-medium text-muted-foreground", classNames?.sortButton)}
+                      className={cn(touchTargetHeight, "inline-flex w-full cursor-pointer items-center justify-start gap-1 whitespace-nowrap text-left text-sm font-medium text-muted-foreground", classNames?.sortButton)}
                     >
                       <span>{column.header}</span>
                       {sortBy === column.id ? (

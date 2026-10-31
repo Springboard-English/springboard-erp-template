@@ -177,7 +177,7 @@ export default function NotificationCenter() {
                                         </p>
                                         <span
                                             className={cn(
-                                                "rounded border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                                                "rounded border px-1.5 py-0.5 text-[10px] font-semibold",
                                                 priorityBadgeClass(n.priority),
                                             )}
                                         >

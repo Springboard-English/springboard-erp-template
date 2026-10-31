@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { useI18n } from "@/context/I18nContext";
 import AppTheme from "@/theme/AppTheme";
 import LazyViewFallback from "@/components/LazyViewFallback";
+import { ConfirmDialogHost } from "@/components/dialogs/ConfirmDialog";
 import MobileBottomBar, {
   type MobileBottomBarItem,
 } from "@/components/MobileBottomBar";
@@ -85,6 +86,11 @@ export interface DashboardLayoutProps {
   defaultCollapsed?: boolean;
   disableCustomTheme?: boolean;
   classNames?: DashboardLayoutClassNames;
+  /**
+   * Give the page a screen-reader `h1` from the active nav label, for an app
+   * whose views don't render their own.
+   */
+  pageHeading?: boolean;
   /** Max width of the centered content column. Defaults to 1700px. */
   maxContentClassName?: string;
   /**
@@ -257,11 +263,19 @@ function DashboardLayoutInner({
   collapsedStorageKey = "dashboard-sidebar-collapsed",
   defaultCollapsed = true,
   classNames,
+  pageHeading = false,
   maxContentClassName = "max-w-[1700px]",
 }: Omit<DashboardLayoutProps, "disableCustomTheme" | "pullToRefresh" | "reportProblem">) {
   const { t } = useI18n();
   const location = useLocation();
   const mainScrollRef = useRef<HTMLElement | null>(null);
+
+  // The tab title reads "Page · App · Springboard English"; index.html holds the part after the page.
+  const [baseTitle] = useState(() => document.title);
+  const activeLabel = navItems.find((item) => item.id === activeTab)?.label;
+  useEffect(() => {
+    document.title = activeLabel ? `${activeLabel} · ${baseTitle}` : baseTitle;
+  }, [activeLabel, baseTitle]);
 
   // Mounting over the boot screen (springboardBoot() in the app's vite config):
   // play the entrance once while the boot card lifts away. Read once, so a
@@ -456,6 +470,7 @@ function DashboardLayoutInner({
                 classNames?.content,
               )}
             >
+              {pageHeading && activeLabel ? <h1 className="sr-only">{activeLabel}</h1> : null}
               <animated.div style={{ opacity: pageSpring.opacity }} className="w-full">
                 <Suspense fallback={loadingFallback ?? <LazyViewFallback />}>
                   {children ?? <Outlet />}
@@ -465,6 +480,8 @@ function DashboardLayoutInner({
           </main>
         </div>
       </div>
+
+      <ConfirmDialogHost />
 
       {mobileItems.length > 0 ? (
         <>

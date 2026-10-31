@@ -127,7 +127,7 @@ export default function QuestionBuilder({
                 </Button>
                 {submitDisabled && missingFields.length > 0 ? (
                   <div className="pointer-events-none absolute bottom-full right-0 mb-2 hidden w-64 rounded-xl border border-border/70 bg-popover px-3 py-2.5 shadow-lg group-hover:block">
-                    <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    <p className="mb-1.5 text-[11px] font-semibold text-muted-foreground">
                       Còn thiếu
                     </p>
                     <ul className="space-y-1">

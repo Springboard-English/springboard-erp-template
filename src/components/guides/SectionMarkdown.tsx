@@ -133,7 +133,7 @@ export default function SectionMarkdown({
         thead: ({ children }) => <TableHeader>{children}</TableHeader>,
         tbody: ({ children }) => <TableBody>{children}</TableBody>,
         tr: ({ children }) => <TableRow>{children}</TableRow>,
-        th: ({ children }) => <TableHead className="bg-muted/40 text-[11px] font-semibold uppercase tracking-wide">{children}</TableHead>,
+        th: ({ children }) => <TableHead className="bg-muted/40 text-[11px] font-semibold">{children}</TableHead>,
         td: ({ children }) => <TableCell>{children}</TableCell>,
         img: ({ src, alt }) => {
           const resolvedSrc = typeof src === "string" ? src.trim() : "";

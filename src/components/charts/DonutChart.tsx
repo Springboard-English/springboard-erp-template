@@ -174,7 +174,7 @@ export default function DonutChart({
             x={SIZE / 2}
             y={SIZE / 2 - 4}
             textAnchor="middle"
-            className="fill-muted-foreground text-[9px] font-semibold uppercase tracking-[0.14em]"
+            className="fill-muted-foreground text-xs font-semibold"
           >
             {centerLabel}
           </text>

@@ -275,7 +275,7 @@ export function DetailView({
                         variant="outline"
                         aria-label={t("detail.restorePanel")}
                         onClick={() => applyMode(true, true, false)}
-                        className="pointer-events-auto absolute right-0 top-1/2 z-20 h-28 w-7 -translate-y-1/2 rounded-l-md rounded-r-none border-r-0 bg-background text-[10px] font-semibold uppercase tracking-[0.14em] shadow-md [writing-mode:vertical-rl]"
+                        className="pointer-events-auto absolute right-0 top-1/2 z-20 h-28 w-7 -translate-y-1/2 rounded-l-md rounded-r-none border-r-0 bg-background text-[10px] font-semibold shadow-md [writing-mode:vertical-rl]"
                     >
                         {t("detail.details")}
                     </Button>

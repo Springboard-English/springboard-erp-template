@@ -1,0 +1,52 @@
+/*
+ * The suite's colour tokens. Apps import this instead of copying the values:
+ *   @import "@springboard-english/springboard-erp-template/tokens.css";
+ * Text and button pairs meet WCAG AA at 4.5:1; --input and --ring meet 3:1.
+ * --border stays light on purpose: it draws dividers, not controls.
+ */
+:root,
+[data-theme="light"] {
+    --radius: 0.75rem;
+    --background: oklch(0.99 0.003 95);
+    --foreground: oklch(0.22 0.01 95);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.22 0.01 95);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.22 0.01 95);
+    --primary: oklch(0.55 0.1663 6.48);
+    --primary-foreground: oklch(0.98 0.004 95);
+    --secondary: oklch(0.95 0.01 95);
+    --secondary-foreground: oklch(0.28 0.01 95);
+    --muted: oklch(0.95 0.01 95);
+    --muted-foreground: oklch(0.52 0.015 95);
+    --accent: oklch(0.92 0.03 190);
+    --accent-foreground: oklch(0.24 0.015 220);
+    --destructive: oklch(0.56 0.22 25);
+    --destructive-foreground: oklch(0.98 0.004 95);
+    --border: oklch(0.89 0.01 95);
+    --input: oklch(0.64 0.01 95);
+    --ring: oklch(0.55 0.06 240);
+}
+
+.dark,
+[data-theme="dark"] {
+    --background: oklch(0.18 0.01 260);
+    --foreground: oklch(0.96 0.005 95);
+    --card: oklch(0.22 0.01 260);
+    --card-foreground: oklch(0.96 0.005 95);
+    --popover: oklch(0.22 0.01 260);
+    --popover-foreground: oklch(0.96 0.005 95);
+    --primary: oklch(0.68 0.1663 6.48);
+    --primary-foreground: oklch(0.2 0.01 260);
+    --secondary: oklch(0.28 0.01 260);
+    --secondary-foreground: oklch(0.96 0.005 95);
+    --muted: oklch(0.28 0.01 260);
+    --muted-foreground: oklch(0.7 0.01 95);
+    --accent: oklch(0.33 0.03 220);
+    --accent-foreground: oklch(0.96 0.005 95);
+    --destructive: oklch(0.68 0.21 24);
+    --destructive-foreground: oklch(0.98 0.004 95);
+    --border: oklch(1 0 0 / 12%);
+    --input: oklch(1 0 0 / 42%);
+    --ring: oklch(0.72 0.04 205);
+}
