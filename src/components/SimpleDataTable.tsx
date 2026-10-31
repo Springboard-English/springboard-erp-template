@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useId, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import useIsMobile from '@/hooks/useIsMobile';
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -26,6 +26,22 @@ export interface SimpleDataTableColumn<T> {
   cellClassName?: string;
   render: (row: T) => ReactNode;
   sortable?: boolean;
+  /**
+   * Adds a header row above this column. Neighbouring columns with the same
+   * `group.id` share one cell there; ungrouped columns span both rows.
+   */
+  group?: SimpleDataTableColumnGroup;
+  /**
+   * Pins the column this many pixels from the table's left edge while it
+   * scrolls sideways. Pinned columns before it need a fixed width to add up to.
+   */
+  stickyLeft?: number;
+}
+
+/** A header cell over several columns. */
+export interface SimpleDataTableColumnGroup {
+  id: string;
+  header: ReactNode;
 }
 
 export type SimpleDataTableSortOrder = 'asc' | 'desc';
@@ -99,10 +115,36 @@ export interface SimpleDataTableProps<T> {
   selection?: RowSelection<T>;
 }
 
+/** A run of neighbouring columns: one group's, or a single ungrouped column. */
+interface ColumnGroupRun<T> {
+  group: SimpleDataTableColumnGroup | undefined;
+  columns: Array<SimpleDataTableColumn<T>>;
+}
+
+/** Splits columns into the runs the top header row draws. */
+function columnGroupRuns<T>(columns: Array<SimpleDataTableColumn<T>>): Array<ColumnGroupRun<T>> {
+  const runs: Array<ColumnGroupRun<T>> = [];
+  for (const column of columns) {
+    const last = runs[runs.length - 1];
+    if (column.group && last?.group?.id === column.group.id) {
+      last.columns.push(column);
+    } else {
+      runs.push({ group: column.group, columns: [column] });
+    }
+  }
+  return runs;
+}
+
+/** The inline offset of a pinned column. */
+function pinnedStyle<T>(column: SimpleDataTableColumn<T>): CSSProperties | undefined {
+  return column.stickyLeft === undefined ? undefined : { left: column.stickyLeft };
+}
+
 /**
- * The suite's desktop table: sortable headers, client or server paging, a
- * loading skeleton, an empty state and, with `selection`, a tick-box column.
- * Pair it with a `MobileCardList` and set `desktopOnly`.
+ * The suite's desktop table: sortable headers, grouped header cells, pinned
+ * columns, client or server paging, a loading skeleton, an empty state and,
+ * with `selection`, a tick-box column. Pair it with a `MobileCardList` and set
+ * `desktopOnly`.
  */
 export default function SimpleDataTable<T>({
   columns,
@@ -255,11 +297,51 @@ export default function SimpleDataTable<T>({
       onFocus={onHoveredRowChange ? () => onHoveredRowChange(row) : undefined}
     >
       {tableColumns.map((column) => (
-        <TableCell key={column.id} className={cn(column.cellClassName, classNames?.cell)}>
+        <TableCell
+          key={column.id}
+          style={pinnedStyle(column)}
+          className={cn(column.stickyLeft !== undefined && 'sticky z-[1] bg-card', column.cellClassName, classNames?.cell)}
+        >
           {column.render(row)}
         </TableCell>
       ))}
     </TableRow>
+  );
+
+  const hasGroups = tableColumns.some((column) => column.group);
+
+  const renderHeadCell = (column: SimpleDataTableColumn<T>, rowSpan?: number) => (
+    <TableHead
+      key={column.id}
+      rowSpan={rowSpan}
+      style={pinnedStyle(column)}
+      className={cn(
+        // With groups the whole header sticks, so its rows stay stacked.
+        hasGroups ? 'bg-card text-left' : 'sticky top-0 z-[1] bg-card text-left',
+        column.stickyLeft !== undefined && 'sticky z-[2]',
+        column.className,
+        classNames?.headCell,
+      )}
+    >
+      {column.sortable && onSortChange ? (
+        <button
+          type="button"
+          onClick={() => handleSortClick(column.id)}
+          className={cn(touchTargetHeight, "inline-flex w-full cursor-pointer items-center justify-start gap-1 whitespace-nowrap text-left text-sm font-medium text-muted-foreground", classNames?.sortButton)}
+        >
+          <span>{column.header}</span>
+          {sortBy === column.id ? (
+            sortOrder === 'asc'
+              ? <ChevronUp className="size-3.5" />
+              : <ChevronDown className="size-3.5" />
+          ) : (
+            <ChevronUp className="size-3.5 opacity-30" />
+          )}
+        </button>
+      ) : (
+        column.header
+      )}
+    </TableHead>
   );
 
   useEffect(() => {
@@ -352,34 +434,33 @@ export default function SimpleDataTable<T>({
         style={tableBodyMaxHeight ? { maxHeight: `${tableBodyMaxHeight}px` } : undefined}
       >
         <Table containerClassName="overflow-x-visible">
-          <TableHeader>
-            <TableRow className={cn("hover:bg-transparent", classNames?.headRow)}>
-              {tableColumns.map((column) => (
-                <TableHead
-                  key={column.id}
-                  className={cn('sticky top-0 z-[1] bg-card text-left', column.className, classNames?.headCell)}
-                >
-                  {column.sortable && onSortChange ? (
-                    <button
-                      type="button"
-                      onClick={() => handleSortClick(column.id)}
-                      className={cn(touchTargetHeight, "inline-flex w-full cursor-pointer items-center justify-start gap-1 whitespace-nowrap text-left text-sm font-medium text-muted-foreground", classNames?.sortButton)}
-                    >
-                      <span>{column.header}</span>
-                      {sortBy === column.id ? (
-                        sortOrder === 'asc'
-                          ? <ChevronUp className="size-3.5" />
-                          : <ChevronDown className="size-3.5" />
-                      ) : (
-                        <ChevronUp className="size-3.5 opacity-30" />
-                      )}
-                    </button>
-                  ) : (
-                    column.header
+          <TableHeader className={hasGroups ? 'sticky top-0 z-[3] bg-card' : undefined}>
+            {hasGroups ? (
+              <>
+                <TableRow className={cn("hover:bg-transparent", classNames?.headRow)}>
+                  {columnGroupRuns(tableColumns).map(({ group, columns: run }) =>
+                    group ? (
+                      <TableHead
+                        key={group.id}
+                        colSpan={run.length}
+                        className={cn('border-l border-border/70 bg-card text-center whitespace-nowrap', classNames?.headCell)}
+                      >
+                        {group.header}
+                      </TableHead>
+                    ) : (
+                      run.map((column) => renderHeadCell(column, 2))
+                    ),
                   )}
-                </TableHead>
-              ))}
-            </TableRow>
+                </TableRow>
+                <TableRow className={cn("hover:bg-transparent", classNames?.headRow)}>
+                  {tableColumns.filter((column) => column.group).map((column) => renderHeadCell(column))}
+                </TableRow>
+              </>
+            ) : (
+              <TableRow className={cn("hover:bg-transparent", classNames?.headRow)}>
+                {tableColumns.map((column) => renderHeadCell(column))}
+              </TableRow>
+            )}
           </TableHeader>
           <TableBody>
             {loading ? (

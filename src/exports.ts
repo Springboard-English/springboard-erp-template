@@ -125,7 +125,7 @@ export type { PageHeaderProps, PageHeaderBackItem } from "./components/layout/Pa
 export { default as AppHeader } from "./components/layout/AppHeader";
 export type { AppHeaderProps } from "./components/layout/AppHeader";
 export { default as SimpleDataTable } from "./components/SimpleDataTable";
-export type { SimpleDataTableColumn, SimpleDataTableSortOrder, SimpleDataTableProps, SimpleDataTableClassNames } from "./components/SimpleDataTable";
+export type { SimpleDataTableColumn, SimpleDataTableColumnGroup, SimpleDataTableSortOrder, SimpleDataTableProps, SimpleDataTableClassNames } from "./components/SimpleDataTable";
 export { default as MobileCardList, CardField } from "./components/MobileCardList";
 export type { MobileCardListProps } from "./components/MobileCardList";
 export {

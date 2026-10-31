@@ -142,6 +142,14 @@ rows). One bar, so a page never shows two floating strips.
   ones last under a divider). `overflow: true` puts an action there on desktop
   too.
 
+## Grouped headers and pinned columns (`SimpleDataTable`, since 4.46.0)
+
+A column's `group` adds a header row: neighbouring columns with the same
+`group.id` share one cell, and ungrouped columns span both rows. With groups the
+whole header sticks to the top. `stickyLeft` pins a column that many pixels from
+the left while the table scrolls sideways; pinned columns before it need a fixed
+width to add up to. Both are per column, and a table using neither is unchanged.
+
 ## Row selection (`SimpleDataTable`, `MobileCardList`, since 4.30.0)
 
 Both take the same `selection: RowSelection<T>` (`selected`, `onChange`,
