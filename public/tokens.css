@@ -3,7 +3,19 @@
  *   @import "@springboard-english/springboard-erp-template/tokens.css";
  * Text and button pairs meet WCAG AA at 4.5:1; --input and --ring meet 3:1.
  * --border stays light on purpose: it draws dividers, not controls.
+ * Status colours pair a `-bg` tint with its ink, which reads at 4.5:1 on it.
  */
+@theme inline {
+    --color-success: var(--success);
+    --color-success-bg: var(--success-bg);
+    --color-warning: var(--warning);
+    --color-warning-bg: var(--warning-bg);
+    --color-info: var(--info);
+    --color-info-bg: var(--info-bg);
+    --color-error: var(--error);
+    --color-error-bg: var(--error-bg);
+}
+
 :root,
 [data-theme="light"] {
     --radius: 0.75rem;
@@ -26,6 +38,14 @@
     --border: oklch(0.89 0.01 95);
     --input: oklch(0.64 0.01 95);
     --ring: oklch(0.55 0.06 240);
+    --success: oklch(0.47 0.11 155);
+    --success-bg: oklch(0.95 0.035 155);
+    --warning: oklch(0.47 0.1 75);
+    --warning-bg: oklch(0.95 0.05 90);
+    --info: oklch(0.47 0.11 245);
+    --info-bg: oklch(0.95 0.025 245);
+    --error: oklch(0.5 0.19 25);
+    --error-bg: oklch(0.95 0.025 25);
 }
 
 .dark,
@@ -49,4 +69,12 @@
     --border: oklch(1 0 0 / 12%);
     --input: oklch(1 0 0 / 42%);
     --ring: oklch(0.72 0.04 205);
+    --success: oklch(0.82 0.12 160);
+    --success-bg: oklch(0.3 0.05 160);
+    --warning: oklch(0.85 0.11 85);
+    --warning-bg: oklch(0.31 0.05 85);
+    --info: oklch(0.83 0.08 240);
+    --info-bg: oklch(0.31 0.05 245);
+    --error: oklch(0.8 0.11 20);
+    --error-bg: oklch(0.31 0.06 20);
 }

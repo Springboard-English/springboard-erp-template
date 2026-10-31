@@ -19,8 +19,8 @@ function priorityBadgeClass(priority: string | null) {
     const normalized = (priority ?? "").trim().toUpperCase();
     if (normalized === "IMMEDIATE") return "border-destructive/40 bg-destructive/10 text-destructive";
     if (normalized === "URGENT")
-        return "border-amber-500/35 bg-amber-500/10 text-amber-700 dark:text-amber-300";
-    return "border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-300";
+        return "border-warning/35 bg-warning-bg text-warning";
+    return "border-info/30 bg-info-bg text-info";
 }
 
 function formatTimestamp(value: string | null | undefined): string | null {

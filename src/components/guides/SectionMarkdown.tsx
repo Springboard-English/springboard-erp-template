@@ -79,10 +79,10 @@ export default function SectionMarkdown({
 
           const toneClass =
             callout.type === "TIP"
-              ? "border-emerald-500/35 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+              ? "border-success/35 bg-success-bg text-success"
               : callout.type === "WARNING"
-                ? "border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300"
-                : "border-sky-500/35 bg-sky-500/10 text-sky-700 dark:text-sky-300";
+                ? "border-warning/40 bg-warning-bg text-warning"
+                : "border-info/35 bg-info-bg text-info";
 
           return (
             <div className={cn("mt-4 rounded-xl border px-3 py-3 text-sm leading-6", toneClass)}>

@@ -145,10 +145,10 @@ function useReadingProgress(): number {
 function getGuideAccent(slug: string) {
   const accents = [
     { gradient: "from-primary/15", ring: "ring-primary/30", dot: "bg-primary/60" },
-    { gradient: "from-sky-500/15", ring: "ring-sky-500/30", dot: "bg-sky-500/60" },
-    { gradient: "from-emerald-500/15", ring: "ring-emerald-500/30", dot: "bg-emerald-500/60" },
-    { gradient: "from-violet-500/15", ring: "ring-violet-500/30", dot: "bg-violet-500/60" },
-    { gradient: "from-amber-500/15", ring: "ring-amber-500/30", dot: "bg-amber-500/60" },
+    { gradient: "from-info/15", ring: "ring-info/30", dot: "bg-info/60" },
+    { gradient: "from-success/15", ring: "ring-success/30", dot: "bg-success/60" },
+    { gradient: "from-primary/15", ring: "ring-primary/30", dot: "bg-primary/60" },
+    { gradient: "from-warning/15", ring: "ring-warning/30", dot: "bg-warning/60" },
   ];
   const index = slug.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0) % accents.length;
   return accents[index];

@@ -93,7 +93,7 @@ export default function ResetPassword(props: ResetPasswordViewProps) {
     <AppTheme {...props}>
       <div className="relative flex min-h-screen flex-col overflow-hidden px-4 py-6 sm:px-8">
         <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,_rgba(34,197,94,0.18),transparent_30%),linear-gradient(180deg,rgba(248,250,252,0.96),rgba(255,255,255,1))] dark:bg-[radial-gradient(circle_at_top,_rgba(34,197,94,0.16),transparent_24%),linear-gradient(180deg,rgba(7,14,26,0.98),rgba(16,24,40,1))]" />
-        <div className="pointer-events-none absolute bottom-[-8rem] right-[-3rem] -z-10 h-72 w-72 rounded-full bg-emerald-300/20 blur-3xl dark:bg-emerald-500/10" />
+        <div className="pointer-events-none absolute bottom-[-8rem] right-[-3rem] -z-10 h-72 w-72 rounded-full bg-success/10 blur-3xl" />
         <ColorModeSelect className="fixed right-4 top-4 z-20 sm:right-6 sm:top-6" />
 
         <div className="mx-auto flex w-full max-w-md flex-1 items-center">

@@ -16,7 +16,7 @@ const badgeVariants = cva(
         destructive:
           "bg-error-bg text-error shadow-none focus-visible:ring-destructive/20 [a&]:hover:bg-error-bg/80",
         outline:
-          "border-2 border-border bg-transparent text-foreground shadow-none [a&]:hover:border-rose-300 [a&]:hover:text-primary",
+          "border-2 border-border bg-transparent text-foreground shadow-none [a&]:hover:border-primary [a&]:hover:text-primary",
         ghost: "bg-muted text-muted-foreground shadow-none [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
         mono: "rounded-[10px] border border-border bg-muted px-2.5 py-1.5 font-mono text-[11px] font-bold tracking-normal text-muted-foreground normal-case shadow-none",
         link: "border-0 bg-transparent p-0 text-primary underline-offset-4 shadow-none [a&]:hover:translate-y-0 [a&]:hover:scale-100 [a&]:hover:underline",

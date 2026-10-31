@@ -214,8 +214,8 @@ export default function PendingChangesBar({
         >
           <div className="flex min-w-0 shrink items-center gap-2.5 text-sm">
             <span className="relative flex size-2.5 shrink-0">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-60" />
-              <span className="relative inline-flex size-2.5 rounded-full bg-amber-400" />
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-warning opacity-60" />
+              <span className="relative inline-flex size-2.5 rounded-full bg-warning" />
             </span>
             <span className="truncate font-medium text-foreground">
               {countLabel}

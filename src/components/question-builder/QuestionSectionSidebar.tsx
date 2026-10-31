@@ -51,7 +51,7 @@ export default function QuestionSectionSidebar({
                     className={cn(
                       "flex size-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold tabular-nums transition-colors",
                       section.isComplete
-                        ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400"
+                        ? "bg-success-bg text-success"
                         : isActive
                           ? "bg-primary/15 text-primary"
                           : "bg-muted text-muted-foreground",

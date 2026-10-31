@@ -69,7 +69,7 @@ export default function FormTableDialog({
                     {tab.complete && (
                         <span className={cn(
                             'text-[10px] font-bold leading-none',
-                            i === activeTab ? 'text-primary-foreground/70' : 'text-emerald-500',
+                            i === activeTab ? 'text-primary-foreground/70' : 'text-success',
                         )}>✓</span>
                     )}
                 </button>
