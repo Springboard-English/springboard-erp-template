@@ -71,6 +71,35 @@ export function clearPersistedFilters(scope: string): void {
   }
 }
 
+/**
+ * Replace a scope's persisted filters with `values`, for a link that opens a
+ * list already filtered (a mentor's sessions, a student's registrations). Call
+ * it just before navigating to the list; its hooks read the values on mount.
+ * Keys are the ones the list's hooks use, including `<key>__label` for an
+ * option filter's label.
+ */
+export function presetPersistedFilters(
+  scope: string,
+  values: Record<string, FilterValue>,
+): void {
+  try {
+    sessionStorage.setItem(storageKey(scope), JSON.stringify(values));
+  } catch {
+    // Without storage the list opens unfiltered, which is still a valid view.
+  }
+}
+
+/**
+ * The `values` entries that preset one `usePersistentOptionFilter` field: its
+ * key and the label its select shows.
+ */
+export function optionFilterPreset(
+  key: string,
+  option: FilterOption,
+): Record<string, FilterValue> {
+  return { [key]: option.value, [`${key}__label`]: option.label };
+}
+
 function resolveInitial<T extends FilterValue>(
   scope: string,
   key: string,

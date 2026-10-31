@@ -241,6 +241,14 @@ export type {
   DetailMenuAction,
 } from "./components/layout/DetailLayout";
 export { default as ProgressMetricCell } from "./components/cells/ProgressMetricCell";
+export {
+  RecordLink,
+  RecordChevron,
+  hasRecordLinkTarget,
+  type RecordLinkProps,
+  type RecordChevronProps,
+  type RecordLinkTarget,
+} from "./components/RecordLink";
 export { default as AdvancedFiltersPanel } from "./components/management/AdvancedFiltersPanel";
 export type { AdvancedFiltersPanelProps } from "./components/management/AdvancedFiltersPanel";
 export { default as AdvancedFiltersToggle } from "./components/management/AdvancedFiltersToggle";

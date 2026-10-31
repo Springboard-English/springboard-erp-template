@@ -28,8 +28,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import { touchHitArea, touchTargetHeight } from "@/lib/touchTarget";
+import { touchTargetHeight } from "@/lib/touchTarget";
 import { useI18n } from "@/context/I18nContext";
+import { RecordLink } from "@/components/RecordLink";
 import useIsMobile from "@/hooks/useIsMobile";
 import {
     DETAIL_HIDDEN_COLLAPSED_VALUE,
@@ -756,6 +757,11 @@ export function DetailClassLinkValue({
     );
 }
 
+/**
+ * A details-form label for a class field with the record chevron that opens
+ * the class; the chevron is the shared `RecordLink` one. No chevron without a
+ * class key.
+ */
 export function DetailClassHeaderLabel({
     label,
     classKey,
@@ -769,21 +775,10 @@ export function DetailClassHeaderLabel({
     const normalizedClassKey = classKey?.trim() || "";
     const resolvedLabel = label ?? t("detail.class");
     return (
-        <span className="inline-flex items-center gap-1">
-            <span>{resolvedLabel}</span>
-            <Button
-                type="button"
-                size="icon"
-                variant="ghost"
-                // An inline icon inside a label: it keeps its size, opts out of
-                // the button floor and takes an invisible tap area on touch.
-                className={cn(touchHitArea, "relative h-5 min-h-0 w-5 min-w-0 p-0 text-muted-foreground hover:text-foreground")}
-                onClick={onOpenClass}
-                disabled={!normalizedClassKey}
-            >
-                <ChevronRight className="h-3.5 w-3.5" />
-            </Button>
-        </span>
+        <RecordLink
+            label={resolvedLabel}
+            onOpen={normalizedClassKey ? onOpenClass : null}
+        />
     );
 }
 
