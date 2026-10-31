@@ -433,7 +433,8 @@ it. There is no floating launcher.
 
 - **The app decides who may report** through `enabled`; the package does not
   gate on role. Leave the prop out, or pass `enabled: false`, for no entry point.
-- **The form** files a ticket in one `POST /v2/feedback-tickets` after uploading
+- **The form** is a `SchemaFormDialog`: the fields on Details, screenshots on
+  their own tab, which it reopens on after screenshot mode. It files a ticket in one `POST /v2/feedback-tickets` after uploading
   up to five PNG/JPEG screenshots (10 MB each) through `upload-url` and a plain
   `PUT` to the signed URL (`api_calls/feedbackTickets.ts`). Screenshot mode
   hides the dialog behind a capture bar so the reporter can go to the broken

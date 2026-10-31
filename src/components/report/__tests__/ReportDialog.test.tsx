@@ -47,11 +47,13 @@ describe("ReportDialog", () => {
 
     expect(screen.getByText("Reported from erp-hrm · /employees")).toBeInTheDocument();
     const send = screen.getByRole("button", { name: "Send report" });
-    expect(send).toBeDisabled();
+    await user.click(send);
+    expect(screen.getByText("Still needed: Summary, Details.")).toBeInTheDocument();
+    expect(submitReportMock).not.toHaveBeenCalled();
 
     await user.type(screen.getByLabelText("Summary"), "Save fails");
     await user.type(screen.getByLabelText("Details"), "Nothing happens on Save.");
-    await user.click(screen.getByLabelText("High"));
+    await user.click(screen.getByRole("radio", { name: "High" }));
     await user.click(send);
 
     expect(submitReportMock).toHaveBeenCalledWith({
@@ -81,6 +83,37 @@ describe("ReportDialog", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Failed to send the report");
     expect(screen.getByLabelText("Summary")).toHaveValue("x");
+  });
+
+  it("comes back from screenshot mode on the screenshots tab, keeping what was typed", async () => {
+    const user = userEvent.setup();
+    const onRequestCapture = vi.fn();
+    const props: ReportDialogProps = {
+      open: true,
+      onClose: () => {},
+      contextLabel: "lms · /",
+      evidence: [],
+      onEvidenceChange: () => {},
+      onRequestCapture,
+    };
+    const tree = (open: boolean) => (
+      <I18nProvider locale="en">
+        <ReportDialog {...props} open={open} />
+      </I18nProvider>
+    );
+    const { rerender } = render(tree(true));
+
+    await user.type(screen.getByLabelText("Summary"), "Broken");
+    await user.click(screen.getByRole("button", { name: "Screenshots and attachments" }));
+    await user.click(screen.getByRole("button", { name: "Screenshot mode" }));
+    expect(onRequestCapture).toHaveBeenCalledOnce();
+
+    rerender(tree(false));
+    rerender(tree(true));
+    expect(screen.getByRole("button", { name: "Screenshot mode" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Details" }));
+    expect(screen.getByLabelText("Summary")).toHaveValue("Broken");
   });
 
   it("reveals the help text and hides it on a second click", async () => {
