@@ -1061,7 +1061,8 @@ export function DetailTabs<T extends string>({
 
     return (
         // The fade tells a phone there are more tabs past the edge.
-        <div className={cn("w-full overflow-x-auto mask-r-from-90% md:mask-none", className, classNames?.root)}>
+        // mb-4 is the one gap between any tab bar and what it controls.
+        <div className={cn("mb-4 w-full overflow-x-auto mask-r-from-90% md:mask-none", className, classNames?.root)}>
             {/* The bottom border is the track; it spans the full width even when the tabs don't */}
             <div ref={tabListRef} className={cn("relative flex min-w-max border-b border-border", classNames?.list)}>
                 {/* Spring-animated active underline, sitting over the track */}
@@ -1199,7 +1200,7 @@ export function DetailTabbedSection<T extends string>({
         <section className={cn("flex min-h-0 flex-col", className)}>
             <div
                 data-detail-tabs-wrap
-                className="shrink-0 overflow-visible pb-2"
+                className="shrink-0 overflow-visible"
             >
                 <DetailTabs
                     tabs={tabs}
@@ -1211,7 +1212,7 @@ export function DetailTabbedSection<T extends string>({
                 ref={contentRef}
                 data-detail-tab-content
                 className={cn(
-                    "mt-4 min-h-0 flex-1",
+                    "min-h-0 flex-1",
                     resolvedContentScrollable &&
                         "overflow-y-auto overflow-x-hidden pr-1",
                     contentClassName,
