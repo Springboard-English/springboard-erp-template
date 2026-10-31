@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useI18n } from '@/context/I18nContext';
 import { cn } from '@/lib/utils';
+import { headerIconButton } from '@/lib/headerControl';
 import { useColorMode } from './AppTheme';
 
 export default function ColorModeIconDropdown(
@@ -34,7 +35,7 @@ export default function ColorModeIconDropdown(
           data-screenshot="toggle-mode"
           variant="ghost"
           size="icon"
-          className={cn('rounded-full', className)}
+          className={cn(headerIconButton, className)}
           aria-label={t('theme.toggle')}
           {...buttonProps}
         >

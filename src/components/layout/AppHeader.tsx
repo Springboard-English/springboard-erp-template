@@ -22,7 +22,8 @@ export default function AppHeader({
   className,
 }: AppHeaderProps) {
   return (
-    <div className={cn("flex w-full items-center justify-end gap-3", className)}>
+    // gap-1: the toolbar's icon buttons carry their own padding, so they sit close like one group.
+    <div className={cn("flex w-full items-center justify-end gap-1", className)}>
       {status ? (
         <p
           className={cn(

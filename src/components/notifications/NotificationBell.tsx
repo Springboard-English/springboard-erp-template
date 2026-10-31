@@ -2,6 +2,7 @@ import { useMemo, useRef, useState, useEffect } from "react";
 import { Bell, ExternalLink, RefreshCw, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { headerIconButtonPlain } from "@/lib/headerControl";
 import { touchHitArea } from "@/lib/touchTarget";
 import { useNotifications } from "@/context/NotificationContext";
 import { useI18n } from "@/context/I18nContext";
@@ -86,7 +87,7 @@ export default function NotificationBell({ viewAllPath }: NotificationBellProps)
             <button
                 type="button"
                 onClick={() => setOpen((current) => !current)}
-                className="relative flex min-h-11 min-w-11 items-center justify-center rounded-md md:pointer-fine:min-h-9 md:pointer-fine:min-w-9 border border-border/70 bg-muted/45 text-foreground transition-colors hover:bg-muted"
+                className={cn(headerIconButtonPlain, "relative")}
                 aria-label={t("notificationBell.ariaLabel", undefined, {
                     suffix:
                         unreadCount > 0

@@ -5,6 +5,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { useI18n } from "@/context/I18nContext";
 import { cn } from "@/lib/utils";
+import { headerIconButton } from "@/lib/headerControl";
 
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
@@ -666,7 +667,7 @@ export function GuideIconButton({
       type="button"
       variant={variant}
       size={size}
-      className={cn("rounded-full", className)}
+      className={cn(headerIconButton, className)}
       aria-current={inGuidesView ? "page" : undefined}
       aria-label={inGuidesView ? closeLabel ?? t("guides.close") : openLabel ?? t("guides.open")}
       title={inGuidesView ? closeLabel ?? t("guides.close") : openLabel ?? t("guides.open")}

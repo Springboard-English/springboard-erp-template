@@ -10,6 +10,7 @@ import {
 import { MessageCircleWarning } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { headerIconButton } from "@/lib/headerControl";
 import { Button } from "../ui/button";
 import { useI18n } from "@/context/I18nContext";
 import AnnotationEditor from "./AnnotationEditor";
@@ -161,7 +162,7 @@ export function ReportProblemButton({
       type="button"
       variant={variant}
       size={size}
-      className={cn("rounded-full", className)}
+      className={cn(headerIconButton, className)}
       aria-label={label}
       title={label}
       onClick={report.open}

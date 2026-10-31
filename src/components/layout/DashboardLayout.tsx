@@ -10,6 +10,7 @@ import { animated, easings, useSpring } from "@react-spring/web";
 import { ChevronsLeft, ChevronsRight, RefreshCw } from "lucide-react";
 import { Outlet, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { headerIconButton } from "@/lib/headerControl";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/context/I18nContext";
 import AppTheme from "@/theme/AppTheme";
@@ -124,9 +125,9 @@ function LayoutRefreshButton({ refresh }: { refresh: () => Promise<void> }) {
   return (
     <Button
       type="button"
-      variant="outline"
+      variant="ghost"
       size="icon"
-      className="rounded-full border-border/70 bg-background/80 shadow-sm backdrop-blur"
+      className={headerIconButton}
       aria-label={label}
       title={label}
       disabled={running}
@@ -356,7 +357,7 @@ function DashboardLayoutInner({
             entering && "sb-enter-fade",
           )}
         >
-          <div className="pointer-events-none flex h-full w-full items-center justify-end gap-2 px-6">
+          <div className="pointer-events-none flex h-full w-full items-center justify-end gap-1 px-6">
             {pageRefresh.available ? (
               <div className="pointer-events-auto">
                 <LayoutRefreshButton refresh={pageRefresh.refresh} />
@@ -366,6 +367,10 @@ function DashboardLayoutInner({
               <div className="pointer-events-auto">
                 <ReportProblemButton />
               </div>
+            ) : null}
+            {/* A hairline splits the page's own actions from the app's controls. */}
+            {(pageRefresh.available || report) && headerContent ? (
+              <span aria-hidden="true" className="mx-1.5 h-5 w-px bg-border" />
             ) : null}
             {headerContent ? (
               <div className={cn("pointer-events-auto", classNames?.header)}>

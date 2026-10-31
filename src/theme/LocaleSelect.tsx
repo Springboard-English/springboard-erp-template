@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { headerIconButton } from "@/lib/headerControl";
 import { useI18n } from "@/context/I18nContext";
 
 type LocaleSelectProps = ComponentProps<typeof Button> & {
@@ -39,17 +40,16 @@ export default function LocaleSelect(props: LocaleSelectProps) {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
-          variant="outline"
+          variant="ghost"
           size="sm"
-          className={cn(
-            "rounded-full border-border/70 bg-background/85 px-3 shadow-sm backdrop-blur",
-            className,
-          )}
+          // The header toolbar's ghost circle, stretched to fit a short language code; the menu names each language in full.
+          className={cn(headerIconButton, "gap-1 px-2.5 text-xs font-semibold", className)}
           aria-label={t("locale.openSelector")}
+          title={getLocaleLabel(locale)}
           {...buttonProps}
         >
           <Languages className="size-4" />
-          <span className="hidden sm:inline">{getLocaleLabel(locale)}</span>
+          <span className="hidden sm:inline">{locale.toUpperCase()}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-40">
