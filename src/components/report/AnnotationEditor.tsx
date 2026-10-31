@@ -228,7 +228,7 @@ export default function AnnotationEditor({ image, onCancel, onSave }: Annotation
 
           <div className="flex flex-row flex-wrap gap-4 md:w-52 md:flex-col md:flex-nowrap">
             <div className="space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+              <p className="text-xs font-semibold text-muted-foreground">
                 {t("report.tool")}
               </p>
               <div className="flex gap-2">
@@ -258,7 +258,7 @@ export default function AnnotationEditor({ image, onCancel, onSave }: Annotation
 
             {tool === "draw" ? (
               <div className="space-y-2">
-                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                <p className="text-xs font-semibold text-muted-foreground">
                   {t("report.colour")}
                 </p>
                 <div className="flex gap-3">

@@ -2,6 +2,7 @@
 // ships it as a file too; this import still inlines it into the bundle.
 import sitemarkUrl from '../../public/sitemark.svg';
 import logoUrl from '../assets/logo.svg';
+import markUrl from '../../public/favicon.svg';
 
 interface LogoProps {
   className?: string;
@@ -13,6 +14,21 @@ export function SitemarkIcon({ className }: LogoProps) {
   return className
     ? <img src={sitemarkUrl} alt="Springboard English" className={className}/>
     : <img src={sitemarkUrl} width="150" alt="Springboard English"/>;
+}
+
+/** The sidebar's brand: the mark, plus the company and app name unless the sidebar is collapsed. */
+export function SpringboardBrand({ app, collapsed }: { app: string; collapsed?: boolean }) {
+  return (
+    <div className="flex min-w-0 items-center gap-3">
+      <img src={markUrl} alt={collapsed ? `Springboard English ${app}` : ''} className="size-9 shrink-0" />
+      {collapsed ? null : (
+        <div className="min-w-0">
+          <p className="truncate text-sm font-semibold text-foreground">Springboard English</p>
+          <p className="truncate text-xs text-muted-foreground">{app}</p>
+        </div>
+      )}
+    </div>
+  );
 }
 
 /** The square lockup: the mark above the two-line name. */

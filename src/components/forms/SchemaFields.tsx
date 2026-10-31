@@ -385,7 +385,7 @@ export function SchemaFields({ form, sections, className }: SchemaFieldsProps) {
                 return (
                     <section key={section.id} className="grid gap-3">
                         {section.title ? (
-                            <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                            <h3 className="text-xs font-semibold text-muted-foreground">
                                 {section.title}
                             </h3>
                         ) : null}

@@ -19,8 +19,8 @@ function priorityBadgeClass(priority: string | null) {
     const normalized = (priority ?? "").trim().toUpperCase();
     if (normalized === "IMMEDIATE") return "border-destructive/40 bg-destructive/10 text-destructive";
     if (normalized === "URGENT")
-        return "border-amber-500/35 bg-amber-500/10 text-amber-700 dark:text-amber-300";
-    return "border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-300";
+        return "border-warning/35 bg-warning-bg text-warning";
+    return "border-info/30 bg-info-bg text-info";
 }
 
 function formatTimestamp(value: string | null | undefined): string | null {
@@ -155,7 +155,7 @@ export default function NotificationBell({ viewAllPath }: NotificationBellProps)
                                             </p>
                                             <span
                                                 className={cn(
-                                                    "shrink-0 rounded border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                                                    "shrink-0 rounded border px-1.5 py-0.5 text-xs font-semibold",
                                                     priorityBadgeClass(n.priority),
                                                 )}
                                             >
@@ -172,7 +172,7 @@ export default function NotificationBell({ viewAllPath }: NotificationBellProps)
                                         )}
                                         <NotificationLink link={n.link} />
                                         {n.created_at && (
-                                            <p className="mt-1 text-[11px] text-muted-foreground/70">
+                                            <p className="mt-1 text-xs text-muted-foreground">
                                                 {formatTimestamp(n.created_at)}
                                             </p>
                                         )}

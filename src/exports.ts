@@ -53,7 +53,11 @@ export { default as ColorModeSelect } from "./theme/ColorModeSelect";
 export { default as ColorModeIconDropdown } from "./theme/ColorModeIconDropdown";
 export { default as LocaleSelect } from "./theme/LocaleSelect";
 
-export { SitemarkIcon, LogoIcon } from "./components/CustomIcons";
+export { SitemarkIcon, LogoIcon, SpringboardBrand } from "./components/CustomIcons";
+export { default as EmptyState } from "./components/EmptyState";
+export type { EmptyStateProps } from "./components/EmptyState";
+export { confirmAction, ConfirmDialogHost } from "./components/dialogs/ConfirmDialog";
+export type { ConfirmOptions } from "./components/dialogs/ConfirmDialog";
 export { default as LazyViewFallback } from "./components/LazyViewFallback";
 export type { LazyViewFallbackProps } from "./components/LazyViewFallback";
 export { lazyWithPreload, usePreloadOnIdle } from "./utils/lazyWithPreload";
@@ -333,7 +337,7 @@ export {
   useGlobalStatusOptional,
 } from "./context/GlobalStatusContext";
 export type { GlobalStatus, GlobalStatusTone } from "./context/GlobalStatusContext";
-export { default as GlobalStatusQueryBridge } from "./components/GlobalStatusQueryBridge";
+export { default as GlobalStatusQueryBridge, GlobalStatusRetry } from "./components/GlobalStatusQueryBridge";
 
 export { NotificationProvider, useNotifications } from "./context/NotificationContext";
 export type { NotificationContextValue } from "./context/NotificationContext";

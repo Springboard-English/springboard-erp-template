@@ -145,10 +145,10 @@ function useReadingProgress(): number {
 function getGuideAccent(slug: string) {
   const accents = [
     { gradient: "from-primary/15", ring: "ring-primary/30", dot: "bg-primary/60" },
-    { gradient: "from-sky-500/15", ring: "ring-sky-500/30", dot: "bg-sky-500/60" },
-    { gradient: "from-emerald-500/15", ring: "ring-emerald-500/30", dot: "bg-emerald-500/60" },
-    { gradient: "from-violet-500/15", ring: "ring-violet-500/30", dot: "bg-violet-500/60" },
-    { gradient: "from-amber-500/15", ring: "ring-amber-500/30", dot: "bg-amber-500/60" },
+    { gradient: "from-info/15", ring: "ring-info/30", dot: "bg-info/60" },
+    { gradient: "from-success/15", ring: "ring-success/30", dot: "bg-success/60" },
+    { gradient: "from-primary/15", ring: "ring-primary/30", dot: "bg-primary/60" },
+    { gradient: "from-warning/15", ring: "ring-warning/30", dot: "bg-warning/60" },
   ];
   const index = slug.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0) % accents.length;
   return accents[index];
@@ -234,7 +234,7 @@ function GuideHero({ guide }: { guide: GuideRecord }) {
       <div className="relative">
         <div className="mb-3 flex items-center gap-1.5">
           <BookOpenText className="size-3.5 text-primary/70" />
-          <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{t("guides.userGuide")}</span>
+          <span className="text-[10px] font-semibold text-muted-foreground">{t("guides.userGuide")}</span>
         </div>
         <h1 className="text-2xl font-bold text-foreground">{guide.title}</h1>
         {guide.description ? <p className="mt-3 max-w-3xl text-sm leading-7 text-foreground/75">{guide.description}</p> : null}
@@ -465,7 +465,7 @@ export function GuidesSidebarContent({ rawGuides, collapsed }: GuidesSidebarCont
         <div className="space-y-1.5">
           {!collapsed ? (
             <div className="px-2 pb-1">
-              <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">{t("guides.allFiles")}</span>
+              <span className="text-[10px] font-semibold text-muted-foreground/60">{t("guides.allFiles")}</span>
             </div>
           ) : null}
 
@@ -534,7 +534,7 @@ export function GuidesSidebarContent({ rawGuides, collapsed }: GuidesSidebarCont
 
           <div className="flex items-center gap-1.5 px-2">
             <ListTree className="size-3 text-muted-foreground/60" />
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">{t("guides.contents")}</span>
+            <span className="text-[10px] font-semibold text-muted-foreground/60">{t("guides.contents")}</span>
           </div>
 
           <div className="space-y-1">

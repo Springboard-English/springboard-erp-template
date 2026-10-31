@@ -170,7 +170,7 @@ export function ComboboxField({
             className={cn(
               fieldHeight,
               'w-full min-w-0 cursor-pointer truncate rounded-md border border-input bg-background pr-9 pl-3 text-base shadow-xs outline-none transition md:text-sm',
-              'placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50',
+              'placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring',
               'disabled:cursor-not-allowed disabled:opacity-50',
               open && 'cursor-text',
             )}

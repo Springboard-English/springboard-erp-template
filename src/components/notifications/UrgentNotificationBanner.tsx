@@ -16,9 +16,9 @@ export default function UrgentNotificationBanner() {
                 <div
                     key={n.appsheet_key}
                     role="alert"
-                    className="flex items-start gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-amber-800 dark:border-amber-400/25 dark:bg-amber-400/10 dark:text-amber-300"
+                    className="flex items-start gap-3 rounded-xl border border-warning/30 bg-warning-bg px-4 py-3 text-warning"
                 >
-                    <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-500 dark:text-amber-400" />
+                    <AlertTriangle className="mt-0.5 size-4 shrink-0 text-warning" />
                     <div className="min-w-0 flex-1">
                         <p className="text-sm font-semibold leading-snug">{n.title}</p>
                         {n.description && (

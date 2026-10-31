@@ -28,7 +28,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "../ui/tabs";
 import { useI18n } from "../../context/I18nContext";
 import type { UserInfo } from "../../api_calls/UserData";
-import { WIDGET_MIN_ROWS, findWidget, stackSizes, widgetRowSpan } from "./layout";
+import { findWidget, stackSizes, widgetMinRows, widgetRowSpan } from "./layout";
 import { WidgetError, WidgetSkeleton } from "./WidgetBodies";
 import { WidgetFooterContext } from "./WidgetFooter";
 import { WidgetBodyContext } from "./useFitRows";
@@ -219,7 +219,7 @@ export default function WidgetFrame({
     const children = isWidgetStack(entry) ? entry.stack : [{ id: entry.id, widget: entry.widget, config: entry.config }];
     const active = children.find((child) => child.id === storedTab) ?? children[0];
     const def = findWidget(registry, active.widget);
-    const rows = useWidgetRowSpan(WIDGET_MIN_ROWS[entry.size], def?.id ?? null);
+    const rows = useWidgetRowSpan(widgetMinRows(entry, registry), def?.id ?? null);
     const bodyContext = useMemo(
         () => (bodyNode ? { node: bodyNode, budget: rows.bodyBudget } : null),
         [bodyNode, rows.bodyBudget],
@@ -266,7 +266,7 @@ export default function WidgetFrame({
 
                     {stack ? (
                         <Tabs value={active.id} onValueChange={selectTab} className="min-w-0 flex-1">
-                            <TabsList variant="line" className="max-w-full justify-start overflow-x-auto">
+                            <TabsList variant="line" className="max-w-full justify-start overflow-x-auto mask-r-from-85% md:mask-none">
                                 {stack.stack.map((child) => {
                                     const childDef = findWidget(registry, child.widget);
                                     return childDef ? (

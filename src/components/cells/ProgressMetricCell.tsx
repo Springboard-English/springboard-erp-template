@@ -34,7 +34,7 @@ export default function ProgressMetricCell({
   return (
     <div className="flex min-w-[220px] flex-col gap-1.5">
       {topLabel ? (
-        <div className="truncate text-[11px] text-muted-foreground">
+        <div className="truncate text-xs text-muted-foreground">
           {topLabel}
         </div>
       ) : null}
@@ -49,12 +49,12 @@ export default function ProgressMetricCell({
         />
       </div>
       {bottomLeftLabel || bottomRightLabel ? (
-        <div className="flex items-center justify-between gap-3 text-[11px] text-muted-foreground">
+        <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
           <span className="truncate">{bottomLeftLabel}</span>
           <span className="truncate text-right">{bottomRightLabel}</span>
         </div>
       ) : bottomLabel ? (
-        <div className="truncate text-[11px] text-muted-foreground">{bottomLabel}</div>
+        <div className="truncate text-xs text-muted-foreground">{bottomLabel}</div>
       ) : null}
     </div>
   );

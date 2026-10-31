@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useQueryClient, type Mutation, type Query } from "@tanstack/react-query";
 import { useGlobalStatus } from "@/context/GlobalStatusContext";
+import { useI18n } from "@/context/I18nContext";
 
 function getErrorMessage(error: unknown): string | null {
     if (error instanceof Error) {
@@ -24,6 +25,25 @@ function getMutationErrorKey(mutation: Mutation): string {
     return `mutation:${String(mutation.mutationId)}`;
 }
 
+/** Offers "Try again" for the status bar's error; renders nothing when there is nothing to retry. */
+export function GlobalStatusRetry() {
+    const { t } = useI18n();
+    const { status } = useGlobalStatus();
+    if (!status?.retry) {
+        return null;
+    }
+
+    return (
+        <button
+            type="button"
+            onClick={status.retry}
+            className="shrink-0 cursor-pointer text-sm font-medium underline underline-offset-2"
+        >
+            {t("mobileCardList.retry")}
+        </button>
+    );
+}
+
 export default function GlobalStatusQueryBridge() {
     const queryClient = useQueryClient();
     const { registerErrorStatus, unregisterErrorStatus } = useGlobalStatus();
@@ -41,7 +61,9 @@ export default function GlobalStatusQueryBridge() {
             const key = getQueryErrorKey(query);
 
             if (message) {
-                registerErrorStatus(key, message);
+                registerErrorStatus(key, message, () => {
+                    void queryClient.refetchQueries({ queryKey: query.queryKey, exact: true });
+                });
                 return;
             }
 

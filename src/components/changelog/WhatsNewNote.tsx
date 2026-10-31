@@ -93,7 +93,7 @@ export default function WhatsNewNote({
               <X className="size-3.5" />
             </button>
 
-            <p className="flex items-center gap-2 pr-6 text-xs font-semibold uppercase tracking-widest text-primary/80">
+            <p className="flex items-center gap-2 pr-6 text-xs font-semibold text-primary/80">
               <Sparkles className="size-3.5" />
               {t("changelog.note.label")}
             </p>
@@ -108,7 +108,7 @@ export default function WhatsNewNote({
               </Suspense>
             </div>
 
-            <p className="mt-3 text-[11px] text-muted-foreground/70">{t("changelog.note.hint")}</p>
+            <p className="mt-3 text-xs text-muted-foreground/70">{t("changelog.note.hint")}</p>
           </div>
           <Popover.Arrow className="fill-background" width={14} height={7} />
         </Popover.Content>

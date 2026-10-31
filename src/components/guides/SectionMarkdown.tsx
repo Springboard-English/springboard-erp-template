@@ -79,14 +79,14 @@ export default function SectionMarkdown({
 
           const toneClass =
             callout.type === "TIP"
-              ? "border-emerald-500/35 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+              ? "border-success/35 bg-success-bg text-success"
               : callout.type === "WARNING"
-                ? "border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300"
-                : "border-sky-500/35 bg-sky-500/10 text-sky-700 dark:text-sky-300";
+                ? "border-warning/40 bg-warning-bg text-warning"
+                : "border-info/35 bg-info-bg text-info";
 
           return (
             <div className={cn("mt-4 rounded-xl border px-3 py-3 text-sm leading-6", toneClass)}>
-              <span className="mr-2 inline-flex rounded border border-current/30 px-1.5 py-0.5 text-[10px] font-bold tracking-wide">
+              <span className="mr-2 inline-flex rounded border border-current/30 px-1.5 py-0.5 text-xs font-bold tracking-wide">
                 {callout.type}
               </span>
               <span>{callout.content}</span>
@@ -133,7 +133,7 @@ export default function SectionMarkdown({
         thead: ({ children }) => <TableHeader>{children}</TableHeader>,
         tbody: ({ children }) => <TableBody>{children}</TableBody>,
         tr: ({ children }) => <TableRow>{children}</TableRow>,
-        th: ({ children }) => <TableHead className="bg-muted/40 text-[11px] font-semibold uppercase tracking-wide">{children}</TableHead>,
+        th: ({ children }) => <TableHead className="bg-muted/40 text-xs font-semibold">{children}</TableHead>,
         td: ({ children }) => <TableCell>{children}</TableCell>,
         img: ({ src, alt }) => {
           const resolvedSrc = typeof src === "string" ? src.trim() : "";

@@ -14,13 +14,15 @@ export type GlobalStatusTone = 'info' | 'error';
 export type GlobalStatus = {
     message: string;
     tone: GlobalStatusTone;
+    /** Refetches whatever failed; set on an error a retry can clear. */
+    retry?: () => void;
 };
 
 type GlobalStatusContextValue = {
     status: GlobalStatus | null;
     setStatus: (message: string, tone?: GlobalStatusTone) => void;
     clearStatus: () => void;
-    registerErrorStatus: (key: string, message: string) => void;
+    registerErrorStatus: (key: string, message: string, retry?: () => void) => void;
     unregisterErrorStatus: (key: string) => void;
     registerLoadingStatus: (key: string, message: string) => void;
     unregisterLoadingStatus: (key: string) => void;
@@ -32,7 +34,7 @@ export function GlobalStatusProvider({ children }: { children: ReactNode }) {
     const [manualStatus, setManualStatus] = useState<GlobalStatus | null>(null);
     const [errorVersion, setErrorVersion] = useState(0);
     const [loadingVersion, setLoadingVersion] = useState(0);
-    const errorStatusesRef = useRef(new Map<string, string>());
+    const errorStatusesRef = useRef(new Map<string, Pick<GlobalStatus, 'message' | 'retry'>>());
     const loadingStatusesRef = useRef(new Map<string, string>());
 
     const currentErrorStatus = useMemo<GlobalStatus | null>(() => {
@@ -42,7 +44,7 @@ export function GlobalStatusProvider({ children }: { children: ReactNode }) {
         }
 
         return {
-            message: values[values.length - 1],
+            ...values[values.length - 1],
             tone: 'error',
         };
     }, [errorVersion]);
@@ -78,7 +80,7 @@ export function GlobalStatusProvider({ children }: { children: ReactNode }) {
         setManualStatus(null);
     }, []);
 
-    const registerErrorStatus = useCallback((key: string, message: string) => {
+    const registerErrorStatus = useCallback((key: string, message: string, retry?: () => void) => {
         const normalizedKey = key.trim();
         const normalizedMessage = message.trim();
 
@@ -87,13 +89,13 @@ export function GlobalStatusProvider({ children }: { children: ReactNode }) {
         if (
             !normalizedKey ||
             !normalizedMessage ||
-            errorStatusesRef.current.get(normalizedKey) === normalizedMessage
+            errorStatusesRef.current.get(normalizedKey)?.message === normalizedMessage
         ) {
             return;
         }
 
         errorStatusesRef.current.delete(normalizedKey);
-        errorStatusesRef.current.set(normalizedKey, normalizedMessage);
+        errorStatusesRef.current.set(normalizedKey, { message: normalizedMessage, retry });
         setErrorVersion((value) => value + 1);
     }, []);
 

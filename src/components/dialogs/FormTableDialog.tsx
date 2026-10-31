@@ -59,7 +59,7 @@ export default function FormTableDialog({
                     type="button"
                     onClick={() => setActiveTab(i)}
                     className={cn(
-                        'inline-flex min-h-11 items-center md:pointer-fine:min-h-9 gap-1.5 rounded-md px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-widest transition-all',
+                        'inline-flex min-h-11 items-center md:pointer-fine:min-h-9 gap-1.5 rounded-md px-3.5 py-1.5 text-[11px] font-semibold transition-all',
                         i === activeTab
                             ? 'bg-primary text-primary-foreground shadow-sm'
                             : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
@@ -69,7 +69,7 @@ export default function FormTableDialog({
                     {tab.complete && (
                         <span className={cn(
                             'text-[10px] font-bold leading-none',
-                            i === activeTab ? 'text-primary-foreground/70' : 'text-emerald-500',
+                            i === activeTab ? 'text-primary-foreground/70' : 'text-success',
                         )}>✓</span>
                     )}
                 </button>

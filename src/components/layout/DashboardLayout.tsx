@@ -14,6 +14,8 @@ import { Button } from "@/components/ui/button";
 import { useI18n } from "@/context/I18nContext";
 import AppTheme from "@/theme/AppTheme";
 import LazyViewFallback from "@/components/LazyViewFallback";
+import { ConfirmDialogHost } from "@/components/dialogs/ConfirmDialog";
+import { GlobalStatusRetry } from "@/components/GlobalStatusQueryBridge";
 import MobileBottomBar, {
   type MobileBottomBarItem,
 } from "@/components/MobileBottomBar";
@@ -32,6 +34,9 @@ import {
 /** Tabs the phone bottom bar shows before the rest move into the Menu sheet. */
 const MAX_BOTTOM_BAR_ITEMS = 4;
 
+/** The title `index.html` shipped, before the shell added the page to it. */
+let shellBaseTitle: string | null = null;
+
 export interface DashboardNavItem {
   /** Stable id passed back to onTabSelect and compared against activeTab. */
   id: string;
@@ -39,6 +44,8 @@ export interface DashboardNavItem {
   icon?: ReactNode;
   /** Hide from the mobile bottom bar (still shown in the side nav). */
   hideOnMobile?: boolean;
+  /** Shorter label for the phone bottom bar, for a name that would truncate. */
+  mobileLabel?: string;
 }
 
 export interface DashboardLayoutClassNames {
@@ -85,6 +92,11 @@ export interface DashboardLayoutProps {
   defaultCollapsed?: boolean;
   disableCustomTheme?: boolean;
   classNames?: DashboardLayoutClassNames;
+  /**
+   * Give the page a screen-reader `h1` from the active nav label, for an app
+   * whose views don't render their own.
+   */
+  pageHeading?: boolean;
   /** Max width of the centered content column. Defaults to 1700px. */
   maxContentClassName?: string;
   /**
@@ -149,7 +161,10 @@ function GlobalStatusMobileBar() {
       )}
       aria-live="polite"
     >
-      <p className="truncate">{status.message}</p>
+      <div className="flex items-center justify-between gap-3">
+        <p className="min-w-0 truncate">{status.message}</p>
+        {status.retry ? <GlobalStatusRetry /> : null}
+      </div>
     </div>
   );
 }
@@ -257,11 +272,20 @@ function DashboardLayoutInner({
   collapsedStorageKey = "dashboard-sidebar-collapsed",
   defaultCollapsed = true,
   classNames,
+  pageHeading = false,
   maxContentClassName = "max-w-[1700px]",
 }: Omit<DashboardLayoutProps, "disableCustomTheme" | "pullToRefresh" | "reportProblem">) {
   const { t } = useI18n();
   const location = useLocation();
   const mainScrollRef = useRef<HTMLElement | null>(null);
+
+  // The tab title reads "Page · App · Springboard English"; index.html holds the part after the page.
+  const activeLabel = navItems.find((item) => item.id === activeTab)?.label;
+  useEffect(() => {
+    // Read once per page load: a remounted shell would otherwise prefix its own title.
+    shellBaseTitle ??= document.title;
+    document.title = activeLabel ? `${activeLabel} · ${shellBaseTitle}` : shellBaseTitle;
+  }, [activeLabel]);
 
   // Mounting over the boot screen (springboardBoot() in the app's vite config):
   // play the entrance once while the boot card lifts away. Read once, so a
@@ -300,7 +324,7 @@ function DashboardLayoutInner({
   const barItems = shownItems.slice(0, MAX_BOTTOM_BAR_ITEMS);
   const mobileItems: MobileBottomBarItem[] = barItems.map((item) => ({
     id: item.id,
-    label: item.label,
+    label: item.mobileLabel ?? item.label,
     icon: item.icon,
   }));
   // Anything the bar drops would otherwise have no entry point on a phone.
@@ -456,6 +480,7 @@ function DashboardLayoutInner({
                 classNames?.content,
               )}
             >
+              {pageHeading && activeLabel ? <h1 className="sr-only">{activeLabel}</h1> : null}
               <animated.div style={{ opacity: pageSpring.opacity }} className="w-full">
                 <Suspense fallback={loadingFallback ?? <LazyViewFallback />}>
                   {children ?? <Outlet />}
@@ -465,6 +490,8 @@ function DashboardLayoutInner({
           </main>
         </div>
       </div>
+
+      <ConfirmDialogHost />
 
       {mobileItems.length > 0 ? (
         <>

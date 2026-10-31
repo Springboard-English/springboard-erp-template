@@ -21,7 +21,8 @@ export default function ColorModeIconDropdown(
   const { t } = useI18n();
   const { className, ...buttonProps } = props;
 
-  const resolvedMode = (systemMode || mode) as 'light' | 'dark';
+  // The mode in use: an explicit choice wins over what the OS prefers.
+  const resolvedMode = (mode === 'system' ? systemMode : mode) as 'light' | 'dark';
   const icon = resolvedMode === 'light'
     ? <Sun className="size-4" />
     : <Moon className="size-4" />;

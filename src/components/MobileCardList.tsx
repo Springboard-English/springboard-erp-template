@@ -13,6 +13,7 @@ import { isRowSelected, toggleRowSelection } from "@/lib/rowSelection";
 // Relative: this type reaches the published .d.ts, where `@/` does not resolve.
 import type { RowSelection } from "../lib/rowSelection";
 import { cn } from "../lib/utils";
+import EmptyState from "@/components/EmptyState";
 import { useI18n } from "@/context/I18nContext";
 import useIsMobile from "@/hooks/useIsMobile";
 
@@ -412,9 +413,7 @@ export default function MobileCardList<T>({
   if (!loading && activeRows.length === 0) {
     return (
       <div className={cn("md:hidden", className)}>
-        <div className="rounded-2xl border border-dashed border-border/70 bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">
-            {resolvedEmptyMessage}
-        </div>
+        <EmptyState title={resolvedEmptyMessage} />
       </div>
     );
   }
@@ -473,7 +472,7 @@ export default function MobileCardList<T>({
             </div>
           ) : null}
           {showEndOfContent ? (
-            <div className="py-3 text-center text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            <div className="py-3 text-center text-xs font-medium text-muted-foreground">
               {resolvedEndOfContentMessage}
             </div>
           ) : null}

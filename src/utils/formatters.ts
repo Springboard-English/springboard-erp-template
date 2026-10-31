@@ -72,17 +72,57 @@ function parseLocalizedTimeValue(value: string) {
   return `${String(hours).padStart(2, "0")}:${minutesText}`;
 }
 
-export function formatDate(value?: string) {
-  return value ? new Date(value).toLocaleDateString() : '-';
+/** The `Intl` locale for every suite date: day first in both languages. Defaults to the page's language. */
+export function appDateLocale(locale?: string): string {
+  const language = locale ?? (typeof document === "undefined" ? "" : document.documentElement.lang);
+  return language.toLowerCase().startsWith("vi") ? "vi-VN" : "en-GB";
 }
 
-export function formatUserTimestamp(value?: string) {
-  if (!value) {
+/** "27 Oct 2026" for a timestamp or a `YYYY-MM-DD` date; "-" without a valid one. */
+export function formatDate(value?: string | null, locale?: string) {
+  const parsed = value ? new Date(value) : null;
+  if (!parsed || Number.isNaN(parsed.getTime())) {
     return '-';
   }
 
-  const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  return new Date(value).toLocaleString(undefined, { timeZone: userTimeZone });
+  return new Intl.DateTimeFormat(appDateLocale(locale), {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    // A bare date parses as UTC midnight; UTC keeps it from shifting a day.
+    ...(/^\d{4}-\d{2}-\d{2}$/.test(value ?? "") ? { timeZone: "UTC" } : {}),
+  }).format(parsed);
+}
+
+/** "27 Oct 2026, 13:00" on a 24-hour clock in the viewer's time zone; "-" without a valid one. */
+export function formatUserTimestamp(value?: string | null, locale?: string) {
+  const parsed = value ? new Date(value) : null;
+  if (!parsed || Number.isNaN(parsed.getTime())) {
+    return '-';
+  }
+
+  return new Intl.DateTimeFormat(appDateLocale(locale), {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).format(parsed);
+}
+
+/** "13:00" on a 24-hour clock in the viewer's time zone; "-" without a valid value. */
+export function formatClockTime(value?: string | null, locale?: string) {
+  const parsed = value ? new Date(value) : null;
+  if (!parsed || Number.isNaN(parsed.getTime())) {
+    return '-';
+  }
+
+  return new Intl.DateTimeFormat(appDateLocale(locale), {
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).format(parsed);
 }
 
 export function toBackendTimestamp(value?: string | null) {

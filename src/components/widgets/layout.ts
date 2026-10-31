@@ -24,6 +24,19 @@ import {
  */
 export const WIDGET_MIN_ROWS: Record<WidgetSize, number> = { S: 1, M: 1, L: 5, XL: 1 };
 
+/**
+ * The rows an entry's card takes at its size: the widget's own `rows`, else the
+ * size's minimum. A stack takes the most any tab asks for, so switching tabs
+ * never changes the card's height.
+ */
+export function widgetMinRows(entry: WidgetLayoutEntry, registry: WidgetRegistry): number {
+    const widgets = isWidgetStack(entry) ? entry.stack.map((child) => child.widget) : [entry.widget];
+    return Math.max(
+        WIDGET_MIN_ROWS[entry.size],
+        ...widgets.map((id) => findWidget(registry, id)?.rows?.[entry.size] ?? 0),
+    );
+}
+
 const SNAP_TOLERANCE_PX = 2;
 
 /**

@@ -10,7 +10,7 @@ export interface WidgetBody {
 export const WidgetBodyContext = createContext<WidgetBody | null>(null);
 
 export interface FitRowsOptions {
-    /** Fit only when true; a size whose card grows with its content (M, XL) passes false. */
+    /** Fit only when true; a size with no fixed box (M or XL without `rows`) passes false. */
     enabled?: boolean;
     /** The page size before the first measurement and whenever fitting is off. Keep it small enough to fit. */
     fallback: number;

@@ -7,7 +7,7 @@ import {
   type ComponentProps,
   type ReactNode,
 } from "react";
-import { Bug } from "lucide-react";
+import { MessageCircleWarning } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
@@ -164,7 +164,7 @@ export function ReportProblemButton({
       onClick={report.open}
       {...props}
     >
-      <Bug className="size-4" aria-hidden="true" />
+      <MessageCircleWarning className="size-4" aria-hidden="true" />
     </Button>
   );
 }
@@ -198,7 +198,7 @@ export function ReportProblemMenuButton({
       }}
       {...props}
     >
-      <Bug className="size-4" aria-hidden="true" />
+      <MessageCircleWarning className="size-4" aria-hidden="true" />
       {t("report.open")}
     </Button>
   );

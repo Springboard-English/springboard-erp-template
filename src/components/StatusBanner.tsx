@@ -21,12 +21,12 @@ const STATUS_STYLES: Record<
   },
   success: {
     container:
-      'border-emerald-500/35 bg-emerald-500/10 text-emerald-700 dark:border-emerald-400/30 dark:bg-emerald-400/12 dark:text-emerald-300',
+      'border-success/35 bg-success-bg text-success',
     icon: CheckCircle2,
   },
   info: {
     container:
-      'border-sky-500/35 bg-sky-500/10 text-sky-700 dark:border-sky-400/30 dark:bg-sky-400/12 dark:text-sky-300',
+      'border-info/35 bg-info-bg text-info',
     icon: Info,
   },
 };
