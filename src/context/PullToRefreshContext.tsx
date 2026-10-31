@@ -13,6 +13,7 @@ import { RefreshCw } from "lucide-react";
 import { QueryClientContext } from "@tanstack/react-query";
 import { useI18n } from "@/context/I18nContext";
 import { cn } from "@/lib/utils";
+import { recordRefresh } from "@/utils/refreshActivity";
 
 export type RefreshHandler = () => unknown;
 
@@ -69,6 +70,7 @@ export function PullToRefreshProvider({ children, enabled = true }: PullToRefres
 
   const available = registered > 0 || queryClient !== undefined;
   const refresh = useCallback(async () => {
+    recordRefresh();
     await handlerRef.current?.();
   }, []);
   const value = useMemo(() => ({ register, refresh, available }), [register, refresh, available]);
@@ -170,6 +172,7 @@ function PullIndicator({
       refreshingRef.current = true;
       setRefreshing(true);
       move(HOLD_AT);
+      recordRefresh();
       void Promise.resolve()
         .then(() => handlerRef.current?.())
         .catch(() => undefined)

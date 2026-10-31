@@ -14,6 +14,7 @@ import { Button } from "../ui/button";
 import { useI18n } from "@/context/I18nContext";
 import AnnotationEditor from "./AnnotationEditor";
 import CaptureBar from "./CaptureBar";
+import RefreshNudge from "./RefreshNudge";
 import ReportDialog, { MAX_REPORT_EVIDENCE, type ReportProblemCategory } from "./ReportDialog";
 
 /** Turns on "Report a problem" for an app. The app decides who may report through `enabled`. */
@@ -90,6 +91,8 @@ export function ReportProblemProvider({
       {children}
       {enabled ? (
         <>
+          <RefreshNudge onReport={open} allowed={phase === "idle"} />
+
           {phase === "capturing" ? (
             <CaptureBar
               onCaptured={(dataUrl) => {

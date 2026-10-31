@@ -447,3 +447,8 @@ it. There is no floating launcher.
   anything else.
 - `modern-screenshot` is loaded by dynamic import on the first capture, so the
   barrel stays importable from Node.
+- **The refresh nudge** (`RefreshNudge`, counted in `utils/refreshActivity.ts`)
+  invites a report after three refreshes in two minutes in one tab, at most once
+  a day per browser, and only where reporting is enabled. A browser reload, the
+  header's Refresh and a pull all count. `OidcBoot` records the reload, because
+  only the page before the Hydra redirect sees navigation type `reload`.

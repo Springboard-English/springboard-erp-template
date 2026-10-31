@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { recordDocumentReload } from "../../utils/refreshActivity";
 import { getAccessToken } from "../accessToken";
 import { consumeLogoutToSignInTransition } from "../transitionStorage";
 import { beginSignIn } from "./client";
@@ -39,6 +40,8 @@ export interface OidcBootProps {
 // would be an unused binding, and dropping them from the interface would break
 // an app still passing one.
 export default function OidcBoot({ children }: OidcBootProps) {
+    // Before the redirect below: only this document knows it was a reload.
+    recordDocumentReload();
     const onCallback = window.location.pathname.endsWith(
         OIDC_CONFIG.callbackRoute,
     );
