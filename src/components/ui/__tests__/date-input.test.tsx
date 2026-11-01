@@ -37,6 +37,28 @@ describe("Input date fields", () => {
     expect(onValue).toHaveBeenLastCalledWith("2026-02-28");
   });
 
+  it("fills the separators from digits alone, for a keypad without them", () => {
+    const onValue = vi.fn();
+    render(<Controlled initial="" onValue={onValue} type="datetime-local" />);
+    const field = screen.getByRole("textbox", { name: "Start" });
+    fireEvent.focus(field);
+    fireEvent.change(field, { target: { value: "011" } });
+    expect(field).toHaveProperty("value", "01/1");
+    fireEvent.change(field, { target: { value: "01/11/20261305" } });
+    expect(field).toHaveProperty("value", "01/11/2026 13:05");
+    expect(onValue).toHaveBeenLastCalledWith("2026-11-01T13:05");
+  });
+
+  it("lets backspace past a separator and pads a short day", () => {
+    render(<Controlled initial="" onValue={() => undefined} />);
+    const field = screen.getByRole("textbox", { name: "Start" });
+    fireEvent.focus(field);
+    fireEvent.change(field, { target: { value: "01/" } });
+    expect(field).toHaveProperty("value", "01");
+    fireEvent.change(field, { target: { value: "1/2/2026" } });
+    expect(field).toHaveProperty("value", "01/02/2026");
+  });
+
   it("reads a date-time on a 24-hour clock", () => {
     render(<Controlled initial="2026-10-27T13:05" onValue={() => undefined} type="datetime-local" />);
     expect(screen.getByRole("textbox", { name: "Start" })).toHaveProperty("value", "27/10/2026 13:05");

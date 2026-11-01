@@ -18,6 +18,31 @@ function toDisplay(iso: string): string {
   return match[4] ? `${date} ${match[4]}` : date
 }
 
+/**
+ * Formats text as it is typed, so digits alone fill "dd/mm/yyyy hh:mm".
+ * A separator typed after a short day, month or hour pads it. Separators only
+ * appear once the next digit does, so backspace always removes a digit.
+ */
+function maskDate(text: string, withTime: boolean): string {
+  const widths = withTime ? [2, 2, 4, 2, 2] : [2, 2, 4]
+  const fields = [""]
+  for (const char of text) {
+    const index = fields.length - 1
+    const current = fields[index]
+    if (/\d/.test(char)) {
+      if (current.length < widths[index]) fields[index] = current + char
+      else if (index + 1 < widths.length) fields.push(char)
+    } else if (current && current.length < widths[index] && index + 1 < widths.length) {
+      fields[index] = current.padStart(widths[index], "0")
+      fields.push("")
+    } else if (current && index + 1 < widths.length) {
+      fields.push("")
+    }
+  }
+  const [day, month, year, hour, minute] = fields
+  return [[day, month, year].filter(Boolean).join("/"), [hour, minute].filter(Boolean).join(":")].filter(Boolean).join(" ")
+}
+
 /** Typed day-first text to ISO, or null while it is not yet a real date. */
 function toIso(text: string, withTime: boolean): string | null {
   const match = text.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2}))?$/)
@@ -76,7 +101,9 @@ function DateInput({ type, value, defaultValue, onChange, fieldClassName, classN
         }}
         onBlur={() => setEditing(false)}
         onChange={(event) => {
-          const next = event.target.value
+          const typed = event.target.value
+          // Mid-text edits stay as typed: reformatting would throw the caret to the end.
+          const next = event.target.selectionStart === typed.length ? maskDate(typed, withTime) : typed
           setText(next)
           if (next.trim() === "") {
             pushNative("")
@@ -100,7 +127,8 @@ function DateInput({ type, value, defaultValue, onChange, fieldClassName, classN
         readOnly={readOnly}
         tabIndex={-1}
         aria-hidden="true"
-        className="pointer-events-none absolute bottom-0 right-3 size-0 opacity-0"
+        // iOS ignores showPicker on a hidden field, so on touch it sits over the calendar button and takes the tap.
+        className={cn("pointer-events-none absolute inset-y-0 right-0 w-10 appearance-none opacity-0", !readOnly && "pointer-coarse:pointer-events-auto pointer-coarse:z-10")}
         onChange={(event) => {
           if (!editing) setText(toDisplay(event.target.value))
           onChange?.(event)
