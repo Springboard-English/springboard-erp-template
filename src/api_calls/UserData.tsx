@@ -9,10 +9,10 @@ import { isOutdatedEditedAtConflictError } from "../utils/conflictErrors";
  *
  * A shared component library has no business owning an app's resource calls:
  * the endpoints, their shapes and their pagination belong to the app that
- * serves them. What DOES belong here is what the package's own ResetPassword
- * and AuthContext call — redeem a reset link, and read back who is signed in —
- * plus writing the signed-in user's own `info`, where the widget board keeps
- * its layout. Signing in and out are OIDC's (`auth/oidc/client.ts`).
+ * serves them. What DOES belong here is what the package's own AuthContext
+ * calls — read back who is signed in — plus writing the signed-in user's own
+ * `info`, where the widget board keeps its layout. Signing in and out are
+ * OIDC's (`auth/oidc/client.ts`).
  *
  * If you are about to add a resource call here, add it to the app instead.
  */
@@ -23,12 +23,6 @@ export interface UserInfo {
     sub: string;
     account_type: string;
     [key: string]: unknown;
-}
-
-export interface ResetPasswordRequest {
-    token: string;
-    username: string;
-    password: string;
 }
 
 function toUserInfo(raw: unknown): UserInfo | null {
@@ -154,27 +148,4 @@ export async function patchCurrentUserInfo(
         const fresh = await fetchCurrentUser();
         return sendInfoPatch(fresh.edited_at, patch);
     }
-}
-
-export async function resetPassword(
-    request: ResetPasswordRequest,
-): Promise<void> {
-    const formData = new URLSearchParams();
-    formData.append("token", request.token);
-    formData.append("username", request.username);
-    formData.append("password", request.password);
-
-    const response = await fetchWithRefresh(
-        getEndpoint("resetPasswordAuthorised"),
-        {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded",
-                Accept: "application/json",
-            },
-            body: formData.toString(),
-        },
-    );
-
-    await throwIfNotOk(response, "Password reset failed");
 }

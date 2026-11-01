@@ -9,7 +9,8 @@ releasing is in `docs/releasing.md`.
 
 - `src/exports.ts` is the public surface and build entry. A component not
   re-exported there is invisible to consumers.
-- `src/views/` holds full pages; `src/components/` the shared components (`ui/`
+- `src/core/` is the code-only `/core` entry: no React, DOM or auth imports, and
+  the build fails if one appears. `src/components/` holds the shared components (`ui/`
   primitives, `layout/` detail scaffolds, `charts/`, `widgets/`, `changelog/`, …).
 - `src/context/`, `src/api_calls/`, `src/auth/`, `src/config/`, `src/utils/`,
   `src/theme/`, `src/i18n/`. `public/` ships as files in `dist/` (favicon,

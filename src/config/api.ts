@@ -30,23 +30,11 @@ export const API_CONFIG = {
     },
     endpoints: {
         currentUser: "/users/me",
-        resetPassword: "/reset/password",
-        resetPasswordAuthorised: "/authenticate/reset",
     },
 } as const;
-
-// Password reset is served unversioned; `currentUser` is under `/v2`.
-const UNVERSIONED_ENDPOINTS: ReadonlySet<keyof typeof API_CONFIG.endpoints> = new Set([
-    "resetPassword",
-    "resetPasswordAuthorised",
-]);
 
 export function getEndpoint(
     endpoint: keyof typeof API_CONFIG.endpoints,
 ): string {
-    const path = API_CONFIG.endpoints[endpoint];
-    if (UNVERSIONED_ENDPOINTS.has(endpoint)) {
-        return `${API_CONFIG.baseURL}${path}`;
-    }
-    return `${API_CONFIG.baseURL}/v2${path}`;
+    return `${API_CONFIG.baseURL}/v2${API_CONFIG.endpoints[endpoint]}`;
 }

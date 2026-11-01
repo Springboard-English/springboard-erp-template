@@ -16,7 +16,6 @@ Consuming apps import components/hooks from the package entry point and the styl
 
 - `src/exports.ts` — the public API surface; every symbol a consumer can import must be re-exported here. This is the build entry point (`vite.config.ts` `build.lib.entry`).
 - `src/index.tsx` — standalone dev entry (`npm run dev`) that mounts `OidcBoot` for local preview; not part of the published package.
-- `src/views/` — full-page views (`ResetPassword`) exported directly.
 - `src/auth/oidc/` — signing in, since 4.0.0: `config` (env + `configureOidc`), `client` (authorization code + PKCE), `OidcBoot` (mount it **above** `AuthProvider`) and `OidcCallback`.
 - `src/components/` — top-level shared components (e.g. `PatchRecordDialog`, `SimpleDataTable`, `MobileCardList`, `PendingChangesBar`, `StatusBanner`).
   - `components/ui/` — low-level shadcn/radix-based primitives (button, card, dialog, input, table, etc.)
