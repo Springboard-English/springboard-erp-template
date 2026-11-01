@@ -20,6 +20,7 @@ import { GlobalStatusRetry } from "@/components/GlobalStatusQueryBridge";
 import MobileBottomBar, {
   type MobileBottomBarItem,
 } from "@/components/MobileBottomBar";
+import AccountPanel, { AccountExtras, type AccountConfig } from "../AccountPanel";
 import MobileMenuSheet from "@/components/layout/MobileMenuSheet";
 import OccasionBackdrop from "@/components/layout/OccasionBackdrop";
 import { useGlobalStatusOptional } from "@/context/GlobalStatusContext";
@@ -73,7 +74,13 @@ export interface DashboardLayoutProps {
   brandCollapsed?: ReactNode;
   /** Right-aligned content of the floating desktop header (account menu, color mode, …). */
   headerContent?: ReactNode;
-  /** Footer pinned to the bottom of the side nav (e.g. an account card). */
+  /**
+   * The account panel, drawn once from one config: in the side nav, and its
+   * build tag and push toggle in the phone sheet. Also keeps the sheet mounted
+   * when `navItems` is empty. An app's `mobileMenu` still follows it there.
+   */
+  account?: AccountConfig;
+  /** Footer pinned to the bottom of the side nav, in place of `account`. */
   sidebarFooter?: (collapsed: boolean) => ReactNode;
   /** Replace the built-in nav list entirely (e.g. a guides tree). */
   sidebarContent?: (collapsed: boolean) => ReactNode;
@@ -265,6 +272,7 @@ function DashboardLayoutInner({
   brand,
   brandCollapsed,
   headerContent,
+  account,
   sidebarFooter,
   sidebarContent,
   mobileMenu,
@@ -451,14 +459,14 @@ function DashboardLayoutInner({
               )}
             </div>
 
-            {sidebarFooter ? (
+            {sidebarFooter || account ? (
               <div
                 className={cn(
                   "border-t border-border/60 py-3",
                   collapsed ? "px-2" : "px-3",
                 )}
               >
-                {sidebarFooter(collapsed)}
+                {sidebarFooter ? sidebarFooter(collapsed) : <AccountPanel {...account!} collapsed={collapsed} />}
               </div>
             ) : null}
           </div>
@@ -498,7 +506,7 @@ function DashboardLayoutInner({
 
       <ConfirmDialogHost />
 
-      {mobileItems.length > 0 ? (
+      {mobileItems.length > 0 || account ? (
         <>
           <MobileBottomBar
             activeTab={activeTab}
@@ -517,6 +525,7 @@ function DashboardLayoutInner({
                 "deliberately nothing" — which an app whose headerContent is
                 only a colour-mode control wants, since the sheet already draws
                 Appearance and the passed-through icon reads as orphaned. */}
+            {account ? <AccountExtras buildTag={account.buildTag} push={account.push} /> : null}
             {mobileMenu === undefined ? defaultMenuBody : mobileMenu}
           </MobileMenuSheet>
         </>

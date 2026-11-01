@@ -94,6 +94,8 @@ export {
 export { default as StatusBanner } from "./components/StatusBanner";
 export { default as BuildTag } from "./components/BuildTag";
 export type { BuildTagProps } from "./components/BuildTag";
+export { default as AccountPanel, AccountExtras } from "./components/AccountPanel";
+export type { AccountConfig, AccountPanelProps } from "./components/AccountPanel";
 export { default as ManageAccountLink } from "./components/ManageAccountLink";
 export type { ManageAccountLinkProps } from "./components/ManageAccountLink";
 export { ACCOUNTS_PROFILE_URL } from "./config/accounts";
@@ -412,7 +414,7 @@ export type {
     PushEnvironment,
     PushSupport,
 } from "./api_calls/pushNotifications";
-export { default as NotificationCenter } from "./components/notifications/NotificationCenter";
+export { default as UserNotificationsView } from "./components/notifications/UserNotificationsView";
 export { default as ImmediateNotificationDialog } from "./components/notifications/ImmediateNotificationDialog";
 export { default as UrgentNotificationBanner } from "./components/notifications/UrgentNotificationBanner";
 export { default as NotificationLink } from "./components/notifications/NotificationLink";
