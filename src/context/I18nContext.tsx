@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { createInstance } from "i18next";
 import { I18nextProvider, initReactI18next, useTranslation } from "react-i18next";
 import { ENGLISH_MESSAGES, VIETNAMESE_MESSAGES, type TemplateI18nKey } from "../i18n/messages";
@@ -135,11 +135,16 @@ export function useI18n() {
   const { t: rawT, i18n } = useTranslation();
   const contextValue = useContext(TemplateI18nContext);
 
-  const t = (key: TemplateI18nKey | string, fallback?: string, values?: TranslationValues) =>
-    rawT(key, {
-      ...values,
-      defaultValue: ENGLISH_MESSAGES[key as TemplateI18nKey] ?? fallback ?? key,
-    });
+  // `rawT` changes with the locale, so `t` is safe in effect and memo deps and
+  // memoised columns still retranslate.
+  const t = useCallback(
+    (key: TemplateI18nKey | string, fallback?: string, values?: TranslationValues) =>
+      rawT(key, {
+        ...values,
+        defaultValue: ENGLISH_MESSAGES[key as TemplateI18nKey] ?? fallback ?? key,
+      }),
+    [rawT],
+  );
 
   return {
     locale: contextValue?.locale ?? i18n.language ?? "en",
