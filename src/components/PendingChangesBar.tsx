@@ -269,9 +269,13 @@ export default function PendingChangesBar({
               "mx-auto w-[calc(100%-7rem)] overflow-auto rounded-t-[28px] border border-b-0 border-border/70 shadow-[0_20px_48px_-28px_rgba(15,23,42,0.5)] backdrop-blur",
               dimmed ? "bg-muted/80 opacity-80 shadow-none" : "bg-card/95",
             )}
+            // The list scrolls only if this element has a limit of its own; the
+            // spring's wrapper clips. The 11rem clears the bar on a short screen.
+            style={{ maxHeight: `min(${expandMaxHeight}px, calc(100dvh - 11rem))` }}
           >
             <table className="w-full text-sm">
-              <thead className="sticky top-0 bg-muted/70">
+              {/* Opaque: rows scroll underneath it. */}
+              <thead className="sticky top-0 bg-muted">
                 <tr className="border-b border-border/70">
                   <th className="whitespace-nowrap px-4 py-2.5 text-left text-sm font-medium text-muted-foreground">
                     {pendingKeyLabel}
