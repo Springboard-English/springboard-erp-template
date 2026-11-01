@@ -1,5 +1,7 @@
 export { DEFAULT_BATCH_CONCURRENCY, runBatch } from "./runBatch";
 export type { BatchOutcome, RunBatchOptions } from "./runBatch";
+export { clickableCardProps } from "./clickableCard";
+export type { ClickableCardProps } from "./clickableCard";
 
 export * from "../utils/formatters";
 export * from "../utils/phone";
