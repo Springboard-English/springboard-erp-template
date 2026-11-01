@@ -13,13 +13,16 @@ export default defineConfig({
   },
   build: {
     lib: {
-      // One entry, deliberately. The root is safe to import from Node (the
-      // markdown renderer is behind a dynamic import), and two entries could
-      // emit a module they both need twice — the access token is module state.
-      entry: fileURLToPath(new URL('./src/exports.ts', import.meta.url)),
-      name: 'SpringboardComponents',
+      // Both entries go through this one build, so a module they share lands in
+      // one chunk: the access token is module state and must never exist twice.
+      // The root is safe to import from Node (the markdown renderer is behind a
+      // dynamic import).
+      entry: {
+        index: fileURLToPath(new URL('./src/exports.ts', import.meta.url)),
+        core: fileURLToPath(new URL('./src/core/index.ts', import.meta.url)),
+      },
       formats: ['es'],
-      fileName: () => 'index.js',
+      fileName: (_format, entryName) => `${entryName}.js`,
     },
     rollupOptions: {
       // Anything whose API is a React CONTEXT must be external, or the package

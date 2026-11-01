@@ -25,6 +25,10 @@
             "types": "./dist/exports.d.ts",
             "import": "./dist/index.js"
         },
+        "./core": {
+            "types": "./dist/core/index.d.ts",
+            "import": "./dist/core.js"
+        },
         "./style.css": "./dist/springboard-erp-template.css",
         "./tokens.css": "./dist/tokens.css",
         "./push-sw.js": "./dist/push-sw.js",
@@ -36,7 +40,7 @@
     },
     "scripts": {
         "dev": "vite",
-        "build": "vite build && tsc -p tsconfig.build.json && node scripts/check-node-safe.mjs && node scripts/check-dts-portable.mjs",
+        "build": "vite build && tsc -p tsconfig.build.json && node scripts/check-node-safe.mjs && node scripts/check-dts-portable.mjs && node scripts/check-core-pure.mjs",
         "preview": "vite preview",
         "lint": "eslint . --ext .ts,.tsx",
         "test": "vitest run"
