@@ -26,7 +26,7 @@ const REGISTRY: WidgetRegistry = [
     def("wide", { sizes: ["XL"], defaultSize: "XL" }),
 ];
 
-const employee: UserInfo = { name: "E", username: "e", sub: "e1", account_type: "employee", scope: "tasks_get" };
+const employee: UserInfo = { name: "E", username: "e", sub: "e1", account_type: "employee", roles: "tasks_get" };
 
 const stored = (items: unknown[]) => ({ v: 1, items });
 

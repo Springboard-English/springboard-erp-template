@@ -1,6 +1,5 @@
 type UserScopeSource = {
   roles?: unknown;
-  scope?: unknown;
   account_type?: unknown;
 };
 
@@ -23,20 +22,12 @@ function normalizeScopeList(scope: unknown): string[] {
 }
 
 function isUserScopeSource(value: unknown): value is UserScopeSource {
-  return Boolean(value) && typeof value === "object";
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
+/** A user's scopes, read from `roles`: the only such field `/v2/users/me` returns. */
 export function getUserScopes(value: unknown): string[] {
-  if (isUserScopeSource(value)) {
-    const roles = normalizeScopeList(value.roles);
-    if (roles.length > 0) {
-      return roles;
-    }
-
-    return normalizeScopeList(value.scope);
-  }
-
-  return normalizeScopeList(value);
+  return normalizeScopeList(isUserScopeSource(value) ? value.roles : value);
 }
 
 export function hasUserScope(value: unknown, permission: string): boolean {

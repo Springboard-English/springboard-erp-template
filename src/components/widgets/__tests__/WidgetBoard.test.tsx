@@ -77,7 +77,7 @@ const DEFAULTS: WidgetDefaults = () => [
 ];
 
 function renderBoard(info: Record<string, unknown> = {}) {
-    currentUser = { name: "N", username: "n", sub: "s1", account_type: "employee", scope: "tasks_get", info };
+    currentUser = { name: "N", username: "n", sub: "s1", account_type: "employee", roles: "tasks_get", info };
     return render(
         <I18nProvider>
             <MemoryRouter>
