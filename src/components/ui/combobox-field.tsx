@@ -190,7 +190,7 @@ export function ComboboxField({
           sideOffset={4}
           align="start"
           className={cn(
-            'z-[60] w-(--radix-popover-trigger-width) min-w-[12rem] max-h-[min(18rem,var(--radix-popover-content-available-height))] overflow-hidden rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-md',
+            'z-[60] w-(--radix-popover-trigger-width) min-w-[12rem] max-h-[min(18rem,var(--radix-popover-content-available-height))] overflow-hidden rounded-md border border-border bg-popover p-1 text-base text-popover-foreground shadow-md md:text-sm',
             'data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2',
             'data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95',
             'data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95',
@@ -220,7 +220,7 @@ export function ComboboxField({
 export function comboboxItemClassName(active: boolean): string {
   return cn(
     touchTargetHeight,
-    'flex w-full min-w-0 cursor-pointer items-center justify-between gap-2 rounded-sm px-2 py-1.5 text-left text-sm outline-none transition',
+    'flex w-full min-w-0 cursor-pointer items-center justify-between gap-2 rounded-sm px-2 py-1.5 text-left outline-none transition',
     'disabled:pointer-events-none disabled:opacity-50',
     active && 'bg-accent text-accent-foreground',
   );

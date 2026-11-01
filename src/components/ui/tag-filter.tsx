@@ -164,7 +164,7 @@ export function TagFilter({
           className="max-h-64 overflow-y-auto overscroll-contain pr-1"
         >
           {rows.length === 0 ? (
-            <div className="px-2 py-1.5 text-sm text-muted-foreground">{t('tagFilter.empty')}</div>
+            <div className="px-2 py-1.5 text-muted-foreground">{t('tagFilter.empty')}</div>
           ) : (
             rows.map((row, index) => {
               const isSelected = selected.has(row.tag);

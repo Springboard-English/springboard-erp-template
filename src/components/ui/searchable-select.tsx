@@ -328,11 +328,11 @@ export function SearchableSelect({
           onWheelCapture={(event) => event.stopPropagation()}
         >
           {error ? (
-            <div className="px-2 py-1.5 text-sm text-destructive">{error}</div>
+            <div className="px-2 py-1.5 text-destructive">{error}</div>
           ) : null}
 
           {showEmpty && !error ? (
-            <div className="px-2 py-1.5 text-sm text-muted-foreground">{resolvedEmptyMessage}</div>
+            <div className="px-2 py-1.5 text-muted-foreground">{resolvedEmptyMessage}</div>
           ) : (
             orderedOptions.map((option, index) => {
               const isSelected = option.value === normalizedValue;
@@ -358,7 +358,7 @@ export function SearchableSelect({
           )}
 
           {isAsync && loading && orderedOptions.length === 0 ? (
-            <div className="flex items-center justify-center gap-2 px-2 py-3 text-sm text-muted-foreground">
+            <div className="flex items-center justify-center gap-2 px-2 py-3 text-muted-foreground">
               <Loader2 className="size-3.5 animate-spin" />
               {t('searchableSelect.loading')}
             </div>
@@ -372,7 +372,7 @@ export function SearchableSelect({
               disabled={loadingMore || loading}
               className={cn(
                 touchTargetHeight,
-                'mt-1 flex w-full cursor-pointer items-center justify-center gap-2 rounded-sm px-2 py-1.5 text-sm text-muted-foreground outline-none transition',
+                'mt-1 flex w-full cursor-pointer items-center justify-center gap-2 rounded-sm px-2 py-1.5 text-muted-foreground outline-none transition',
                 'hover:bg-accent hover:text-accent-foreground',
                 'disabled:pointer-events-none disabled:opacity-50',
               )}
