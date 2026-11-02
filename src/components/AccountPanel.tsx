@@ -14,7 +14,9 @@ import { cn } from "@/lib/utils";
 
 export interface AccountConfig {
   /** This build's tag; `hidden` is the panel's to set. */
-  buildTag: Omit<BuildTagProps, "hidden" | "className">;
+  buildTag?: Omit<BuildTagProps, "hidden" | "className">;
+  /** Shown after the name in place of the account type. */
+  roleLabel?: string;
   /** Omit where the app offers no push. */
   push?: Pick<PushNotificationsToggleProps, "app" | "serviceWorkerUrl">;
   /** False on the accounts site, where the link would point at the page itself. */
@@ -48,7 +50,7 @@ export function AccountExtras({
 }: Pick<AccountConfig, "buildTag" | "push"> & { collapsed?: boolean; pushClassName?: string }) {
   return (
     <>
-      <BuildTag {...buildTag} hidden={collapsed} />
+      {buildTag ? <BuildTag {...buildTag} hidden={collapsed} /> : null}
       {/* Renders nothing where push cannot be offered. */}
       {push && !collapsed ? <PushNotificationsToggle {...push} className={pushClassName} /> : null}
     </>
@@ -60,6 +62,7 @@ export default function AccountPanel({
   className,
   collapsed = false,
   buildTag,
+  roleLabel,
   push,
   manageAccount = true,
   actions,
@@ -71,10 +74,8 @@ export default function AccountPanel({
   const logoutLabel = t("account.logout");
   const name = user?.name?.trim() || user?.username?.trim() || loggingIn;
   const accountType = user?.account_type ?? "";
-  const accountTypeLabel = t(
-    `account.type.${accountType}`,
-    accountType.charAt(0).toUpperCase() + accountType.slice(1),
-  );
+  const accountTypeLabel =
+    roleLabel ?? t(`account.type.${accountType}`, accountType.charAt(0).toUpperCase() + accountType.slice(1));
   const identity = user ? `${name} · ${accountTypeLabel}` : loggingIn;
 
   const handleLogout = async () => {
@@ -100,7 +101,8 @@ export default function AccountPanel({
         {collapsed ? (
           <div className="flex justify-center">
             <div
-              className="flex size-10 items-center justify-center rounded-full bg-muted text-sm font-semibold tracking-tight"
+              // An app tints this from CSS with the two variables.
+              className="flex size-10 items-center justify-center rounded-full bg-[var(--account-avatar-bg,var(--muted))] text-sm font-semibold tracking-tight text-[var(--account-avatar-fg,inherit)]"
               title={identity}
               aria-label={identity}
             >
