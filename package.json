@@ -32,6 +32,7 @@
             "types": "./dist/core/index.d.ts",
             "import": "./dist/core.js"
         },
+        "./test-setup": "./dist/test-setup.js",
         "./style.css": "./dist/springboard-erp-template.css",
         "./tokens.css": "./dist/tokens.css",
         "./push-sw.js": "./dist/push-sw.js",

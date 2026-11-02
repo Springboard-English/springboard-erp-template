@@ -20,6 +20,7 @@ export default defineConfig({
       entry: {
         index: fileURLToPath(new URL('./src/exports.ts', import.meta.url)),
         core: fileURLToPath(new URL('./src/core/index.ts', import.meta.url)),
+        'test-setup': fileURLToPath(new URL('./src/test/setup.ts', import.meta.url)),
       },
       formats: ['es'],
       fileName: (_format, entryName) => `${entryName}.js`,
@@ -34,6 +35,9 @@ export default defineConfig({
         'react-dom',
         'react-router-dom',
         '@tanstack/react-query',
+        // The app's own test runner, which `test-setup` must share with it.
+        'vitest',
+        /^@testing-library\//,
       ],
       output: {
         assetFileNames: (assetInfo) => assetInfo.name ?? 'asset',

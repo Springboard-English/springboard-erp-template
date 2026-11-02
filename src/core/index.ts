@@ -3,6 +3,7 @@ export type { BatchOutcome, RunBatchOptions } from "./runBatch";
 export { clickableCardProps } from "./clickableCard";
 export type { ClickableCardProps } from "./clickableCard";
 
+export { cn } from "../lib/utils";
 export * from "../utils/formatters";
 export * from "../utils/phone";
 export * from "../utils/urlQueryState";

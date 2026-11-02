@@ -189,3 +189,13 @@ export function getTextareaRows(value?: string | null, minRows = 2, maxRows = 8)
   const wrappedLineEstimate = Math.ceil(normalized.length / 70);
   return Math.min(maxRows, Math.max(minRows, newlineCount, wrappedLineEstimate));
 }
+
+/** The browser's UTC offset as `+07:00`. */
+export function getClientTimezoneOffset() {
+  const offsetMinutes = -new Date().getTimezoneOffset();
+  const sign = offsetMinutes >= 0 ? "+" : "-";
+  const absoluteOffsetMinutes = Math.abs(offsetMinutes);
+  const hours = String(Math.floor(absoluteOffsetMinutes / 60)).padStart(2, "0");
+  const minutes = String(absoluteOffsetMinutes % 60).padStart(2, "0");
+  return `${sign}${hours}:${minutes}`;
+}
