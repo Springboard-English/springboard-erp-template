@@ -525,7 +525,14 @@ function DashboardLayoutInner({
                 "deliberately nothing" — which an app whose headerContent is
                 only a colour-mode control wants, since the sheet already draws
                 Appearance and the passed-through icon reads as orphaned. */}
-            {account ? <AccountExtras buildTag={account.buildTag} push={account.push} /> : null}
+            {account ? (
+              <AccountExtras
+                buildTag={account.buildTag}
+                push={account.push}
+                // The outline Button's surface, matching the sheet's other controls.
+                pushClassName="rounded-md border bg-background px-3 py-2.5 shadow-xs dark:border-input dark:bg-input/30"
+              />
+            ) : null}
             {mobileMenu === undefined ? defaultMenuBody : mobileMenu}
           </MobileMenuSheet>
         </>

@@ -44,12 +44,13 @@ export function AccountExtras({
   buildTag,
   push,
   collapsed = false,
-}: Pick<AccountConfig, "buildTag" | "push"> & { collapsed?: boolean }) {
+  pushClassName,
+}: Pick<AccountConfig, "buildTag" | "push"> & { collapsed?: boolean; pushClassName?: string }) {
   return (
     <>
       <BuildTag {...buildTag} hidden={collapsed} />
       {/* Renders nothing where push cannot be offered. */}
-      {push && !collapsed ? <PushNotificationsToggle {...push} /> : null}
+      {push && !collapsed ? <PushNotificationsToggle {...push} className={pushClassName} /> : null}
     </>
   );
 }
