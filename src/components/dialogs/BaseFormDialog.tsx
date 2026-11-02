@@ -58,7 +58,7 @@ export default function BaseFormDialog({
                         subHeader ? 'pb-0 pt-3 sm:pt-3.5' : 'py-3 sm:py-3.5',
                     )}
                 >
-                    <DialogTitle className={subHeader ? 'mb-3' : undefined}>{title}</DialogTitle>
+                    <DialogTitle className={subHeader && !description ? 'mb-3' : undefined}>{title}</DialogTitle>
                     {description && <DialogDescription>{description}</DialogDescription>}
                     {subHeader}
                 </DialogHeader>
