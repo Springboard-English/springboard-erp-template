@@ -45,7 +45,12 @@ describe("ReportDialog", () => {
     submitReportMock.mockResolvedValueOnce({ id: "7c9e6efe-9e1b-48e3-83e9-b7146883c1d0" });
     renderDialog({ defaultCategory: "content_data", evidence: ["data:image/png;base64,AA=="] });
 
-    expect(screen.getByText("Reported from erp-hrm · /employees")).toBeInTheDocument();
+    const footer = screen.getByRole("button", { name: "Send report" }).parentElement!;
+    expect(footer).toHaveTextContent("Reported from erp-hrm · /employees");
+    expect(screen.getByRole("dialog")).toHaveAccessibleDescription(
+      "Describe what you were doing, what you expected, and what happened instead.",
+    );
+    expect(screen.queryByText("Priority")).not.toBeInTheDocument();
     const send = screen.getByRole("button", { name: "Send report" });
     await user.click(send);
     expect(screen.getByText("Still needed: Summary, Details.")).toBeInTheDocument();
@@ -53,7 +58,6 @@ describe("ReportDialog", () => {
 
     await user.type(screen.getByLabelText("Summary"), "Save fails");
     await user.type(screen.getByLabelText("Details"), "Nothing happens on Save.");
-    await user.click(screen.getByRole("radio", { name: "High" }));
     await user.click(send);
 
     expect(submitReportMock).toHaveBeenCalledWith({
@@ -61,7 +65,6 @@ describe("ReportDialog", () => {
       summary: "Save fails",
       description: "Nothing happens on Save.",
       category: "content_data",
-      priority: "high",
       contextLabel: "erp-hrm · /employees",
       evidence: ["data:image/png;base64,AA=="],
     });

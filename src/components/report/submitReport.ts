@@ -3,7 +3,6 @@ import {
   uploadFeedbackTicketFile,
   type FeedbackTicketAttachmentRef,
   type FeedbackTicketCategory,
-  type FeedbackTicketPriority,
   type FeedbackTicketReportType,
 } from "../../api_calls/feedbackTickets";
 
@@ -12,7 +11,6 @@ export interface ReportSubmission {
   summary: string;
   description: string;
   category: FeedbackTicketCategory;
-  priority: FeedbackTicketPriority;
   /** Where it was reported from ("lms · /classes/3a"); appended to the description. */
   contextLabel: string;
   /** Screenshots and attached images, as data URLs. */
@@ -56,7 +54,6 @@ export async function submitReport(submission: ReportSubmission): Promise<Submit
     summary: submission.summary,
     description: `${submission.description}\n\n[${submission.contextLabel}]`,
     category: submission.category,
-    priority: submission.priority,
     report_type: submission.reportType,
     attachments,
   });

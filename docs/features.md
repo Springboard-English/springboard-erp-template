@@ -446,7 +446,8 @@ it. There is no floating launcher.
   up to five PNG/JPEG screenshots (10 MB each) through `upload-url` and a plain
   `PUT` to the signed URL (`api_calls/feedbackTickets.ts`). Screenshot mode
   hides the dialog behind a capture bar so the reporter can go to the broken
-  screen; the capture can be marked up and cropped.
+  screen; the capture can be marked up and cropped. The reporter picks no
+  priority; the team sets it in triage.
 - **The context** appended to the description is `"<app> · <path>"`, read from
   react-router. The Area starts on `defaultCategory`, else `lms` for the LMS
   and `process` elsewhere. A feature request is a report type, not an Area.

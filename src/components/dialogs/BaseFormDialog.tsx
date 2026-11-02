@@ -16,7 +16,9 @@ type BaseFormDialogProps = {
     open: boolean;
     saving?: boolean;
     title: string;
-    description?: string;
+    description?: ReactNode;
+    /** Rendered in the bottom bar, opposite the buttons. */
+    footerNote?: ReactNode;
     error?: string | null;
     submitLabel?: string;
     submitDisabled?: boolean;
@@ -32,6 +34,7 @@ export default function BaseFormDialog({
     saving = false,
     title,
     description,
+    footerNote,
     error,
     submitLabel = 'Create',
     submitDisabled = false,
@@ -71,6 +74,11 @@ export default function BaseFormDialog({
                 </div>
 
                 <DialogFooter className="shrink-0 border-t border-border/60 px-4 py-3 sm:px-5 sm:py-3.5" showCloseButton={false}>
+                    {footerNote && (
+                        <div className="min-w-0 flex-1 self-center text-xs text-muted-foreground">
+                            {footerNote}
+                        </div>
+                    )}
                     {submitDisabledReason && submitDisabled && (
                         <p className="mr-auto max-w-[50%] text-xs text-muted-foreground/80">
                             {submitDisabledReason}

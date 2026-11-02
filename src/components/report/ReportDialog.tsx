@@ -13,10 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useI18n } from "@/context/I18nContext";
-import type {
-  FeedbackTicketPriority as TicketPriority,
-  FeedbackTicketReportType as ReportType,
-} from "../../api_calls/feedbackTickets";
+import type { FeedbackTicketReportType as ReportType } from "../../api_calls/feedbackTickets";
 import type { FormSchema, FormValues } from "../forms/schema";
 import { SchemaFormDialog } from "../forms/SchemaFormDialog";
 import { useSchemaForm } from "../forms/useSchemaForm";
@@ -65,12 +62,6 @@ const REPORT_TYPES: Array<{ value: ReportType; key: string }> = [
   { value: "other", key: "report.typeOther" },
 ];
 
-const PRIORITIES: Array<{ value: TicketPriority; key: string }> = [
-  { value: "high", key: "report.priorityHigh" },
-  { value: "medium", key: "report.priorityMedium" },
-  { value: "low", key: "report.priorityLow" },
-];
-
 const CATEGORIES: Array<{ value: ReportProblemCategory; key: string }> = [
   { value: "lms", key: "report.categoryLms" },
   { value: "access_login", key: "report.categoryAccess" },
@@ -81,7 +72,7 @@ const CATEGORIES: Array<{ value: ReportProblemCategory; key: string }> = [
 export interface ReportDialogProps {
   open: boolean;
   onClose: () => void;
-  /** Where it is reported from, shown in the header and appended to the description. */
+  /** Where it is reported from, shown in the bottom bar and appended to the description. */
   contextLabel: string;
   /** The Area preselected each time the form opens. */
   defaultCategory?: ReportProblemCategory;
@@ -92,9 +83,10 @@ export interface ReportDialogProps {
 }
 
 /**
- * The report form on the shared schema dialog: type, Area, priority, summary
- * and details on one tab, up to five screenshots on the next. Sending uploads
- * the screenshots, files the ticket and shows its reference.
+ * The report form on the shared schema dialog: type, Area, summary and details
+ * on one tab, up to five screenshots on the next. Sending uploads the
+ * screenshots, files the ticket and shows its reference. The team sets the
+ * priority in triage.
  */
 export default function ReportDialog({
   open,
@@ -127,7 +119,7 @@ export default function ReportDialog({
           type: "choice",
           required: true,
           options: options(REPORT_TYPES),
-          span: "full",
+          span: 2,
         },
         {
           name: "category",
@@ -136,14 +128,6 @@ export default function ReportDialog({
           display: "select",
           required: true,
           options: options(CATEGORIES),
-        },
-        {
-          name: "priority",
-          label: t("report.priorityLabel"),
-          type: "choice",
-          required: true,
-          options: options(PRIORITIES),
-          span: 2,
         },
         {
           name: "summary",
@@ -169,7 +153,7 @@ export default function ReportDialog({
     [locale],
   );
   const initial = useMemo<FormValues>(
-    () => ({ reportType: "bug", category: defaultCategory, priority: "medium" }),
+    () => ({ reportType: "bug", category: defaultCategory }),
     [defaultCategory],
   );
   const form = useSchemaForm(schema, { initial });
@@ -219,7 +203,6 @@ export default function ReportDialog({
           summary: String(values.summary).trim(),
           description: String(values.description).trim(),
           category: values.category as ReportProblemCategory,
-          priority: values.priority as TicketPriority,
           contextLabel,
           evidence,
         });
@@ -265,8 +248,8 @@ export default function ReportDialog({
   const full = evidence.length >= MAX_REPORT_EVIDENCE;
 
   const guidance = (
-    <div className="flex items-start justify-between gap-3">
-      <p className="text-sm leading-relaxed text-muted-foreground">{t("report.guidance")}</p>
+    <>
+      {t("report.guidance")}{" "}
       <Popover>
         <PopoverTrigger asChild>
           <button
@@ -275,19 +258,21 @@ export default function ReportDialog({
             title={t("report.helpAria")}
             className={cn(
               touchHitArea,
-              "shrink-0 rounded-xs text-muted-foreground opacity-70 transition-opacity hover:opacity-100",
+              "inline-flex rounded-xs align-text-bottom text-muted-foreground opacity-70 transition-opacity hover:opacity-100",
             )}
           >
             <CircleHelp className="size-4" aria-hidden="true" />
           </button>
         </PopoverTrigger>
-        <PopoverContent align="end" className="w-72 text-sm">
+        <PopoverContent align="start" className="w-72 text-sm">
           <p className="font-medium text-foreground">{t("report.helpTitle")}</p>
           <p className="mt-1 text-muted-foreground">{t("report.helpBody")}</p>
         </PopoverContent>
       </Popover>
-    </div>
+    </>
   );
+
+  const context = t("report.context", undefined, { context: contextLabel });
 
   const evidenceTab = (
     <div className="grid gap-3 py-1">
@@ -372,9 +357,13 @@ export default function ReportDialog({
     <SchemaFormDialog
       open={open}
       title={t("report.title")}
-      description={t("report.context", undefined, { context: contextLabel })}
+      description={guidance}
+      footerNote={
+        <p className="truncate" title={context}>
+          {context}
+        </p>
+      }
       form={form}
-      head={guidance}
       extraTabs={[
         { label: t("report.evidenceLabel"), content: evidenceTab, complete: evidence.length > 0 },
       ]}

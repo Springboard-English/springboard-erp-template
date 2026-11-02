@@ -16,7 +16,9 @@ export interface SchemaFormTab {
 export interface SchemaFormDialogProps {
     open: boolean;
     title: string;
-    description?: string;
+    description?: ReactNode;
+    /** Rendered in the bottom bar, opposite the buttons. */
+    footerNote?: ReactNode;
     form: SchemaForm;
     /** Rendered above the fields on the first tab, e.g. a template picker. */
     head?: ReactNode;
@@ -62,6 +64,7 @@ export function SchemaFormDialog({
     open,
     title,
     description,
+    footerNote,
     form,
     head,
     extraTabs = [],
@@ -115,6 +118,7 @@ export function SchemaFormDialog({
             open={open}
             title={title}
             description={description}
+            footerNote={footerNote}
             error={error ?? missingError}
             saving={saving}
             submitLabel={submitLabel}

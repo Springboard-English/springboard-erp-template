@@ -23,7 +23,7 @@ export interface FeedbackTicketCreate {
     summary: string;
     description: string;
     category: FeedbackTicketCategory;
-    priority: FeedbackTicketPriority;
+    priority?: FeedbackTicketPriority | null;
     report_type?: FeedbackTicketReportType | null;
     suggested_owner_key?: string | null;
     attachments: FeedbackTicketAttachmentRef[];

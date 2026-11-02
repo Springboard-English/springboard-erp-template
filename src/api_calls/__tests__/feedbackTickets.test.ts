@@ -17,7 +17,6 @@ const submission = {
   summary: "Save fails",
   description: "The form does not save.",
   category: "process" as const,
-  priority: "medium" as const,
   contextLabel: "erp-hrm · /employees/3",
   evidence: [] as string[],
 };
@@ -59,7 +58,6 @@ describe("submitReport", () => {
       summary: "Save fails",
       description: "The form does not save.\n\n[erp-hrm · /employees/3]",
       category: "process",
-      priority: "medium",
       report_type: "bug",
       attachments: [],
     });

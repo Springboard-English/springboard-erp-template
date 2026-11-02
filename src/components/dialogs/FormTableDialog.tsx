@@ -17,7 +17,9 @@ type FormTableDialogProps = {
     open: boolean;
     saving?: boolean;
     title: string;
-    description?: string;
+    description?: ReactNode;
+    /** Rendered in the bottom bar, opposite the buttons. */
+    footerNote?: ReactNode;
     error?: string | null;
     submitLabel?: string;
     submitDisabled?: boolean;
@@ -35,6 +37,7 @@ export default function FormTableDialog({
     saving = false,
     title,
     description,
+    footerNote,
     error,
     submitLabel,
     submitDisabled = false,
@@ -90,6 +93,7 @@ export default function FormTableDialog({
             saving={saving}
             title={title}
             description={description}
+            footerNote={footerNote}
             error={error}
             submitLabel={submitLabel ?? t('common.create')}
             submitDisabled={submitDisabled}
