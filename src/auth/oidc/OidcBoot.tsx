@@ -8,14 +8,6 @@ import { OIDC_CONFIG } from "./config";
 
 export interface OidcBootProps {
     children: ReactNode;
-    /**
-     * @deprecated No longer rendered. A sign-out goes straight to the sign-in
-     * page rather than to an interstitial. Still accepted so that passing it is
-     * not a build error in an app that has not dropped the prop yet.
-     */
-    signedOutMessage?: string;
-    /** @deprecated No longer rendered. See {@link OidcBootProps.signedOutMessage}. */
-    signInLabel?: string;
 }
 
 

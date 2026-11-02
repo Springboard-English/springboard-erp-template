@@ -65,8 +65,6 @@ export { default as LazyViewFallback } from "./components/LazyViewFallback";
 export type { LazyViewFallbackProps } from "./components/LazyViewFallback";
 export { lazyWithPreload, usePreloadOnIdle } from "./utils/lazyWithPreload";
 export type { PreloadableComponent } from "./utils/lazyWithPreload";
-export { default as MultiSelectDropdown } from "./components/MultiSelectDropdown";
-export type { MultiSelectDropdownProps } from "./components/MultiSelectDropdown";
 export { default as PatchRecordDialog } from "./components/PatchRecordDialog";
 export type { PatchFieldType, PatchFieldOption, PatchFieldConfig } from "./components/PatchRecordDialog";
 export { default as PendingChangesBar } from "./components/PendingChangesBar";
@@ -80,17 +78,6 @@ export type {
 export { definePendingBarAction } from "./components/PendingChangesBar";
 export { default as PendingBarConfirmDialog } from "./components/PendingBarConfirmDialog";
 export type { PendingBarConfirm, PendingBarConfirmDialogProps } from "./components/PendingBarConfirmDialog";
-export {
-  PENDING_CHANGES_BAR_DEFAULT_SAVE_LABEL,
-  PENDING_CHANGES_BAR_DEFAULT_CANCEL_LABEL,
-  PENDING_CHANGES_BAR_DEFAULT_VIEW_UNSAVED_LABEL,
-  PENDING_CHANGES_BAR_DEFAULT_PENDING_KEY_LABEL,
-  PENDING_CHANGES_BAR_DEFAULT_PENDING_VALUE_LABEL,
-  PENDING_CHANGES_BAR_DEFAULT_EXPAND_MAX_HEIGHT,
-  PENDING_CHANGES_BAR_DEFAULT_SPRING_CONFIG,
-  PENDING_CHANGES_BAR_DEFAULT_BAR_TRANSITION_MS,
-  PENDING_CHANGES_BAR_DEFAULT_CHEVRON_TRANSITION_MS,
-} from "./components/PendingChangesBar";
 export { default as StatusBanner } from "./components/StatusBanner";
 export { default as BuildTag } from "./components/BuildTag";
 export type { BuildTagProps } from "./components/BuildTag";
@@ -103,10 +90,6 @@ export { ACCOUNTS_PROFILE_URL } from "./config/accounts";
 // generated commit list and, optionally, a what's-new note — so an app only
 // reaches for these directly to render the history somewhere else, or to test
 // the parsing without a DOM.
-export { default as ChangelogDialog } from "./components/changelog/ChangelogDialog";
-export type { ChangelogDialogProps } from "./components/changelog/ChangelogDialog";
-export { default as WhatsNewNote } from "./components/changelog/WhatsNewNote";
-export type { WhatsNewNoteProps } from "./components/changelog/WhatsNewNote";
 export {
   buildChangelog,
   changelogNoteId,
@@ -140,8 +123,6 @@ export {
   togglePageSelection,
 } from "./lib/rowSelection";
 export type { RowSelection, RowSelectionCheckedState, PageSelectionState } from "./lib/rowSelection";
-export { default as MobileBottomBar } from "./components/MobileBottomBar";
-export type { MobileBottomBarItem, MobileBottomBarProps } from "./components/MobileBottomBar";
 export { default as MobileMenuSheet } from "./components/layout/MobileMenuSheet";
 export type { MobileMenuSheetProps } from "./components/layout/MobileMenuSheet";
 export { default as useIsMobile, MOBILE_MEDIA_QUERY } from "./hooks/useIsMobile";
@@ -237,9 +218,7 @@ export {
   DetailTextBlock,
   DetailFieldsTable,
   type DetailFieldsTableRow,
-  DetailClassLinkValue,
   DetailClassHeaderLabel,
-  DetailActionPanel,
   DetailTabs,
   DetailTabbedSection,
   DetailPendingView,
@@ -485,8 +464,6 @@ export type { ChartColorMode, ChartPalette } from "./components/charts/palette";
 // a registry of `WidgetDefinition`s (each fetching its own data) and defaults.
 export { default as WidgetBoard } from "./components/widgets/WidgetBoard";
 export type { WidgetBoardProps } from "./components/widgets/WidgetBoard";
-export { default as useWidgetLayout } from "./components/widgets/useWidgetLayout";
-export type { UseWidgetLayoutOptions, WidgetLayoutState } from "./components/widgets/useWidgetLayout";
 export {
   WidgetEmpty,
   WidgetError,

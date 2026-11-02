@@ -39,16 +39,3 @@ export function hasAnyUserScope(value: unknown, permissions: string[]): boolean 
   return permissions.some((permission) => scopes.includes(permission));
 }
 
-export function canAccessManagement(value: unknown): boolean {
-  if (!isUserScopeSource(value) || value.account_type !== "employee") {
-    return false;
-  }
-
-  return hasAnyUserScope(value, [
-    "classes_get",
-    "sessions_get",
-    "schedules_get",
-    "tests_get",
-    "classes_feedbacks_get",
-  ]);
-}
