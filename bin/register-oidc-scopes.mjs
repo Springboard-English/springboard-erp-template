@@ -7,7 +7,7 @@
  * Add-only: a scope the app stopped asking for stays, which keeps the bundle
  * still being served working. Run from the app's root, after `npm ci`:
  *
- *     sb-register-oidc-scopes --issuer=https://auth.springboard.vn/dev --client=lms-dev [--dry-run]
+ *     sb-register-oidc-scopes --issuer=https://auth.dev.springboard.vn --client=lms-dev [--dry-run]
  *
  * In Cloud Build the token comes from the metadata server; elsewhere set
  * HYDRA_TOKEN to an identity token for the admin URL.
@@ -20,7 +20,7 @@ import { pathToFileURL } from "node:url";
 const ADMIN_URLS = {
     "https://auth.springboard.vn":
         "https://hydra-admin-254797106218.asia-southeast1.run.app",
-    "https://auth.springboard.vn/dev":
+    "https://auth.dev.springboard.vn":
         "https://hydra-dev-admin-254797106218.asia-southeast1.run.app",
 };
 // OIDC_CONFIG.scope always prepends these (src/auth/oidc/config.ts).

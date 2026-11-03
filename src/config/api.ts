@@ -14,7 +14,7 @@ let _baseURL: string = (() => {
             return import.meta.env.VITE_BASE_URL;
         }
         if (import.meta.env.DEV) {
-            return "https://api.springboard.vn/dev";
+            return "https://api.dev.springboard.vn";
         }
     }
     return "https://api.springboard.vn";
