@@ -1,0 +1,54 @@
+/* The `/exercise` renderers' own rules: an app that runs papers imports this
+   beside its stylesheet. Colours come from the app's theme (`--highlight-*`). */
+
+/* The student highlighter, painted through the CSS Custom Highlight API. */
+::highlight(sb-hl-yellow) { background-color: var(--highlight-yellow); color: var(--highlight-ink); }
+::highlight(sb-hl-green) { background-color: var(--highlight-green); color: var(--highlight-ink); }
+::highlight(sb-hl-blue) { background-color: var(--highlight-blue); color: var(--highlight-ink); }
+::highlight(sb-hl-pink) { background-color: var(--highlight-pink); color: var(--highlight-ink); }
+
+/* The runner's content pane split into the passage and questions scrollers.
+   Everything sizes from the pane (`.runner-content-pane`, the app's shell), never
+   from the viewport, so a banner above the columns cannot push them past the
+   bottom bar. Plain CSS because a query over a custom property is unreadable as
+   a Tailwind arbitrary value. */
+.runner-passage-column,
+.runner-pool-column {
+  min-width: 0;
+}
+
+/* A flex column at every width: it fills the grid cell side by side and hugs its content stacked. */
+.runner-passage-column {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+@media (min-width: 64rem) {
+  /* `overflow-y: auto` stays on the pane, so a wide page that does not split still scrolls. */
+  .runner-content-pane {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* `relative` so the options' sr-only radios are clipped by this scroller, not the pane. */
+  .runner-questions-column {
+    position: relative;
+    min-height: 0;
+    overflow-y: auto;
+    /* Clears the scrollbar off an option's focus ring. */
+    padding-right: 0.5rem;
+  }
+}
+
+/* A container query: the pool also renders inside the half-width questions
+   column. It pins to whichever pane scrolls it, capped to that pane's height
+   (`--runner-scroller`, published by `useScrollPane`). */
+@container (min-width: 48rem) {
+  .runner-pool-column {
+    position: sticky;
+    top: 0;
+    max-height: var(--runner-scroller, 100dvh);
+    overflow-y: auto;
+  }
+}

@@ -39,6 +39,7 @@
         "./test-setup": "./dist/test-setup.js",
         "./style.css": "./dist/springboard-erp-template.css",
         "./tokens.css": "./dist/tokens.css",
+        "./exercise.css": "./dist/exercise.css",
         "./push-sw.js": "./dist/push-sw.js",
         "./favicon.svg": "./dist/favicon.svg",
         "./vite": {
