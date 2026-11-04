@@ -20,6 +20,7 @@ export default defineConfig({
       entry: {
         index: fileURLToPath(new URL('./src/exports.ts', import.meta.url)),
         core: fileURLToPath(new URL('./src/core/index.ts', import.meta.url)),
+        exercise: fileURLToPath(new URL('./src/exercise/index.ts', import.meta.url)),
         'test-setup': fileURLToPath(new URL('./src/test/setup.ts', import.meta.url)),
       },
       formats: ['es'],
@@ -35,6 +36,9 @@ export default defineConfig({
         'react-dom',
         'react-router-dom',
         '@tanstack/react-query',
+        // The exercise model's schemas: an app composes them with its own `z`,
+        // so both must be the same copy. Only `/exercise` imports it.
+        'zod',
         // The app's own test runner, which `test-setup` must share with it.
         'vitest',
         /^@testing-library\//,
