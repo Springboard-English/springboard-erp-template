@@ -209,4 +209,15 @@ export const EXERCISE_VIETNAMESE_MESSAGES: Record<string, string> = {
   "exercise.value.Choose several": "Chọn nhiều đáp án",
   "exercise.value.Multiple matching": "Nối thông tin",
   "exercise.value.Error correction in a passage": "Sửa lỗi trong đoạn văn",
+  // Highlighter colours (`HIGHLIGHT_COLOURS`).
+  "exercise.value.Highlight yellow": "Tô sáng màu vàng",
+  "exercise.value.Highlight green": "Tô sáng màu xanh lá",
+  "exercise.value.Highlight blue": "Tô sáng màu xanh dương",
+  "exercise.value.Highlight pink": "Tô sáng màu hồng",
+  // Answer parts (`formatAnswer`).
+  "exercise.value.Root": "Từ gốc",
+  "exercise.value.Answer": "Câu trả lời",
+  "exercise.value.Marked": "Đã đánh dấu",
+  "exercise.value.Corrected to": "Sửa thành",
+  "exercise.value.Picked for the group": "Đã chọn cho cả nhóm câu",
 };

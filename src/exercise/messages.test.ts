@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { EXERCISE_VIETNAMESE_MESSAGES } from "./messages";
 import { QUESTION_TYPE_LABELS, SKILL_LABELS } from "./lib/exercises";
 import { ERROR_HUNT, SECTION_LAYOUTS, sectionTaskLabel } from "./lib/section-type";
+import { HIGHLIGHT_COLOURS } from "./components/highlighter";
 
 // Every source file under `src/exercise` as text, through Vite's raw import, so
 // the check needs no Node APIs. Tests are left out.
@@ -23,12 +24,15 @@ describe("EXERCISE_VIETNAMESE_MESSAGES", () => {
     expect([...keys].filter((key) => !(key in EXERCISE_VIETNAMESE_MESSAGES))).toEqual([]);
   });
 
-  it("translates every skill, question type and section task through `exercise.value.`", () => {
+  it("translates every fixed value the code passes to `valueLabel`", () => {
     const values = [
       ...Object.values(SKILL_LABELS),
       ...Object.values(QUESTION_TYPE_LABELS),
       ...SECTION_LAYOUTS.map((layout) => sectionTaskLabel(layout)),
       sectionTaskLabel(ERROR_HUNT),
+      ...HIGHLIGHT_COLOURS.map((colour) => `Highlight ${colour}`),
+      // The answer parts `AnswerValue` labels.
+      ...[...SOURCES["./lib/attempt-answer.ts"].matchAll(/label: "([^"]+)"/g)].map((match) => match[1]),
     ];
     expect(values.filter((value) => !(`exercise.value.${value}` in EXERCISE_VIETNAMESE_MESSAGES))).toEqual([]);
   });
