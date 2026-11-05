@@ -78,3 +78,30 @@
     --error: oklch(0.8 0.11 20);
     --error-bg: oklch(0.31 0.06 20);
 }
+
+/*
+ * Pointer on anything clickable. Tailwind v4's preflight gives <button> the
+ * arrow, and the Radix checkbox, switch, radio, select and tab are all buttons.
+ * Kept in `@layer base` so a component's own `cursor-*` utility still wins.
+ */
+@layer base {
+    button:not(:disabled),
+    [role="button"]:not([aria-disabled="true"]),
+    [role="checkbox"]:not([aria-disabled="true"]),
+    [role="radio"]:not([aria-disabled="true"]),
+    [role="option"]:not([aria-disabled="true"]),
+    [role="tab"]:not([aria-disabled="true"]),
+    summary,
+    label[for],
+    a[href]:not([aria-disabled="true"]) {
+        cursor: pointer;
+    }
+
+    button:disabled,
+    [role="button"][aria-disabled="true"],
+    [role="checkbox"][aria-disabled="true"],
+    [role="tab"][aria-disabled="true"],
+    a[aria-disabled="true"] {
+        cursor: not-allowed;
+    }
+}
