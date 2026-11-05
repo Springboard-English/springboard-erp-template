@@ -467,3 +467,30 @@ it. There is no floating launcher.
   a day per browser, and only where reporting is enabled. A browser reload, the
   header's Refresh and a pull all count. `OidcBoot` records the reload, because
   only the page before the Hydra redirect sees navigation type `reload`.
+
+## Feedback surveys (`/feedback`, since 5.2.0)
+
+An opt-in entry, like `/exercise`: an app that imports nothing from
+`@springboard-english/springboard-erp-template/feedback` never bundles it. It
+reports moments to Springboard's self-hosted Formbricks (`forms.springboard.vn`,
+the fork), and Formbricks decides which survey shows, how often and to whom.
+
+- **Boot:** `configureFeedback({ appUrl, workspaceId, app, isProduction,
+  contextKeys, appVersion })` once; `null` or never calling it keeps it off.
+  `app` prefixes every action (`leap` → `leap_run_submitted`).
+- **Report:** `trackFeedback(moment, { role, ...context })`. The moments and
+  the context keys are the app's; the context is keys and enums
+  (`scoreBand(points, max)` gives `low`/`mid`/`high`), never names or answers.
+  Every key in `contextKeys` is sent on every report, unset ones as `null`.
+- **Only a production build fires real actions;** anything else fires
+  `dev_<app>_<moment>`, so a dev bundle never opens a real survey.
+- **Who answered:** each report fetches a respondent pass
+  (`POST /v2/users/me/respondent-pass`) and sends it as the embedded field
+  `sb_pass`. A survey that wants named answers declares `sb_pass`; the fork
+  verifies it and drops it. `{ identify: false }` skips the pass.
+- **Busy screens:** `useFeedbackSuppressed(active)` hides and removes every
+  survey while an exam, a tour or a live class is on screen, whatever triggered
+  it (a dashboard no-code trigger runs on every route). Guests are never asked
+  unless `askGuests`.
+- **The SDK loads on the first report**, as a lazy chunk, and every error is
+  caught: feedback never breaks the screen that reports it.

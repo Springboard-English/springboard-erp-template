@@ -21,6 +21,7 @@ export default defineConfig({
         index: fileURLToPath(new URL('./src/exports.ts', import.meta.url)),
         core: fileURLToPath(new URL('./src/core/index.ts', import.meta.url)),
         exercise: fileURLToPath(new URL('./src/exercise/index.ts', import.meta.url)),
+        feedback: fileURLToPath(new URL('./src/feedback/index.ts', import.meta.url)),
         'test-setup': fileURLToPath(new URL('./src/test/setup.ts', import.meta.url)),
       },
       formats: ['es'],
