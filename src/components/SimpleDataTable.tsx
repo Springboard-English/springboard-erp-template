@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { Fragment, useEffect, useId, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import useIsMobile from '@/hooks/useIsMobile';
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -44,6 +44,49 @@ export interface SimpleDataTableColumnGroup {
   header: ReactNode;
 }
 
+/**
+ * Groups body rows under full-width header rows. Grouping applies to the rows
+ * on the current page, so a group can continue on the next page.
+ */
+export interface SimpleDataTableRowGroups<T> {
+  /** The group a row belongs to. */
+  key: (row: T) => string;
+  /** The header row's content, given the group's key and its rows on this page. */
+  header: (key: string, rows: T[]) => ReactNode;
+  /** Orders the groups; without it they keep the order they first appear in. */
+  compare?: (a: string, b: string) => number;
+}
+
+/** One group of rows on the current page. */
+export interface SimpleDataTableRowGroup<T> {
+  key: string;
+  rows: T[];
+}
+
+/**
+ * Splits a page's rows into groups, each keeping its rows' order. Groups come
+ * in order of first appearance, or sorted by `compare` when given.
+ */
+export function groupTableRows<T>(
+  rows: T[],
+  key: (row: T) => string,
+  compare?: (a: string, b: string) => number,
+): Array<SimpleDataTableRowGroup<T>> {
+  const groups = new Map<string, T[]>();
+  for (const row of rows) {
+    const groupKey = key(row);
+    const members = groups.get(groupKey);
+    if (members) {
+      members.push(row);
+    } else {
+      groups.set(groupKey, [row]);
+    }
+  }
+  const result = [...groups.entries()].map(([groupKey, members]) => ({ key: groupKey, rows: members }));
+  // Array sort is stable, so groups that compare equal keep their first-appearance order.
+  return compare ? result.sort((a, b) => compare(a.key, b.key)) : result;
+}
+
 export type SimpleDataTableSortOrder = 'asc' | 'desc';
 
 export interface SimpleDataTableClassNames {
@@ -63,6 +106,8 @@ export interface SimpleDataTableClassNames {
   cell?: string;
   /** The empty-state cell. */
   emptyCell?: string;
+  /** Each group header cell, with `rowGroups`. */
+  groupCell?: string;
   /** Footer / pagination bar. */
   footer?: string;
   /** "Showing x–y of z" label. */
@@ -113,6 +158,8 @@ export interface SimpleDataTableProps<T> {
    * `onRowClick`; with no `onRowClick` a row click toggles its tick.
    */
   selection?: RowSelection<T>;
+  /** Groups the rows on each page under a header row per group. */
+  rowGroups?: SimpleDataTableRowGroups<T>;
 }
 
 /** A run of neighbouring columns: one group's, or a single ungrouped column. */
@@ -172,6 +219,7 @@ export default function SimpleDataTable<T>({
   hoveredRow = null,
   onHoveredRowChange,
   selection,
+  rowGroups,
 }: SimpleDataTableProps<T>) {
   const isMobileViewport = useIsMobile();
   const { t } = useI18n();
@@ -482,6 +530,20 @@ export default function SimpleDataTable<T>({
                   {resolvedEmptyMessage}
                 </TableCell>
               </TableRow>
+            ) : rowGroups ? (
+              groupTableRows(paginatedRows, rowGroups.key, rowGroups.compare).map((group) => (
+                <Fragment key={`group-${group.key}`}>
+                  <TableRow className="hover:bg-transparent">
+                    <TableCell
+                      colSpan={tableColumns.length}
+                      className={cn('bg-muted/50 py-2 text-sm font-semibold text-foreground', classNames?.groupCell)}
+                    >
+                      {rowGroups.header(group.key, group.rows)}
+                    </TableCell>
+                  </TableRow>
+                  {group.rows.map((row) => renderTableRow(row))}
+                </Fragment>
+              ))
             ) : (
               paginatedRows.map((row) => renderTableRow(row))
             )}

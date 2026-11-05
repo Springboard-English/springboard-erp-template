@@ -155,6 +155,19 @@ whole header sticks to the top. `stickyLeft` pins a column that many pixels from
 the left while the table scrolls sideways; pinned columns before it need a fixed
 width to add up to. Both are per column, and a table using neither is unchanged.
 
+## Row groups and filter pills (`SimpleDataTable`, `FilterPills`, since 5.3.0)
+
+`rowGroups` (`key`, `header`, optional `compare`) puts a full-width header row
+above each group of body rows. It groups the rows on the current page, so with
+server paging a group can carry on to the next page; `compare` orders the
+groups, otherwise they come in the order they first appear. `groupTableRows`
+is the same split for a caller's own use.
+
+`FilterPills` is a one-line row of pills that sets one filter value. Use it for
+a short list of choices under a page's own tabs (a class's homework topics),
+where a second tab bar would read as two levels of navigation. It scrolls
+sideways on a phone instead of wrapping.
+
 ## Row selection (`SimpleDataTable`, `MobileCardList`, since 4.30.0)
 
 Both take the same `selection: RowSelection<T>` (`selected`, `onChange`,

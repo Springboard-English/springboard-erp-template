@@ -112,8 +112,8 @@ export { default as PageHeader } from "./components/layout/PageHeader";
 export type { PageHeaderProps, PageHeaderBackItem } from "./components/layout/PageHeader";
 export { default as AppHeader } from "./components/layout/AppHeader";
 export type { AppHeaderProps } from "./components/layout/AppHeader";
-export { default as SimpleDataTable } from "./components/SimpleDataTable";
-export type { SimpleDataTableColumn, SimpleDataTableColumnGroup, SimpleDataTableSortOrder, SimpleDataTableProps, SimpleDataTableClassNames } from "./components/SimpleDataTable";
+export { default as SimpleDataTable, groupTableRows } from "./components/SimpleDataTable";
+export type { SimpleDataTableColumn, SimpleDataTableColumnGroup, SimpleDataTableSortOrder, SimpleDataTableProps, SimpleDataTableClassNames, SimpleDataTableRowGroups, SimpleDataTableRowGroup } from "./components/SimpleDataTable";
 export { default as MobileCardList, CardField } from "./components/MobileCardList";
 export type { MobileCardListProps } from "./components/MobileCardList";
 export {
@@ -314,6 +314,7 @@ export * from "./components/ui/sheet";
 export * from "./components/ui/switch";
 export * from "./components/ui/table";
 export * from "./components/ui/tabs";
+export * from "./components/ui/filter-pills";
 // Tags on a resource: TagInput authors them, TagFilter narrows a list by them.
 // `normalizeTag`/`normalizeTags` are exported alongside because they have to
 // match the API's `normalize_tags` — callers building a query string need the

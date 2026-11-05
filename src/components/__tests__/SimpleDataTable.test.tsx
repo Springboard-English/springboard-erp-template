@@ -1,6 +1,6 @@
 import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import SimpleDataTable, { type SimpleDataTableColumn } from "../SimpleDataTable";
+import SimpleDataTable, { groupTableRows, type SimpleDataTableColumn } from "../SimpleDataTable";
 import { I18nProvider } from "@/context/I18nContext";
 
 type Row = { key: string };
@@ -62,5 +62,48 @@ describe("SimpleDataTable pinned columns", () => {
         expect(screen.getByText("name")).toHaveStyle({ left: "40px" });
         expect(screen.getByText("name-a")).toHaveStyle({ left: "40px" });
         expect(screen.getByText("other-a").style.left).toBe("");
+    });
+});
+
+describe("groupTableRows", () => {
+    const rows = [
+        { key: "1", topic: "b" },
+        { key: "2", topic: "a" },
+        { key: "3", topic: "b" },
+    ];
+
+    it("keeps first-appearance order without a compare", () => {
+        const groups = groupTableRows(rows, (row) => row.topic);
+        expect(groups.map((group) => [group.key, group.rows.map((row) => row.key)])).toEqual([
+            ["b", ["1", "3"]],
+            ["a", ["2"]],
+        ]);
+    });
+
+    it("orders the groups by compare", () => {
+        const groups = groupTableRows(rows, (row) => row.topic, (a, b) => a.localeCompare(b));
+        expect(groups.map((group) => group.key)).toEqual(["a", "b"]);
+    });
+});
+
+describe("SimpleDataTable row groups", () => {
+    it("draws a header row spanning every column above each group", () => {
+        render(
+            <I18nProvider>
+                <SimpleDataTable
+                    columns={[plain("a"), plain("b")]}
+                    rows={[{ key: "x" }, { key: "y" }, { key: "z" }]}
+                    rowKey={(row) => row.key}
+                    rowGroups={{ key: (row) => (row.key === "y" ? "second" : "first"), header: (key, members) => `${key} (${members.length})` }}
+                    page={0}
+                    pageSize={10}
+                    onPageChange={() => undefined}
+                    onPageSizeChange={() => undefined}
+                />
+            </I18nProvider>,
+        );
+        const bodyRows = within(screen.getByRole("table")).getAllByRole("row").slice(1);
+        expect(bodyRows.map((row) => row.textContent)).toEqual(["first (2)", "a-xb-x", "a-zb-z", "second (1)", "a-yb-y"]);
+        expect(screen.getByText("first (2)")).toHaveAttribute("colspan", "2");
     });
 });
