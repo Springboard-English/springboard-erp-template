@@ -248,7 +248,7 @@ export default function PendingChangesBar({
         // panel 50, this bar 55, modals/popovers 60. The bar has to clear the
         // floating panel — the edits it saves are made *inside* that panel, and
         // any lower layer sits under the panel's backdrop, unreachable.
-        "fixed bottom-[calc(4rem+0.75rem)] left-3 right-3 z-[55] transform-gpu transition-all md:bottom-6 md:left-[calc(18rem+1.5rem)] md:right-6",
+        "fixed bottom-[calc(4rem+0.75rem)] left-3 right-3 z-[55] transform-gpu transition-all md:bottom-6 md:left-[calc(var(--sb-sidebar-width,18rem)+1.5rem)] md:right-6",
         show
           ? "translate-y-0 opacity-100 pointer-events-auto"
           : "translate-y-6 opacity-0 pointer-events-none",

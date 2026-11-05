@@ -36,6 +36,9 @@ import {
 /** Tabs the phone bottom bar shows before the rest move into the Menu sheet. */
 const MAX_BOTTOM_BAR_ITEMS = 4;
 
+/** How long a mouse rests on the collapsed rail before it pops out, so passing over it doesn't. */
+const RAIL_PEEK_DELAY_MS = 150;
+
 /** The title `index.html` shipped, before the shell added the page to it. */
 let shellBaseTitle: string | null = null;
 
@@ -316,6 +319,27 @@ function DashboardLayoutInner({
     localStorage.setItem(collapsedStorageKey, String(collapsed));
   }, [collapsed, collapsedStorageKey]);
 
+  // Fixed overlays (PendingChangesBar) start at the side nav's edge; a peek overlays, so it doesn't count.
+  useEffect(() => {
+    const root = document.documentElement;
+    root.style.setProperty("--sb-sidebar-width", collapsed ? "5rem" : "18rem");
+    return () => {
+      root.style.removeProperty("--sb-sidebar-width");
+    };
+  }, [collapsed]);
+
+  // A mouse resting on the collapsed rail pops the full menu out over the page.
+  const [peek, setPeek] = useState(false);
+  const peekTimer = useRef<number | undefined>(undefined);
+  const railCollapsed = collapsed && !peek;
+
+  const endPeek = () => {
+    window.clearTimeout(peekTimer.current);
+    setPeek(false);
+  };
+
+  useEffect(() => () => window.clearTimeout(peekTimer.current), []);
+
   const [pageSpring, pageApi] = useSpring(() => ({
     opacity: 1,
     config: { duration: 380, easing: easings.easeOutCubic },
@@ -397,10 +421,20 @@ function DashboardLayoutInner({
             entering && "sb-enter-sidebar",
             classNames?.sidebar,
           )}
+          onPointerEnter={(event) => {
+            // Mouse only: a tap on a touch screen or a pen must not open it.
+            if (!collapsed || event.pointerType !== "mouse") return;
+            window.clearTimeout(peekTimer.current);
+            peekTimer.current = window.setTimeout(() => setPeek(true), RAIL_PEEK_DELAY_MS);
+          }}
+          onPointerLeave={endPeek}
         >
+          {/* Absolute, so a popped-out menu overlays the page instead of pushing it. */}
           <div
             className={cn(
-              "relative flex h-full flex-col overflow-visible backdrop-blur",
+              "absolute inset-y-0 left-0 flex flex-col overflow-visible backdrop-blur transition-[width,box-shadow] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]",
+              railCollapsed ? "w-20" : "w-72",
+              peek && "border-r border-border/70 bg-card shadow-xl",
               classNames?.sidebarInner,
             )}
           >
@@ -409,7 +443,10 @@ function DashboardLayoutInner({
               variant="outline"
               size="icon"
               className="absolute -right-4 top-6 z-10 hidden size-9 rounded-full border-border/70 bg-background shadow-sm md:flex"
-              onClick={() => setCollapsed((current) => !current)}
+              onClick={() => {
+                endPeek();
+                setCollapsed((current) => !current);
+              }}
               aria-label={
                 collapsed
                   ? t("app.sidebar.expand", "Expand sidebar")
@@ -432,28 +469,31 @@ function DashboardLayoutInner({
               <div
                 className={cn(
                   "flex items-center border-b border-border/60 py-5",
-                  collapsed ? "justify-center px-3" : "justify-start px-5",
+                  railCollapsed ? "justify-center px-3" : "justify-start px-5",
                   classNames?.sidebarHeader,
                 )}
               >
-                {collapsed ? (brandCollapsed ?? brand) : brand}
+                {railCollapsed ? (brandCollapsed ?? brand) : brand}
               </div>
             )}
 
             <div
               className={cn(
                 "flex min-h-0 flex-1 flex-col overflow-y-auto py-4",
-                collapsed ? "px-2" : "px-3",
+                railCollapsed ? "px-2" : "px-3",
               )}
             >
               {sidebarContent ? (
-                sidebarContent(collapsed)
+                sidebarContent(railCollapsed)
               ) : (
                 <SideNavList
                   navItems={navItems}
                   activeTab={activeTab}
-                  collapsed={collapsed}
-                  onTabSelect={onTabSelect}
+                  collapsed={railCollapsed}
+                  onTabSelect={(id) => {
+                    endPeek();
+                    onTabSelect(id);
+                  }}
                   classNames={classNames}
                 />
               )}
@@ -463,10 +503,10 @@ function DashboardLayoutInner({
               <div
                 className={cn(
                   "border-t border-border/60 py-3",
-                  collapsed ? "px-2" : "px-3",
+                  railCollapsed ? "px-2" : "px-3",
                 )}
               >
-                {sidebarFooter ? sidebarFooter(collapsed) : <AccountPanel {...account!} collapsed={collapsed} />}
+                {sidebarFooter ? sidebarFooter(railCollapsed) : <AccountPanel {...account!} collapsed={railCollapsed} />}
               </div>
             ) : null}
           </div>

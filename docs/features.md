@@ -48,6 +48,11 @@ rules that keep it that way; a per-app copy of any of them is the bug.
   the sidebar is `md:block`, the header is `md:flex`, the bottom bar is
   `md:hidden`. Do not introduce a second one. `useIsMobile()` is its JS
   complement (`max-width: 767px`) and agrees with it by construction.
+- **The collapsed rail pops out on mouse hover.** Resting a mouse on it for
+  150ms overlays the full menu on the page, and leaving folds it back. Touch and
+  pen pointers never trigger it. `sidebarContent`, `sidebarFooter` and the
+  account panel receive the effective state, so they draw expanded while it is
+  out; nothing in an app needs to change.
 - **Prefer CSS to JS for showing and hiding.** `md:hidden` / `hidden md:block`
   need no JS and do not flash on first paint. Reach for `useIsMobile()` only
   when the decision is which component to *mount*, or when a layout mode has to
