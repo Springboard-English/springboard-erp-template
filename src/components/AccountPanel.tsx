@@ -1,13 +1,18 @@
-import { useState, type ReactNode } from "react";
-import { LogOut } from "lucide-react";
+import { useState } from "react";
+import { LogOut, UserCog } from "lucide-react";
 import BuildTag, { type BuildTagProps } from "./BuildTag";
-import ManageAccountLink from "@/components/ManageAccountLink";
 import PushNotificationsToggle, {
   type PushNotificationsToggleProps,
 } from "./notifications/PushNotificationsToggle";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  SidebarButton,
+  SidebarIconCell,
+  SidebarText,
+  sidebarRowGrid,
+  type SidebarAction,
+} from "./layout/SidebarRow";
 import { Separator } from "@/components/ui/separator";
+import { ACCOUNTS_PROFILE_URL } from "@/config/accounts";
 import { useAuth } from "@/context/AuthContext";
 import { useI18n } from "@/context/I18nContext";
 import { cn } from "@/lib/utils";
@@ -21,8 +26,8 @@ export interface AccountConfig {
   push?: Pick<PushNotificationsToggleProps, "app" | "serviceWorkerUrl">;
   /** False on the accounts site, where the link would point at the page itself. */
   manageAccount?: boolean;
-  /** An app's own rows above Manage account, given the panel's collapsed state. */
-  actions?: (collapsed: boolean) => ReactNode;
+  /** An app's own rows above Manage account; the panel draws them like nav tabs. */
+  actions?: SidebarAction[];
 }
 
 export interface AccountPanelProps extends AccountConfig {
@@ -89,58 +94,70 @@ export default function AccountPanel({
     }
   };
 
+  const rowClassName = "text-muted-foreground hover:text-foreground";
+  const showManageAccount = manageAccount && user && user.account_type !== "guest";
+
+  // Bottom-up, in the sidebar's two columns: the rows that only show expanded
+  // sit on top, so a rail that collapses or pops out moves no icon.
   return (
-    <Card
-      className={cn(
-        "rounded-2xl border-border/70 bg-card/85 py-0 shadow-[0_18px_40px_-28px_rgba(0,0,0,0.45)] backdrop-blur",
-        collapsed && "rounded-xl",
-        className,
-      )}
-    >
-      <CardContent className={cn("space-y-4 px-4 py-4", collapsed && "px-3 py-3")}>
-        {collapsed ? (
-          <div className="flex justify-center">
-            <div
-              // An app tints this from CSS with the two variables.
-              className="flex size-10 items-center justify-center rounded-full bg-[var(--account-avatar-bg,var(--muted))] text-sm font-semibold tracking-tight text-[var(--account-avatar-fg,inherit)]"
-              title={identity}
-              aria-label={identity}
-            >
-              {initialsOf(user?.name)}
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-1">
-            <p className="text-sm font-semibold tracking-tight">{identity}</p>
-            {user?.name?.trim() && user.username?.trim() ? (
-              <p className="truncate text-xs text-muted-foreground">{user.username}</p>
-            ) : null}
-          </div>
-        )}
+    <div className={cn("flex flex-col gap-1", className)}>
+      <div className={cn("overflow-hidden", collapsed ? "h-0" : "pb-2")}>
+        {/* Fixed to the expanded width, so the rail's width animation clips it instead of rewrapping it. */}
+        <div className="w-60 space-y-3 px-3">
+          <AccountExtras buildTag={buildTag} push={push} collapsed={collapsed} />
+        </div>
+      </div>
 
-        <AccountExtras buildTag={buildTag} push={push} collapsed={collapsed} />
+      {actions?.map((action) => (
+        <SidebarButton
+          key={action.id}
+          icon={action.icon}
+          label={action.label}
+          collapsed={collapsed}
+          dataAttributes={action.dataAttributes}
+          disabled={action.disabled}
+          onClick={action.onClick}
+          className={rowClassName}
+        />
+      ))}
 
-        <Separator />
+      {showManageAccount ? (
+        <SidebarButton
+          icon={UserCog}
+          label={t("account.manage", "Manage account")}
+          collapsed={collapsed}
+          href={ACCOUNTS_PROFILE_URL}
+          className={rowClassName}
+        />
+      ) : null}
 
-        {actions?.(collapsed)}
+      <SidebarButton
+        icon={LogOut}
+        label={isLoggingOut ? t("account.loggingOut") : logoutLabel}
+        collapsed={collapsed}
+        onClick={handleLogout}
+        disabled={isLoggingOut}
+        className={rowClassName}
+      />
 
-        {manageAccount ? <ManageAccountLink collapsed={collapsed} /> : null}
+      <Separator className="my-1" />
 
-        <Button
-          variant="outline"
-          size={collapsed ? "icon" : "sm"}
-          onClick={handleLogout}
-          disabled={isLoggingOut}
-          title={collapsed ? logoutLabel : undefined}
-          aria-label={collapsed ? logoutLabel : undefined}
-          className={cn(collapsed ? "mx-auto flex size-9 justify-center" : "w-full justify-start gap-2")}
-        >
-          <LogOut className="size-4" />
-          <span className={collapsed ? "sr-only" : undefined}>
-            {isLoggingOut ? t("account.loggingOut") : logoutLabel}
+      <div className={cn(sidebarRowGrid, "min-h-12")} title={identity}>
+        <SidebarIconCell>
+          <span
+            aria-hidden="true"
+            // An app tints this from CSS with the two variables.
+            className="flex size-9 items-center justify-center rounded-full bg-[var(--account-avatar-bg,var(--muted))] text-xs font-semibold tracking-tight text-[var(--account-avatar-fg,inherit)]"
+          >
+            {initialsOf(user?.name)}
           </span>
-        </Button>
-      </CardContent>
-    </Card>
+        </SidebarIconCell>
+        <SidebarText collapsed={collapsed} className="pl-1">
+          {/* Name and role on their own lines, so a long role isn't cut off after the name. */}
+          <span className="block truncate text-sm font-semibold tracking-tight">{user ? name : loggingIn}</span>
+          {user ? <span className="block truncate text-xs text-muted-foreground">{accountTypeLabel}</span> : null}
+        </SidebarText>
+      </div>
+    </div>
   );
 }

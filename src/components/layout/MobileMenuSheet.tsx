@@ -18,7 +18,7 @@ import type { DashboardNavItem } from "./DashboardLayout";
 
 // The mobile counterpart of the side nav. Below `md` the sidebar is
 // `display:none` and the desktop header is `md:flex`, so everything an app puts
-// in `sidebarFooter` or `headerContent` — account, theme, sign-out — is
+// in the account panel or `headerContent` — account, theme, sign-out — is
 // unreachable on a phone unless it lives here too.
 
 interface SegmentedOption {
@@ -198,10 +198,12 @@ export default function MobileMenuSheet({
               <div className="grid grid-cols-3 gap-1">
                 {overflowItems.map((item) => {
                   const isActive = activeTab === item.id;
+                  const Icon = item.icon;
                   return (
                     <button
                       key={item.id}
                       type="button"
+                      {...item.dataAttributes}
                       className={cn(
                         "flex min-h-11 flex-col items-center gap-1.5 rounded-xl px-2 py-3 text-xs font-medium transition-colors",
                         isActive
@@ -210,7 +212,7 @@ export default function MobileMenuSheet({
                       )}
                       onClick={() => handleTabSelect(item.id)}
                     >
-                      {item.icon}
+                      {Icon ? <Icon className="size-5" /> : null}
                       {item.label}
                     </button>
                   );

@@ -8,6 +8,8 @@ export interface MobileBottomBarItem {
   id: string;
   label: string;
   icon: ReactNode;
+  /** Put on the tab's button, e.g. a tour anchor. */
+  dataAttributes?: Record<`data-${string}`, string>;
 }
 
 export interface MobileBottomBarProps {
@@ -83,6 +85,7 @@ export default function MobileBottomBar({
               onClick={() => onTabSelect?.(item.id)}
               aria-label={item.label}
               aria-current={isActive ? "page" : undefined}
+              {...item.dataAttributes}
             >
               {item.icon}
               <span className="max-w-full truncate text-xs font-medium leading-tight">

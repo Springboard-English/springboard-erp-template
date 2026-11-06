@@ -57,7 +57,7 @@ releasing is in `docs/releasing.md`.
   dependency-free SVG.
 - Don't branch on an error's message text. A status check reads
   `ApiError.status`.
-- Don't put a control only in `sidebarFooter` or `headerContent`; both are
+- Don't put a control only in the account panel or `headerContent`; both are
   desktop-only, and an app that overrides `mobileMenu` owns the mobile copy.
 - Don't call the backend from the changelog, or add a `fetch` handler to the
   push service worker.

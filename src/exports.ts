@@ -50,7 +50,7 @@ export { default as ColorModeSelect } from "./theme/ColorModeSelect";
 export { default as ColorModeIconDropdown } from "./theme/ColorModeIconDropdown";
 export { default as LocaleSelect } from "./theme/LocaleSelect";
 
-export { SitemarkIcon, LogoIcon, SpringboardBrand } from "./components/CustomIcons";
+export { SitemarkIcon, LogoIcon, SpringboardMark } from "./components/CustomIcons";
 export { default as EmptyState } from "./components/EmptyState";
 export type { EmptyStateProps } from "./components/EmptyState";
 export { default as OutdatedDataDialog } from "./components/dialogs/OutdatedDataDialog";
@@ -107,7 +107,13 @@ export type {
   ChangelogDay,
 } from "./components/changelog/types";
 export { default as DashboardLayout } from "./components/layout/DashboardLayout";
-export type { DashboardLayoutProps, DashboardNavItem, DashboardLayoutClassNames } from "./components/layout/DashboardLayout";
+export type {
+  DashboardBrand,
+  DashboardLayoutProps,
+  DashboardNavItem,
+  DashboardLayoutClassNames,
+} from "./components/layout/DashboardLayout";
+export type { SidebarAction, SidebarDataAttributes, SidebarIcon } from "./components/layout/SidebarRow";
 export { default as PageHeader } from "./components/layout/PageHeader";
 export type { PageHeaderProps, PageHeaderBackItem } from "./components/layout/PageHeader";
 export { default as AppHeader } from "./components/layout/AppHeader";

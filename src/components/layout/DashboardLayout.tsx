@@ -22,6 +22,14 @@ import MobileBottomBar, {
 } from "@/components/MobileBottomBar";
 import AccountPanel, { AccountExtras, type AccountConfig } from "../AccountPanel";
 import MobileMenuSheet from "@/components/layout/MobileMenuSheet";
+import {
+  SidebarIconCell,
+  SidebarText,
+  sidebarRowGrid,
+  type SidebarDataAttributes,
+  type SidebarIcon,
+} from "./SidebarRow";
+import { SpringboardMark } from "@/components/CustomIcons";
 import OccasionBackdrop from "@/components/layout/OccasionBackdrop";
 import { useGlobalStatusOptional } from "@/context/GlobalStatusContext";
 import { PullToRefreshProvider, usePageRefresh } from "@/context/PullToRefreshContext";
@@ -46,11 +54,24 @@ export interface DashboardNavItem {
   /** Stable id passed back to onTabSelect and compared against activeTab. */
   id: string;
   label: string;
-  icon?: ReactNode;
+  /** The icon component; the shell sizes it the same in the side nav, bottom bar and sheet. */
+  icon?: SidebarIcon;
   /** Hide from the mobile bottom bar (still shown in the side nav). */
   hideOnMobile?: boolean;
   /** Shorter label for the phone bottom bar, for a name that would truncate. */
   mobileLabel?: string;
+  /** Put on the tab itself wherever it is drawn, e.g. a tour anchor. */
+  dataAttributes?: SidebarDataAttributes;
+}
+
+/** The brand row at the top of the side nav: a mark in the icon column, two lines beside it. */
+export interface DashboardBrand {
+  /** A square mark up to 36px. Defaults to the Springboard mark. */
+  mark?: ReactNode;
+  /** Defaults to "Springboard English". */
+  title?: string;
+  /** The app's name, e.g. "HRM". */
+  subtitle?: string;
 }
 
 export interface DashboardLayoutClassNames {
@@ -71,10 +92,8 @@ export interface DashboardLayoutProps {
   navItems: DashboardNavItem[];
   activeTab: string;
   onTabSelect: (id: string) => void;
-  /** Brand mark shown when the sidebar is expanded. */
-  brand?: ReactNode;
-  /** Compact brand mark shown when the sidebar is collapsed. */
-  brandCollapsed?: ReactNode;
+  /** The brand row; the shell lays it out so the mark stays put as the rail collapses. */
+  brand?: DashboardBrand;
   /** Right-aligned content of the floating desktop header (account menu, color mode, …). */
   headerContent?: ReactNode;
   /**
@@ -83,8 +102,6 @@ export interface DashboardLayoutProps {
    * when `navItems` is empty. An app's `mobileMenu` still follows it there.
    */
   account?: AccountConfig;
-  /** Footer pinned to the bottom of the side nav, in place of `account`. */
-  sidebarFooter?: (collapsed: boolean) => ReactNode;
   /** Replace the built-in nav list entirely (e.g. a guides tree). */
   sidebarContent?: (collapsed: boolean) => ReactNode;
   /**
@@ -221,14 +238,14 @@ function SideNavList({
     <nav
       ref={navRef}
       className={cn(
-        "animate-in fade-in-0 slide-in-from-bottom-2 relative flex flex-col gap-1 p-2 duration-200",
+        "animate-in fade-in-0 slide-in-from-bottom-2 relative flex flex-col gap-1 duration-200",
         classNames?.nav,
       )}
     >
       <animated.div
         aria-hidden="true"
         className={cn(
-          "pointer-events-none absolute inset-x-2 rounded-xl bg-secondary",
+          "pointer-events-none absolute inset-x-0 rounded-xl bg-secondary",
           classNames?.navIndicator,
         )}
         style={{
@@ -240,17 +257,19 @@ function SideNavList({
       />
       {navItems.map((item) => {
         const isActive = activeTab === item.id;
+        const Icon = item.icon;
+        // Two columns whatever the state, so the icon never moves; the rail's width clips the label.
         return (
           <Button
             key={item.id}
             type="button"
             variant="ghost"
             title={collapsed ? item.label : undefined}
-            aria-label={collapsed ? item.label : undefined}
             aria-current={isActive ? "page" : undefined}
+            {...item.dataAttributes}
             className={cn(
-              "relative z-10 h-11 w-full rounded-xl text-sm font-medium transition-colors duration-150 hover:bg-transparent",
-              collapsed ? "justify-center px-0" : "justify-start gap-3 px-3",
+              sidebarRowGrid,
+              "relative z-10 h-11 gap-0 overflow-hidden rounded-xl px-0 text-sm font-medium transition-colors duration-150 hover:bg-transparent",
               isActive
                 ? "text-foreground"
                 : "text-muted-foreground hover:text-foreground",
@@ -259,8 +278,8 @@ function SideNavList({
             )}
             onClick={() => onTabSelect(item.id)}
           >
-            {item.icon}
-            <span className={collapsed ? "sr-only" : undefined}>{item.label}</span>
+            <SidebarIconCell>{Icon ? <Icon className="size-5" /> : null}</SidebarIconCell>
+            <SidebarText collapsed={collapsed}>{item.label}</SidebarText>
           </Button>
         );
       })}
@@ -273,10 +292,8 @@ function DashboardLayoutInner({
   activeTab,
   onTabSelect,
   brand,
-  brandCollapsed,
   headerContent,
   account,
-  sidebarFooter,
   sidebarContent,
   mobileMenu,
   children,
@@ -355,11 +372,15 @@ function DashboardLayoutInner({
   const shownItems = navItems.filter((item) => !item.hideOnMobile);
   // Past this many tabs the row outgrows a phone and pushes Menu off-screen.
   const barItems = shownItems.slice(0, MAX_BOTTOM_BAR_ITEMS);
-  const mobileItems: MobileBottomBarItem[] = barItems.map((item) => ({
-    id: item.id,
-    label: item.mobileLabel ?? item.label,
-    icon: item.icon,
-  }));
+  const mobileItems: MobileBottomBarItem[] = barItems.map((item) => {
+    const Icon = item.icon;
+    return {
+      id: item.id,
+      label: item.mobileLabel ?? item.label,
+      icon: Icon ? <Icon className="size-5" /> : null,
+      dataAttributes: item.dataAttributes,
+    };
+  });
   // Anything the bar drops would otherwise have no entry point on a phone.
   const overflowItems = [
     ...shownItems.slice(MAX_BOTTOM_BAR_ITEMS),
@@ -369,10 +390,9 @@ function DashboardLayoutInner({
   // `headerContent` is `md:flex`-only, so whatever an app puts there — its
   // notifications, its own controls — has no home on a phone. Surface it.
   //
-  // `sidebarFooter` is deliberately NOT surfaced. It is where apps put their
-  // account panel, and the sheet already draws identity and sign-out itself, so
-  // passing it through would show the name, the email and a Logout button
-  // twice. An app that wants something else in the sheet passes `mobileMenu`.
+  // The account panel is deliberately NOT surfaced: the sheet already draws
+  // identity and sign-out itself, so it would show the name, the email and a
+  // Logout button twice. An app that wants more in the sheet passes `mobileMenu`.
   const pageRefresh = usePageRefresh();
   const report = useReportProblem();
 
@@ -465,24 +485,28 @@ function DashboardLayoutInner({
               )}
             </Button>
 
-            {(brand || brandCollapsed) && (
+            {/* Every block below keeps px-4 in both states: the 3rem icon column is then the rail's centre. */}
+            {brand ? (
               <div
                 className={cn(
-                  "flex items-center border-b border-border/60 py-5",
-                  railCollapsed ? "justify-center px-3" : "justify-start px-5",
+                  sidebarRowGrid,
+                  "overflow-hidden border-b border-border/60 px-4 py-5",
                   classNames?.sidebarHeader,
                 )}
               >
-                {railCollapsed ? (brandCollapsed ?? brand) : brand}
+                <SidebarIconCell>{brand.mark ?? <SpringboardMark />}</SidebarIconCell>
+                <SidebarText collapsed={railCollapsed} className="pl-1">
+                  <span className="block truncate text-sm font-semibold text-foreground">
+                    {brand.title ?? "Springboard English"}
+                  </span>
+                  {brand.subtitle ? (
+                    <span className="block truncate text-xs text-muted-foreground">{brand.subtitle}</span>
+                  ) : null}
+                </SidebarText>
               </div>
-            )}
+            ) : null}
 
-            <div
-              className={cn(
-                "flex min-h-0 flex-1 flex-col overflow-y-auto py-4",
-                railCollapsed ? "px-2" : "px-3",
-              )}
-            >
+            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden px-4 py-4">
               {sidebarContent ? (
                 sidebarContent(railCollapsed)
               ) : (
@@ -499,14 +523,9 @@ function DashboardLayoutInner({
               )}
             </div>
 
-            {sidebarFooter || account ? (
-              <div
-                className={cn(
-                  "border-t border-border/60 py-3",
-                  railCollapsed ? "px-2" : "px-3",
-                )}
-              >
-                {sidebarFooter ? sidebarFooter(railCollapsed) : <AccountPanel {...account!} collapsed={railCollapsed} />}
+            {account ? (
+              <div className="border-t border-border/60 px-4 py-3">
+                <AccountPanel {...account} collapsed={railCollapsed} />
               </div>
             ) : null}
           </div>

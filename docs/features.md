@@ -50,9 +50,19 @@ rules that keep it that way; a per-app copy of any of them is the bug.
   complement (`max-width: 767px`) and agrees with it by construction.
 - **The collapsed rail pops out on mouse hover.** Resting a mouse on it for
   150ms overlays the full menu on the page, and leaving folds it back. Touch and
-  pen pointers never trigger it. `sidebarContent`, `sidebarFooter` and the
-  account panel receive the effective state, so they draw expanded while it is
-  out; nothing in an app needs to change.
+  pen pointers never trigger it. `sidebarContent` and the account panel
+  receive the effective state, so they draw expanded while it is out; nothing
+  in an app needs to change.
+- **Every sidebar row is two columns, and the template draws them.** A fixed
+  3rem icon column and a text column, with the same `px-4` collapsed and
+  expanded, so no icon moves when the rail collapses, expands or pops out; the
+  rail's width clips the text and it fades. Apps pass values only: nav items
+  with an icon *component* (`icon: Users`, sized by the shell), `brand` as
+  `{ mark?, title?, subtitle? }`, and `account.actions` as
+  `{ id, label, icon, onClick }` rows. A tour anchor or test id goes in
+  `dataAttributes`, which lands on the tab in the side nav, bottom bar and
+  sheet. Restyle through `classNames` (`navIndicator`, `navItemActive`, `nav`,
+  `sidebar`), never by passing markup.
 - **Prefer CSS to JS for showing and hiding.** `md:hidden` / `hidden md:block`
   need no JS and do not flash on first paint. Reach for `useIsMobile()` only
   when the decision is which component to *mount*, or when a layout mode has to
@@ -89,7 +99,7 @@ rules that keep it that way; a per-app copy of any of them is the bug.
   `viewport-fit=cover`, which is what makes `env()` resolve at all — do not drop
   it.
 - **Use `dvh`, not `vh`.** `100vh` overflows behind mobile browser chrome.
-- **Anything an app puts in `sidebarFooter` or `headerContent` is desktop-only.**
+- **The account panel and anything in `headerContent` are desktop-only.**
   Both are gated above `md`. `DashboardLayout` surfaces them in `MobileMenuSheet`
   by default, and `mobileMenu` replaces that body — an app that overrides it owns
   putting account and sign-out somewhere reachable.
