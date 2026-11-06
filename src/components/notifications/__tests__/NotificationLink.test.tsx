@@ -12,6 +12,7 @@ const { fetchWithRefreshMock, markSeenMock, notificationsState } = vi.hoisted(()
 vi.mock("@/api_calls/fetchWithRefresh", () => ({ fetchWithRefresh: fetchWithRefreshMock }));
 vi.mock("@/context/NotificationContext", () => ({
   useNotifications: () => ({
+    recent: notificationsState.informative,
     immediate: [],
     urgent: [],
     informative: notificationsState.informative,
@@ -28,8 +29,13 @@ import { fetchUserNotifications, safeNotificationLink } from "@/api_calls/notifi
 import { I18nProvider } from "@/context/I18nContext";
 import NotificationBell from "../NotificationBell";
 
+/** The bell's trigger; it renders a phone row and a desktop icon, and CSS picks one. */
+function bellButton() {
+  return screen.getAllByRole("button", { name: /Notifications/ })[0];
+}
+
 /** A notice with the given key, title and link. */
-function notice(key: string, link: string | null): UserNotification {
+function notice(key: string, link: string | null, read_status: boolean | null = null): UserNotification {
   return {
     appsheet_key: key,
     users_notification_key: null,
@@ -41,7 +47,7 @@ function notice(key: string, link: string | null): UserNotification {
     end_time: null,
     created_at: null,
     sender_key: null,
-    read_status: null,
+    read_status,
     read_at: null,
     link,
   };
@@ -102,7 +108,7 @@ describe("NotificationBell", () => {
       </I18nProvider>,
     );
 
-    await user.click(screen.getByRole("button", { name: /Notifications/ }));
+    await user.click(bellButton());
 
     const links = screen.getAllByRole("link", { name: "Open" });
     expect(links).toHaveLength(1);
@@ -119,7 +125,7 @@ describe("NotificationBell", () => {
         <NotificationBell />
       </I18nProvider>,
     );
-    const bell = screen.getByRole("button", { name: /Notifications/ });
+    const bell = bellButton();
 
     await user.click(bell);
     expect(screen.getByText("Notice a")).toBeInTheDocument();
@@ -127,5 +133,46 @@ describe("NotificationBell", () => {
 
     await user.click(bell);
     expect(markSeenMock.mock.calls.map(([key]) => key)).toEqual(["a", "b"]);
+  });
+
+  it("keeps read notices listed, bolds the unread ones and shows at most five", async () => {
+    const user = userEvent.setup();
+    notificationsState.informative = [
+      notice("a", null),
+      notice("b", null, true),
+      notice("c", null),
+      notice("d", null, true),
+      notice("e", null),
+      notice("f", null),
+    ];
+    render(
+      <I18nProvider locale="en">
+        <NotificationBell />
+      </I18nProvider>,
+    );
+
+    await user.click(bellButton());
+
+    expect(screen.getAllByRole("listitem")).toHaveLength(5);
+    expect(screen.queryByText("Notice f")).not.toBeInTheDocument();
+    expect(screen.getByText("Notice b")).toHaveClass("font-normal");
+    expect(screen.getByText("Notice a")).toHaveClass("font-semibold");
+    // Only unread notices offer a mark-as-read tick.
+    expect(screen.getAllByRole("button", { name: "Mark as read" })).toHaveLength(3);
+  });
+
+  it("marks every unread notice read from the header, not only the five shown", async () => {
+    const user = userEvent.setup();
+    notificationsState.informative = ["a", "b", "c", "d", "e", "f"].map((key) => notice(key, null, key === "b"));
+    render(
+      <I18nProvider locale="en">
+        <NotificationBell />
+      </I18nProvider>,
+    );
+
+    await user.click(bellButton());
+    await user.click(screen.getByRole("button", { name: "Mark all as read" }));
+
+    expect(markSeenMock.mock.calls.map(([key]) => key)).toEqual(["a", "c", "d", "e", "f"]);
   });
 });

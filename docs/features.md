@@ -449,6 +449,23 @@ registers, removes and tests the device (`api_calls/pushNotifications.ts`,
   (`NotificationLink`). Only an absolute http(s) URL renders
   (`safeNotificationLink`); the fetcher drops anything else.
 
+## Notification centre (`NotificationBell`, since 5.4.0)
+
+- **It lists the five newest active notices, read ones included** (`recent` on
+  `useNotifications()`). Unread titles are bold and carry a "Mark as read"
+  tick; reading a notice keeps it listed. "Mark all as read" covers every
+  unread notice, not only the five shown. The view-all page has the rest.
+- **The banner and dialog still take only unread notices** (`urgent`,
+  `immediate`). Dismissing one marks it read and leaves it in the centre.
+- **Informative notices are marked read when the centre closes**, so they stay
+  bold while the reader is looking at them.
+- **In the phone menu it is a full-width "Notifications" row** whose list opens
+  inline; on desktop it is the header icon with a dropdown. Put it in
+  `mobileMenu` on its own, not in a row beside other controls.
+- **The phone menu draws the Language switch itself** (under Appearance, when
+  the app has more than one locale), so `LocaleSelect` belongs in the desktop
+  header only.
+
 ## Report a problem (`src/components/report/`)
 
 `<DashboardLayout reportProblem={{ app: "erp-hrm", enabled: isEmployee }}>`

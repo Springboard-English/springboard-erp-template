@@ -21,28 +21,33 @@ import type { DashboardNavItem } from "./DashboardLayout";
 // in `sidebarFooter` or `headerContent` — account, theme, sign-out — is
 // unreachable on a phone unless it lives here too.
 
-function AppearanceToggle() {
-  const { t } = useI18n();
-  const { mode, setMode } = useColorMode();
-  const options: Array<{
-    value: "system" | "light" | "dark";
-    label: string;
-    icon: LucideIcon;
-  }> = [
-    { value: "system", label: t("app.appearance.system", "System"), icon: Monitor },
-    { value: "light", label: t("app.appearance.light", "Light"), icon: Sun },
-    { value: "dark", label: t("app.appearance.dark", "Dark"), icon: Moon },
-  ];
+interface SegmentedOption {
+  value: string;
+  label: string;
+  icon?: LucideIcon;
+}
 
+/** The sheet's segmented track: one equal-width pressed button per option. */
+function SegmentedToggle({
+  label,
+  options,
+  value,
+  onChange,
+}: {
+  label: string;
+  options: SegmentedOption[];
+  value: string;
+  onChange: (value: string) => void;
+}) {
   return (
     <div
-      className="relative inline-grid h-11 w-full grid-cols-3 rounded-xl border border-border/70 bg-muted/45 p-1"
+      className="relative grid h-11 w-full auto-cols-fr grid-flow-col rounded-xl border border-border/70 bg-muted/45 p-1"
       role="group"
-      aria-label={t("app.appearance.label", "Appearance")}
+      aria-label={label}
     >
       {options.map((option) => {
         const Icon = option.icon;
-        const selected = mode === option.value;
+        const selected = value === option.value;
         return (
           <button
             key={option.value}
@@ -57,14 +62,51 @@ function AppearanceToggle() {
                 : "text-muted-foreground hover:text-foreground",
             )}
             aria-pressed={selected}
-            onClick={() => setMode(option.value)}
+            onClick={() => onChange(option.value)}
           >
-            <Icon className="size-3.5" />
+            {Icon ? <Icon className="size-3.5" /> : null}
             {option.label}
           </button>
         );
       })}
     </div>
+  );
+}
+
+/** System, Light or Dark for the shell. */
+function AppearanceToggle() {
+  const { t } = useI18n();
+  const { mode, setMode } = useColorMode();
+  return (
+    <SegmentedToggle
+      label={t("app.appearance.label", "Appearance")}
+      value={mode}
+      onChange={(value) => setMode(value as "system" | "light" | "dark")}
+      options={[
+        { value: "system", label: t("app.appearance.system", "System"), icon: Monitor },
+        { value: "light", label: t("app.appearance.light", "Light"), icon: Sun },
+        { value: "dark", label: t("app.appearance.dark", "Dark"), icon: Moon },
+      ]}
+    />
+  );
+}
+
+// Each language in its own name, so a reader who can't read the current one can still find theirs.
+const LOCALE_NAMES: Record<string, string> = { en: "English", vi: "Tiếng Việt" };
+
+/** The app's languages, the phone counterpart of the header's `LocaleSelect`. */
+function LanguageToggle() {
+  const { t, locale, setLocale, availableLocales } = useI18n();
+  return (
+    <SegmentedToggle
+      label={t("locale.selector", "Language")}
+      value={locale}
+      onChange={setLocale}
+      options={availableLocales.map((code) => ({
+        value: code,
+        label: LOCALE_NAMES[code] ?? code.toUpperCase(),
+      }))}
+    />
   );
 }
 
@@ -90,7 +132,7 @@ export default function MobileMenuSheet({
   onTabSelect,
   children,
 }: MobileMenuSheetProps) {
-  const { t } = useI18n();
+  const { t, availableLocales } = useI18n();
   const { user, logout } = useAuth();
   const colorMode = useColorMode();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -199,6 +241,16 @@ export default function MobileMenuSheet({
                 {t("app.appearance.label", "Appearance")}
               </p>
               <AppearanceToggle />
+            </div>
+          ) : null}
+
+          {/* Drawn here like Appearance, so no app has to fit `LocaleSelect` into its `mobileMenu`. */}
+          {availableLocales.length > 1 ? (
+            <div className="space-y-2">
+              <p className="text-xs font-medium text-muted-foreground">
+                {t("locale.selector", "Language")}
+              </p>
+              <LanguageToggle />
             </div>
           ) : null}
         </div>

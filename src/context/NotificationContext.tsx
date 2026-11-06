@@ -14,7 +14,14 @@ function isActive(n: UserNotification): boolean {
     return true;
 }
 
+/** Newest first; a notice with no `created_at` sorts last. */
+function byNewest(a: UserNotification, b: UserNotification): number {
+    return (b.created_at ? Date.parse(b.created_at) : 0) - (a.created_at ? Date.parse(a.created_at) : 0);
+}
+
 export interface NotificationContextValue {
+    /** Every active notice, read or not, newest first, with this session's reads applied to `read_status`. */
+    recent: UserNotification[];
     immediate: UserNotification[];
     urgent: UserNotification[];
     informative: UserNotification[];
@@ -79,6 +86,16 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         markSeen(appsheetKey);
     }, [markSeen]);
 
+    // Dismissing hides a banner or dialog, not the notice: the centre keeps it, as read.
+    const recent = allNotifications
+        .filter(isActive)
+        .map((n) =>
+            n.read_status !== true && (readKeys.has(n.appsheet_key) || dismissedKeys.has(n.appsheet_key))
+                ? { ...n, read_status: true }
+                : n,
+        )
+        .sort(byNewest);
+
     const activeVisible = allNotifications.filter(
         (n) =>
             isActive(n) &&
@@ -95,6 +112,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     return (
         <NotificationContext.Provider
             value={{
+                recent,
                 immediate,
                 urgent,
                 informative,

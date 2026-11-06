@@ -1,9 +1,10 @@
 import { useMemo, useRef, useState, useEffect } from "react";
-import { Bell, ExternalLink, RefreshCw, X } from "lucide-react";
+import { Bell, Check, ExternalLink, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { headerIconButtonPlain } from "@/lib/headerControl";
 import { touchHitArea } from "@/lib/touchTarget";
+import { Button } from "@/components/ui/button";
 import { useNotifications } from "@/context/NotificationContext";
 import { useI18n } from "@/context/I18nContext";
 import NotificationLink from "./NotificationLink";
@@ -11,6 +12,9 @@ import {
     getNotificationPriorityKind,
     shouldMarkNotificationReadOnView,
 } from "@/api_calls/notifications";
+
+/** How many notices the centre lists; the rest are on the view-all page. */
+const MAX_SHOWN = 5;
 
 function formatPriority(priority: string | null) {
     return getNotificationPriorityKind(priority);
@@ -41,17 +45,19 @@ interface NotificationBellProps {
     viewAllPath?: string;
 }
 
+/**
+ * The notification centre: the five newest active notices, read ones kept and
+ * unread ones in bold. On desktop it is a header icon with a dropdown; in the
+ * phone menu it is a full-width row whose list opens inline.
+ */
 export default function NotificationBell({ viewAllPath }: NotificationBellProps) {
     const { t } = useI18n();
-    const { immediate, urgent, informative, unreadCount, isLoading, dismiss, markSeen, refetch } =
-        useNotifications();
+    const { recent, unreadCount, isLoading, markSeen, refetch } = useNotifications();
     const [open, setOpen] = useState(false);
     const rootRef = useRef<HTMLDivElement>(null);
 
-    const allNotifications = useMemo(
-        () => [...immediate, ...urgent, ...informative],
-        [immediate, urgent, informative],
-    );
+    const shown = useMemo(() => recent.slice(0, MAX_SHOWN), [recent]);
+    const unread = useMemo(() => recent.filter((n) => n.read_status !== true), [recent]);
 
     useEffect(() => {
         if (!open) return;
@@ -64,16 +70,16 @@ export default function NotificationBell({ viewAllPath }: NotificationBellProps)
         return () => document.removeEventListener("mousedown", handlePointerDown);
     }, [open]);
 
-    // Marking read hides a notification, so informative ones shown while open are only
-    // collected here and marked read when the centre closes.
+    // Informative notices shown while open are marked read when the centre
+    // closes, so they stay bold for as long as the reader is looking at them.
     const seenWhileOpen = useRef<Set<string>>(new Set());
 
     useEffect(() => {
         if (!open) return;
-        informative
-            .filter((notification) => shouldMarkNotificationReadOnView(notification))
-            .forEach((notification) => seenWhileOpen.current.add(notification.appsheet_key));
-    }, [informative, open]);
+        shown
+            .filter((n) => n.read_status !== true && shouldMarkNotificationReadOnView(n))
+            .forEach((n) => seenWhileOpen.current.add(n.appsheet_key));
+    }, [shown, open]);
 
     useEffect(() => {
         if (open) return;
@@ -82,24 +88,46 @@ export default function NotificationBell({ viewAllPath }: NotificationBellProps)
         keys.forEach((key) => markSeen(key));
     }, [markSeen, open]);
 
+    const label = t("notificationBell.ariaLabel", undefined, {
+        suffix:
+            unreadCount > 0
+                ? t("notificationBell.unreadSuffix", undefined, { count: unreadCount })
+                : "",
+    });
+    const countText = unreadCount > 99 ? "99+" : String(unreadCount);
+
     return (
-        <div ref={rootRef} className="relative">
+        <div ref={rootRef} className="relative max-md:w-full">
+            {/* Phone menu: a labelled row like the sheet's other controls. */}
+            <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setOpen((current) => !current)}
+                className="w-full justify-start gap-2 md:hidden"
+                aria-label={label}
+                aria-expanded={open}
+            >
+                <Bell className="size-4" />
+                {t("notificationBell.title")}
+                {unreadCount > 0 && (
+                    <span className="ml-auto inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-semibold leading-none text-primary-foreground">
+                        {countText}
+                    </span>
+                )}
+            </Button>
+            {/* Desktop header: the toolbar's ghost circle. */}
             <button
                 type="button"
                 onClick={() => setOpen((current) => !current)}
-                className={cn(headerIconButtonPlain, "relative")}
-                aria-label={t("notificationBell.ariaLabel", undefined, {
-                    suffix:
-                        unreadCount > 0
-                            ? t("notificationBell.unreadSuffix", undefined, { count: unreadCount })
-                            : "",
-                })}
+                className={cn(headerIconButtonPlain, "relative max-md:hidden")}
+                aria-label={label}
                 aria-expanded={open}
             >
                 <Bell className="size-4" />
                 {unreadCount > 0 && (
                     <span className="absolute -right-1 -top-1 inline-flex min-h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold leading-none text-primary-foreground">
-                        {unreadCount > 99 ? "99+" : unreadCount}
+                        {countText}
                     </span>
                 )}
             </button>
@@ -107,24 +135,24 @@ export default function NotificationBell({ viewAllPath }: NotificationBellProps)
             {open && (
                 <div
                     className={cn(
-                        "animate-in fade-in-0 slide-in-from-top-2 absolute right-0 top-full mt-2 z-[60] w-[min(92vw,30rem)] overflow-hidden rounded-xl border border-border bg-popover text-popover-foreground shadow-xl duration-150",
+                        // Inline under the row in the phone menu; a dropdown under the icon on desktop.
+                        "animate-in fade-in-0 slide-in-from-top-2 mt-2 w-full overflow-hidden rounded-xl border border-border bg-popover text-popover-foreground duration-150",
+                        "md:absolute md:right-0 md:top-full md:z-[60] md:w-[min(92vw,30rem)] md:shadow-xl",
                     )}
                 >
-                    <div className="flex items-center justify-between border-b border-border/70 px-4 py-3">
-                        <p className="text-sm font-semibold text-foreground">
+                    <div className="flex items-center justify-between gap-3 border-b border-border/70 px-4 py-3">
+                        {/* The phone row right above already names the list. */}
+                        <p className="text-sm font-semibold text-foreground max-md:sr-only">
                             {t("notificationBell.title")}
                         </p>
-                        <div className="flex items-center gap-2">
-                            {allNotifications.length > 0 && (
+                        <div className="ml-auto flex items-center gap-3">
+                            {unread.length > 0 && (
                                 <button
                                     type="button"
-                                    onClick={() => {
-                                        allNotifications.forEach((n) => dismiss(n.appsheet_key));
-                                        setOpen(false);
-                                    }}
+                                    onClick={() => unread.forEach((n) => markSeen(n.appsheet_key))}
                                     className={cn(touchHitArea, "relative text-xs text-muted-foreground transition-colors hover:text-foreground")}
                                 >
-                                    {t("common.clearAll")}
+                                    {t("notificationBell.markAllRead")}
                                 </button>
                             )}
                             <button
@@ -141,53 +169,72 @@ export default function NotificationBell({ viewAllPath }: NotificationBellProps)
                         </div>
                     </div>
 
-                    {allNotifications.length === 0 ? (
+                    {shown.length === 0 ? (
                         <div className="px-4 py-8 text-center text-sm text-muted-foreground">
                             {t("notificationBell.empty")}
                         </div>
                     ) : (
-                        <ul className="max-h-80 divide-y divide-border/50 overflow-y-auto">
-                            {allNotifications.map((n) => (
-                                <li key={n.appsheet_key} className="flex items-start gap-3 px-4 py-3">
-                                    <div className="min-w-0 flex-1">
-                                        <div className="mb-1 flex items-center gap-2">
-                                            <p className="text-sm font-medium leading-snug text-foreground">
-                                                {n.title}
-                                            </p>
-                                            <span
-                                                className={cn(
-                                                    "shrink-0 rounded border px-1.5 py-0.5 text-xs font-semibold",
-                                                    priorityBadgeClass(n.priority),
-                                                )}
-                                            >
-                                                {t(
-                                                    `app.notification.${formatPriority(n.priority)}`,
-                                                    formatPriority(n.priority),
-                                                )}
-                                            </span>
+                        <ul className="divide-y divide-border/50 md:max-h-80 md:overflow-y-auto">
+                            {shown.map((n) => {
+                                const isUnread = n.read_status !== true;
+                                return (
+                                    <li key={n.appsheet_key} className="flex items-start gap-3 px-4 py-3">
+                                        <div className="min-w-0 flex-1">
+                                            <div className="mb-1 flex items-center gap-2">
+                                                <p
+                                                    className={cn(
+                                                        "min-w-0 text-sm leading-snug break-words",
+                                                        isUnread ? "font-semibold text-foreground" : "font-normal text-muted-foreground",
+                                                    )}
+                                                >
+                                                    {isUnread ? (
+                                                        <span className="sr-only">{t("notificationBell.unread")}: </span>
+                                                    ) : null}
+                                                    {n.title}
+                                                </p>
+                                                <span
+                                                    className={cn(
+                                                        "shrink-0 rounded border px-1.5 py-0.5 text-xs font-semibold",
+                                                        priorityBadgeClass(n.priority),
+                                                    )}
+                                                >
+                                                    {t(
+                                                        `app.notification.${formatPriority(n.priority)}`,
+                                                        formatPriority(n.priority),
+                                                    )}
+                                                </span>
+                                            </div>
+                                            {n.description && (
+                                                <p
+                                                    className={cn(
+                                                        "text-xs whitespace-pre-line break-words text-muted-foreground",
+                                                        isUnread && "font-medium",
+                                                    )}
+                                                >
+                                                    {n.description}
+                                                </p>
+                                            )}
+                                            <NotificationLink link={n.link} />
+                                            {n.created_at && (
+                                                <p className="mt-1 text-xs text-muted-foreground">
+                                                    {formatTimestamp(n.created_at)}
+                                                </p>
+                                            )}
                                         </div>
-                                        {n.description && (
-                                            <p className="text-xs whitespace-pre-line break-words text-muted-foreground">
-                                                {n.description}
-                                            </p>
+                                        {isUnread && (
+                                            <button
+                                                type="button"
+                                                onClick={() => markSeen(n.appsheet_key)}
+                                                className={cn(touchHitArea, "relative mt-0.5 shrink-0 text-muted-foreground transition-colors hover:text-foreground")}
+                                                aria-label={t("notificationBell.markRead")}
+                                                title={t("notificationBell.markRead")}
+                                            >
+                                                <Check className="size-3.5" />
+                                            </button>
                                         )}
-                                        <NotificationLink link={n.link} />
-                                        {n.created_at && (
-                                            <p className="mt-1 text-xs text-muted-foreground">
-                                                {formatTimestamp(n.created_at)}
-                                            </p>
-                                        )}
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={() => dismiss(n.appsheet_key)}
-                                        className={cn(touchHitArea, "relative mt-0.5 shrink-0 text-muted-foreground transition-colors hover:text-foreground")}
-                                        aria-label={t("notificationBell.dismiss")}
-                                    >
-                                        <X className="size-3.5" />
-                                    </button>
-                                </li>
-                            ))}
+                                    </li>
+                                );
+                            })}
                         </ul>
                     )}
 
@@ -196,7 +243,7 @@ export default function NotificationBell({ viewAllPath }: NotificationBellProps)
                             <Link
                                 to={viewAllPath}
                                 onClick={() => setOpen(false)}
-                                className="flex w-full items-center justify-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+                                className={cn(touchHitArea, "relative flex w-full items-center justify-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground")}
                             >
                                 {t("common.viewAll", "View all notifications")}
                                 <ExternalLink className="size-3" />
