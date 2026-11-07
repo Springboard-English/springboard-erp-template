@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/ca
 import { useI18n } from "../../context/I18nContext";
 import { valueLabel } from "../i18n";
 import type { ExerciseAnswer, ExerciseNode } from "../lib/exercises";
+import { formatMarks } from "../lib/grading";
 import { questionTypeLabel } from "../lib/section-type";
 import { CategoryPill } from "./category-pill";
 import { Explanation, explanationOf } from "./explanation";
@@ -28,7 +29,7 @@ export function Frame({ node, children, mode }: { node: ExerciseNode; children: 
   const hasText = Boolean(node.title?.trim() || node.instruction?.trim());
   const points = (
     <Badge variant={mode === "result" ? "secondary" : "outline"}>
-      {node.points === 1 ? t("exercise.renderer.pointOne", "1 point") : t("exercise.renderer.pointOther", "{n} points", { n: node.points })}
+      {node.points === 1 ? t("exercise.renderer.pointOne", "1 point") : t("exercise.renderer.pointOther", "{n} points", { n: formatMarks(node.points) })}
     </Badge>
   );
   // With no pill and no text the header would be a tinted band holding only

@@ -72,8 +72,14 @@ const baseExerciseSchema = z.object({
   // `nonnegative`, not `positive`: the API accepts `ge=0` and 0 is a real mark
   // meaning the question is worth nothing — a worked example, an unscored
   // practice item. With `positive()` such a question would come back from the
-  // server and fail to parse on the way in.
-  points: z.number().int().nonnegative().default(1),
+  // server and fail to parse on the way in. Part marks (0.5, 1.25) are real
+  // too; the API stores two places, so a third would be refused there.
+  points: z
+    .number()
+    .nonnegative()
+    // A tolerance, since 0.29 * 100 is 28.999999999999996 in floating point.
+    .refine((n) => Math.abs(n * 100 - Math.round(n * 100)) < 1e-6, "At most two decimal places")
+    .default(1),
 });
 
 // Answer fields are optional throughout: the API splits the answer out of
