@@ -45,7 +45,7 @@ describe("DashboardLayout reportProblem", () => {
     const user = userEvent.setup();
     renderLayout({ reportProblem: { app: "erp-hrm" } });
 
-    const button = screen.getByRole("button", { name: "Report a problem" });
+    const button = screen.getByRole("button", { name: "Report a Problem" });
     expect(button).toHaveAttribute("data-variant", "ghost");
     expect(button).toHaveAttribute("data-size", "icon-sm");
     expect(button.querySelector("svg.lucide-message-circle-warning")).not.toBeNull();
@@ -63,7 +63,7 @@ describe("DashboardLayout reportProblem", () => {
     await user.click(screen.getByRole("button", { name: "Open menu" }));
     const sheet = await screen.findByRole("dialog");
     expect(within(sheet).getByText("app menu")).toBeInTheDocument();
-    const entry = within(sheet).getByRole("button", { name: "Report a problem" });
+    const entry = within(sheet).getByRole("button", { name: "Report a Problem" });
     expect(entry).toHaveAttribute("data-variant", "outline");
     expect(entry.className).toContain("w-full");
     expect(entry.className).toContain("min-h-11");
@@ -77,19 +77,19 @@ describe("DashboardLayout reportProblem", () => {
   it("draws no entry point when the app does not enable it", async () => {
     const user = userEvent.setup();
     const { unmount } = renderLayout({ reportProblem: { app: "lms", enabled: false } });
-    expect(screen.queryByRole("button", { name: "Report a problem" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Report a Problem" })).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Open menu" }));
     await screen.findByRole("dialog");
-    expect(screen.queryByRole("button", { name: "Report a problem" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Report a Problem" })).not.toBeInTheDocument();
     unmount();
 
     renderLayout();
-    expect(screen.queryByRole("button", { name: "Report a problem" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Report a Problem" })).not.toBeInTheDocument();
   });
 
   it("never draws a floating launcher", () => {
     renderLayout({ reportProblem: { app: "lms" } });
-    expect(screen.getAllByRole("button", { name: "Report a problem" })).toHaveLength(1);
+    expect(screen.getAllByRole("button", { name: "Report a Problem" })).toHaveLength(1);
     expect(document.querySelector(".animate-pulse")).toBeNull();
   });
 });

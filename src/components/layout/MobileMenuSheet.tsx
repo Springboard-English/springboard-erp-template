@@ -281,8 +281,8 @@ export default function MobileMenuSheet({
             <LogOut className="size-4 shrink-0" />
             <span className="truncate">
               {isLoggingOut
-                ? t("app.loggingOut", "Logging out...")
-                : t("app.logout", "Log out")}
+                ? t("app.loggingOut", "Logging Out...")
+                : t("app.logout", "Log Out")}
             </span>
           </button>
         </div>

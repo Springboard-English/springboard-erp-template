@@ -104,7 +104,7 @@ describe("WidgetBoard", () => {
     it("saves nothing when Done follows no change", async () => {
         const user = userEvent.setup();
         renderBoard();
-        await user.click(screen.getByRole("button", { name: "Edit home" }));
+        await user.click(screen.getByRole("button", { name: "Edit Home" }));
         await screen.findByRole("button", { name: "Done" });
         await user.click(screen.getByRole("button", { name: "Done" }));
         expect(patchCurrentUserInfo).not.toHaveBeenCalled();
@@ -113,7 +113,7 @@ describe("WidgetBoard", () => {
     it("removes a widget and saves the layout to info in one write", async () => {
         const user = userEvent.setup();
         renderBoard();
-        await user.click(screen.getByRole("button", { name: "Edit home" }));
+        await user.click(screen.getByRole("button", { name: "Edit Home" }));
         await screen.findByRole("button", { name: "Done" });
         await user.click(screen.getByRole("button", { name: "Remove Widget a" }));
         expect(patchCurrentUserInfo).not.toHaveBeenCalled();
@@ -131,9 +131,9 @@ describe("WidgetBoard", () => {
         renderBoard({ dashboard_test: { v: 1, items: [{ id: "c", widget: "c", size: "S" }] } });
         expect(screen.getByText("body c at S")).toBeInTheDocument();
 
-        await user.click(screen.getByRole("button", { name: "Edit home" }));
+        await user.click(screen.getByRole("button", { name: "Edit Home" }));
         await screen.findByRole("button", { name: "Done" });
-        await user.click(screen.getByRole("button", { name: "Reset to default" }));
+        await user.click(screen.getByRole("button", { name: "Reset to Default" }));
         await user.click(screen.getByRole("button", { name: "Done" }));
 
         await waitFor(() => expect(patchCurrentUserInfo).toHaveBeenCalledWith({ dashboard_test: null }));
@@ -178,9 +178,9 @@ describe("WidgetBoard", () => {
     it("adds from the gallery, which offers only widgets the user may use", async () => {
         const user = userEvent.setup();
         renderBoard();
-        await user.click(screen.getByRole("button", { name: "Edit home" }));
+        await user.click(screen.getByRole("button", { name: "Edit Home" }));
         await screen.findByRole("button", { name: "Done" });
-        await user.click(screen.getByRole("button", { name: "Add widget" }));
+        await user.click(screen.getByRole("button", { name: "Add Widget" }));
 
         const sheet = await screen.findByRole("dialog");
         expect(within(sheet).queryByText("Widget secret")).not.toBeInTheDocument();
@@ -209,7 +209,7 @@ describe("WidgetBoard", () => {
     it("moves a widget later from its menu, without dragging", async () => {
         const user = userEvent.setup();
         renderBoard();
-        await user.click(screen.getByRole("button", { name: "Edit home" }));
+        await user.click(screen.getByRole("button", { name: "Edit Home" }));
         await screen.findByRole("button", { name: "Done" });
         await user.click(await screen.findByRole("button", { name: "Options for Widget a" }));
         await user.click(await screen.findByRole("menuitem", { name: "Move later" }));

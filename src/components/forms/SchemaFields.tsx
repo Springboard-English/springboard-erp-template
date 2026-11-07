@@ -326,7 +326,7 @@ function ListControl({ field, form, invalid }: { field: FormField; form: SchemaF
 
             <Button type="button" variant="outline" size="sm" className="w-fit" onClick={() => form.addRow(field.name)}>
                 <Plus />
-                {t("schemaForm.addRow", "Add row")}
+                {t("schemaForm.addRow", "Add Row")}
             </Button>
         </div>
     );

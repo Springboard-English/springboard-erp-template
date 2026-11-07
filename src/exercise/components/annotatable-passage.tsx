@@ -45,7 +45,7 @@ export function AnnotatablePassage({
         {count ? (
           <Button type="button" size="sm" variant="ghost" onClick={clear}>
             <X className="size-4" />
-            {t("exercise.renderer.clearHighlights", "Clear highlights ({n})", { n: count })}
+            {t("exercise.renderer.clearHighlights", "Clear Highlights ({n})", { n: count })}
           </Button>
         ) : (
           <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-muted-foreground">

@@ -139,7 +139,7 @@ function RecordingStatus({ recording, deck }: { recording: DeckRecording; deck: 
       action={
         <Button type="button" size="sm" onClick={() => play(id)} disabled={busy}>
           <CirclePlay className="size-4" />
-          {t("exercise.pageRecording.playOnce", "Play recording (plays once)")}
+          {t("exercise.pageRecording.playOnce", "Play Recording (Plays Once)")}
         </Button>
       }
     >

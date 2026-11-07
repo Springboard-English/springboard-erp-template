@@ -508,7 +508,7 @@ export function HighlighterButton({
               }}
               className="mt-3 min-h-11 w-full rounded-full border-2 border-border px-3 py-1.5 text-xs font-bold hover:border-rose-200 md:pointer-fine:min-h-9"
             >
-              {t("exercise.highlighter.turnOff", "Turn off")}
+              {t("exercise.highlighter.turnOff", "Turn Off")}
             </button>
           ) : null}
         </div>

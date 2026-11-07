@@ -49,7 +49,7 @@ export function PaginationBar({ index, total, onPrev, onNext, nextLabel, center 
             nextLabel ?? (
               <>
                 <span className="sm:hidden">{t("exercise.pagination.review", "Review")}</span>
-                <span className="hidden sm:inline">{t("exercise.pagination.reviewAnswers", "Review answers")}</span>
+                <span className="hidden sm:inline">{t("exercise.pagination.reviewAnswers", "Review Answers")}</span>
               </>
             )
           ) : (

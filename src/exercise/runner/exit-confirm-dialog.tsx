@@ -50,7 +50,7 @@ export function ExitConfirmDialog({
         </DialogHeader>
         <DialogFooter className="gap-2">
           <Button data-keep-working variant="outline" onClick={() => onOpenChange(false)}>
-            {t("exercise.exitConfirm.keepWorking", "Keep working")}
+            {t("exercise.exitConfirm.keepWorking", "Keep Working")}
           </Button>
           <Button variant="ghost" onClick={onExit} onKeyDown={ignoreSpaceActivation}>
             <LogOut className="size-4" />

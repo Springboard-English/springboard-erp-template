@@ -58,7 +58,7 @@ describe("RefreshNudge", () => {
     recordRefresh();
     const { onReport } = renderNudge();
 
-    await user.click(screen.getByRole("button", { name: "Report a bug" }));
+    await user.click(screen.getByRole("button", { name: "Report a Bug" }));
 
     expect(onReport).toHaveBeenCalledOnce();
     expect(screen.queryByTestId("refresh-nudge")).not.toBeInTheDocument();

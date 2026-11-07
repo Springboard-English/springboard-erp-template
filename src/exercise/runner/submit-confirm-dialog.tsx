@@ -110,7 +110,7 @@ export function SubmitConfirmDialog({
               )}
               {submitting
                 ? t("exercise.submitConfirm.submitting", "Submitting…")
-                : t("exercise.submitConfirm.tryAgain", "Try again now")}
+                : t("exercise.submitConfirm.tryAgain", "Try Again Now")}
             </Button>
           ) : (
             <>
@@ -120,7 +120,7 @@ export function SubmitConfirmDialog({
                 disabled={submitting}
                 onClick={() => onOpenChange(false)}
               >
-                {t("exercise.submitConfirm.keepWorking", "Keep working")}
+                {t("exercise.submitConfirm.keepWorking", "Keep Working")}
               </Button>
               <Button
                 onClick={onConfirm}

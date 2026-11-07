@@ -733,12 +733,12 @@ function ActiveBar({
         {failed ? (
           <Button type="button" size="sm" className={light} onClick={actions.retry}>
             <RotateCcw className="size-4" />
-            {t("exercise.recordingBar.tryAgain", "Try again")}
+            {t("exercise.recordingBar.tryAgain", "Try Again")}
           </Button>
         ) : !free && phase === "blocked" && !over ? (
           <Button type="button" size="sm" className={light} onClick={actions.tap}>
             <CirclePlay className="size-4" />
-            {t("exercise.recordingBar.tapToListen", "Tap to listen")}
+            {t("exercise.recordingBar.tapToListen", "Tap to Listen")}
           </Button>
         ) : null}
       </div>

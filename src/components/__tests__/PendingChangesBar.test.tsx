@@ -87,7 +87,7 @@ describe("PendingChangesBar", () => {
     );
     await userEvent.click(screen.getByRole("button", { name: "Send" }));
     expect(await screen.findByText("Server unavailable")).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: "Try again" }));
+    await userEvent.click(screen.getByRole("button", { name: "Try Again" }));
     await waitFor(() =>
       expect(screen.getByRole("button", { name: "Send now" })).toBeDisabled(),
     );

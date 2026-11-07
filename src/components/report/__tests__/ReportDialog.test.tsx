@@ -45,13 +45,13 @@ describe("ReportDialog", () => {
     submitReportMock.mockResolvedValueOnce({ id: "7c9e6efe-9e1b-48e3-83e9-b7146883c1d0" });
     renderDialog({ defaultCategory: "content_data", evidence: ["data:image/png;base64,AA=="] });
 
-    const footer = screen.getByRole("button", { name: "Send report" }).parentElement!;
+    const footer = screen.getByRole("button", { name: "Send Report" }).parentElement!;
     expect(footer).toHaveTextContent("Reported from erp-hrm · /employees");
     expect(screen.getByRole("dialog")).toHaveAccessibleDescription(
       "Describe what you were doing, what you expected, and what happened instead.",
     );
     expect(screen.queryByText("Priority")).not.toBeInTheDocument();
-    const send = screen.getByRole("button", { name: "Send report" });
+    const send = screen.getByRole("button", { name: "Send Report" });
     await user.click(send);
     expect(screen.getByText("Still needed: Summary, Details.")).toBeInTheDocument();
     expect(submitReportMock).not.toHaveBeenCalled();
@@ -82,7 +82,7 @@ describe("ReportDialog", () => {
 
     await user.type(screen.getByLabelText("Summary"), "x");
     await user.type(screen.getByLabelText("Details"), "y");
-    await user.click(screen.getByRole("button", { name: "Send report" }));
+    await user.click(screen.getByRole("button", { name: "Send Report" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Failed to send the report");
     expect(screen.getByLabelText("Summary")).toHaveValue("x");
@@ -108,12 +108,12 @@ describe("ReportDialog", () => {
 
     await user.type(screen.getByLabelText("Summary"), "Broken");
     await user.click(screen.getByRole("button", { name: "Screenshots and attachments" }));
-    await user.click(screen.getByRole("button", { name: "Screenshot mode" }));
+    await user.click(screen.getByRole("button", { name: "Screenshot Mode" }));
     expect(onRequestCapture).toHaveBeenCalledOnce();
 
     rerender(tree(false));
     rerender(tree(true));
-    expect(screen.getByRole("button", { name: "Screenshot mode" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Screenshot Mode" })).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Details" }));
     expect(screen.getByLabelText("Summary")).toHaveValue("Broken");
