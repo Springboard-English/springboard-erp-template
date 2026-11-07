@@ -50,7 +50,11 @@ export default function BaseFormDialog({
         <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && !saving && onClose()}>
             <DialogContent
                 showCloseButton={!saving}
-                className="!fixed !top-1/2 !left-1/2 !-translate-x-1/2 !-translate-y-1/2 !w-[calc(100%-1rem)] max-h-[calc(100svh-1rem)] !max-w-none sm:!w-[80vw] sm:max-h-[90vh] sm:!max-w-none flex flex-col overflow-hidden border-0 bg-card p-0 shadow-xl"
+                className={cn(
+                    "!fixed !top-1/2 !left-1/2 !-translate-x-1/2 !-translate-y-1/2 !w-[calc(100%-1rem)] max-h-[calc(100svh-1rem)] !max-w-none sm:!w-[80vw] sm:max-h-[90vh] sm:!max-w-none flex flex-col overflow-hidden border-0 bg-card p-0 shadow-xl",
+                    // A tabbed dialog keeps one height, so switching tabs never re-centres it under the cursor.
+                    subHeader && "h-[calc(100svh-1rem)] sm:h-[min(44rem,90vh)]",
+                )}
             >
                 <DialogHeader
                     className={cn(
@@ -67,7 +71,8 @@ export default function BaseFormDialog({
                     'flex-1 overflow-y-auto px-3 py-3 sm:px-4 sm:py-4',
                     subHeader ? 'min-h-[300px]' : 'min-h-0',
                 )}>
-                    <div className="flex min-h-full flex-col justify-center gap-3">
+                    {/* Tabbed, each tab starts at the top of the fixed-height body. */}
+                    <div className={cn("flex min-h-full flex-col gap-3", subHeader ? "justify-start" : "justify-center")}>
                         {error && <StatusBanner variant="error">{error}</StatusBanner>}
                         {children}
                     </div>
@@ -80,7 +85,7 @@ export default function BaseFormDialog({
                         </div>
                     )}
                     {submitDisabledReason && submitDisabled && (
-                        <p className="mr-auto max-w-[50%] text-xs text-muted-foreground/80">
+                        <p className="mr-auto max-w-[50%] text-xs text-muted-foreground">
                             {submitDisabledReason}
                         </p>
                     )}

@@ -70,6 +70,8 @@ export function PageHeaderBack({ items }: { items: PageHeaderBackItem[] }) {
                                 // a tablet keeps the small text link, with a 44px tap area around it
                                 touchHitArea,
                                 "relative underline-offset-4 md:hover:text-foreground md:hover:underline max-md:-ml-1.5 max-md:inline-flex max-md:min-h-11 max-md:min-w-0 max-md:items-center",
+                                // and a mouse desktop a 24px-tall one (WCAG 2.5.8), without moving the 20px row
+                                "md:pointer-fine:after:absolute md:pointer-fine:after:inset-x-0 md:pointer-fine:after:top-1/2 md:pointer-fine:after:h-6 md:pointer-fine:after:-translate-y-1/2",
                             )}
                             onClick={item.onClick}
                         >

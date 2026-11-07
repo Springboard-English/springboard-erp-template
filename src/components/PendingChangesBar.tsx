@@ -253,6 +253,8 @@ export default function PendingChangesBar({
           ? "translate-y-0 opacity-100 pointer-events-auto"
           : "translate-y-6 opacity-0 pointer-events-none",
       )}
+      // Hidden, its buttons must not take Tab focus or be read out; it stays mounted so it can slide in.
+      inert={!show}
       style={{ transitionDuration: `${barTransitionMs}ms` }}
     >
       <div className="relative">
