@@ -68,7 +68,7 @@ describe("ReportDialog", () => {
       contextLabel: "erp-hrm · /employees",
       evidence: ["data:image/png;base64,AA=="],
     });
-    expect(await screen.findByText("Report Sent")).toBeInTheDocument();
+    expect(await screen.findByText("Report sent")).toBeInTheDocument();
     expect(screen.getByText("#6883c1d0")).toBeInTheDocument();
     expect(
       screen.getByText("You'll get a notification here with a link to follow the ticket."),
