@@ -198,6 +198,17 @@ describe("baseExerciseSchema.points", () => {
     expect(exerciseNodeSchema.safeParse(node).success).toBe(true);
   });
 
+  it("accepts part marks to two places", () => {
+    for (const points of [0.5, 1.25, 0.29]) {
+      expect(exerciseNodeSchema.safeParse({ ...choiceNode, points }).success).toBe(true);
+    }
+  });
+
+  it("rejects a third decimal place, which the API cannot store", () => {
+    const node = { ...choiceNode, points: 0.125 };
+    expect(exerciseNodeSchema.safeParse(node).success).toBe(false);
+  });
+
   it("still rejects a negative mark", () => {
     const node = { ...choiceNode, points: -1 };
     expect(exerciseNodeSchema.safeParse(node).success).toBe(false);
