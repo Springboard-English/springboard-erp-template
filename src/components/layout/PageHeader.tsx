@@ -54,9 +54,9 @@ export function PageHeaderBack({ items, eyebrow }: { items: PageHeaderBackItem[]
     const lastIndex = items.length - 1;
     if (items.length === 0 && eyebrow) {
         return (
-            // The back link's size and weight, so the row reads the same with either in it; the
-            // app's primary colour marks it as the section's name rather than a link.
-            <p className="col-span-2 row-start-1 flex min-w-0 items-center truncate text-xs text-primary md:h-5">
+            // The back link's size, so the row keeps its height; bold in the app's primary colour
+            // so it reads as the section's name rather than a link.
+            <p className="col-span-2 row-start-1 flex min-w-0 items-center truncate text-xs font-extrabold text-primary md:h-5">
                 {eyebrow}
             </p>
         );
