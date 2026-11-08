@@ -664,6 +664,12 @@ export function DetailFieldsTable({
                     scrollContainerClassName,
                 )}
             >
+                {/* A fixed table takes its column widths from the first row; a
+                    section row spans both cells, so the widths are set here. */}
+                <colgroup>
+                    <col className={labelColumnClassName ?? "md:w-[220px]"} />
+                    <col />
+                </colgroup>
                 <TableBody>
                     {rows.map((row, index) => {
                         const key = row.key ?? `detail-row-${index}`;
