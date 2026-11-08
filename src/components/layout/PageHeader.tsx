@@ -12,9 +12,10 @@ export interface PageHeaderBackItem {
 
 // Every page head is the same grid, so a list page and a detail page put the
 // back link, title, actions, summary and the tab bar under them in one place.
-// Desktop rows: back link (always 20px, empty on a list), title with the
-// actions on its right, summary (always 16px). Phone: the back link and the
-// actions share a nav-bar row above a large title.
+// Desktop rows: back link or eyebrow (always 20px, empty when there is
+// neither), title with the actions on its right, summary (always 16px). Phone:
+// the back link and the actions share a nav-bar row above a large title; an
+// eyebrow takes that row alone and the actions drop under the title.
 const ROOT_CLASS =
     "mb-4 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 md:grid-cols-[minmax(min-content,1fr)_minmax(0,auto)] md:gap-x-4";
 
@@ -44,12 +45,21 @@ export function PageHeaderRoot({
 }
 
 /**
- * The back trail above the title, "← Parent / Child". On a phone only the
- * nearest parent shows, as a full-height "‹ Parent" tap target. With no items
- * the row stays on desktop as empty space, so the title never moves.
+ * The row above the title: the back trail "← Parent / Child", or on a page
+ * with no way back an eyebrow, a short line naming the section. On a phone
+ * only the nearest parent shows, as a full-height "‹ Parent" tap target. With
+ * neither the row stays on desktop as empty space, so the title never moves.
  */
-export function PageHeaderBack({ items }: { items: PageHeaderBackItem[] }) {
+export function PageHeaderBack({ items, eyebrow }: { items: PageHeaderBackItem[]; eyebrow?: ReactNode }) {
     const lastIndex = items.length - 1;
+    if (items.length === 0 && eyebrow) {
+        return (
+            // The back link's size and weight, so the row reads the same with either in it.
+            <p className="col-span-2 row-start-1 flex min-w-0 items-center truncate text-xs text-muted-foreground md:h-5">
+                {eyebrow}
+            </p>
+        );
+    }
     if (items.length === 0) {
         return <div aria-hidden="true" className="hidden md:col-span-2 md:row-start-1 md:block md:h-5" />;
     }
@@ -87,7 +97,11 @@ export function PageHeaderBack({ items }: { items: PageHeaderBackItem[] }) {
     );
 }
 
-/** The page's `h2` with its status chip beside it, on the second desktop row; 36px tall so it lines up with the actions. */
+/**
+ * The page's `h2` with its status chip beside it, on the second desktop row;
+ * 36px tall so it lines up with the actions. `hasBack` is true whenever the
+ * row above is drawn on a phone, a back link or an eyebrow.
+ */
 export function PageHeaderTitle({
     children,
     status,
@@ -113,14 +127,20 @@ export function PageHeaderTitle({
     );
 }
 
-/** The page's controls, right of the title on desktop; on a phone beside the back link, or on their own row under the title. */
+/**
+ * The page's controls, right of the title on desktop; on a phone beside the
+ * back link, or on their own row under the title (one row lower when an
+ * eyebrow sits above it).
+ */
 export function PageHeaderActions({
     children,
     hasBack,
+    hasEyebrow = false,
     align = "end",
 }: {
     children: ReactNode;
     hasBack: boolean;
+    hasEyebrow?: boolean;
     align?: "start" | "end";
 }) {
     return (
@@ -128,7 +148,12 @@ export function PageHeaderActions({
             className={cn(
                 "flex min-w-0 flex-wrap items-center gap-2 md:col-start-2 md:row-start-2",
                 align === "end" ? "justify-end" : "justify-start",
-                hasBack ? "col-start-2 row-start-1" : "col-span-2 row-start-2 max-md:flex-col max-md:items-stretch md:col-span-1",
+                hasBack
+                    ? "col-start-2 row-start-1"
+                    : cn(
+                          "col-span-2 max-md:flex-col max-md:items-stretch md:col-span-1",
+                          hasEyebrow ? "row-start-3" : "row-start-2",
+                      ),
             )}
         >
             {children}
@@ -141,12 +166,14 @@ export function PageHeaderActions({
  * list. On desktop it is always 16px tall, empty or not, so the tab bar under
  * the header sits at the same height on every page.
  */
-export function PageHeaderSummary({ children }: { children?: ReactNode }) {
+export function PageHeaderSummary({ children, belowActions = false }: { children?: ReactNode; belowActions?: boolean }) {
     return (
         <div
             className={cn(
+                // A phone that stacks eyebrow, title and actions puts the summary on a fourth row.
+                belowActions ? "row-start-4 md:row-start-3" : "row-start-3",
                 // Small print, so the 16px row a page leaves empty reads as spacing rather than a gap.
-                "col-span-2 row-start-3 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground md:min-h-4",
+                "col-span-2 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground md:min-h-4",
                 !children && "max-md:hidden",
             )}
         >
@@ -160,6 +187,11 @@ export interface PageHeaderProps {
     title: ReactNode;
     /** Parent pages shown as a back link above the title. A top-level list leaves it out. */
     back?: PageHeaderBackItem[];
+    /**
+     * A short line above the title naming the section, in the back link's
+     * place and type. Shown only when there is no back link.
+     */
+    eyebrow?: ReactNode;
     /** Sits beside the title, typically one `DetailChip`. */
     status?: ReactNode;
     /** A row of `DetailMetaItem`s, or a short line of text, under the title. */
@@ -183,6 +215,7 @@ export interface PageHeaderProps {
 export default function PageHeader({
     title,
     back = [],
+    eyebrow,
     status,
     summary,
     actions,
@@ -190,21 +223,22 @@ export default function PageHeader({
     className,
 }: PageHeaderProps) {
     const hasBack = back.length > 0;
+    const hasEyebrow = !hasBack && Boolean(eyebrow);
     return (
         <PageHeaderRoot
             // The title column stops growing, so the actions start right after it.
             className={cn(actionsAlign === "start" && "md:grid-cols-[auto_minmax(0,1fr)]", className)}
         >
-            <PageHeaderBack items={back} />
-            <PageHeaderTitle status={status} hasBack={hasBack}>
+            <PageHeaderBack items={back} eyebrow={eyebrow} />
+            <PageHeaderTitle status={status} hasBack={hasBack || hasEyebrow}>
                 {title}
             </PageHeaderTitle>
             {actions ? (
-                <PageHeaderActions hasBack={hasBack} align={actionsAlign}>
+                <PageHeaderActions hasBack={hasBack} hasEyebrow={hasEyebrow} align={actionsAlign}>
                     {actions}
                 </PageHeaderActions>
             ) : null}
-            <PageHeaderSummary>{summary}</PageHeaderSummary>
+            <PageHeaderSummary belowActions={hasEyebrow && Boolean(actions)}>{summary}</PageHeaderSummary>
         </PageHeaderRoot>
     );
 }

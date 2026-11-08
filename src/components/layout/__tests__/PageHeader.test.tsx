@@ -29,6 +29,17 @@ describe("PageHeader", () => {
         expect(screen.getByText("0 / 15 students")).toBeTruthy();
     });
 
+    it("draws an eyebrow in the back row of a list page, and drops it when there is a back link", () => {
+        const { container, rerender } = render(<PageHeader title="Tests" eyebrow="Reusable tests" />);
+        const header = container.querySelector("[data-page-header]");
+        expect(header?.children).toHaveLength(3);
+        expect(screen.getByText("Reusable tests")).toBeTruthy();
+
+        rerender(<PageHeader title="Tests" eyebrow="Reusable tests" back={[{ label: "Home", onClick: () => undefined }]} />);
+        expect(screen.queryByText("Reusable tests")).toBeNull();
+        expect(screen.getByRole("navigation").textContent).toContain("Home");
+    });
+
     it("gives DetailBreadcrumbs its own grid when drawn outside a header", () => {
         const { container } = render(<DetailBreadcrumbs items={[]} current="Users" />);
         const headers = container.querySelectorAll("[data-page-header]");
