@@ -39,6 +39,8 @@ export interface UIPreset {
     sheetContent?: UIPresetSlot;
     tableHead?: UIPresetSlot;
     tableRow?: UIPresetSlot;
+    /** The `h2` title of `PageHeader` and `DetailHeader`. */
+    pageTitle?: UIPresetSlot;
 }
 
 let _preset: UIPreset = {};
