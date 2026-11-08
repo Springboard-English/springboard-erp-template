@@ -3,6 +3,7 @@ import { ArrowLeft, ChevronLeft } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { touchHitArea } from "@/lib/touchTarget";
+import { uiPresetClass } from "@/config/uiPreset";
 
 /** One step of a page's back trail; items with an `onClick` are links. */
 export interface PageHeaderBackItem {
@@ -120,7 +121,12 @@ export function PageHeaderTitle({
                 hasBack ? "col-span-2 row-start-2" : "col-start-1 row-start-1",
             )}
         >
-            <h2 className="min-w-0 break-words text-xl font-semibold tracking-tight max-md:text-2xl max-md:font-bold">
+            <h2
+                className={cn(
+                    "min-w-0 break-words text-xl font-semibold tracking-tight max-md:text-2xl max-md:font-bold",
+                    uiPresetClass("pageTitle"),
+                )}
+            >
                 {children}
             </h2>
             {status}
