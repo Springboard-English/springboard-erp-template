@@ -15,7 +15,7 @@ function Checkbox({
       data-slot="checkbox"
       className={cn(
         touchHitArea,
-        "peer relative size-[26px] shrink-0 rounded-[9px] border-2 border-input bg-card shadow-xs transition-all duration-200 ease-bounce outline-none focus-visible:border-ring focus-visible:ring-4 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-error data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-white data-[state=indeterminate]:border-primary data-[state=indeterminate]:bg-primary data-[state=indeterminate]:text-white dark:bg-input/30",
+        "peer relative size-[26px] shrink-0 rounded-[9px] border-2 border-input bg-card shadow-xs transition-all duration-200 ease-bounce outline-none focus-visible:border-ring focus-visible:ring-4 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-error data-[state=checked]:border-[var(--selected,var(--primary))] data-[state=checked]:bg-[var(--selected,var(--primary))] data-[state=checked]:text-[var(--selected-foreground,white)] data-[state=indeterminate]:border-[var(--selected,var(--primary))] data-[state=indeterminate]:bg-[var(--selected,var(--primary))] data-[state=indeterminate]:text-[var(--selected-foreground,white)] dark:bg-input/30",
         className
       )}
       {...props}

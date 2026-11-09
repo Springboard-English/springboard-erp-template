@@ -116,7 +116,7 @@ export function TagInput({
     <div className={cn('flex flex-col gap-1', className)}>
       <div
         className={cn(
-          'flex min-h-11 w-full flex-wrap md:pointer-fine:min-h-9 items-center gap-1.5 rounded-md border border-input bg-background px-2 py-1.5 text-sm shadow-xs transition',
+          'flex min-h-11 w-full flex-wrap md:pointer-fine:min-h-9 items-center gap-1.5 rounded-md border border-input bg-transparent px-2 py-1.5 text-sm shadow-xs transition dark:bg-input/30',
           'focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring',
           disabled && 'cursor-not-allowed opacity-50',
         )}

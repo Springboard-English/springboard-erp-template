@@ -269,10 +269,11 @@ function SideNavList({
             {...item.dataAttributes}
             className={cn(
               sidebarRowGrid,
-              "relative z-10 h-11 gap-0 overflow-hidden rounded-xl px-0 text-sm font-medium transition-colors duration-150 hover:bg-transparent",
+              "relative z-10 h-11 gap-0 overflow-hidden rounded-xl px-0 text-sm font-medium transition-colors duration-150",
+              // The active row sits on the sliding indicator; the others light up a softer pill on hover
               isActive
-                ? "text-foreground"
-                : "text-muted-foreground hover:text-foreground",
+                ? "text-foreground hover:bg-transparent"
+                : "text-muted-foreground hover:bg-secondary/70 hover:text-foreground",
               classNames?.navItem,
               isActive && classNames?.navItemActive,
             )}
@@ -433,7 +434,8 @@ function DashboardLayoutInner({
         </div>
       ) : null}
 
-      <div className={cn("flex min-h-screen bg-background", classNames?.root)}>
+      {/* The brand wash behind every page's header, fading out a screen-third down */}
+      <div className={cn("flex min-h-screen bg-background bg-gradient-to-b from-primary/15 via-primary/5 to-transparent bg-[length:100%_480px] bg-no-repeat", classNames?.root)}>
         <aside
           className={cn(
             "sticky top-0 z-20 hidden h-screen shrink-0 border-r border-border/70 bg-card/95 transition-[width] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] md:block",

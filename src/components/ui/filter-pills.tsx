@@ -50,7 +50,7 @@ export function FilterPills<T extends string>({
               "inline-flex shrink-0 cursor-pointer items-center whitespace-nowrap rounded-full border px-3.5 text-sm font-medium transition-colors",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
               active
-                ? "border-primary bg-primary text-primary-foreground"
+                ? "border-[var(--selected,var(--primary))] bg-[var(--selected,var(--primary))] text-[var(--selected-foreground,var(--primary-foreground))]"
                 : "border-border/70 bg-card text-muted-foreground hover:bg-muted/50 hover:text-foreground",
             )}
           >

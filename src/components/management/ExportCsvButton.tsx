@@ -110,6 +110,8 @@ export function useExportCsvAction<T>({
         icon: <Download className="size-4" />,
         disabled: disabled || isExporting,
         onSelect: () => void runExport(),
+        // A download is never the page's job, so it waits in "⋯"
+        overflow: true,
     };
 }
 

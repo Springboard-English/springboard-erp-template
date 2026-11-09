@@ -241,6 +241,7 @@ export type {
   DetailMenuAction,
 } from "./components/layout/DetailLayout";
 export { default as ProgressMetricCell } from "./components/cells/ProgressMetricCell";
+export type { ProgressMetricTone } from "./components/cells/ProgressMetricCell";
 export {
   RecordLink,
   RecordChevron,

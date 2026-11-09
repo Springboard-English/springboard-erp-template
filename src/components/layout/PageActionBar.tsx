@@ -63,7 +63,7 @@ export function fitPageActions(
 
 /**
  * A page header's buttons in one row: as many as fit beside the title, the
- * rest in a "⋯" menu at the end. It measures every button in a hidden copy of
+ * rest in a "⋯" menu just before the main action, which stays right-most. It measures every button in a hidden copy of
  * the row and watches its own width, so a long title, a narrow window or a
  * translated label moves buttons in and out. Pass it as `PageHeader` or
  * `DetailHeader` `actions`. `leading` holds a list's search and filters, which
@@ -201,8 +201,10 @@ export default function PageActionBar({
                     {leading}
                 </div>
             ) : null}
-            {visible.map((action) => renderButton(action, false))}
+            {visible.filter((action) => action.variant !== "default").map((action) => renderButton(action, false))}
             <DetailActionsMenu actions={menu} />
+            {/* The main action stays the right-most button, after "⋯" */}
+            {visible.filter((action) => action.variant === "default").map((action) => renderButton(action, false))}
         </div>
     );
 }

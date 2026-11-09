@@ -1010,7 +1010,7 @@ export function DetailTabs<T extends string>({
                 {/* Spring-animated active underline, sitting over the track */}
                 <animated.div
                     aria-hidden="true"
-                    className={cn("pointer-events-none absolute -bottom-px left-0 h-0.5 rounded-full bg-primary", classNames?.pill)}
+                    className={cn("pointer-events-none absolute -bottom-px left-0 h-0.5 rounded-full bg-[var(--selected,var(--primary))]", classNames?.pill)}
                     style={{
                         left: pillSpring.left,
                         width: pillSpring.width,
@@ -1071,7 +1071,7 @@ export function DetailTabs<T extends string>({
                         {resolvedActiveTab !== tab.value && (
                             <span
                                 aria-hidden="true"
-                                className="pointer-events-none absolute inset-x-2 -bottom-px h-0.5 origin-center scale-x-0 rounded-full bg-primary/40 transition-transform duration-200 ease-out group-hover:scale-x-100 motion-reduce:transition-none"
+                                className="pointer-events-none absolute inset-x-2 -bottom-px h-0.5 origin-center scale-x-0 rounded-full bg-[var(--selected,var(--primary))]/40 transition-transform duration-200 ease-out group-hover:scale-x-100 motion-reduce:transition-none"
                             />
                         )}
                     </button>
