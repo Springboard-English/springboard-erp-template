@@ -452,6 +452,18 @@ nothing required is missing.
   does not understand; `inferJinjaSchema` reads a form off a Jinja page's names.
 - `FormTableDialog` is unchanged; dialogs move over one at a time.
 
+## Form dialogs (`BaseFormDialog`, `FormTableDialog`)
+
+- **`size`**: `wide` (the default, 80vw) suits a dialog holding a table;
+  `form` caps it at 55rem so a dialog of plain fields doesn't stretch a Points
+  box across the screen.
+- **`submitOptions`** turns the submit button into a split button: the main
+  label stays the common action and the chevron's menu holds the others (say
+  Post, with Schedule and Save Draft in the menu), so one choice doesn't need
+  its own tab.
+- On a phone the footer stacks bottom-up; the footer note and the
+  disabled-submit reason sit above the buttons, not under them.
+
 ## Push notifications (`PushNotificationsToggle`, since 4.9.0)
 
 `<PushNotificationsToggle app="lms" serviceWorkerUrl="/sw.js" />` in an app's
