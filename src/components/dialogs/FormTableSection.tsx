@@ -72,6 +72,36 @@ export function FormTableRow({ label = '', required = false, helperText, childre
     );
 }
 
+/** One field with its label above it, for a narrow column such as a form dialog's `aside`. */
+export function FormStackField({
+    label,
+    required = false,
+    helperText,
+    children,
+    className,
+}: {
+    label: string;
+    required?: boolean;
+    helperText?: string;
+    children: ReactNode;
+    className?: string;
+}) {
+    return (
+        <div className={cn('grid gap-1.5', className)}>
+            <div className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground">
+                <span>{label}</span>
+                {required && (
+                    <span className="text-destructive" aria-hidden="true">
+                        *
+                    </span>
+                )}
+            </div>
+            {children}
+            {helperText && <p className="text-xs leading-5 text-muted-foreground">{helperText}</p>}
+        </div>
+    );
+}
+
 export default function FormTableSection({ children }: FormTableSectionProps) {
     return (
         <div className="overflow-hidden rounded-2xl bg-transparent">

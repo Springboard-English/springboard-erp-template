@@ -171,7 +171,8 @@ export type {
 } from "./components/guides/UserGuide";
 export { default as BaseFormDialog } from "./components/dialogs/BaseFormDialog";
 export type { FormDialogSize, FormDialogSubmitOption } from "./components/dialogs/BaseFormDialog";
-export { default as FormTableDialog, FormTableRow } from "./components/dialogs/FormTableDialog";
+export { default as FormTableDialog, FormStackField, FormTableRow } from "./components/dialogs/FormTableDialog";
+export { default as ResizableColumns } from "./components/layout/ResizableColumns";
 export type { FormTableDialogTab } from "./components/dialogs/FormTableDialog";
 export { default as FormTableSection } from "./components/dialogs/FormTableSection";
 

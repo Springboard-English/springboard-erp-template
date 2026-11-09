@@ -16,6 +16,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import StatusBanner from '@/components/StatusBanner';
+import ResizableColumns from '@/components/layout/ResizableColumns';
 import { useI18n } from '@/context/I18nContext';
 import { cn } from '@/lib/utils';
 
@@ -47,6 +48,10 @@ type BaseFormDialogProps = {
     onSubmit: () => void | Promise<void>;
     children: ReactNode;
     subHeader?: ReactNode;
+    /** A side column beside the body, split by a resizable handle; stacked under it on a phone. */
+    aside?: ReactNode;
+    /** Remembers the side column's width per browser under this key. */
+    asideStorageKey?: string;
 };
 
 /** A modal form with a title, an optional tab bar, a scrolling body and a Cancel and submit footer. */
@@ -66,18 +71,28 @@ export default function BaseFormDialog({
     onSubmit,
     children,
     subHeader,
+    aside,
+    asideStorageKey,
 }: BaseFormDialogProps) {
     const { t } = useI18n();
     const resolvedSubmitLabel = submitLabel || t('common.create');
+    const body = (
+        <>
+            {error && <StatusBanner variant="error">{error}</StatusBanner>}
+            {children}
+        </>
+    );
     return (
         <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && !saving && onClose()}>
             <DialogContent
                 showCloseButton={!saving}
                 className={cn(
                     "!fixed !top-1/2 !left-1/2 !-translate-x-1/2 !-translate-y-1/2 !w-[calc(100%-1rem)] max-h-[calc(100svh-1rem)] !max-w-none sm:max-h-[90vh] sm:!max-w-none flex flex-col overflow-hidden border-0 bg-card p-0 shadow-xl",
-                    size === 'form' ? "sm:!w-[min(80vw,55rem)]" : "sm:!w-[80vw]",
-                    // A tabbed dialog keeps one height, so switching tabs never re-centres it under the cursor.
-                    subHeader && "h-[calc(100svh-1rem)] sm:h-[min(44rem,90vh)]",
+                    // Two columns need the width a table gets, whatever size was asked for.
+                    size === 'form' && !aside ? "sm:!w-[min(80vw,55rem)]" : "sm:!w-[80vw]",
+                    // A tabbed dialog keeps one height, so switching tabs never re-centres it under the cursor;
+                    // a two-column one, so each column scrolls on its own.
+                    (subHeader || aside) && "h-[calc(100svh-1rem)] sm:h-[min(44rem,90vh)]",
                 )}
             >
                 <DialogHeader
@@ -91,16 +106,24 @@ export default function BaseFormDialog({
                     {subHeader}
                 </DialogHeader>
 
-                <div className={cn(
-                    'flex-1 overflow-y-auto px-3 py-3 sm:px-4 sm:py-4',
-                    subHeader ? 'min-h-[300px]' : 'min-h-0',
-                )}>
-                    {/* Tabbed, each tab starts at the top of the fixed-height body. */}
-                    <div className={cn("flex min-h-full flex-col gap-3", subHeader ? "justify-start" : "justify-center")}>
-                        {error && <StatusBanner variant="error">{error}</StatusBanner>}
-                        {children}
+                {aside ? (
+                    // A phone scrolls the stacked columns together; a desktop scrolls each column.
+                    <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3 sm:px-4 sm:py-4 md:overflow-hidden">
+                        <ResizableColumns aside={aside} storageKey={asideStorageKey} className="md:h-full">
+                            <div className="flex flex-col gap-3">{body}</div>
+                        </ResizableColumns>
                     </div>
-                </div>
+                ) : (
+                    <div className={cn(
+                        'flex-1 overflow-y-auto px-3 py-3 sm:px-4 sm:py-4',
+                        subHeader ? 'min-h-[300px]' : 'min-h-0',
+                    )}>
+                        {/* Tabbed, each tab starts at the top of the fixed-height body. */}
+                        <div className={cn("flex min-h-full flex-col gap-3", subHeader ? "justify-start" : "justify-center")}>
+                            {body}
+                        </div>
+                    </div>
+                )}
 
                 <DialogFooter className="shrink-0 border-t border-border/60 px-4 py-3 sm:px-5 sm:py-3.5" showCloseButton={false}>
                     {/* The phone footer stacks bottom-up, so notes go last to sit above the buttons. */}

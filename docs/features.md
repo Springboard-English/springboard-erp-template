@@ -461,6 +461,13 @@ nothing required is missing.
   label stays the common action and the chevron's menu holds the others (say
   Post, with Schedule and Save Draft in the menu), so one choice doesn't need
   its own tab.
+- **`aside`** adds a side column on the right, like Classroom's settings
+  column: the body (the form table) on the left, `aside` on the right, split
+  by a handle that drags or takes the arrow keys (`ResizableColumns`, 240px up
+  to half the row). Each column scrolls on its own, the dialog takes the wide
+  width and a fixed height, and `asideStorageKey` remembers the width. Use
+  `FormStackField` (label above) for fields in the narrow column. On a phone the
+  columns stack, main first.
 - On a phone the footer stacks bottom-up; the footer note and the
   disabled-submit reason sit above the buttons, not under them.
 

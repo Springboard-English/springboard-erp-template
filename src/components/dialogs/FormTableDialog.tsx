@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import BaseFormDialog, { type FormDialogSize, type FormDialogSubmitOption } from './BaseFormDialog';
-import FormTableSection, { FormTableRow } from './FormTableSection';
+import FormTableSection, { FormStackField, FormTableRow } from './FormTableSection';
 import { useI18n } from '@/context/I18nContext';
 import { cn } from '@/lib/utils';
 
@@ -34,6 +34,10 @@ type FormTableDialogProps = {
     tabs?: FormTableDialogTab[];
     /** The tab shown each time the dialog opens. */
     initialTab?: number;
+    /** A side column beside the form table, split by a resizable handle; stacked under it on a phone. */
+    aside?: ReactNode;
+    /** Remembers the side column's width per browser under this key. */
+    asideStorageKey?: string;
 };
 
 /** A `BaseFormDialog` whose body is a two-column form table, optionally split into tabs. */
@@ -54,6 +58,8 @@ export default function FormTableDialog({
     children,
     tabs,
     initialTab = 0,
+    aside,
+    asideStorageKey,
 }: FormTableDialogProps) {
     const { t } = useI18n();
     const [activeTab, setActiveTab] = useState(initialTab);
@@ -110,10 +116,12 @@ export default function FormTableDialog({
             onClose={onClose}
             onSubmit={onSubmit}
             subHeader={tabBar}
+            aside={aside}
+            asideStorageKey={asideStorageKey}
         >
             {isRaw ? content : <FormTableSection>{content}</FormTableSection>}
         </BaseFormDialog>
     );
 }
 
-export { FormTableRow };
+export { FormStackField, FormTableRow };
