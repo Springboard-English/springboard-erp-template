@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import MoreActionsMenu from "./MoreActionsMenu";
+import type { PageAction } from "../layout/PageActionBar";
 import useIsMobile from "@/hooks/useIsMobile";
 import { useI18n } from "@/context/I18nContext";
 import { useGlobalStatus } from "@/context/GlobalStatusContext";
@@ -42,21 +43,20 @@ type ExportCsvButtonProps<T> = {
 );
 
 /**
- * Downloads the filtered rows as CSV. On a desktop it is an "Export CSV"
- * button; on a phone it folds into a "⋯" menu so the toolbar row keeps room
- * for search and Filters.
+ * The "Export CSV" action for a `PageActionBar`: downloads the filtered rows,
+ * reports progress and a capped export through the global status line, and
+ * reads "Exporting..." while it runs.
  */
-export default function ExportCsvButton<T>({
+export function useExportCsvAction<T>({
     columns,
     fetchAll,
     fetchRows,
     filenamePrefix,
     disabled = false,
-}: ExportCsvButtonProps<T>) {
+}: ExportCsvButtonProps<T>): PageAction {
     const { t } = useI18n();
     const { setStatus, clearStatus } = useGlobalStatus();
     const [isExporting, setIsExporting] = useState(false);
-    const isMobile = useIsMobile();
 
     const runExport = async () => {
         try {
@@ -104,34 +104,38 @@ export default function ExportCsvButton<T>({
         }
     };
 
+    return {
+        id: "export-csv",
+        label: isExporting ? t("app.common.exporting", "Exporting...") : t("app.common.exportCsv", "Export CSV"),
+        icon: <Download className="size-4" />,
+        disabled: disabled || isExporting,
+        onSelect: () => void runExport(),
+    };
+}
+
+/**
+ * Downloads the filtered rows as CSV. On a desktop it is an "Export CSV"
+ * button; on a phone it folds into a "⋯" menu so the toolbar row keeps room
+ * for search and Filters. In a `PageActionBar`, use `useExportCsvAction`.
+ */
+export default function ExportCsvButton<T>(props: ExportCsvButtonProps<T>) {
+    const action = useExportCsvAction(props);
+    const isMobile = useIsMobile();
+
     // A phone's toolbar row has room for search and Filters only; export is rare there.
     if (isMobile) {
         return (
             <MoreActionsMenu
-                disabled={isExporting}
-                items={[
-                    {
-                        label: t("app.common.exportCsv", "Export CSV"),
-                        icon: <Download className="size-4" />,
-                        disabled,
-                        onSelect: () => void runExport(),
-                    },
-                ]}
+                disabled={action.disabled}
+                items={[{ label: String(action.label), icon: action.icon, onSelect: action.onSelect! }]}
             />
         );
     }
 
     return (
-        <Button
-            type="button"
-            variant="outline"
-            onClick={() => void runExport()}
-            disabled={disabled || isExporting}
-        >
-            <Download className="size-4" />
-            {isExporting
-                ? t("app.common.exporting", "Exporting...")
-                : t("app.common.exportCsv", "Export CSV")}
+        <Button type="button" variant="outline" onClick={action.onSelect} disabled={action.disabled}>
+            {action.icon}
+            {action.label}
         </Button>
     );
 }

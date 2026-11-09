@@ -116,6 +116,8 @@ export type {
 export type { SidebarAction, SidebarDataAttributes, SidebarIcon } from "./components/layout/SidebarRow";
 export { default as PageHeader } from "./components/layout/PageHeader";
 export type { PageHeaderProps, PageHeaderBackItem } from "./components/layout/PageHeader";
+export { default as PageActionBar } from "./components/layout/PageActionBar";
+export type { PageAction } from "./components/layout/PageActionBar";
 export { default as AppHeader } from "./components/layout/AppHeader";
 export type { AppHeaderProps } from "./components/layout/AppHeader";
 export { default as SimpleDataTable, groupTableRows } from "./components/SimpleDataTable";
@@ -249,7 +251,7 @@ export {
 export { default as AdvancedFiltersPanel } from "./components/management/AdvancedFiltersPanel";
 export type { AdvancedFiltersPanelProps } from "./components/management/AdvancedFiltersPanel";
 export { default as AdvancedFiltersToggle } from "./components/management/AdvancedFiltersToggle";
-export { default as ExportCsvButton } from "./components/management/ExportCsvButton";
+export { default as ExportCsvButton, useExportCsvAction } from "./components/management/ExportCsvButton";
 export { default as MoreActionsMenu } from "./components/management/MoreActionsMenu";
 export type { MoreActionItem, MoreActionsMenuProps } from "./components/management/MoreActionsMenu";
 export { default as RefreshButton } from "./components/management/RefreshButton";

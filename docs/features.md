@@ -157,6 +157,30 @@ rows). One bar, so a page never shows two floating strips.
   ones last under a divider). `overflow: true` puts an action there on desktop
   too.
 
+## Page header buttons (`PageActionBar`, since 6.1.5)
+
+A page's buttons go in a `PageActionBar` passed as `PageHeader` or
+`DetailHeader` `actions`, after any search or filter controls, as a list of
+`PageAction`s (`id`, `label`, `icon`, `onSelect` or a `to` route, `variant`,
+`disabled`). The bar never wraps.
+
+- **The title comes first.** A header holding a bar gives the title (on a
+  phone, the back link) its full width and the bar the rest, at least room
+  for the "⋯".
+- **What does not fit moves into "⋯".** The bar measures a hidden copy of
+  every button and watches its own width, so a narrow window, a long title or
+  a translated label moves buttons in and out. They go from the end, and a
+  `variant: "default"` button only after every other.
+- **Some actions are always in "⋯":** `overflow: true`, and every
+  `destructive` one, last under a divider. A menu item with a `to` navigates.
+- **A list's search and filters go in `leading`.** They never fold and keep
+  their own width on a desktop (give the search one, e.g. `md:w-64`); on a
+  phone they take the row and every button goes into "⋯". Export is
+  `useExportCsvAction`, the same download `ExportCsvButton` runs. A Create
+  that `useMobileFAB` also registers is `desktopOnly`.
+- **Dialogs open from state.** A dialog that draws its own trigger can't be
+  folded; give it `open`/`onOpenChange` and open it from `onSelect`.
+
 ## Grouped headers and pinned columns (`SimpleDataTable`, since 4.46.0)
 
 A column's `group` adds a header row: neighbouring columns with the same

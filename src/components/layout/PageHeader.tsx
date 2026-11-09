@@ -17,8 +17,13 @@ export interface PageHeaderBackItem {
 // neither), title with the actions on its right, summary (always 16px). Phone:
 // the back link and the actions share a nav-bar row above a large title; an
 // eyebrow takes that row alone and the actions drop under the title.
-const ROOT_CLASS =
-    "mb-4 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 md:grid-cols-[minmax(min-content,1fr)_minmax(0,auto)] md:gap-x-4";
+// With a `PageActionBar` the title (or a phone's back link) keeps its full
+// width and the bar takes the rest, at least room for its "⋯".
+const ROOT_CLASS = cn(
+    "mb-4 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 md:grid-cols-[minmax(min-content,1fr)_minmax(0,auto)] md:gap-x-4",
+    // `:has` outranks the `md:` columns, so this holds at every width.
+    "has-[[data-page-action-bar]]:grid-cols-[minmax(0,max-content)_minmax(2.75rem,1fr)]",
+);
 
 // True inside a page-header grid, so a slot drawn on its own can bring one.
 const PageHeaderGridContext = createContext(false);
