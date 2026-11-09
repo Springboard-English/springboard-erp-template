@@ -16,6 +16,10 @@ export interface PageAction extends Omit<DetailMenuAction, "onSelect"> {
     variant?: "default" | "outline" | "secondary" | "ghost" | "ai";
     /** A route to open instead of `onSelect`, drawn as a link while inline. */
     to?: string;
+    /** Router state sent with `to`. */
+    state?: unknown;
+    /** `data-*` attributes for the inline button, such as a guided tour's anchor. */
+    data?: Record<`data-${string}`, string>;
     /** Always in "⋯", whatever the room; destructive actions are there regardless. */
     overflow?: boolean;
     /** Left out on a phone, where `useMobileFAB` draws it as the floating button. */
@@ -139,7 +143,9 @@ export default function PageActionBar({
         icon: action.icon,
         disabled: action.disabled,
         destructive: action.destructive,
-        onSelect: action.to ? () => navigate(action.to as string) : (action.onSelect ?? (() => undefined)),
+        onSelect: action.to
+            ? () => navigate(action.to as string, { state: action.state })
+            : (action.onSelect ?? (() => undefined)),
     }));
 
     const renderButton = (action: PageAction, inert: boolean) => {
@@ -150,10 +156,14 @@ export default function PageActionBar({
             </>
         );
         const variant = action.variant ?? "outline";
+        // `group` lets an icon animate on the button's hover; the measuring copy carries no anchors.
+        const shared = { variant, size, className: "group", ...(inert ? {} : action.data) };
         if (action.to && !inert && !action.disabled) {
             return (
-                <Button key={action.id} asChild variant={variant} size={size}>
-                    <Link to={action.to}>{content}</Link>
+                <Button key={action.id} asChild {...shared}>
+                    <Link to={action.to} state={action.state}>
+                        {content}
+                    </Link>
                 </Button>
             );
         }
@@ -161,8 +171,7 @@ export default function PageActionBar({
             <Button
                 key={action.id}
                 type="button"
-                variant={variant}
-                size={size}
+                {...shared}
                 disabled={action.disabled}
                 tabIndex={inert ? -1 : undefined}
                 onClick={inert ? undefined : action.onSelect}

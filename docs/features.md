@@ -161,8 +161,9 @@ rows). One bar, so a page never shows two floating strips.
 
 A page's buttons go in a `PageActionBar` passed as `PageHeader` or
 `DetailHeader` `actions`, after any search or filter controls, as a list of
-`PageAction`s (`id`, `label`, `icon`, `onSelect` or a `to` route, `variant`,
-`disabled`). The bar never wraps.
+`PageAction`s (`id`, `label`, `icon`, `onSelect` or a `to` route with optional
+router `state`, `variant`, `disabled`, and `data-*` attributes such as a tour
+anchor in `data`). The bar never wraps.
 
 - **The title comes first.** A header holding a bar gives the title (on a
   phone, the back link) its full width and the bar the rest, at least room
