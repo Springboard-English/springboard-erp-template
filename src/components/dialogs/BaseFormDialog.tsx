@@ -1,5 +1,12 @@
 import type { ReactNode } from 'react';
+import { ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
     Dialog,
     DialogContent,
@@ -12,8 +19,21 @@ import StatusBanner from '@/components/StatusBanner';
 import { useI18n } from '@/context/I18nContext';
 import { cn } from '@/lib/utils';
 
+/** Another way to submit, offered in the menu beside the submit button. */
+export type FormDialogSubmitOption = {
+    label: string;
+    onSelect: () => void | Promise<void>;
+    disabled?: boolean;
+};
+
+/** `wide` fills most of the screen for tables; `form` caps the width so plain fields don't stretch. */
+export type FormDialogSize = 'wide' | 'form';
+
 type BaseFormDialogProps = {
     open: boolean;
+    size?: FormDialogSize;
+    /** Turns the submit button into a split button whose menu holds these. */
+    submitOptions?: FormDialogSubmitOption[];
     saving?: boolean;
     title: string;
     description?: ReactNode;
@@ -29,8 +49,11 @@ type BaseFormDialogProps = {
     subHeader?: ReactNode;
 };
 
+/** A modal form with a title, an optional tab bar, a scrolling body and a Cancel and submit footer. */
 export default function BaseFormDialog({
     open,
+    size = 'wide',
+    submitOptions,
     saving = false,
     title,
     description,
@@ -51,7 +74,8 @@ export default function BaseFormDialog({
             <DialogContent
                 showCloseButton={!saving}
                 className={cn(
-                    "!fixed !top-1/2 !left-1/2 !-translate-x-1/2 !-translate-y-1/2 !w-[calc(100%-1rem)] max-h-[calc(100svh-1rem)] !max-w-none sm:!w-[80vw] sm:max-h-[90vh] sm:!max-w-none flex flex-col overflow-hidden border-0 bg-card p-0 shadow-xl",
+                    "!fixed !top-1/2 !left-1/2 !-translate-x-1/2 !-translate-y-1/2 !w-[calc(100%-1rem)] max-h-[calc(100svh-1rem)] !max-w-none sm:max-h-[90vh] sm:!max-w-none flex flex-col overflow-hidden border-0 bg-card p-0 shadow-xl",
+                    size === 'form' ? "sm:!w-[min(80vw,55rem)]" : "sm:!w-[80vw]",
                     // A tabbed dialog keeps one height, so switching tabs never re-centres it under the cursor.
                     subHeader && "h-[calc(100svh-1rem)] sm:h-[min(44rem,90vh)]",
                 )}
@@ -79,22 +103,60 @@ export default function BaseFormDialog({
                 </div>
 
                 <DialogFooter className="shrink-0 border-t border-border/60 px-4 py-3 sm:px-5 sm:py-3.5" showCloseButton={false}>
+                    {/* The phone footer stacks bottom-up, so notes go last to sit above the buttons. */}
                     {footerNote && (
-                        <div className="min-w-0 flex-1 self-center text-xs text-muted-foreground">
+                        <div className="min-w-0 flex-1 self-center text-xs text-muted-foreground max-sm:order-last max-sm:self-start">
                             {footerNote}
                         </div>
                     )}
                     {submitDisabledReason && submitDisabled && (
-                        <p className="mr-auto max-w-[50%] text-xs text-muted-foreground">
+                        <p className="text-xs text-muted-foreground max-sm:order-last sm:mr-auto sm:max-w-[50%]">
                             {submitDisabledReason}
                         </p>
                     )}
                     <Button type="button" variant="outline" onClick={onClose} disabled={saving}>
                         {t('common.cancel')}
                     </Button>
-                    <Button type="button" onClick={() => void onSubmit()} disabled={saving || submitDisabled}>
-                        {resolvedSubmitLabel}
-                    </Button>
+                    {submitOptions && submitOptions.length > 0 ? (
+                        <div className="flex">
+                            <Button
+                                type="button"
+                                className="flex-1 rounded-r-none"
+                                onClick={() => void onSubmit()}
+                                disabled={saving || submitDisabled}
+                            >
+                                {resolvedSubmitLabel}
+                            </Button>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                        type="button"
+                                        size="icon"
+                                        className="rounded-l-none border-l border-primary-foreground/25"
+                                        aria-label={t('common.moreActions')}
+                                        disabled={saving}
+                                    >
+                                        <ChevronDown />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    {submitOptions.map((option) => (
+                                        <DropdownMenuItem
+                                            key={option.label}
+                                            disabled={option.disabled}
+                                            onSelect={() => void option.onSelect()}
+                                        >
+                                            {option.label}
+                                        </DropdownMenuItem>
+                                    ))}
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </div>
+                    ) : (
+                        <Button type="button" onClick={() => void onSubmit()} disabled={saving || submitDisabled}>
+                            {resolvedSubmitLabel}
+                        </Button>
+                    )}
                 </DialogFooter>
             </DialogContent>
         </Dialog>

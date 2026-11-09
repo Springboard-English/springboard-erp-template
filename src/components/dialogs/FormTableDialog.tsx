@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import BaseFormDialog from '@/components/dialogs/BaseFormDialog';
+import BaseFormDialog, { type FormDialogSize, type FormDialogSubmitOption } from './BaseFormDialog';
 import FormTableSection, { FormTableRow } from './FormTableSection';
 import { useI18n } from '@/context/I18nContext';
 import { cn } from '@/lib/utils';
@@ -15,6 +15,10 @@ export type FormTableDialogTab = {
 
 type FormTableDialogProps = {
     open: boolean;
+    /** `form` caps the width so plain fields don't stretch; `wide` (the default) is for tables. */
+    size?: FormDialogSize;
+    /** Turns the submit button into a split button whose menu holds these. */
+    submitOptions?: FormDialogSubmitOption[];
     saving?: boolean;
     title: string;
     description?: ReactNode;
@@ -32,8 +36,11 @@ type FormTableDialogProps = {
     initialTab?: number;
 };
 
+/** A `BaseFormDialog` whose body is a two-column form table, optionally split into tabs. */
 export default function FormTableDialog({
     open,
+    size,
+    submitOptions,
     saving = false,
     title,
     description,
@@ -90,6 +97,8 @@ export default function FormTableDialog({
     return (
         <BaseFormDialog
             open={open}
+            size={size}
+            submitOptions={submitOptions}
             saving={saving}
             title={title}
             description={description}
