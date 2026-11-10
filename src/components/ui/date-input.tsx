@@ -128,7 +128,7 @@ function DateInput({ type, value, defaultValue, onChange, fieldClassName, classN
         tabIndex={-1}
         aria-hidden="true"
         // iOS ignores showPicker on a hidden field, so on touch it sits over the calendar button and takes the tap.
-        className={cn("pointer-events-none absolute inset-y-0 right-0 w-10 appearance-none opacity-0", !readOnly && "pointer-coarse:pointer-events-auto pointer-coarse:z-10")}
+        className={cn("pointer-events-none absolute inset-y-0 right-0 w-11 appearance-none opacity-0", !readOnly && "pointer-coarse:pointer-events-auto pointer-coarse:z-10")}
         onChange={(event) => {
           if (!editing) setText(toDisplay(event.target.value))
           onChange?.(event)
@@ -138,7 +138,7 @@ function DateInput({ type, value, defaultValue, onChange, fieldClassName, classN
         type="button"
         disabled={disabled || readOnly}
         aria-label={ariaLabel ? `${ariaLabel}: calendar` : "Open calendar"}
-        className={cn(touchTargetHeight, "absolute inset-y-0 right-0 flex w-10 cursor-pointer items-center justify-center text-muted-foreground hover:text-foreground disabled:pointer-events-none disabled:opacity-50")}
+        className={cn(touchTargetHeight, "absolute inset-y-0 right-0 flex w-11 cursor-pointer items-center justify-center text-muted-foreground hover:text-foreground disabled:pointer-events-none disabled:opacity-50")}
         onClick={() => nativeRef.current?.showPicker?.()}
       >
         <CalendarDays className="size-4" />

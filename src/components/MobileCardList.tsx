@@ -71,6 +71,8 @@ export interface MobileCardListProps<T> {
   renderCard: (row: T) => ReactNode;
   loading?: boolean;
   emptyMessage?: string;
+  /** The next step under the empty message, as `SimpleDataTable`'s `emptyAction`. */
+  emptyAction?: ReactNode;
   page?: number;
   pageSize?: number;
   onPageChange?: (page: number) => void;
@@ -110,6 +112,7 @@ export default function MobileCardList<T>({
   renderCard,
   loading = false,
   emptyMessage,
+  emptyAction,
   page = 0,
   pageSize = 25,
   onPageChange,
@@ -413,7 +416,7 @@ export default function MobileCardList<T>({
   if (!loading && activeRows.length === 0) {
     return (
       <div className={cn("md:hidden", className)}>
-        <EmptyState title={resolvedEmptyMessage} />
+        <EmptyState title={resolvedEmptyMessage} action={emptyAction} />
       </div>
     );
   }
