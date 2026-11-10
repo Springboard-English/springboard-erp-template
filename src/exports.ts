@@ -243,6 +243,12 @@ export type {
   DetailChipTone,
   DetailMenuAction,
 } from "./components/layout/DetailLayout";
+export { DetailSectionShell } from "./components/layout/DetailSectionShell";
+export type {
+  DetailSectionGroup,
+  DetailSectionIcon,
+  DetailSectionItem,
+} from "./components/layout/DetailSectionShell";
 export { default as ProgressMetricCell } from "./components/cells/ProgressMetricCell";
 export {
   RecordLink,

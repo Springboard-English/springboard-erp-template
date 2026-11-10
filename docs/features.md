@@ -157,6 +157,28 @@ rows). One bar, so a page never shows two floating strips.
   ones last under a divider). `overflow: true` puts an action there on desktop
   too.
 
+## Record sections (`DetailSectionShell`, since 6.5.0)
+
+A detail view with several sections wraps its content in `DetailSectionShell`
+instead of `DetailTabbedSection`. Each `DetailSectionItem` has a `value`,
+`label`, `icon`, optional `group` (an id from `groups`), `count` and
+`pendingCount`.
+
+- **Wide containers get a grouped sidebar**, a symbol per row, headed by the
+  `groups` labels in their given order; sections with no group lead,
+  unheaded. Width comes from the container, so the floating panel takes the
+  narrow form.
+- **Narrow containers get one segmented bar.** Segments size to their labels
+  and never truncate; the bar scrolls sideways and keeps the open section in
+  view.
+- **`pinnedEnd` keeps a section always visible**: at the sidebar's foot while
+  the groups scroll above it, and at the bar's right end while the rest slide
+  under it. A record's Details is the pinned section, so it stays reachable
+  but reads as lower priority. The default section is the first unpinned one,
+  usually Overview; the shell doesn't choose it.
+- **Unsaved edits show as a numbered badge** (`pendingCount`), never as
+  colour alone.
+
 ## Page header buttons (`PageActionBar`, since 6.1.5)
 
 A page's buttons go in a `PageActionBar` passed as `PageHeader` or

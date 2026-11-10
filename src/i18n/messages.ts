@@ -115,6 +115,7 @@ export const ENGLISH_MESSAGES = {
   "detail.expandView": "Expand View",
   "detail.floatingView": "Floating View",
   "detail.moreActions": "More actions",
+  "detail.unsavedCount": "{count} unsaved changes",
   "detail.openClass": "Open class",
   "recordLink.open": "Open {name}",
   "layout.resizeColumns": "Resize columns",
