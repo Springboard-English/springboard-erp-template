@@ -59,11 +59,11 @@
         "test": "vitest run"
     },
     "dependencies": {
+        "@base-ui/react": "1.9.0",
         "@dnd-kit/core": "^6.3.1",
         "@dnd-kit/sortable": "^10.0.0",
         "@dnd-kit/utilities": "^3.2.2",
         "@formbricks/js": "5.1.0",
-        "@radix-ui/react-popover": "^1.1.15",
         "@react-spring/web": "^10.0.3",
         "@tanstack/react-virtual": "^3.14.10",
         "class-variance-authority": "^0.7.1",
@@ -73,7 +73,6 @@
         "libphonenumber-js": "^1.13.14",
         "lucide-react": "^1.7.0",
         "modern-screenshot": "^4.7.0",
-        "radix-ui": "^1.4.3",
         "react-i18next": "^17.0.8",
         "react-markdown": "^10.1.0",
         "remark-gfm": "^4.0.1",

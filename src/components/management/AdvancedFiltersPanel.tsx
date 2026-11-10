@@ -1,5 +1,5 @@
-import * as Popover from "@radix-ui/react-popover";
 import { type ReactNode } from "react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -46,19 +46,16 @@ function FiltersPopover({
 }: AdvancedFiltersPanelProps) {
   const { t } = useI18n();
   return (
-    <Popover.Root open={open} onOpenChange={onOpenChange}>
-      <Popover.Trigger asChild>{trigger}</Popover.Trigger>
-      <Popover.Portal>
-        <Popover.Content
+    <Popover open={open} onOpenChange={onOpenChange}>
+      <PopoverTrigger asChild>{trigger}</PopoverTrigger>
+        <PopoverContent
           align="start"
           side="bottom"
           sideOffset={6}
+          // The card inside carries the chrome, so the popup itself is bare.
           className={cn(
-            "z-20 w-[min(calc(100vw-2rem),72rem)]",
-            "outline-none data-[state=closed]:pointer-events-none",
-            "data-[state=open]:animate-in data-[state=closed]:animate-out",
-            "data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0",
-            "data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95",
+            "w-[min(calc(100vw-2rem),72rem)] rounded-none border-0 bg-transparent p-0 shadow-none",
+            "outline-none data-closed:pointer-events-none",
           )}
         >
           <div
@@ -96,9 +93,8 @@ function FiltersPopover({
               </div>
             )}
           </div>
-        </Popover.Content>
-      </Popover.Portal>
-    </Popover.Root>
+        </PopoverContent>
+    </Popover>
   );
 }
 
@@ -119,13 +115,13 @@ function FiltersDialog({
       <DialogContent
         className={cn(
           "inset-0 top-0 left-0 flex h-dvh max-h-none w-full max-w-none translate-x-0 translate-y-0 flex-col gap-0 rounded-none border-0 p-0",
-          "data-[state=open]:slide-in-from-bottom-4 data-[state=open]:zoom-in-100 data-[state=closed]:zoom-out-100",
+          "data-open:slide-in-from-bottom-4 data-open:zoom-in-100 data-closed:zoom-out-100",
           className,
         )}
       >
         <div className="flex min-h-14 shrink-0 items-center border-b border-border/60 px-4 pr-14 pt-[env(safe-area-inset-top)]">
           <DialogTitle className="text-base">{t("common.filters")}</DialogTitle>
-          {/* Radix warns without a description; the title says it all. */}
+          {/* A dialog needs a description for assistive tech; the title says it all. */}
           <DialogDescription className="sr-only">{t("common.filters")}</DialogDescription>
         </div>
         <div className="grid min-h-0 flex-1 content-start gap-4 overflow-y-auto px-4 py-4 [&>*]:min-w-0">

@@ -1,5 +1,5 @@
-import { Suspense, lazy, type ReactNode } from "react";
-import * as Popover from "@radix-ui/react-popover";
+import { Suspense, lazy, useRef, type ReactNode } from "react";
+import { Popover } from "@base-ui/react/popover";
 import { Sparkles, X } from "lucide-react";
 
 import { useI18n } from "@/context/I18nContext";
@@ -50,27 +50,35 @@ export default function WhatsNewNote({
 }: WhatsNewNoteProps) {
   const { t } = useI18n();
   const { title, body } = parseWhatsNewNote(markdown);
+  const anchorRef = useRef<HTMLSpanElement>(null);
 
   return (
+    <>
+      <span ref={anchorRef} className="contents">{children}</span>
     <Popover.Root open={open} onOpenChange={(next) => (next ? undefined : onDismiss())}>
-      <Popover.Anchor asChild>{children}</Popover.Anchor>
       <Popover.Portal>
-        <Popover.Content
+        <Popover.Positioner
+          // Anchored to the caller's element, not a trigger: the note opens on
+          // its own.
+          anchor={anchorRef}
           side={side}
           align={align}
           sideOffset={10}
           collisionPadding={12}
+          className="isolate z-[70]"
+        >
+        <Popover.Popup
           // The note appears on its own, without the user having asked for it.
           // Taking focus would move the caret out of whatever they were typing,
           // so it stays where it is; the note is dismissible by clicking
-          // anywhere, which is what Radix already treats as "outside".
-          onOpenAutoFocus={(event) => event.preventDefault()}
+          // anywhere, which Base UI already treats as an outside press.
+          initialFocus={false}
           onClick={onDismiss}
           className={cn(
             "z-[70] w-[min(22rem,calc(100vw-2rem))]",
-            "data-[state=open]:animate-in data-[state=closed]:animate-out",
-            "data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0",
-            "data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95",
+            "data-open:animate-in data-closed:animate-out",
+            "data-open:fade-in-0 data-closed:fade-out-0",
+            "data-open:zoom-in-95 data-closed:zoom-out-95",
             "outline-none",
           )}
           data-testid="whats-new-note"
@@ -110,9 +118,15 @@ export default function WhatsNewNote({
 
             <p className="mt-3 text-xs text-muted-foreground/70">{t("changelog.note.hint")}</p>
           </div>
-          <Popover.Arrow className="fill-background" width={14} height={7} />
-        </Popover.Content>
+          <Popover.Arrow className="data-[side=bottom]:top-[-7px] data-[side=left]:right-[-7px] data-[side=left]:rotate-90 data-[side=right]:left-[-7px] data-[side=right]:-rotate-90 data-[side=top]:bottom-[-7px] data-[side=top]:rotate-180">
+            <svg width="14" height="7" viewBox="0 0 14 7" className="fill-background" aria-hidden>
+              <path d="M0 0 L7 7 L14 0 Z" />
+            </svg>
+          </Popover.Arrow>
+        </Popover.Popup>
+        </Popover.Positioner>
       </Popover.Portal>
     </Popover.Root>
+    </>
   );
 }

@@ -1,10 +1,15 @@
 import { Bell } from "lucide-react";
-import { Dialog as DialogPrimitive } from "radix-ui";
+import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import { useNotifications } from "@/context/NotificationContext";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/context/I18nContext";
 import NotificationLink from "./NotificationLink";
 
+/**
+ * The must-read notification: a modal the user can only leave by
+ * acknowledging it. Escape and outside clicks are refused; the queue advances
+ * as each one is dismissed.
+ */
 export default function ImmediateNotificationDialog() {
     const { t } = useI18n();
     const { immediate, dismiss } = useNotifications();
@@ -13,13 +18,15 @@ export default function ImmediateNotificationDialog() {
     if (!current) return null;
 
     return (
-        <DialogPrimitive.Root open>
+        <DialogPrimitive.Root
+            open
+            // Only the Acknowledge button closes it.
+            onOpenChange={(_open, details) => details.cancel()}
+        >
             <DialogPrimitive.Portal>
-                <DialogPrimitive.Overlay className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm data-[state=open]:animate-in data-[state=open]:fade-in-0" />
-                <DialogPrimitive.Content
-                    onEscapeKeyDown={(e) => e.preventDefault()}
-                    onInteractOutside={(e) => e.preventDefault()}
-                    className="fixed left-1/2 top-1/2 z-[60] w-full max-w-md -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl border border-border bg-background shadow-2xl outline-none data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95"
+                <DialogPrimitive.Backdrop className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm data-open:animate-in data-open:fade-in-0" />
+                <DialogPrimitive.Popup
+                    className="fixed left-1/2 top-1/2 z-[60] w-full max-w-md -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl border border-border bg-background shadow-2xl outline-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95"
                     aria-describedby={current.description ? "immediate-desc" : undefined}
                 >
                     <div className="flex flex-col items-center px-8 py-10 text-center">
@@ -51,7 +58,7 @@ export default function ImmediateNotificationDialog() {
                             {t("notification.acknowledge")}
                         </Button>
                     </div>
-                </DialogPrimitive.Content>
+                </DialogPrimitive.Popup>
             </DialogPrimitive.Portal>
         </DialogPrimitive.Root>
     );

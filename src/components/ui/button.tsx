@@ -1,10 +1,11 @@
 import * as React from "react"
+import { useRender } from "@base-ui/react/use-render"
 import { cva, type VariantProps } from "class-variance-authority"
-import { Slot } from "radix-ui"
 
 import { cn } from "@/lib/utils"
 import { uiPresetClass } from "@/config/uiPreset"
 import { buttonTarget } from "@/lib/touchTarget"
+import { asChildRender } from "@/lib/primitiveCompat"
 
 const buttonVariants = cva(
   // Two heights for the whole suite: 44px on phones and touch screens, 36px on
@@ -51,31 +52,43 @@ const buttonVariants = cva(
   }
 )
 
+/**
+ * The suite's button. A plain `<button>` by default; `asChild` renders the
+ * single child element instead (a `Link`, say) with the button's props merged
+ * onto it. Classes layer built-in variant, then the app's preset, then the
+ * caller's `className`.
+ */
 function Button({
   className,
   variant = "default",
   size = "default",
   asChild = false,
+  children,
+  ref,
   ...props
 }: React.ComponentProps<"button"> &
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean
   }) {
-  const Comp = asChild ? Slot.Root : "button"
   // Order matters and is the whole contract: built-in variant classes, then the
   // app's preset, then the caller's `className`. tailwind-merge makes each
   // later layer win only on the utilities it actually conflicts with.
   const presetClass = uiPresetClass("button", { variant, size })
+  const render = asChildRender(asChild, children)
 
-  return (
-    <Comp
-      data-slot="button"
-      data-variant={variant}
-      data-size={size}
-      className={cn(buttonVariants({ variant, size }), presetClass, className)}
-      {...props}
-    />
-  )
+  return useRender({
+    defaultTagName: "button",
+    render,
+    ref,
+    props: {
+      "data-slot": "button",
+      "data-variant": variant,
+      "data-size": size,
+      className: cn(buttonVariants({ variant, size }), presetClass, className),
+      children: render ? undefined : children,
+      ...props,
+    },
+  })
 }
 
 export { Button, buttonVariants }

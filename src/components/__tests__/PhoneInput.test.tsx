@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import PatchRecordDialog from "../PatchRecordDialog";
@@ -83,6 +83,9 @@ describe("PatchRecordDialog tel fields", () => {
   it("lets a record with an untouched legacy number be edited", async () => {
     const user = userEvent.setup();
     const onSubmit = renderDialog("0985/0385");
+    // The dialog moves focus to its first field a frame after opening; typing
+    // before that would be interrupted.
+    await waitFor(() => expect(screen.getByPlaceholderText("Phone")).toHaveFocus());
 
     await user.clear(screen.getByPlaceholderText("Name"));
     await user.type(screen.getByPlaceholderText("Name"), "Renamed");

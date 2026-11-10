@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { ChevronDown, Loader2 } from 'lucide-react';
-import { Popover as PopoverPrimitive } from 'radix-ui';
+import { Popover as PopoverPrimitive } from '@base-ui/react/popover';
 import { fieldHeight, touchTargetHeight } from '@/lib/touchTarget';
 import { cn } from '@/lib/utils';
 
@@ -141,8 +141,21 @@ export function ComboboxField({
   const inputValue = open && query !== null ? query : displayValue;
 
   return (
-    <PopoverPrimitive.Root open={open} onOpenChange={setOpen}>
-      <PopoverPrimitive.Anchor asChild>
+    <PopoverPrimitive.Root
+      open={open}
+      onOpenChange={(next, details) => {
+        // Clicking the field is not "outside": it should keep the list open.
+        if (
+          !next &&
+          details.reason === 'outside-press' &&
+          anchorRef.current?.contains(details.event.target as Node)
+        ) {
+          details.cancel();
+          return;
+        }
+        setOpen(next);
+      }}
+    >
         <div
           ref={anchorRef}
           className={cn('relative w-full min-w-0', className)}
@@ -183,34 +196,33 @@ export function ComboboxField({
             )}
           </span>
         </div>
-      </PopoverPrimitive.Anchor>
 
       <PopoverPrimitive.Portal>
-        <PopoverPrimitive.Content
+        <PopoverPrimitive.Positioner
+          anchor={anchorRef}
           sideOffset={4}
           align="start"
-          className={cn(
-            'z-[60] w-(--radix-popover-trigger-width) min-w-[12rem] max-h-[min(18rem,var(--radix-popover-content-available-height))] overflow-hidden rounded-md border border-border bg-popover p-1 text-base text-popover-foreground shadow-md md:text-sm',
-            'data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2',
-            'data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95',
-            'data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95',
-            contentClassName,
-          )}
-          onOpenAutoFocus={(event) => event.preventDefault()}
-          onCloseAutoFocus={(event) => event.preventDefault()}
-          // Clicking the field is not "outside": it should keep the list open.
-          onInteractOutside={(event) => {
-            if (anchorRef.current?.contains(event.target as Node)) {
-              event.preventDefault();
-            }
-          }}
-          // Pressing inside the list must not blur the field, or the blur would
-          // close the list before the click lands.
-          onMouseDown={(event) => event.preventDefault()}
-          onClick={(event) => event.stopPropagation()}
+          className="isolate z-[60]"
         >
-          {children({ activeIndex, setActiveIndex, itemId, listId })}
-        </PopoverPrimitive.Content>
+          <PopoverPrimitive.Popup
+            className={cn(
+              'z-[60] w-(--anchor-width) min-w-[12rem] max-h-[min(18rem,var(--available-height))] overflow-hidden rounded-md border border-border bg-popover p-1 text-base text-popover-foreground shadow-md md:text-sm',
+              'data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2',
+              'data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95',
+              'data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95',
+              contentClassName,
+            )}
+            // The field keeps focus throughout: it is the combobox input.
+            initialFocus={false}
+            finalFocus={false}
+            // Pressing inside the list must not blur the field, or the blur would
+            // close the list before the click lands.
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={(event) => event.stopPropagation()}
+          >
+            {children({ activeIndex, setActiveIndex, itemId, listId })}
+          </PopoverPrimitive.Popup>
+        </PopoverPrimitive.Positioner>
       </PopoverPrimitive.Portal>
     </PopoverPrimitive.Root>
   );
