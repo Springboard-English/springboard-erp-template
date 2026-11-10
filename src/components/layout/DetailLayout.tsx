@@ -4,6 +4,7 @@ import {
     useCallback,
     useContext,
     useEffect,
+    useId,
     useLayoutEffect,
     useRef,
     type ReactNode,
@@ -631,6 +632,75 @@ export type DetailFieldsTableRow =
     | DetailFieldsTableFieldRow
     | DetailFieldsTableSectionRow;
 
+// Form controls that need an accessible name; a control already named keeps its own.
+const UNNAMED_CONTROL_SELECTOR = [
+    "input:not([type=hidden])",
+    "textarea",
+    "select",
+    "[role=combobox]",
+    "[role=switch]",
+    "[role=checkbox]",
+]
+    .map((selector) => `${selector}:not([aria-label]):not([aria-labelledby])`)
+    .join(",");
+
+/**
+ * One label and value row. Inline editors in the value cell take the row's
+ * label as their accessible name, so a field edited in place is announced by
+ * what it is rather than as an unnamed text box.
+ */
+function DetailFieldsTableField({
+    row,
+    labelColumnClassName,
+}: {
+    row: DetailFieldsTableFieldRow;
+    labelColumnClassName?: string;
+}) {
+    const labelId = useId();
+    const valueRef = useRef<HTMLTableCellElement | null>(null);
+    // Runs every render because the value cell swaps between read and edit modes.
+    useLayoutEffect(() => {
+        const cell = valueRef.current;
+        if (!cell) return;
+        cell.querySelectorAll<HTMLElement>(UNNAMED_CONTROL_SELECTOR).forEach((control) => {
+            const labelledByElement = control.id
+                ? cell.ownerDocument.querySelector(`label[for="${CSS.escape(control.id)}"]`)
+                : null;
+            if (!labelledByElement && !control.closest("label")) {
+                control.setAttribute("aria-labelledby", labelId);
+            }
+        });
+    });
+    return (
+        <TableRow
+            className={cn(
+                "block border-b border-border/60 hover:bg-transparent md:table-row",
+                row.rowClassName,
+            )}
+        >
+            <TableCell
+                id={labelId}
+                className={cn(
+                    "block w-full border-border/60 px-4 pt-4 pb-2 align-top text-sm font-medium text-muted-foreground md:table-cell md:border-r md:px-4 md:py-3 md:align-middle",
+                    labelColumnClassName ?? "md:w-[220px]",
+                    row.labelClassName,
+                )}
+            >
+                {row.label}
+            </TableCell>
+            <TableCell
+                ref={valueRef}
+                className={cn(
+                    "block w-full px-4 pt-0 pb-4 text-sm md:table-cell md:px-4 md:py-3 md:align-middle",
+                    row.valueClassName,
+                )}
+            >
+                {row.value}
+            </TableCell>
+        </TableRow>
+    );
+}
+
 export function DetailFieldsTable({
     rows,
     className,
@@ -698,32 +768,11 @@ export function DetailFieldsTable({
                         }
 
                         return (
-                            <TableRow
+                            <DetailFieldsTableField
                                 key={key}
-                                className={cn(
-                                    "block border-b border-border/60 hover:bg-transparent md:table-row",
-                                    row.rowClassName,
-                                )}
-                            >
-                                <TableCell
-                                    className={cn(
-                                        "block w-full border-border/60 px-4 pt-4 pb-2 align-top text-sm font-medium text-muted-foreground md:table-cell md:border-r md:px-4 md:py-3 md:align-middle",
-                                        labelColumnClassName ??
-                                            "md:w-[220px]",
-                                        row.labelClassName,
-                                    )}
-                                >
-                                    {row.label}
-                                </TableCell>
-                                <TableCell
-                                    className={cn(
-                                        "block w-full px-4 pt-0 pb-4 text-sm md:table-cell md:px-4 md:py-3 md:align-middle",
-                                        row.valueClassName,
-                                    )}
-                                >
-                                    {row.value}
-                                </TableCell>
-                            </TableRow>
+                                row={row}
+                                labelColumnClassName={labelColumnClassName}
+                            />
                         );
                     })}
                 </TableBody>
