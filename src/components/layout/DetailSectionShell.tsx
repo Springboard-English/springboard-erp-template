@@ -188,7 +188,8 @@ function SidebarRow<T extends string>({
                 buttonTarget,
                 FOCUS_RING,
                 "flex w-full items-center gap-2.5 rounded-md px-3 text-left text-sm transition-colors motion-reduce:transition-none",
-                active ? "bg-primary/10 font-semibold text-primary" : "text-foreground hover:bg-muted",
+                // The open row's text stays foreground: an app's primary on its own tint can miss 4.5:1.
+                active ? "bg-primary/10 font-semibold text-foreground" : "text-foreground hover:bg-muted",
             )}
         >
             <span aria-hidden className="contents">
