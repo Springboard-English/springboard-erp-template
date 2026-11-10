@@ -124,6 +124,8 @@ export { default as SimpleDataTable, groupTableRows } from "./components/SimpleD
 export type { SimpleDataTableColumn, SimpleDataTableColumnGroup, SimpleDataTableSortOrder, SimpleDataTableProps, SimpleDataTableClassNames, SimpleDataTableRowGroups, SimpleDataTableRowGroup } from "./components/SimpleDataTable";
 export { default as MobileCardList, CardField } from "./components/MobileCardList";
 export type { MobileCardListProps } from "./components/MobileCardList";
+export { Timeline, TimelineGroup, TimelineEntry } from "./components/timeline/Timeline";
+export type { TimelineGroupState, TimelineAttributes } from "./components/timeline/Timeline";
 export {
   isRowSelected,
   toggleRowSelection,

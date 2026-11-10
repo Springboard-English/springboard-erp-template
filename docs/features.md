@@ -584,3 +584,22 @@ the fork), and Formbricks decides which survey shows, how often and to whom.
   unless `askGuests`.
 - **The SDK loads on the first report**, as a lazy chunk, and every error is
   caught: feedback never breaks the screen that reports it.
+
+## Timeline (`src/components/timeline/`, since 6.3.0)
+
+A dated rail for a student-facing or report page: `Timeline` is the rail,
+`TimelineGroup` one heading on it (a day, a week, a stage) and `TimelineEntry`
+a row card inside a group.
+
+- **A group says where it sits against today** through `state`: `past` is a
+  ticked green dot, `today` a lit primary dot, `upcoming` (the default) an
+  outlined one. The host decides the order of groups; the rail does not sort.
+  `meta` is a muted note after the label, such as a count.
+- **An entry lists what belongs to it.** Its `children` render as rows under
+  the entry inside the same card, so a session shows the coursework set in it,
+  or a day its events, without a second rail. `onOpen` makes the row a button;
+  without it the row is static. `warn` turns the meta line red.
+- **Domain-free.** The pieces take icons, text and callbacks only. The app
+  groups its own rows (by ICT day, by week) and formats its own labels.
+- Each piece takes `attributes` for `data-*` hooks, such as a guided tour's
+  anchor.
