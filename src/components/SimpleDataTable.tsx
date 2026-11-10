@@ -6,7 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { pageSelectionState, togglePageSelection, toggleRowSelection } from '@/lib/rowSelection';
 // Relative: this type reaches the published .d.ts, where `@/` does not resolve.
 import type { RowSelection } from '../lib/rowSelection';
-import { SearchableSelect } from '@/components/ui/searchable-select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Table,
   TableBody,
@@ -36,6 +36,8 @@ export interface SimpleDataTableColumn<T> {
    * scrolls sideways. Pinned columns before it need a fixed width to add up to.
    */
   stickyLeft?: number;
+  /** `end` right-aligns the header and cells, for numbers and row actions. */
+  align?: 'start' | 'end';
 }
 
 /** A header cell over several columns. */
@@ -137,6 +139,8 @@ export interface SimpleDataTableProps<T> {
   loading?: boolean;
   loadingMessage?: string;
   emptyMessage?: string;
+  /** Shown under the empty message, typically the button that creates the first row. */
+  emptyAction?: ReactNode;
   page: number;
   pageSize: number;
   pageSizeOptions?: number[];
@@ -203,6 +207,7 @@ export default function SimpleDataTable<T>({
   loading = false,
   loadingMessage,
   emptyMessage,
+  emptyAction,
   page,
   pageSize,
   pageSizeOptions = [10, 25, 50],
@@ -335,9 +340,10 @@ export default function SimpleDataTable<T>({
       key={rowKey(row)}
       data-state={selection && selectedKeys.has(rowKey(row)) ? 'selected' : undefined}
       className={cn(
-        'odd:bg-transparent even:bg-muted/20',
+        // Hairlines separate rows; a tint marks only the row under the pointer.
+        'hover:bg-muted/40',
         handleRowClick && 'cursor-pointer',
-        hoveredRowKey === rowKey(row) && 'bg-muted/35',
+        hoveredRowKey === rowKey(row) && 'bg-muted/40',
         classNames?.row,
       )}
       onClick={handleRowClick ? () => handleRowClick(row) : undefined}
@@ -348,7 +354,14 @@ export default function SimpleDataTable<T>({
         <TableCell
           key={column.id}
           style={pinnedStyle(column)}
-          className={cn(column.stickyLeft !== undefined && 'sticky z-[1] bg-card', column.cellClassName, classNames?.cell)}
+          className={cn(
+            // Dense rows: a 36px control plus 10px above and below on desktop.
+            'px-4 py-2.5',
+            column.align === 'end' && 'text-right',
+            column.stickyLeft !== undefined && 'sticky z-[1] bg-card',
+            column.cellClassName,
+            classNames?.cell,
+          )}
         >
           {column.render(row)}
         </TableCell>
@@ -366,6 +379,9 @@ export default function SimpleDataTable<T>({
       className={cn(
         // With groups the whole header sticks, so its rows stay stacked.
         hasGroups ? 'bg-card text-left' : 'sticky top-0 z-[1] bg-card text-left',
+        // A quiet header: smaller, muted, on a faint band.
+        'h-10 bg-muted/40 px-4 text-[13px] font-medium text-muted-foreground',
+        column.align === 'end' && 'text-right',
         column.stickyLeft !== undefined && 'sticky z-[2]',
         column.className,
         classNames?.headCell,
@@ -375,7 +391,12 @@ export default function SimpleDataTable<T>({
         <button
           type="button"
           onClick={() => handleSortClick(column.id)}
-          className={cn(touchTargetHeight, "inline-flex w-full cursor-pointer items-center justify-start gap-1 whitespace-nowrap text-left text-sm font-medium text-muted-foreground", classNames?.sortButton)}
+          className={cn(
+            touchTargetHeight,
+            "inline-flex w-full cursor-pointer items-center justify-start gap-1 whitespace-nowrap text-left text-[13px] font-medium text-muted-foreground hover:text-foreground",
+            column.align === 'end' && 'justify-end text-right',
+            classNames?.sortButton,
+          )}
         >
           <span>{column.header}</span>
           {sortBy === column.id ? (
@@ -472,7 +493,7 @@ export default function SimpleDataTable<T>({
     <div
       ref={rootRef}
       className={cn(
-        "flex min-h-0 flex-col overflow-hidden rounded-2xl border border-border/70 bg-card shadow-md",
+        "flex min-h-0 flex-col overflow-hidden rounded-xl border border-border/70 bg-card shadow-xs",
         className,
         classNames?.root,
       )}
@@ -525,9 +546,12 @@ export default function SimpleDataTable<T>({
               <TableRow className="hover:bg-transparent">
                 <TableCell
                   colSpan={tableColumns.length}
-                  className={cn("py-10 text-center text-sm text-muted-foreground", classNames?.emptyCell)}
+                  className={cn("py-12 text-center text-sm text-muted-foreground", classNames?.emptyCell)}
                 >
-                  {resolvedEmptyMessage}
+                  <div className="flex flex-col items-center gap-3">
+                    <span>{resolvedEmptyMessage}</span>
+                    {emptyAction}
+                  </div>
                 </TableCell>
               </TableRow>
             ) : rowGroups ? (
@@ -557,59 +581,69 @@ export default function SimpleDataTable<T>({
         </div>
       )}
 
+      {/* No footer under an empty table: the empty state says it all. */}
+      {!loading && totalRows === 0 ? null : (
       <div
         ref={footerRef}
         className={cn(
-          "flex-shrink-0 flex flex-col gap-3 border-t border-border/70 bg-card px-4 py-3 sm:flex-row sm:items-center",
-          alignPaginationToLeft ? "sm:justify-start" : "sm:justify-between",
+          "flex-shrink-0 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border/70 bg-card px-4 py-2",
+          alignPaginationToLeft ? "justify-start" : "justify-between",
           classNames?.footer,
         )}
       >
-        <div className={cn("text-sm text-muted-foreground", classNames?.showingLabel)}>
+        <div className={cn("text-sm text-muted-foreground tabular-nums", classNames?.showingLabel)}>
           {showingResultsLabel}
         </div>
 
-        <div className={cn("flex flex-col gap-3 sm:flex-row sm:items-center", alignPaginationToLeft ? "sm:ml-4" : "")}>
-          <label className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span className="whitespace-nowrap">{t('simpleDataTable.rows')}</span>
-            <SearchableSelect
-              value={pageSize}
-              onValueChange={(value) => onPageSizeChange(Number(value))}
-              options={pageSizeOptions.map((option) => ({ value: String(option), label: String(option) }))}
-              // Dense in the footer on desktop; the primitive's 44px stands on
-              // touch. A bare `h-9` here would pin it to 36px on a phone too.
-              className="md:h-9"
-              searchPlaceholder={t('simpleDataTable.searchRows')}
-            />
-          </label>
+        <div className={cn("flex items-center gap-4", alignPaginationToLeft ? "ml-4" : "")}>
+          {/* Only worth offering when there are more rows than the smallest page holds. */}
+          {totalRows > Math.min(...pageSizeOptions) || canGoNext ? (
+            <label className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span className="whitespace-nowrap">{t('simpleDataTable.rows')}</span>
+              <Select value={String(pageSize)} onValueChange={(value) => onPageSizeChange(Number(value))}>
+                <SelectTrigger size="sm" className="w-20 px-3 font-medium" aria-label={t('simpleDataTable.rows')}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {pageSizeOptions.map((option) => (
+                    <SelectItem key={option} value={String(option)}>
+                      {option}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </label>
+          ) : null}
 
-          <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => onPageChange(safePage - 1)}
-              disabled={!canGoPrevious}
-            >
-              <ChevronLeft className="size-4" />
-              {t('simpleDataTable.previous')}
-            </Button>
-            <span className="min-w-20 text-center text-sm text-muted-foreground">
-              {pageLabel}
-            </span>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => onPageChange(safePage + 1)}
-              disabled={!canGoNext}
-            >
-              {t('simpleDataTable.next')}
-              <ChevronRight className="size-4" />
-            </Button>
-          </div>
+          {/* A single page needs no pager. */}
+          {canGoPrevious || canGoNext ? (
+            <div className="flex items-center gap-1">
+              <span className="mr-1 text-sm text-muted-foreground tabular-nums">{pageLabel}</span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                aria-label={t('simpleDataTable.previous')}
+                onClick={() => onPageChange(safePage - 1)}
+                disabled={!canGoPrevious}
+              >
+                <ChevronLeft className="size-4" />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                aria-label={t('simpleDataTable.next')}
+                onClick={() => onPageChange(safePage + 1)}
+                disabled={!canGoNext}
+              >
+                <ChevronRight className="size-4" />
+              </Button>
+            </div>
+          ) : null}
         </div>
       </div>
+      )}
     </div>
   );
 }
