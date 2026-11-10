@@ -3,6 +3,7 @@ import { Checkbox as CheckboxPrimitive } from "@base-ui/react/checkbox"
 
 import { cn } from "@/lib/utils"
 import { touchHitArea } from "@/lib/touchTarget"
+import { uiPresetClass } from "@/config/uiPreset"
 
 type CheckedState = boolean | "indeterminate"
 
@@ -43,6 +44,7 @@ function Checkbox({
       className={cn(
         touchHitArea,
         "peer relative size-[26px] shrink-0 rounded-[9px] border-2 border-input bg-card shadow-xs transition-all duration-200 ease-bounce outline-none focus-visible:border-ring focus-visible:ring-4 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-error data-checked:border-primary data-checked:bg-primary data-checked:text-white data-indeterminate:border-primary data-indeterminate:bg-primary data-indeterminate:text-white dark:bg-input/30",
+        uiPresetClass("checkbox"),
         className
       )}
       {...props}

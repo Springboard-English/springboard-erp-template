@@ -41,6 +41,26 @@ export interface UIPreset {
     tableRow?: UIPresetSlot;
     /** The `h2` title of `PageHeader` and `DetailHeader`. */
     pageTitle?: UIPresetSlot;
+    /** `Badge`; receives its `variant`. */
+    badge?: UIPresetSlot;
+    /** The backdrop behind `DialogContent` and `SheetContent`. */
+    overlay?: UIPresetSlot;
+    /** `SelectTrigger`. */
+    selectTrigger?: UIPresetSlot;
+    /** The floating panel of a dropdown menu, select or popover; `variant` names which ("menu", "select", "popover"). */
+    popup?: UIPresetSlot;
+    /** One row of a dropdown menu or select list; `variant` is "menu" or "select". */
+    listItem?: UIPresetSlot;
+    /** `TabsList`; receives its `variant`. */
+    tabsList?: UIPresetSlot;
+    /** `TabsTrigger`. */
+    tabsTrigger?: UIPresetSlot;
+    /** The `Switch` track; `size` is its size. */
+    switch?: UIPresetSlot;
+    /** The `Switch` thumb; `size` is the switch's size. */
+    switchThumb?: UIPresetSlot;
+    /** `Checkbox`. */
+    checkbox?: UIPresetSlot;
 }
 
 let _preset: UIPreset = {};

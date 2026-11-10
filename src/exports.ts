@@ -339,6 +339,8 @@ export * from "./components/ui/textarea";
 // `config/uiPreset` for why tokens alone are not enough.
 export { configureUIPreset, getUIPreset, uiPresetClass } from "./config/uiPreset";
 export type { UIPreset, UIPresetSlot, UIPresetSlotArgs } from "./config/uiPreset";
+// Material 3 Expressive look; needs `m3e.css` imported after `tokens.css`.
+export { m3eUIPreset } from "./config/m3ePreset";
 
 // Transient app-wide status. `GlobalStatusQueryBridge` wires TanStack Query
 // errors into it; `DashboardLayout` renders the status below `md`, where the

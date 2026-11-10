@@ -1,0 +1,296 @@
+/*
+ * Material 3 Expressive look for the suite, opt-in. An app that wants it
+ * imports this after tokens.css and registers `m3eUIPreset`:
+ *   @import "@springboard-english/springboard-erp-template/tokens.css";
+ *   @import "@springboard-english/springboard-erp-template/m3e.css";
+ *   configureUIPreset(m3eUIPreset)
+ *
+ * What it changes:
+ *   colour   the shadcn tokens point at M3 colour roles, generated from the
+ *            suite's rose (#bc3b62) with the "vibrant" scheme, which keeps the
+ *            rose as primary. Status colours (success, warning, info, error)
+ *            are the suite's and stay as they are.
+ *   shape    rounded-xs … rounded-4xl follow the M3 corner scale.
+ *   motion   springs as CSS linear() easings: ease-spring-*, used by the
+ *            preset for popup enter and exit.
+ *   state    `state-layer` / `state-layer-circle` overlays and elevation
+ *            shadows (shadow-elevation-0 … 5).
+ *
+ * Derived from shadcn M3E (https://github.com/Crysta1221/shadcn-m3e, MIT,
+ * Copyright (c) 2026 Crysta1221), whose tokens and spring curves come from
+ * Compose Material3 (androidx, Apache License 2.0). Colour roles generated with
+ * Google's material-color-utilities (Apache License 2.0).
+ */
+
+/* ---------- M3 colour roles (seed #bc3b62, vibrant) ---------- */
+
+:root,
+[data-theme="light"] {
+    --md-sys-color-background: #fff8f7;
+    --md-sys-color-error: #ba1a1a;
+    --md-sys-color-error-container: #ffdad6;
+    --md-sys-color-inverse-on-surface: #ffecee;
+    --md-sys-color-inverse-primary: #ffb1c1;
+    --md-sys-color-inverse-surface: #3c2c2f;
+    --md-sys-color-on-error: #ffffff;
+    --md-sys-color-on-error-container: #93000a;
+    --md-sys-color-on-primary: #ffffff;
+    --md-sys-color-on-primary-container: #90003e;
+    --md-sys-color-on-secondary: #ffffff;
+    --md-sys-color-on-secondary-container: #673b37;
+    --md-sys-color-on-surface: #26181a;
+    --md-sys-color-on-surface-variant: #574145;
+    --md-sys-color-on-tertiary: #ffffff;
+    --md-sys-color-on-tertiary-container: #6e3821;
+    --md-sys-color-outline: #8a7175;
+    --md-sys-color-outline-variant: #ddbfc4;
+    --md-sys-color-primary: #bc0053;
+    --md-sys-color-primary-container: #ffd9df;
+    --md-sys-color-scrim: #000000;
+    --md-sys-color-secondary: #82524d;
+    --md-sys-color-secondary-container: #ffdad6;
+    --md-sys-color-surface: #fff8f7;
+    --md-sys-color-surface-container: #ffe9eb;
+    --md-sys-color-surface-container-high: #fde2e5;
+    --md-sys-color-surface-container-highest: #f7dce0;
+    --md-sys-color-surface-container-low: #fff0f1;
+    --md-sys-color-surface-container-lowest: #ffffff;
+    --md-sys-color-tertiary: #8a4f36;
+    --md-sys-color-tertiary-container: #ffdbce;
+}
+
+.dark,
+[data-theme="dark"] {
+    --md-sys-color-background: #1d1012;
+    --md-sys-color-error: #ffb4ab;
+    --md-sys-color-error-container: #93000a;
+    --md-sys-color-inverse-on-surface: #3c2c2f;
+    --md-sys-color-inverse-primary: #bc0053;
+    --md-sys-color-inverse-surface: #f7dce0;
+    --md-sys-color-on-error: #690005;
+    --md-sys-color-on-error-container: #ffdad6;
+    --md-sys-color-on-primary: #66002a;
+    --md-sys-color-on-primary-container: #ffd9df;
+    --md-sys-color-on-secondary: #4c2522;
+    --md-sys-color-on-secondary-container: #ffdad6;
+    --md-sys-color-on-surface: #f7dce0;
+    --md-sys-color-on-surface-variant: #ddbfc4;
+    --md-sys-color-on-tertiary: #52230d;
+    --md-sys-color-on-tertiary-container: #ffdbce;
+    --md-sys-color-outline: #a58a8e;
+    --md-sys-color-outline-variant: #574145;
+    --md-sys-color-primary: #ffb1c1;
+    --md-sys-color-primary-container: #90003e;
+    --md-sys-color-scrim: #000000;
+    --md-sys-color-secondary: #f5b7b1;
+    --md-sys-color-secondary-container: #673b37;
+    --md-sys-color-surface: #1d1012;
+    --md-sys-color-surface-container: #2a1c1e;
+    --md-sys-color-surface-container-high: #352629;
+    --md-sys-color-surface-container-highest: #413033;
+    --md-sys-color-surface-container-low: #26181a;
+    --md-sys-color-surface-container-lowest: #170b0d;
+    --md-sys-color-tertiary: #ffb598;
+    --md-sys-color-tertiary-container: #6e3821;
+}
+
+/* ---------- shadcn tokens → M3 roles ---------- */
+
+/* Listed with the dark selectors too, so a `.dark` wrapper below the root,
+   which tokens.css also targets, takes the M3 values. */
+:root,
+[data-theme="light"],
+.dark,
+[data-theme="dark"] {
+    --background: var(--md-sys-color-surface);
+    --foreground: var(--md-sys-color-on-surface);
+    --card: var(--md-sys-color-surface-container-low);
+    --card-foreground: var(--md-sys-color-on-surface);
+    --popover: var(--md-sys-color-surface-container);
+    --popover-foreground: var(--md-sys-color-on-surface);
+    --primary: var(--md-sys-color-primary);
+    --primary-foreground: var(--md-sys-color-on-primary);
+    --secondary: var(--md-sys-color-secondary-container);
+    --secondary-foreground: var(--md-sys-color-on-secondary-container);
+    --muted: var(--md-sys-color-surface-container-highest);
+    --muted-foreground: var(--md-sys-color-on-surface-variant);
+    --accent: var(--md-sys-color-secondary-container);
+    --accent-foreground: var(--md-sys-color-on-secondary-container);
+    --destructive: var(--md-sys-color-error);
+    --destructive-foreground: var(--md-sys-color-on-error);
+    --border: var(--md-sys-color-outline-variant);
+    --input: var(--md-sys-color-outline);
+    --ring: var(--md-sys-color-secondary);
+    --radius: var(--md-sys-shape-corner-medium);
+}
+
+/* ---------- shape, state, motion ---------- */
+
+:root {
+    --md-sys-shape-corner-extra-small: 4px;
+    --md-sys-shape-corner-small: 8px;
+    --md-sys-shape-corner-medium: 12px;
+    --md-sys-shape-corner-large: 16px;
+    --md-sys-shape-corner-large-increased: 20px;
+    --md-sys-shape-corner-extra-large: 28px;
+    --md-sys-shape-corner-extra-large-increased: 32px;
+    --md-sys-shape-corner-extra-extra-large: 48px;
+
+    --md-sys-state-hover-opacity: 0.08;
+    --md-sys-state-focus-opacity: 0.1;
+    --md-sys-state-pressed-opacity: 0.1;
+
+    --md-sys-motion-easing-emphasized: cubic-bezier(0.2, 0, 0, 1);
+    --md-sys-motion-easing-emphasized-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1);
+    --md-sys-motion-easing-emphasized-accelerate: cubic-bezier(0.3, 0, 0.8, 0.15);
+
+    /* Expressive springs, sampled into linear() so plain CSS can play them. */
+    --md-sys-motion-spring-fast-spatial: linear(0, 0.0206, 0.0754, 0.1544, 0.2492, 0.3524, 0.458, 0.5613, 0.6588, 0.7479, 0.8269, 0.895, 0.952, 0.9981, 1.0338, 1.0603, 1.0783, 1.0893, 1.0942, 1.0943, 1.0906, 1.0842, 1.0759, 1.0665, 1.0565, 1.0465, 1.037, 1.0281, 1.0201, 1.0131, 1.0072, 1.0023, 0.9984, 0.9955, 0.9934, 0.992, 0.9912, 0.991, 0.9912, 0.9917, 0.9924, 0.9932, 0.9942, 0.9951, 0.996, 0.9969, 0.9977, 0.9984, 1);
+    --md-sys-motion-spring-fast-spatial-duration: 360ms;
+    --md-sys-motion-spring-default-spatial: linear(0, 0.0145, 0.0527, 0.1076, 0.1736, 0.2461, 0.3214, 0.3968, 0.4702, 0.54, 0.6051, 0.665, 0.7193, 0.7679, 0.8108, 0.8483, 0.8807, 0.9083, 0.9316, 0.951, 0.9669, 0.9798, 0.99, 0.998, 1.004, 1.0085, 1.0116, 1.0136, 1.0147, 1.0151, 1.0151, 1.0146, 1.0138, 1.0128, 1.0118, 1.0106, 1.0095, 1.0084, 1.0073, 1.0063, 1.0053, 1.0045, 1.0037, 1.0031, 1.0025, 1.002, 1.0015, 1.0011, 1);
+    --md-sys-motion-spring-default-spatial-duration: 440ms;
+    --md-sys-motion-spring-slow-spatial: linear(0, 0.0142, 0.0517, 0.1057, 0.1706, 0.2421, 0.3166, 0.3912, 0.464, 0.5334, 0.5984, 0.6583, 0.7127, 0.7615, 0.8047, 0.8426, 0.8755, 0.9036, 0.9274, 0.9473, 0.9638, 0.9771, 0.9878, 0.9962, 1.0027, 1.0074, 1.0108, 1.0131, 1.0144, 1.0151, 1.0151, 1.0148, 1.0141, 1.0132, 1.0122, 1.0111, 1.0099, 1.0088, 1.0077, 1.0067, 1.0057, 1.0049, 1.0041, 1.0034, 1.0027, 1.0022, 1.0017, 1.0013, 1);
+    --md-sys-motion-spring-slow-spatial-duration: 600ms;
+    --md-sys-motion-spring-fast-effects: linear(0, 0.0576, 0.1807, 0.3214, 0.4558, 0.5737, 0.6718, 0.7508, 0.8128, 0.8606, 0.897, 0.9244, 0.9448, 0.9599, 0.9709, 0.979, 0.9849, 0.9892, 0.9923, 0.9945, 0.9961, 0.9972, 0.998, 0.9986, 1);
+    --md-sys-motion-spring-fast-effects-duration: 150ms;
+    --md-sys-motion-spring-default-effects: linear(0, 0.0616, 0.1912, 0.3374, 0.4751, 0.594, 0.6916, 0.7689, 0.8288, 0.8743, 0.9084, 0.9337, 0.9523, 0.9658, 0.9756, 0.9826, 0.9877, 0.9913, 0.9939, 0.9957, 0.997, 0.9979, 0.9985, 0.999, 1);
+    --md-sys-motion-spring-default-effects-duration: 240ms;
+}
+
+/* People who ask for less motion get the plain emphasized curve, no overshoot. */
+@media (prefers-reduced-motion: reduce) {
+    :root {
+        --md-sys-motion-spring-fast-spatial: var(--md-sys-motion-easing-emphasized);
+        --md-sys-motion-spring-default-spatial: var(--md-sys-motion-easing-emphasized);
+        --md-sys-motion-spring-slow-spatial: var(--md-sys-motion-easing-emphasized);
+    }
+}
+
+/* ---------- Tailwind theme ---------- */
+
+@theme inline {
+    /* M3 colour roles as utilities: bg-primary-container, text-on-surface-variant … */
+    --color-on-primary: var(--md-sys-color-on-primary);
+    --color-primary-container: var(--md-sys-color-primary-container);
+    --color-on-primary-container: var(--md-sys-color-on-primary-container);
+    --color-secondary-container: var(--md-sys-color-secondary-container);
+    --color-on-secondary-container: var(--md-sys-color-on-secondary-container);
+    --color-tertiary: var(--md-sys-color-tertiary);
+    --color-on-tertiary: var(--md-sys-color-on-tertiary);
+    --color-tertiary-container: var(--md-sys-color-tertiary-container);
+    --color-on-tertiary-container: var(--md-sys-color-on-tertiary-container);
+    --color-on-error: var(--md-sys-color-on-error);
+    --color-error-container: var(--md-sys-color-error-container);
+    --color-on-error-container: var(--md-sys-color-on-error-container);
+    --color-surface: var(--md-sys-color-surface);
+    --color-surface-container-lowest: var(--md-sys-color-surface-container-lowest);
+    --color-surface-container-low: var(--md-sys-color-surface-container-low);
+    --color-surface-container: var(--md-sys-color-surface-container);
+    --color-surface-container-high: var(--md-sys-color-surface-container-high);
+    --color-surface-container-highest: var(--md-sys-color-surface-container-highest);
+    --color-on-surface: var(--md-sys-color-on-surface);
+    --color-on-surface-variant: var(--md-sys-color-on-surface-variant);
+    --color-outline: var(--md-sys-color-outline);
+    --color-outline-variant: var(--md-sys-color-outline-variant);
+    --color-inverse-surface: var(--md-sys-color-inverse-surface);
+    --color-inverse-on-surface: var(--md-sys-color-inverse-on-surface);
+    --color-scrim: var(--md-sys-color-scrim);
+
+    /* The M3 corner scale replaces shadcn's offsets from --radius. */
+    --radius-xs: var(--md-sys-shape-corner-extra-small);
+    --radius-sm: var(--md-sys-shape-corner-small);
+    --radius-md: var(--md-sys-shape-corner-medium);
+    --radius-lg: var(--md-sys-shape-corner-large);
+    --radius-xl: var(--md-sys-shape-corner-large-increased);
+    --radius-2xl: var(--md-sys-shape-corner-extra-large);
+    --radius-3xl: var(--md-sys-shape-corner-extra-large-increased);
+    --radius-4xl: var(--md-sys-shape-corner-extra-extra-large);
+
+    --shadow-elevation-0: none;
+    --shadow-elevation-1: 0 1px 2px 0 rgb(0 0 0 / 0.3), 0 1px 3px 1px rgb(0 0 0 / 0.15);
+    --shadow-elevation-2: 0 1px 2px 0 rgb(0 0 0 / 0.3), 0 2px 6px 2px rgb(0 0 0 / 0.15);
+    --shadow-elevation-3: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 4px 8px 3px rgb(0 0 0 / 0.15);
+
+    /* ease-spring-*: Tailwind's ease utility sets --tw-ease, which the
+       animate-in / animate-out keyframes read, so popups ride the spring. */
+    --ease-spring-fast-spatial: var(--md-sys-motion-spring-fast-spatial);
+    --ease-spring-default-spatial: var(--md-sys-motion-spring-default-spatial);
+    --ease-spring-slow-spatial: var(--md-sys-motion-spring-slow-spatial);
+    --ease-spring-fast-effects: var(--md-sys-motion-spring-fast-effects);
+    --ease-spring-default-effects: var(--md-sys-motion-spring-default-effects);
+    --ease-emphasized-accelerate: var(--md-sys-motion-easing-emphasized-accelerate);
+    --ease-emphasized-decelerate: var(--md-sys-motion-easing-emphasized-decelerate);
+}
+
+/* ---------- utilities ---------- */
+
+/* An overlay of the content colour at the M3 state opacities. It inherits the
+   element's corners. `state-layer-<colour>` picks another overlay colour. */
+@utility state-layer {
+    position: relative;
+    &::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        background-color: var(--state-layer-color, currentColor);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity var(--md-sys-motion-spring-fast-effects-duration) var(--md-sys-motion-spring-fast-effects);
+    }
+    @media (hover: hover) {
+        &:hover::before {
+            opacity: var(--md-sys-state-hover-opacity);
+        }
+    }
+    &:focus-visible::before,
+    &[data-highlighted]::before {
+        opacity: var(--md-sys-state-focus-opacity);
+    }
+    &:active::before,
+    &[data-popup-open]::before {
+        opacity: var(--md-sys-state-pressed-opacity);
+    }
+    &:disabled::before,
+    &[data-disabled]::before,
+    &[aria-disabled="true"]::before {
+        opacity: 0;
+    }
+}
+
+@utility state-layer-* {
+    --state-layer-color: --value(--color-*);
+}
+
+/* A 40px round state layer behind a small selection control (checkbox, radio). */
+@utility state-layer-circle {
+    &::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 40px;
+        height: 40px;
+        translate: -50% -50%;
+        border-radius: 9999px;
+        background-color: var(--state-layer-color, currentColor);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity var(--md-sys-motion-spring-fast-effects-duration) var(--md-sys-motion-spring-fast-effects);
+    }
+    @media (hover: hover) {
+        &:hover::before {
+            opacity: var(--md-sys-state-hover-opacity);
+        }
+    }
+    &:focus-visible::before {
+        opacity: var(--md-sys-state-focus-opacity);
+    }
+    &:active::before {
+        opacity: var(--md-sys-state-pressed-opacity);
+    }
+    &[data-disabled]::before,
+    &:disabled::before {
+        opacity: 0;
+    }
+}
