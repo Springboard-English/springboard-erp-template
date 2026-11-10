@@ -110,7 +110,14 @@ export default function QuestionList({
               ) : null}
 
               {question.type === "radio-group" ? (
-                <div className="space-y-2 rounded-lg border border-border/50 p-3">
+                <div
+                  className={cn(
+                    "rounded-lg border border-border/50 p-3",
+                    question.layout === "horizontal"
+                      ? "flex flex-wrap gap-x-6 gap-y-2"
+                      : "space-y-2",
+                  )}
+                >
                   {question.options.map((option) => (
                     <label
                       key={option.value}

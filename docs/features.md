@@ -471,6 +471,11 @@ nothing required is missing.
 - On a phone the footer stacks bottom-up; the footer note and the
   disabled-submit reason sit above the buttons, not under them.
 
+## Question builder (`src/components/question-builder/`)
+
+- A `radio-group` question lists one option per row. `layout: "horizontal"`
+  puts them on one wrapping row instead, for a short scale such as 1 to 5.
+
 ## Push notifications (`PushNotificationsToggle`, since 4.9.0)
 
 `<PushNotificationsToggle app="lms" serviceWorkerUrl="/sw.js" />` in an app's

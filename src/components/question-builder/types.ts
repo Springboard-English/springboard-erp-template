@@ -83,6 +83,8 @@ export interface QuestionBuilderRadioGroupQuestion
   onChange: (value: string) => void;
   options: QuestionBuilderOption[];
   name?: string;
+  /** One option per row (default), or all options on one wrapping row. */
+  layout?: "vertical" | "horizontal";
 }
 
 export interface QuestionBuilderCheckboxGroupQuestion
