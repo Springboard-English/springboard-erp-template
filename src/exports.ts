@@ -242,6 +242,7 @@ export type {
   DetailTabItem,
   DetailChipTone,
   DetailMenuAction,
+  BreadcrumbItem as DetailBreadcrumbItem,
 } from "./components/layout/DetailLayout";
 export { DetailSectionShell } from "./components/layout/DetailSectionShell";
 export type {

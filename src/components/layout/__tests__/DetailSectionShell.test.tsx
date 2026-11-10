@@ -2,6 +2,9 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import { Info, List, Users } from "lucide-react";
 import { describe, expect, it, vi } from "vitest";
 
+import { MemoryRouter } from "react-router-dom";
+
+import { DetailPendingView } from "../DetailLayout";
 import { DetailSectionShell } from "../DetailSectionShell";
 
 const items = [
@@ -52,6 +55,19 @@ describe("DetailSectionShell", () => {
         expect(onChange).not.toHaveBeenCalled();
         fireEvent.click(within(nav).getByRole("button", { name: "Details" }));
         expect(onChange).toHaveBeenCalledWith("details");
+    });
+
+    it("draws the same navigation while the record loads", () => {
+        render(
+            <MemoryRouter>
+                <DetailPendingView
+                    breadcrumbs={[{ label: "Students", onClick: () => undefined }]}
+                    sections={{ items: [...items], label: "Record sections" }}
+                />
+            </MemoryRouter>,
+        );
+        const nav = screen.getByRole("navigation", { name: "Record sections" });
+        expect(within(nav).getByRole("button", { name: "Overview" })).toHaveAttribute("aria-current", "page");
     });
 
     it("names the unsaved-edit count instead of relying on colour", () => {

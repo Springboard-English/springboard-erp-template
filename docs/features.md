@@ -178,6 +178,11 @@ instead of `DetailTabbedSection`. Each `DetailSectionItem` has a `value`,
   usually Overview; the shell doesn't choose it.
 - **Unsaved edits show as a numbered badge** (`pendingCount`), never as
   colour alone.
+- **While the record loads**, pass the same `items`, `groups` and `label` to
+  `DetailPendingView` as `sections`, so the navigation doesn't jump when the
+  record arrives.
+- **The pending-changes bar gets room.** While it shows, the pinned rows and
+  the content pane pad their foot so the bar never covers them.
 
 ## Page header buttons (`PageActionBar`, since 6.1.5)
 

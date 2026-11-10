@@ -33,6 +33,11 @@ import { cn } from "@/lib/utils";
 import { touchTargetHeight } from "@/lib/touchTarget";
 import { useI18n } from "@/context/I18nContext";
 import { RecordLink } from "@/components/RecordLink";
+import {
+    DetailSectionShell,
+    type DetailSectionGroup,
+    type DetailSectionItem,
+} from "./DetailSectionShell";
 import useIsMobile from "@/hooks/useIsMobile";
 import {
     DETAIL_HIDDEN_COLLAPSED_VALUE,
@@ -145,7 +150,7 @@ export function resetDetailLayoutMotionConfig(): DetailLayoutMotionConfig {
     return getDetailLayoutMotionConfig();
 }
 
-type BreadcrumbItem = {
+export type BreadcrumbItem = {
     label: string;
     onClick?: () => void;
 };
@@ -1274,6 +1279,7 @@ export function DetailPendingView<T extends string>({
     trailingTabs,
     activeTab,
     onTabChange,
+    sections,
     message,
     className,
     onCloseFloating,
@@ -1287,6 +1293,12 @@ export function DetailPendingView<T extends string>({
     trailingTabs?: Array<{ value: T; label: ReactNode }>;
     activeTab?: T;
     onTabChange?: (tab: T) => void;
+    /** The loaded page's `DetailSectionShell` navigation; takes the place of `tabs`. */
+    sections?: {
+        items: Array<DetailSectionItem<T>>;
+        groups?: DetailSectionGroup[];
+        label: string;
+    };
     message?: ReactNode;
     className?: string;
     onCloseFloating?: () => void;
@@ -1314,7 +1326,19 @@ export function DetailPendingView<T extends string>({
                 actions={actions}
             />
             <div aria-busy={message ? undefined : true} className="contents">
-                {tabs && tabs.length > 0 ? (
+                {sections && sections.items.length > 0 ? (
+                    // The same navigation as the loaded page, so nothing jumps when the record arrives.
+                    <DetailSectionShell
+                        items={sections.items}
+                        groups={sections.groups}
+                        label={sections.label}
+                        activeSection={activeTab ?? sections.items[0].value}
+                        onChange={onTabChange ?? (() => undefined)}
+                        className="min-h-0 flex-1"
+                    >
+                        {body}
+                    </DetailSectionShell>
+                ) : tabs && tabs.length > 0 ? (
                     <DetailTabbedSection
                         tabs={tabs}
                         trailingTabs={trailingTabs}
