@@ -89,6 +89,9 @@ rules that keep it that way; a per-app copy of any of them is the bug.
   `text-base md:text-sm` for exactly this reason: iOS Safari auto-zooms any
   focused field under 16px, and the zoom is hard to escape inside a scroll-locked
   layout. Never override the mobile step down.
+- **Every table row is one height** (`SimpleDataTable`, since 6.7.1): 56px on
+  touch and 48px with a mouse, room for a button either way, so a row with a
+  control and a row of plain text line up. A cell with two lines still grows.
 - **A table needs a card fallback.** Pair `SimpleDataTable`
   (`hidden md:block`) with `MobileCardList` (`md:hidden`). A table left to
   scroll horizontally is usable but poor; a table inside a *detail tab* is the

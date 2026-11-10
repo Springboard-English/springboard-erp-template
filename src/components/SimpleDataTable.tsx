@@ -172,6 +172,11 @@ export interface SimpleDataTableProps<T> {
   rowGroups?: SimpleDataTableRowGroups<T>;
 }
 
+// One row height whatever a cell holds: room for a 44px touch control plus 6px
+// above and below, or a 36px control with a mouse. A td's height is a floor, so
+// a two-line cell still grows; text-only rows no longer come out shorter.
+const ROW_CELL_CLASS = 'h-14 px-4 py-1.5 md:pointer-fine:h-12';
+
 /** A run of neighbouring columns: one group's, or a single ungrouped column. */
 interface ColumnGroupRun<T> {
   group: SimpleDataTableColumnGroup | undefined;
@@ -362,8 +367,7 @@ export default function SimpleDataTable<T>({
           key={column.id}
           style={pinnedStyle(column)}
           className={cn(
-            // Dense rows: a 36px control plus 10px above and below on desktop.
-            'px-4 py-2.5',
+            ROW_CELL_CLASS,
             column.align === 'end' && 'text-right',
             column.stickyLeft !== undefined && 'sticky z-[1] bg-card',
             column.cellClassName,
@@ -545,7 +549,7 @@ export default function SimpleDataTable<T>({
               Array.from({ length: skeletonRowCount }).map((_, index) => (
                 <TableRow key={`loading-skeleton-${index}`} className="hover:bg-transparent">
                   {tableColumns.map((column) => (
-                    <TableCell key={`${column.id}-skeleton-${index}`} className={column.cellClassName}>
+                    <TableCell key={`${column.id}-skeleton-${index}`} className={cn(ROW_CELL_CLASS, column.cellClassName)}>
                       <div className="h-4 w-full animate-pulse rounded bg-muted/60" />
                     </TableCell>
                   ))}
