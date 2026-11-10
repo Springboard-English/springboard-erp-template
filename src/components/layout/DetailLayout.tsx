@@ -1,4 +1,5 @@
 import {
+    Fragment,
     createContext,
     useCallback,
     useContext,
@@ -823,15 +824,22 @@ export interface DetailTabsClassNames {
     tabActive?: string;
 }
 
-/** Underlined tab bar for a detail view: a full-width track, a spring underline under the active tab, and a hover underline on the rest. */
+/**
+ * Underlined tab bar for a detail view: a full-width track, a spring underline
+ * under the active tab, and a hover underline on the rest. `trailingTabs` sit
+ * at the far right of the same track, for a record's own pages (Details)
+ * apart from its working views.
+ */
 export function DetailTabs<T extends string>({
-    tabs,
+    tabs: leadingTabs,
+    trailingTabs = [],
     activeTab,
     onChange,
     className,
     classNames,
 }: {
     tabs: Array<DetailTabItem<T>>;
+    trailingTabs?: Array<DetailTabItem<T>>;
     activeTab: T;
     onChange: (tab: T) => void;
     className?: string;
@@ -841,6 +849,8 @@ export function DetailTabs<T extends string>({
     const tabListRef = useRef<HTMLDivElement | null>(null);
     const debugInstanceRef = useRef(++detailTabsDebugInstanceCounter);
     const initializedRef = useRef(false);
+    // Both groups take part in the active tab and the underline; only the layout splits them.
+    const tabs = [...leadingTabs, ...trailingTabs];
     const resolvedActiveTab =
         tabs.find((tab) => tab.value === activeTab)?.value ?? tabs[0]?.value;
 
@@ -1019,9 +1029,13 @@ export function DetailTabs<T extends string>({
                         ),
                     }}
                 />
-                {tabs.map((tab) => (
+                {tabs.map((tab, index) => (
+                    <Fragment key={tab.value}>
+                    {/* The trailing group starts past a flexible gap, at the far right. */}
+                    {index === leadingTabs.length && index > 0 ? (
+                        <span aria-hidden="true" className="min-w-6 flex-1" />
+                    ) : null}
                     <button
-                        key={tab.value}
                         ref={(el) => {
                             if (el) buttonRefs.current.set(tab.value, el);
                             else buttonRefs.current.delete(tab.value);
@@ -1075,6 +1089,7 @@ export function DetailTabs<T extends string>({
                             />
                         )}
                     </button>
+                    </Fragment>
                 ))}
             </div>
         </div>
@@ -1083,6 +1098,7 @@ export function DetailTabs<T extends string>({
 
 export function DetailTabbedSection<T extends string>({
     tabs,
+    trailingTabs,
     activeTab,
     onChange,
     children,
@@ -1092,6 +1108,8 @@ export function DetailTabbedSection<T extends string>({
     scrollResetKey,
 }: {
     tabs: Array<DetailTabItem<T>>;
+    /** Tabs at the far right of the bar, such as a record's Details. */
+    trailingTabs?: Array<DetailTabItem<T>>;
     activeTab: T;
     onChange: (tab: T) => void;
     children: ReactNode;
@@ -1146,6 +1164,7 @@ export function DetailTabbedSection<T extends string>({
             >
                 <DetailTabs
                     tabs={tabs}
+                    trailingTabs={trailingTabs}
                     activeTab={activeTab}
                     onChange={onChange}
                 />
@@ -1202,6 +1221,7 @@ export function DetailPendingView<T extends string>({
     title,
     actions,
     tabs,
+    trailingTabs,
     activeTab,
     onTabChange,
     message,
@@ -1213,6 +1233,8 @@ export function DetailPendingView<T extends string>({
     title?: ReactNode;
     actions?: ReactNode;
     tabs?: Array<{ value: T; label: ReactNode }>;
+    /** As on `DetailTabbedSection`: tabs at the far right of the bar. */
+    trailingTabs?: Array<{ value: T; label: ReactNode }>;
     activeTab?: T;
     onTabChange?: (tab: T) => void;
     message?: ReactNode;
@@ -1245,6 +1267,7 @@ export function DetailPendingView<T extends string>({
                 {tabs && tabs.length > 0 ? (
                     <DetailTabbedSection
                         tabs={tabs}
+                        trailingTabs={trailingTabs}
                         activeTab={activeTab ?? tabs[0].value}
                         onChange={onTabChange ?? (() => undefined)}
                     >
