@@ -632,6 +632,11 @@ a row card inside a group.
   the entry inside the same card, so a session shows the coursework set in it,
   or a day its events, without a second rail. `onOpen` makes the row a button;
   without it the row is static. `warn` turns the meta line red.
+- **One row height** (since 6.7.0): a group's heading and every entry row are
+  exactly a button's height, 44px on touch and 36px with a mouse, so a row can
+  hold a button and rows never differ. An entry is one line: a small icon, the
+  title, then its meta, each truncated. A host drawing its own row on the rail
+  (a week bar) gives it `TIMELINE_ROW`.
 - **Domain-free.** The pieces take icons, text and callbacks only. The app
   groups its own rows (by ICT day, by week) and formats its own labels.
 - Each piece takes `attributes` for `data-*` hooks, such as a guided tour's

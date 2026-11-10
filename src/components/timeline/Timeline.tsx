@@ -3,6 +3,15 @@ import { Check, type LucideIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
+/**
+ * Every row on the rail is as tall as a button (44px on touch, 36px with a
+ * mouse), so a heading, an entry and a host's own bar line up and any of them
+ * can hold one. A host drawing its own row on the rail uses `TIMELINE_ROW`.
+ */
+export const TIMELINE_ROW = "min-h-11 md:pointer-fine:min-h-9";
+// An entry's row sits inside a 1px border top and bottom.
+const TIMELINE_ENTRY_ROW = "min-h-[2.625rem] md:pointer-fine:min-h-[2.125rem]";
+
 /** `data-*` attributes a host puts on a piece, such as a guided tour's anchor. */
 export type TimelineAttributes = Record<`data-${string}`, string>;
 
@@ -54,14 +63,21 @@ export function TimelineGroup({
     <li className="relative pb-6 pl-6 last:pb-0" data-state={state} {...attributes}>
       <span
         className={cn(
-          "absolute -left-[0.6875rem] top-0.5 flex size-5 items-center justify-center rounded-full ring-4 ring-background",
+          // Centred on the heading row: (44 - 20) / 2 on touch, (36 - 20) / 2 with a mouse.
+          "absolute -left-[0.6875rem] top-3 flex size-5 items-center justify-center rounded-full ring-4 ring-background md:pointer-fine:top-2",
           GROUP_DOT[state],
         )}
         aria-hidden
       >
         {state === "past" && <Check className="size-3" />}
       </span>
-      <h3 className="mb-2 flex flex-wrap items-baseline gap-x-2 text-sm font-semibold text-foreground">
+      {/* The heading is a row as tall as a button, like every other row on the rail. */}
+      <h3
+        className={cn(
+          TIMELINE_ROW,
+          "mb-2 flex items-center gap-x-2 truncate text-sm font-semibold text-foreground",
+        )}
+      >
         {label}
         {meta && <span className="font-normal text-muted-foreground">{meta}</span>}
       </h3>
@@ -71,10 +87,11 @@ export function TimelineGroup({
 }
 
 /**
- * One thing on the timeline, as a row card: a round icon, a title, a meta line
- * and one trailing element (a chip or a single action). `onOpen` makes the row
- * a button. `children` are rows that belong to it, listed under the row inside
- * the same card, such as the coursework set in a session.
+ * One thing on the timeline, as a one-line row card exactly as tall as a
+ * button: a round icon, the title with its meta after it, and one trailing
+ * element (chips or a single action). `onOpen` makes the row a button.
+ * `children` are rows that belong to it, listed under the row inside the same
+ * card, such as the coursework set in a session.
  */
 export function TimelineEntry({
   icon: Icon,
@@ -98,14 +115,16 @@ export function TimelineEntry({
 }) {
   const row = (
     <>
-      <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-        <Icon className="size-5" aria-hidden />
+      <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+        <Icon className="size-3.5" aria-hidden />
       </span>
-      <span className="min-w-0 flex-1">
-        {/* Two lines before the ellipsis: phone titles are cut short otherwise. */}
-        <span className="line-clamp-2 font-medium">{title}</span>
+      {/* One line: the title, then its meta, each cut short before the row grows. */}
+      <span className="flex min-w-0 flex-1 items-baseline gap-2">
+        <span className="min-w-0 shrink truncate text-sm font-medium">{title}</span>
         {meta && (
-          <span className={cn("block truncate text-xs", warn ? "text-destructive" : "text-muted-foreground")}>
+          <span
+            className={cn("min-w-0 flex-1 truncate text-xs", warn ? "text-destructive" : "text-muted-foreground")}
+          >
             {meta}
           </span>
         )}
@@ -117,21 +136,22 @@ export function TimelineEntry({
       className="rounded-xl border border-border/70 bg-card shadow-sm transition hover:-translate-y-px hover:shadow"
       {...attributes}
     >
-      <div className="flex items-center gap-3 px-4 py-3">
+      {/* The card's 1px borders bring the row to exactly a button's height. */}
+      <div className={cn(TIMELINE_ENTRY_ROW, "flex items-center gap-3 px-3")}>
         {onOpen ? (
           <button
             type="button"
             onClick={onOpen}
-            className="flex min-w-0 flex-1 items-center gap-3 rounded-md text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="flex min-w-0 flex-1 items-center gap-3 self-stretch rounded-md text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             {row}
           </button>
         ) : (
           <div className="flex min-w-0 flex-1 items-center gap-3">{row}</div>
         )}
-        {trailing && <span className="shrink-0">{trailing}</span>}
+        {trailing && <span className="flex shrink-0 items-center">{trailing}</span>}
       </div>
-      {children && <ul className="space-y-2 border-t border-border/50 px-3 py-3">{children}</ul>}
+      {children && <ul className="space-y-2 border-t border-border/50 p-2">{children}</ul>}
     </li>
   );
 }
