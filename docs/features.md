@@ -638,7 +638,7 @@ a row card inside a group.
 - **One minimum row height** (since 6.7.0): a group's heading and every entry
   row are at least a button's height, 44px on touch and 36px with a mouse, so
   a row can hold a button and one-line rows match. It is a floor, never a cap:
-  a long title or meta wraps and grows its row (6.7.1). A host drawing its own
+  a long title or meta wraps and grows its row (6.7.2). A host drawing its own
   row on the rail (a week bar) gives it `TIMELINE_ROW`.
 - **Domain-free.** The pieces take icons, text and callbacks only. The app
   groups its own rows (by ICT day, by week) and formats its own labels.
