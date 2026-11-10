@@ -24,7 +24,7 @@ describe("Timeline", () => {
     expect(screen.getByText("2 to do")).toBeInTheDocument();
   });
 
-  it("gives a heading and an entry row the same button height", () => {
+  it("gives a heading and an entry row the same button height as a floor, not a cap", () => {
     render(
       <Timeline>
         <TimelineGroup label="Today" state="today">
@@ -36,6 +36,9 @@ describe("Timeline", () => {
     expect(screen.getByRole("heading", { name: "Today" })).toHaveClass("min-h-11", "md:pointer-fine:min-h-9");
     const row = screen.getByText("Session 7").closest("li")?.firstElementChild;
     expect(row).toHaveClass("min-h-[2.625rem]", "md:pointer-fine:min-h-[2.125rem]");
+    // Nothing cuts the content to fit: no fixed height and no truncation.
+    expect(row?.className).not.toMatch(/(^|\s)h-\[|max-h-/);
+    expect(screen.getByText("Session 7")).not.toHaveClass("truncate");
   });
 
   it("opens an entry from its row and lists what belongs to it underneath", () => {

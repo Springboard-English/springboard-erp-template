@@ -4,9 +4,10 @@ import { Check, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /**
- * Every row on the rail is as tall as a button (44px on touch, 36px with a
- * mouse), so a heading, an entry and a host's own bar line up and any of them
- * can hold one. A host drawing its own row on the rail uses `TIMELINE_ROW`.
+ * Every row on the rail is at least as tall as a button (44px on touch, 36px
+ * with a mouse), so a heading, an entry and a host's own bar line up and any
+ * of them can hold one. It is a floor, never a cap: more content grows a row.
+ * A host drawing its own row on the rail uses `TIMELINE_ROW`.
  */
 export const TIMELINE_ROW = "min-h-11 md:pointer-fine:min-h-9";
 // An entry's row sits inside a 1px border top and bottom.
@@ -71,11 +72,11 @@ export function TimelineGroup({
       >
         {state === "past" && <Check className="size-3" />}
       </span>
-      {/* The heading is a row as tall as a button, like every other row on the rail. */}
+      {/* At least a button's height, like every other row on the rail; a long label wraps and grows it. */}
       <h3
         className={cn(
           TIMELINE_ROW,
-          "mb-2 flex items-center gap-x-2 truncate text-sm font-semibold text-foreground",
+          "mb-2 flex flex-wrap items-center gap-x-2 text-sm font-semibold text-foreground",
         )}
       >
         {label}
@@ -87,11 +88,12 @@ export function TimelineGroup({
 }
 
 /**
- * One thing on the timeline, as a one-line row card exactly as tall as a
- * button: a round icon, the title with its meta after it, and one trailing
- * element (chips or a single action). `onOpen` makes the row a button.
- * `children` are rows that belong to it, listed under the row inside the same
- * card, such as the coursework set in a session.
+ * One thing on the timeline, as a row card at least as tall as a button: a
+ * round icon, the title with its meta after it, and one trailing element
+ * (chips or a single action). Longer content wraps and the row grows; it is
+ * never cut to fit. `onOpen` makes the row a button. `children` are rows that
+ * belong to it, listed under the row inside the same card, such as the
+ * coursework set in a session.
  */
 export function TimelineEntry({
   icon: Icon,
@@ -118,15 +120,11 @@ export function TimelineEntry({
       <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
         <Icon className="size-3.5" aria-hidden />
       </span>
-      {/* One line: the title, then its meta, each cut short before the row grows. */}
-      <span className="flex min-w-0 flex-1 items-baseline gap-2">
-        <span className="min-w-0 shrink truncate text-sm font-medium">{title}</span>
+      {/* The title, then its meta on the same line while they fit; past that they wrap. */}
+      <span className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2">
+        <span className="min-w-0 text-sm font-medium">{title}</span>
         {meta && (
-          <span
-            className={cn("min-w-0 flex-1 truncate text-xs", warn ? "text-destructive" : "text-muted-foreground")}
-          >
-            {meta}
-          </span>
+          <span className={cn("min-w-0 text-xs", warn ? "text-destructive" : "text-muted-foreground")}>{meta}</span>
         )}
       </span>
     </>
@@ -136,8 +134,8 @@ export function TimelineEntry({
       className="rounded-xl border border-border/70 bg-card shadow-sm transition hover:-translate-y-px hover:shadow"
       {...attributes}
     >
-      {/* The card's 1px borders bring the row to exactly a button's height. */}
-      <div className={cn(TIMELINE_ENTRY_ROW, "flex items-center gap-3 px-3")}>
+      {/* A floor, never a cap: with the card's 1px borders, one line is exactly a button's height. */}
+      <div className={cn(TIMELINE_ENTRY_ROW, "flex items-center gap-3 px-3 py-1")}>
         {onOpen ? (
           <button
             type="button"
