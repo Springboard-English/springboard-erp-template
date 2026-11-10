@@ -135,7 +135,8 @@ export function DetailSectionShell<T extends string>({
                         })}
                     </div>
                     {endItems.length > 0 ? (
-                        <ul className="shrink-0 space-y-0.5 border-t border-border/70 bg-background pt-2 pb-4">
+                        // While the pending-changes bar floats over the page's foot, the pinned rows rise above it.
+                        <ul className="shrink-0 space-y-0.5 border-t border-border/70 bg-background pt-2 pb-4 [body:has([data-pending-bar=open])_&]:pb-24">
                             {endItems.map((item) => (
                                 <li key={item.value}>
                                     <SidebarRow item={item} active={item.value === activeSection} onSelect={select} />
@@ -158,7 +159,7 @@ export function DetailSectionShell<T extends string>({
                 <div
                     ref={contentRef}
                     data-detail-tab-content
-                    className="min-h-0 min-w-0 flex-1 pb-6 md:overflow-y-auto md:overflow-x-hidden md:pr-1"
+                    className="min-h-0 min-w-0 flex-1 pb-6 md:overflow-y-auto md:overflow-x-hidden md:pr-1 [body:has([data-pending-bar=open])_&]:pb-24"
                 >
                     {children}
                 </div>
@@ -194,6 +195,8 @@ function SidebarRow<T extends string>({
                 <Icon className={cn("size-4 shrink-0", active ? "text-primary" : "text-muted-foreground")} />
             </span>
             <span className="min-w-0 flex-1 truncate">{item.label}</span>
+            {/* Keeps the label and the badge apart when the row's name is read out. */}
+            {item.pendingCount ? <span className="sr-only">, </span> : null}
             {item.pendingCount ? <PendingBadge count={item.pendingCount} /> : null}
             {item.count !== undefined ? (
                 <span className="text-xs tabular-nums text-muted-foreground">{item.count}</span>
@@ -259,6 +262,7 @@ function SegmentedSections<T extends string>({
                 className={segmentClass(active)}
             >
                 <span>{item.label}</span>
+                {item.pendingCount ? <span className="sr-only">, </span> : null}
                 {item.pendingCount ? <PendingBadge count={item.pendingCount} /> : null}
             </button>
         );

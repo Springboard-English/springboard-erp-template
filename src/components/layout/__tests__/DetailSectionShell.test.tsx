@@ -31,7 +31,7 @@ describe("DetailSectionShell", () => {
         renderShell();
         const nav = screen.getByRole("navigation", { name: "Record sections" });
         const labels = within(nav).getAllByRole("button").map((button) => button.textContent);
-        expect(labels).toEqual(["Overview", "People2", "Details"]);
+        expect(labels).toEqual(["Overview", "People, 2", "Details"]);
         expect(within(nav).getByRole("heading", { name: "Students" })).toBeInTheDocument();
     });
 

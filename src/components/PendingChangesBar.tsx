@@ -255,6 +255,8 @@ export default function PendingChangesBar({
       )}
       // Hidden, its buttons must not take Tab focus or be read out; it stays mounted so it can slide in.
       inert={!show}
+      // Lets page layouts such as DetailSectionShell clear room for the bar while it shows.
+      data-pending-bar={show ? "open" : "closed"}
       style={{ transitionDuration: `${barTransitionMs}ms` }}
     >
       <div className="relative">
