@@ -474,7 +474,8 @@ nothing required is missing.
 ## Question builder (`src/components/question-builder/`)
 
 - A `radio-group` question lists one option per row. `layout: "horizontal"`
-  puts them on one wrapping row instead, for a short scale such as 1 to 5.
+  spreads them across one wrapping row instead, first option at the left edge
+  and last at the right, for a short scale such as 1 to 5.
 
 ## Push notifications (`PushNotificationsToggle`, since 4.9.0)
 

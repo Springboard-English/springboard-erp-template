@@ -114,7 +114,7 @@ export default function QuestionList({
                   className={cn(
                     "rounded-lg border border-border/50 p-3",
                     question.layout === "horizontal"
-                      ? "flex flex-wrap gap-x-6 gap-y-2"
+                      ? "flex flex-wrap justify-between gap-x-6 gap-y-2"
                       : "space-y-2",
                   )}
                 >

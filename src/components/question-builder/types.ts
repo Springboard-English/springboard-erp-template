@@ -83,7 +83,7 @@ export interface QuestionBuilderRadioGroupQuestion
   onChange: (value: string) => void;
   options: QuestionBuilderOption[];
   name?: string;
-  /** One option per row (default), or all options on one wrapping row. */
+  /** One option per row (default), or all options spread across one wrapping row. */
   layout?: "vertical" | "horizontal";
 }
 
