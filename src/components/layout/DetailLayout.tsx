@@ -586,14 +586,19 @@ export function DetailSummaryItem({ label, value }: DetailStat) {
     );
 }
 
+/** A rounded card around a block of detail content; `fill` grows it to the bottom of a flex-column parent on desktop. */
 export function DetailCard({
     children,
     className = "rounded-3xl border border-border/70 bg-card p-5 shadow-md",
+    fill = false,
 }: {
     children: ReactNode;
     className?: string;
+    fill?: boolean;
 }) {
-    return <section className={className}>{children}</section>;
+    return (
+        <section className={cn(className, fill && "md:min-h-0 md:flex-1 md:overflow-y-auto")}>{children}</section>
+    );
 }
 
 export function DetailTextBlock({
@@ -713,6 +718,7 @@ export function DetailFieldsTable({
     tableClassName,
     labelColumnClassName,
     scrollable = false,
+    fill = false,
     scrollContainerClassName,
 }: {
     rows: DetailFieldsTableRow[];
@@ -720,6 +726,8 @@ export function DetailFieldsTable({
     tableClassName?: string;
     labelColumnClassName?: string;
     scrollable?: boolean;
+    /** Grows the card to the bottom of a flex-column parent on desktop; its rows scroll inside. */
+    fill?: boolean;
     scrollContainerClassName?: string;
 }) {
     return (
@@ -727,6 +735,7 @@ export function DetailFieldsTable({
             className={cn(
                 "overflow-hidden rounded-2xl border border-border/70 bg-card shadow-md",
                 scrollable && "min-h-0",
+                fill && "md:flex md:min-h-0 md:flex-1 md:flex-col",
                 className,
             )}
         >
@@ -738,6 +747,7 @@ export function DetailFieldsTable({
                 containerClassName={cn(
                     "overflow-x-auto",
                     scrollable && "h-full max-h-full overflow-y-auto",
+                    fill && "md:min-h-0 md:flex-1 md:overflow-y-auto",
                     scrollContainerClassName,
                 )}
             >

@@ -181,6 +181,12 @@ instead of `DetailTabbedSection`. Each `DetailSectionItem` has a `value`,
 - **While the record loads**, pass the same `items`, `groups` and `label` to
   `DetailPendingView` as `sections`, so the navigation doesn't jump when the
   record arrives.
+- **Content runs to the window's foot** (since 6.6.0). The content pane is a
+  column on desktop. Wrap a section's content in
+  `flex min-h-0 flex-1 flex-col gap-4` and give its last card `fill`
+  (`SimpleDataTable`, `DetailFieldsTable`, `DetailCard`). That card grows to
+  the bottom and scrolls inside; cards above it keep their height. The sidebar
+  doesn't stretch.
 - **The pending-changes bar gets room.** While it shows, the pinned rows and
   the content pane pad their foot so the bar never covers them.
 

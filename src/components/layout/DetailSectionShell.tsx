@@ -159,7 +159,9 @@ export function DetailSectionShell<T extends string>({
                 <div
                     ref={contentRef}
                     data-detail-tab-content
-                    className="min-h-0 min-w-0 flex-1 pb-6 md:overflow-y-auto md:overflow-x-hidden md:pr-1 [body:has([data-pending-bar=open])_&]:pb-24"
+                    // A column, so a section wrapped in `flex-1 flex-col` can grow a `fill` card to the
+                    // window's foot; other children keep their own height and the pane scrolls past them.
+                    className="min-h-0 min-w-0 flex-1 pb-6 md:flex md:flex-col md:overflow-y-auto md:overflow-x-hidden md:pr-1 md:[&>*]:shrink-0 [body:has([data-pending-bar=open])_&]:pb-24"
                 >
                     {children}
                 </div>

@@ -132,6 +132,12 @@ export interface SimpleDataTableProps<T> {
    * blank, which is worse than the squeeze.
    */
   desktopOnly?: boolean;
+  /**
+   * Grows the card to the bottom of a flex-column parent on desktop, such as a
+   * `DetailSectionShell` section, with the rows scrolling inside it and the
+   * pager pinned to its foot.
+   */
+  fill?: boolean;
   /** Convenience alias for `classNames.root`. */
   className?: string;
   /** Granular restyling slots for the table chrome. */
@@ -202,6 +208,7 @@ export default function SimpleDataTable<T>({
   rows,
   rowKey,
   desktopOnly = false,
+  fill = false,
   className,
   classNames,
   loading = false,
@@ -494,13 +501,15 @@ export default function SimpleDataTable<T>({
       ref={rootRef}
       className={cn(
         "flex min-h-0 flex-col overflow-hidden rounded-xl border border-border/70 bg-card shadow-xs",
+        fill && "md:flex-1",
         className,
         classNames?.root,
       )}
     >
       <div
-        className={cn("min-h-0 overflow-auto", classNames?.scroll)}
-        style={tableBodyMaxHeight ? { maxHeight: `${tableBodyMaxHeight}px` } : undefined}
+        className={cn("min-h-0 overflow-auto", fill && "md:flex-1", classNames?.scroll)}
+        // A filled card takes its height from the parent, so the measured cap only applies otherwise.
+        style={tableBodyMaxHeight && !fill ? { maxHeight: `${tableBodyMaxHeight}px` } : undefined}
       >
         <Table containerClassName="overflow-x-visible">
           <TableHeader className={hasGroups ? 'sticky top-0 z-[3] bg-card' : undefined}>
