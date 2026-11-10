@@ -674,7 +674,8 @@ function DetailFieldsTableField({
     return (
         <TableRow
             className={cn(
-                "block border-b border-border/60 hover:bg-transparent md:table-row",
+                // A phone stacks label over value; `w-full` carries the divider across the card.
+                "block w-full border-b border-border/60 hover:bg-transparent md:table-row",
                 row.rowClassName,
             )}
         >
