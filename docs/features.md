@@ -167,7 +167,8 @@ class page does: `ResourceLayout` takes a `primary` column (two thirds: the
 record's own editable fields, one `ResourceCard` per category) and a
 `secondary` column (one third: status, ownership, tags, and a Summary card of
 `SummaryRow`s that open the section behind each figure). Inside a card,
-`FormLayout` stacks `FormField`s and `FormLayoutGroup` puts short fields side
+`FormLayout` stacks `ResourceField`s (since 6.8.2; 6.8.0 named it `FormField`,
+which hid the form schema's `FormField` type) and `FormLayoutGroup` puts short fields side
 by side. Card titles are Title Case and name the category; cards never nest.
 Narrow containers and phones stack the side column under the main one.
 

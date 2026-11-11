@@ -250,7 +250,8 @@ export {
   ResourceCard,
   FormLayout,
   FormLayoutGroup,
-  FormField,
+  // Not `FormField`: that name is the form schema's field type, exported from ./components/forms.
+  ResourceField,
   SummaryRow,
   ProgressBar,
   RESOURCE_CARD_SURFACE,

@@ -88,7 +88,7 @@ export function FormLayoutGroup({ children }: { children: ReactNode }) {
  * optional help line under it. `htmlFor` ties a plain label to its input; a
  * label that is itself a link (a record chevron) is drawn as text instead.
  */
-export function FormField({
+export function ResourceField({
     label,
     htmlFor,
     helpText,
