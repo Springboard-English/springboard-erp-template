@@ -48,19 +48,29 @@ function DialogOverlay({
   )
 }
 
+/** True when an outside press landed on the pending-changes bar, which saves edits made inside the dialog. */
+function onPendingBar(event: { target: EventTarget | null }) {
+  return event.target instanceof Element && event.target.closest("[data-pending-bar]") !== null
+}
+
 function DialogContent({
   className,
+  overlayClassName,
   children,
   showCloseButton = true,
+  onPointerDownOutside,
+  onFocusOutside,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean
+  /** Layer for the backdrop, when the dialog itself is raised, such as the pending bar's confirm. */
+  overlayClassName?: string
 }) {
   const { t } = useI18n()
   const presetClass = uiPresetClass("dialogContent")
   return (
     <DialogPortal data-slot="dialog-portal">
-      <DialogOverlay />
+      <DialogOverlay className={overlayClassName} />
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
@@ -68,6 +78,15 @@ function DialogContent({
           presetClass,
           className
         )}
+        // Pressing Save or Review on the pending bar is not a press outside: the dialog stays open.
+        onPointerDownOutside={(event) => {
+          if (onPendingBar(event)) event.preventDefault()
+          onPointerDownOutside?.(event)
+        }}
+        onFocusOutside={(event) => {
+          if (onPendingBar(event)) event.preventDefault()
+          onFocusOutside?.(event)
+        }}
         {...props}
       >
         {children}

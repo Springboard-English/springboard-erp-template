@@ -244,11 +244,11 @@ export default function PendingChangesBar({
   return createPortal(
     <div
       className={cn(
-        // Layer scale (see DetailLayout): app chrome ≤ 40, the floating detail
-        // panel 50, this bar 55, modals/popovers 60. The bar has to clear the
-        // floating panel — the edits it saves are made *inside* that panel, and
-        // any lower layer sits under the panel's backdrop, unreachable.
-        "fixed bottom-[calc(4rem+0.75rem)] left-3 right-3 z-[55] transform-gpu transition-all md:bottom-6 md:left-[calc(var(--sb-sidebar-width,18rem)+1.5rem)] md:right-6",
+        // Layer scale: app chrome ≤ 40, the floating detail panel 50, dialogs and
+        // sheets 60, this bar 65, popovers and menus 70, the bar's own confirm 75.
+        // The bar clears dialogs because the edits it saves are often made inside
+        // one (a week overview, a tables dialog); under the overlay it is unreachable.
+        "fixed bottom-[calc(4rem+0.75rem)] left-3 right-3 z-[65] transform-gpu transition-all md:bottom-6 md:left-[calc(var(--sb-sidebar-width,18rem)+1.5rem)] md:right-6",
         show
           ? "translate-y-0 opacity-100 pointer-events-auto"
           : "translate-y-6 opacity-0 pointer-events-none",

@@ -173,6 +173,9 @@ export default function PendingBarConfirmDialog<P>({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
+        // Above the bar (65) that opened it, overlay included.
+        className="z-[75]"
+        overlayClassName="z-[75]"
         showCloseButton={!running}
         // Radix warns when no description is wired; say there is none instead.
         {...(hasDescription ? {} : { "aria-describedby": undefined })}

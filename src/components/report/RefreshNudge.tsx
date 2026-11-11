@@ -46,7 +46,7 @@ export default function RefreshNudge({ onReport, allowed }: RefreshNudgeProps) {
     <div
       role="status"
       data-testid="refresh-nudge"
-      // Phones clear the bottom bar; below the pending bar's z-[55] so it never covers Save.
+      // Phones clear the bottom bar; below the pending bar's z-[65] so it never covers Save.
       className="fixed inset-x-3 bottom-[calc(4rem+0.75rem+env(safe-area-inset-bottom))] z-50 md:inset-x-auto md:bottom-6 md:right-6 md:w-80"
     >
       <div className="rounded-2xl border border-border/70 bg-card p-4 shadow-xl">

@@ -28,11 +28,11 @@ function PopoverContent({
         align={align}
         sideOffset={sideOffset}
         className={cn(
-          // z-[60] for the same reason as SelectContent: portalled to <body>,
+          // z-[70] for the same reason as SelectContent: portalled to <body>,
           // so a Popover inside a Dialog sits beside the z-[60] overlay rather
-          // than inside it, and at z-50 it would open invisibly behind it. The
-          // searchable-select's own popover uses z-[60] too.
-          "z-[60] w-72 origin-(--radix-popover-content-transform-origin) rounded-md border bg-popover p-4 text-popover-foreground shadow-md outline-hidden data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
+          // than inside it, and it must also clear the pending bar (65). The
+          // searchable-select's own popover uses z-[70] too.
+          "z-[70] w-72 origin-(--radix-popover-content-transform-origin) rounded-md border bg-popover p-4 text-popover-foreground shadow-md outline-hidden data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
           className
         )}
         {...props}
