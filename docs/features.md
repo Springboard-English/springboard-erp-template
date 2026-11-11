@@ -160,6 +160,17 @@ rows). One bar, so a page never shows two floating strips.
   ones last under a divider). `overflow: true` puts an action there on desktop
   too.
 
+## A record's Details in cards (`ResourceLayout`, since 6.8.0)
+
+A record's Details section groups its fields into titled cards, as the LMS
+class page does: `ResourceLayout` takes a `primary` column (two thirds: the
+record's own editable fields, one `ResourceCard` per category) and a
+`secondary` column (one third: status, ownership, tags, and a Summary card of
+`SummaryRow`s that open the section behind each figure). Inside a card,
+`FormLayout` stacks `FormField`s and `FormLayoutGroup` puts short fields side
+by side. Card titles are Title Case and name the category; cards never nest.
+Narrow containers and phones stack the side column under the main one.
+
 ## Record sections (`DetailSectionShell`, since 6.5.0)
 
 A detail view with several sections wraps its content in `DetailSectionShell`

@@ -245,6 +245,16 @@ export type {
   BreadcrumbItem as DetailBreadcrumbItem,
 } from "./components/layout/DetailLayout";
 export { DetailSectionShell } from "./components/layout/DetailSectionShell";
+export {
+  ResourceLayout,
+  ResourceCard,
+  FormLayout,
+  FormLayoutGroup,
+  FormField,
+  SummaryRow,
+  ProgressBar,
+  RESOURCE_CARD_SURFACE,
+} from "./components/layout/ResourceLayout";
 export type {
   DetailSectionGroup,
   DetailSectionIcon,
