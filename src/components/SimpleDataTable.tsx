@@ -611,7 +611,8 @@ export default function SimpleDataTable<T>({
           classNames?.footer,
         )}
       >
-        <div className={cn("text-sm text-muted-foreground tabular-nums", classNames?.showingLabel)}>
+        {/* The label holds the pager's button height, so a one-page footer is as tall as a paged one. */}
+        <div className={cn("flex min-h-11 items-center text-sm text-muted-foreground tabular-nums md:pointer-fine:min-h-9", classNames?.showingLabel)}>
           {showingResultsLabel}
         </div>
 
