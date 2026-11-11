@@ -389,9 +389,10 @@ export default function SimpleDataTable<T>({
       style={pinnedStyle(column)}
       className={cn(
         // With groups the whole header sticks, so its rows stay stacked.
-        hasGroups ? 'bg-card text-left' : 'sticky top-0 z-[1] bg-card text-left',
-        // A quiet header: smaller, muted, on a faint band.
-        'h-10 bg-muted/40 px-4 text-[13px] font-medium text-muted-foreground',
+        hasGroups ? 'text-left' : 'sticky top-0 z-[1] text-left',
+        // A quiet header: smaller, muted, on a faint band. The band is mixed into the card colour
+        // rather than laid over it at 40%, so rows scrolling under the sticky header stay hidden.
+        'h-10 bg-[color-mix(in_oklab,var(--color-muted)_40%,var(--color-card))] px-4 text-[13px] font-medium text-muted-foreground',
         column.align === 'end' && 'text-right',
         column.stickyLeft !== undefined && 'sticky z-[2]',
         column.className,
@@ -449,7 +450,8 @@ export default function SimpleDataTable<T>({
       // Measured whenever the ref is attached; the literal is only the
       // first-paint fallback, sized for the footer's 36px `size="sm"` buttons.
       const footerHeight = footerRef.current?.offsetHeight ?? 88;
-      const bottomGap = 16;
+      // The card runs to the viewport's foot; the page's own bottom padding is the gap.
+      const bottomGap = 0;
 
       if (containerVisibleHeight <= 0) {
         setTableBodyMaxHeight(null);
@@ -469,7 +471,8 @@ export default function SimpleDataTable<T>({
         return;
       }
 
-      const nextBodyHeight = Math.max(120, Math.floor(availableHeight - footerHeight - 8));
+      // Less the card's 1px top and bottom borders.
+      const nextBodyHeight = Math.max(120, Math.floor(availableHeight - footerHeight - 2));
       setTableBodyMaxHeight(nextBodyHeight);
     };
 
@@ -479,6 +482,10 @@ export default function SimpleDataTable<T>({
     window.addEventListener('resize', updateHeights);
 
     const observer = new ResizeObserver(updateHeights);
+    // The card itself too: its footer grows once the page-size picker shows, after the first measure.
+    if (rootRef.current) {
+      observer.observe(rootRef.current);
+    }
     if (rootRef.current?.parentElement) {
       observer.observe(rootRef.current.parentElement);
     }
