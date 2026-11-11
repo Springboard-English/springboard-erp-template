@@ -177,6 +177,40 @@ export interface SimpleDataTableProps<T> {
 // a two-line cell still grows; text-only rows no longer come out shorter.
 const ROW_CELL_CLASS = 'h-14 px-4 py-1.5 md:pointer-fine:h-12';
 
+// A dialog is a bounded box too, so a table in one caps its rows to the room left and scrolls inside.
+const DIALOG_SELECTOR = '[data-slot="dialog-content"]';
+const VIEWPORT_SELECTOR = `[data-detail-tab-content], [data-table-viewport], ${DIALOG_SELECTOR}`;
+
+/**
+ * The height `el` must leave free at the foot of `container`: every wrapper's bottom padding and
+ * border, and whatever is stacked below it, such as a dialog's footer buttons.
+ */
+function spaceBelowUpTo(el: HTMLElement, container: HTMLElement): number {
+  let total = 0;
+  for (let child = el, node = el.parentElement; node; child = node, node = node.parentElement) {
+    const style = window.getComputedStyle(node);
+    // clientHeight already leaves out the container's own border.
+    total += (parseFloat(style.paddingBottom) || 0) + (node === container ? 0 : parseFloat(style.borderBottomWidth) || 0);
+    // Only a stacking parent puts its later children below; a row puts them beside, like an aside.
+    const stacks =
+      style.display === 'block' ||
+      style.display === 'grid' ||
+      (style.display.includes('flex') && style.flexDirection.startsWith('column'));
+    if (stacks) {
+      const gap = parseFloat(style.rowGap) || 0;
+      for (let sibling = child.nextElementSibling; sibling; sibling = sibling.nextElementSibling) {
+        const position = window.getComputedStyle(sibling).position;
+        // A floating close button or bar takes no room in the stack.
+        if (position === 'absolute' || position === 'fixed' || !(sibling instanceof HTMLElement)) continue;
+        if (sibling.offsetHeight === 0) continue;
+        total += sibling.offsetHeight + gap;
+      }
+    }
+    if (node === container) break;
+  }
+  return total;
+}
+
 /** A run of neighbouring columns: one group's, or a single ungrouped column. */
 interface ColumnGroupRun<T> {
   group: SimpleDataTableColumnGroup | undefined;
@@ -431,7 +465,7 @@ export default function SimpleDataTable<T>({
         return;
       }
 
-      const viewportRoot = rootRef.current.closest('[data-detail-tab-content], [data-table-viewport]') as HTMLElement | null;
+      const viewportRoot = rootRef.current.closest(VIEWPORT_SELECTOR) as HTMLElement | null;
       // Only clamp height inside known fixed-height content containers.
       if (!viewportRoot) {
         setTableBodyMaxHeight(null);
@@ -439,19 +473,26 @@ export default function SimpleDataTable<T>({
       }
 
       const container = viewportRoot;
-      if (!container) {
-        return;
-      }
+      const inDialog = container.matches(DIALOG_SELECTOR);
 
       const rootRect = rootRef.current.getBoundingClientRect();
       const containerRect = container.getBoundingClientRect();
-      const rootTopWithinContainer = Math.max(0, rootRect.top - containerRect.top);
+      // A dialog opens with a zoom, so its rects are scaled while the layout heights are not.
+      const scale = container.offsetHeight > 0 ? containerRect.height / container.offsetHeight : 1;
+      let scrolledBy = 0;
+      // In a dialog, measure from the top of its content, not from where a scrolled wrapper has moved it.
+      for (let node = rootRef.current.parentElement; inDialog && node; node = node.parentElement) {
+        scrolledBy += node.scrollTop;
+        if (node === container) break;
+      }
+      const rootTopWithinContainer = Math.max(0, (rootRect.top - containerRect.top) / (scale || 1) + scrolledBy);
       const containerVisibleHeight = container.clientHeight;
       // Measured whenever the ref is attached; the literal is only the
       // first-paint fallback, sized for the footer's 36px `size="sm"` buttons.
       const footerHeight = footerRef.current?.offsetHeight ?? 88;
-      // The card runs to the viewport's foot; the page's own bottom padding is the gap.
-      const bottomGap = 0;
+      // A tab's card runs to the viewport's foot; the page's own bottom padding is the gap.
+      // A dialog's card stops above its padding and footer, so the pager stays in view.
+      const bottomGap = inDialog ? spaceBelowUpTo(rootRef.current, container) : 0;
 
       if (containerVisibleHeight <= 0) {
         setTableBodyMaxHeight(null);
@@ -489,9 +530,15 @@ export default function SimpleDataTable<T>({
     if (rootRef.current?.parentElement) {
       observer.observe(rootRef.current.parentElement);
     }
-    const viewportRoot = rootRef.current?.closest('[data-detail-tab-content], [data-table-viewport]') as HTMLElement | null;
+    const viewportRoot = rootRef.current?.closest(VIEWPORT_SELECTOR) as HTMLElement | null;
     if (viewportRoot) {
       observer.observe(viewportRoot);
+    }
+    // A dialog keeps its height while content above the table loads in, so watch the wrappers between.
+    if (viewportRoot?.matches(DIALOG_SELECTOR)) {
+      for (let node = rootRef.current?.parentElement ?? null; node && node !== viewportRoot; node = node.parentElement) {
+        observer.observe(node);
+      }
     }
     observer.observe(document.documentElement);
 
