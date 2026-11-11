@@ -204,6 +204,14 @@ instead of `DetailTabbedSection`. Each `DetailSectionItem` has a `value`,
   doesn't stretch.
 - **The pending-changes bar gets room.** While it shows, the pinned rows and
   the content pane pad their foot so the bar never covers them.
+- **A section's controls sit in the header** (since 6.9.0). Wrap the open
+  section's view select, Create, Filters and similar in
+  `DetailHeaderActions`. On desktop they render in `DetailHeader` ahead of
+  Floating View and "⋯"; on a phone, or with no `DetailHeader`, they render
+  where they are written, as a right-aligned row. A whole
+  `AdvancedFiltersPanel` moves with its toggle. `useDetailHeaderSlotActive()`
+  says whether they were lifted, so a section can drop a toolbar row left
+  holding only a count.
 
 ## Page header buttons (`PageActionBar`, since 6.1.5)
 

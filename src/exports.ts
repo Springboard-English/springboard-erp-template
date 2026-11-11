@@ -220,6 +220,8 @@ export type {
 export {
   DetailView,
   DetailHeader,
+  DetailHeaderActions,
+  useDetailHeaderSlotActive,
   DetailBreadcrumbs,
   DetailChip,
   DetailMetaItem,

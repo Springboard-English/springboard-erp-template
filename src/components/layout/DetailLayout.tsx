@@ -7,8 +7,10 @@ import {
     useId,
     useLayoutEffect,
     useRef,
+    useState,
     type ReactNode,
 } from "react";
+import { createPortal } from "react-dom";
 import { animated, useSpring } from "@react-spring/web";
 
 import { ChevronRight, Expand, MoreHorizontal, PanelRight } from "lucide-react";
@@ -168,6 +170,9 @@ const DetailViewContext = createContext<{
     contentScrollable?: boolean;
     expandToNormalView: () => void;
     switchToFloatingView: () => void;
+    /** The desktop header's section-controls slot, once `DetailHeader` has mounted it. */
+    headerSlot: HTMLElement | null;
+    setHeaderSlot: (element: HTMLElement | null) => void;
 } | null>(null);
 
 export const BackgroundDetailViewContext = createContext<boolean>(false);
@@ -196,6 +201,7 @@ export function DetailView({
     // preference survives, and a rotate or a resize brings the panel back.
     const isMobile = useIsMobile();
     const floating = isBackground || isMobile ? false : detailViewMode.floating;
+    const [headerSlot, setHeaderSlot] = useState<HTMLElement | null>(null);
     const collapsed = isBackground ? false : detailViewMode.isCollapsed;
     const hiddenCollapsed = isBackground
         ? false
@@ -263,6 +269,8 @@ export function DetailView({
                 contentScrollable,
                 expandToNormalView,
                 switchToFloatingView,
+                headerSlot,
+                setHeaderSlot,
             }}
         >
             <section
@@ -503,8 +511,9 @@ export function DetailActionsMenu({
 
 /**
  * The head of a record page: `breadcrumbs` (a `DetailBreadcrumbs`) and the
- * page's actions in the same grid as `PageHeader`, with the floating-view
- * toggle ahead of the actions on desktop.
+ * page's actions in the same grid as `PageHeader`. On desktop the open
+ * section's controls (`DetailHeaderActions`) come first, then the
+ * floating-view toggle, then `actions`.
  */
 export function DetailHeader({
     breadcrumbs,
@@ -524,7 +533,14 @@ export function DetailHeader({
         !isMobile && detailViewContext?.floating && !detailViewContext.collapsed;
     const showFloatingAction =
         !isMobile && detailViewContext && !detailViewContext.floating;
-    const hasActions = Boolean(actions) || showExpandAction || showFloatingAction;
+    // Section controls only move up on desktop; a phone keeps them above the section.
+    const showSlot = !isMobile && Boolean(detailViewContext);
+    const setHeaderSlot = detailViewContext?.setHeaderSlot;
+    const hasActions =
+        Boolean(actions) || showExpandAction || showFloatingAction || showSlot;
+
+    // A header that unmounts hands its controls back to the section.
+    useEffect(() => () => setHeaderSlot?.(null), [setHeaderSlot]);
 
     return (
         <PageHeaderRoot data-detail-header className={className}>
@@ -532,6 +548,13 @@ export function DetailHeader({
             {hasActions ? (
                 // A record page always has a way back, so its phone actions share the back link's row.
                 <PageHeaderActions hasBack>
+                    {showSlot ? (
+                        <div
+                            ref={setHeaderSlot}
+                            data-detail-header-slot
+                            className="contents"
+                        />
+                    ) : null}
                     {showExpandAction ? (
                         <Button
                             type="button"
@@ -563,6 +586,36 @@ export function DetailHeader({
             ) : null}
         </PageHeaderRoot>
     );
+}
+
+/**
+ * The open section's own controls (a view select, Create, Filters, ...),
+ * lifted into the record page's header ahead of Floating View and "⋯" on
+ * desktop. On a phone, or outside a `DetailView` with a `DetailHeader`, they
+ * render where they are written, so a section keeps working on its own.
+ * `fallbackClassName` lays out that inline row.
+ */
+export function DetailHeaderActions({
+    children,
+    fallbackClassName = "flex flex-wrap items-center justify-end gap-2",
+}: {
+    children: ReactNode;
+    fallbackClassName?: string;
+}) {
+    const detailViewContext = useContext(DetailViewContext);
+    const isMobile = useIsMobile();
+    const slot = isMobile ? null : detailViewContext?.headerSlot ?? null;
+    if (slot) {
+        return createPortal(children, slot);
+    }
+    return <div className={fallbackClassName}>{children}</div>;
+}
+
+/** True when `DetailHeaderActions` is lifting controls into the header, so a section can drop the toolbar row it no longer fills. */
+export function useDetailHeaderSlotActive(): boolean {
+    const detailViewContext = useContext(DetailViewContext);
+    const isMobile = useIsMobile();
+    return !isMobile && Boolean(detailViewContext?.headerSlot);
 }
 
 export function DetailSummaryGrid({
