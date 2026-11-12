@@ -4,7 +4,12 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import useIsMobile from "@/hooks/useIsMobile";
 import { cn } from "@/lib/utils";
-import { DetailActionsMenu, type DetailMenuAction } from "./DetailLayout";
+import {
+    ActionsMenuRoleProvider,
+    DetailActionsMenu,
+    useActionsMenuLifted,
+    type DetailMenuAction,
+} from "./DetailLayout";
 
 /** One button of a page header's action bar; the bar moves it into "⋯" when it does not fit. */
 export interface PageAction extends Omit<DetailMenuAction, "onSelect"> {
@@ -68,6 +73,7 @@ export function fitPageActions(
  * translated label moves buttons in and out. Pass it as `PageHeader` or
  * `DetailHeader` `actions`. `leading` holds a list's search and filters, which
  * never fold: on a phone they take the row and every button goes into "⋯".
+ * Lifted into a record header, its "⋯" items join the header's one "⋯".
  */
 export default function PageActionBar({
     actions: allActions,
@@ -86,6 +92,8 @@ export default function PageActionBar({
     const measureRef = useRef<HTMLDivElement>(null);
     const leadingRef = useRef<HTMLDivElement>(null);
     const hasLeading = Boolean(leading);
+    // Lifted into a record header, folded buttons join the header's "⋯", so the bar keeps no room for its own.
+    const menuLifted = useActionsMenuLifted();
     const actions = isMobile ? allActions.filter((action) => !action.desktopOnly) : allActions;
     const candidates = actions.filter((action) => !action.overflow && !action.destructive);
     const alwaysMenu = candidates.length < actions.length;
@@ -107,7 +115,7 @@ export default function PageActionBar({
             }
             const items = Array.from(measure.children) as HTMLElement[];
             const widths = items.slice(0, -1).map((item) => item.getBoundingClientRect().width);
-            const menuWidth = items[items.length - 1]?.getBoundingClientRect().width ?? 0;
+            const menuWidth = menuLifted ? 0 : (items[items.length - 1]?.getBoundingClientRect().width ?? 0);
             const primary = signature.split("|").map((part) => part.endsWith(":default"));
             const leadingWidth = leadingRef.current ? leadingRef.current.getBoundingClientRect().width + GAP : 0;
             // A phone's search row has no room for buttons.
@@ -131,7 +139,7 @@ export default function PageActionBar({
             observer.observe(leadingRef.current);
         }
         return () => observer.disconnect();
-    }, [signature, alwaysMenu, hasLeading, isMobile]);
+    }, [signature, alwaysMenu, hasLeading, isMobile, menuLifted]);
 
     // Before the first measurement every button shows, as it would without the bar.
     const visible = candidates.filter((_, i) => shown?.[i] ?? true);
@@ -192,7 +200,10 @@ export default function PageActionBar({
             <div aria-hidden="true" className="pointer-events-none invisible absolute inset-0 overflow-hidden">
                 <div ref={measureRef} inert className="flex w-max gap-2">
                     {candidates.map((action) => renderButton(action, true))}
-                    <DetailActionsMenu actions={[{ label: "", onSelect: () => undefined }]} />
+                    {/* Plain, so the measuring copy never hands a dummy item to the header's "⋯". */}
+                    <ActionsMenuRoleProvider value="plain">
+                        <DetailActionsMenu actions={[{ label: "", onSelect: () => undefined }]} />
+                    </ActionsMenuRoleProvider>
                 </div>
             </div>
             {hasLeading ? (

@@ -1,7 +1,7 @@
 {
     "name": "@springboard-english/springboard-erp-template",
     "private": false,
-    "version": "6.9.3",
+    "version": "6.9.4",
     "type": "module",
     "repository": {
         "type": "git",

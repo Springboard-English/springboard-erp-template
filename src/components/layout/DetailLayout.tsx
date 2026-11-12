@@ -173,7 +173,39 @@ const DetailViewContext = createContext<{
     /** The desktop header's section-controls slot, once `DetailHeader` has mounted it. */
     headerSlot: HTMLElement | null;
     setHeaderSlot: (element: HTMLElement | null) => void;
+    /** The "⋯" items of lifted sections, by section; read at render, so `menuVersion` marks a change. */
+    sectionMenus: Map<string, DetailMenuAction[]>;
+    menuVersion: number;
+    setSectionMenu: (id: string, actions: DetailMenuAction[] | null) => void;
+    /** How many header "⋯" menus are taking the section items in; with none, the header draws its own. */
+    menuHosts: number;
+    registerMenuHost: () => () => void;
 } | null>(null);
+
+/**
+ * Where a `DetailActionsMenu` sits: `section` inside controls lifted into the
+ * header, which hand their items to the header's "⋯"; `header` among the
+ * header's own actions, which takes them in; `plain` anywhere else.
+ */
+type ActionsMenuRole = "plain" | "section" | "header";
+const ActionsMenuRoleContext = createContext<ActionsMenuRole>("plain");
+
+/** Provides where the `DetailActionsMenu`s below sit; `PageActionBar` marks its measuring copy `plain`. */
+export const ActionsMenuRoleProvider = ActionsMenuRoleContext.Provider;
+
+/** True when a "⋯" here hands its items to the record header's "⋯" instead of drawing its own. */
+export function useActionsMenuLifted(): boolean {
+    return useContext(ActionsMenuRoleContext) === "section" && Boolean(useContext(DetailViewContext));
+}
+
+/** A comparable key for a menu: an item change that matters on screen changes it. */
+function menuSignature(actions: DetailMenuAction[] | null | undefined): string {
+    return (actions ?? [])
+        .map((action, index) =>
+            [typeof action.label === "string" ? action.label : `#${index}`, action.disabled ? 1 : 0, action.destructive ? 1 : 0].join(":"),
+        )
+        .join("|");
+}
 
 export const BackgroundDetailViewContext = createContext<boolean>(false);
 
@@ -202,6 +234,26 @@ export function DetailView({
     const isMobile = useIsMobile();
     const floating = isBackground || isMobile ? false : detailViewMode.floating;
     const [headerSlot, setHeaderSlot] = useState<HTMLElement | null>(null);
+    // Kept in a ref so a section re-rendering with fresh callbacks costs no update; the version moves on a visible change.
+    const sectionMenusRef = useRef(new Map<string, DetailMenuAction[]>());
+    const [menuVersion, setMenuVersion] = useState(0);
+    const [menuHosts, setMenuHosts] = useState(0);
+    const setSectionMenu = useCallback((id: string, actions: DetailMenuAction[] | null) => {
+        const menus = sectionMenusRef.current;
+        const changed = menuSignature(menus.get(id)) !== menuSignature(actions);
+        if (actions && actions.length > 0) {
+            menus.set(id, actions);
+        } else {
+            menus.delete(id);
+        }
+        if (changed) {
+            setMenuVersion((version) => version + 1);
+        }
+    }, []);
+    const registerMenuHost = useCallback(() => {
+        setMenuHosts((count) => count + 1);
+        return () => setMenuHosts((count) => count - 1);
+    }, []);
     const collapsed = isBackground ? false : detailViewMode.isCollapsed;
     const hiddenCollapsed = isBackground
         ? false
@@ -271,6 +323,11 @@ export function DetailView({
                 switchToFloatingView,
                 headerSlot,
                 setHeaderSlot,
+                sectionMenus: sectionMenusRef.current,
+                menuVersion,
+                setSectionMenu,
+                menuHosts,
+                registerMenuHost,
             }}
         >
             <section
@@ -468,31 +525,39 @@ export interface DetailMenuAction {
     destructive?: boolean;
 }
 
-/** A "⋯" button opening a menu of the page's less common actions, so a destructive one is never a single click away. `side` picks where the menu opens; a bottom-fixed bar passes `"top"`. */
-export function DetailActionsMenu({
-    actions,
-    side = "bottom",
+/** The items of every lifted section's "⋯", in mount order; each calls the section's latest handler. */
+function useSectionMenuItems(): DetailMenuAction[] {
+    const detailViewContext = useContext(DetailViewContext);
+    if (!detailViewContext) {
+        return [];
+    }
+    const { sectionMenus } = detailViewContext;
+    return Array.from(sectionMenus.entries()).flatMap(([id, actions]) =>
+        actions.map((action, index) => ({
+            ...action,
+            // The section may have re-rendered since this menu did; run its newest handler.
+            onSelect: () => (sectionMenus.get(id)?.[index] ?? action).onSelect(),
+        })),
+    );
+}
+
+/** The "⋯" button and its menu: `groups` are drawn in order under dividers, destructive items last. */
+function ActionsMenuView({
+    groups,
+    side,
 }: {
-    actions: DetailMenuAction[];
-    side?: "top" | "bottom";
+    groups: DetailMenuAction[][];
+    side: "top" | "bottom";
 }) {
     const { t } = useI18n();
-    if (actions.length === 0) {
+    const regular = groups
+        .map((group) => group.filter((action) => !action.destructive))
+        .filter((group) => group.length > 0);
+    const destructive = groups.flat().filter((action) => action.destructive);
+    if (regular.length === 0 && destructive.length === 0) {
         return null;
     }
-    const regular = actions.filter((action) => !action.destructive);
-    const destructive = actions.filter((action) => action.destructive);
-    const renderItem = (action: DetailMenuAction, index: number) => (
-        <DropdownMenuItem
-            key={index}
-            variant={action.destructive ? "destructive" : "default"}
-            disabled={action.disabled}
-            onSelect={action.onSelect}
-        >
-            {action.icon}
-            {action.label}
-        </DropdownMenuItem>
-    );
+    const sections = destructive.length > 0 ? [...regular, destructive] : regular;
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -501,12 +566,78 @@ export function DetailActionsMenu({
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent side={side} align="end" className="min-w-44">
-                {regular.map(renderItem)}
-                {regular.length > 0 && destructive.length > 0 ? <DropdownMenuSeparator /> : null}
-                {destructive.map(renderItem)}
+                {sections.map((section, sectionIndex) => (
+                    <Fragment key={sectionIndex}>
+                        {sectionIndex > 0 ? <DropdownMenuSeparator /> : null}
+                        {section.map((action, index) => (
+                            <DropdownMenuItem
+                                key={index}
+                                variant={action.destructive ? "destructive" : "default"}
+                                disabled={action.disabled}
+                                onSelect={action.onSelect}
+                            >
+                                {action.icon}
+                                {action.label}
+                            </DropdownMenuItem>
+                        ))}
+                    </Fragment>
+                ))}
             </DropdownMenuContent>
         </DropdownMenu>
     );
+}
+
+/**
+ * A "⋯" button opening a menu of the page's less common actions, so a
+ * destructive one is never a single click away. `side` picks where the menu
+ * opens; a bottom-fixed bar passes `"top"`. A record page keeps one "⋯" in
+ * its header: a section lifted there hands its items over, and the header's
+ * menu lists them first.
+ */
+export function DetailActionsMenu({
+    actions,
+    side = "bottom",
+}: {
+    actions: DetailMenuAction[];
+    side?: "top" | "bottom";
+}) {
+    const detailViewContext = useContext(DetailViewContext);
+    const role = useContext(ActionsMenuRoleContext);
+    const id = useId();
+    const lifted = role === "section" && Boolean(detailViewContext);
+    const hosting = role === "header" && Boolean(detailViewContext);
+    const setSectionMenu = detailViewContext?.setSectionMenu;
+    const registerMenuHost = detailViewContext?.registerMenuHost;
+    const sectionItems = useSectionMenuItems();
+
+    // Every render, so the header always runs this section's newest handlers.
+    useLayoutEffect(() => {
+        if (lifted) {
+            setSectionMenu?.(id, actions);
+        }
+    });
+    useLayoutEffect(() => {
+        if (!lifted || !setSectionMenu) {
+            return;
+        }
+        return () => setSectionMenu(id, null);
+    }, [lifted, setSectionMenu, id]);
+    useLayoutEffect(() => (hosting ? registerMenuHost?.() : undefined), [hosting, registerMenuHost]);
+
+    if (lifted) {
+        return null;
+    }
+    return <ActionsMenuView groups={hosting ? [sectionItems, actions] : [actions]} side={side} />;
+}
+
+/** The header's own "⋯" for lifted section items, drawn only while no page "⋯" takes them in. */
+function HeaderSectionMenu() {
+    const detailViewContext = useContext(DetailViewContext);
+    const sectionItems = useSectionMenuItems();
+    if (!detailViewContext || detailViewContext.menuHosts > 0) {
+        return null;
+    }
+    return <ActionsMenuView groups={[sectionItems]} side="bottom" />;
 }
 
 /**
@@ -581,7 +712,10 @@ export function DetailHeader({
                             {t("detail.floatingView")}
                         </Button>
                     ) : null}
-                    {actions}
+                    <ActionsMenuRoleContext.Provider value="header">
+                        {actions}
+                    </ActionsMenuRoleContext.Provider>
+                    {showSlot ? <HeaderSectionMenu /> : null}
                 </PageHeaderActions>
             ) : null}
         </PageHeaderRoot>
@@ -606,7 +740,10 @@ export function DetailHeaderActions({
     const isMobile = useIsMobile();
     const slot = isMobile ? null : detailViewContext?.headerSlot ?? null;
     if (slot) {
-        return createPortal(children, slot);
+        return createPortal(
+            <ActionsMenuRoleContext.Provider value="section">{children}</ActionsMenuRoleContext.Provider>,
+            slot,
+        );
     }
     return <div className={fallbackClassName}>{children}</div>;
 }
