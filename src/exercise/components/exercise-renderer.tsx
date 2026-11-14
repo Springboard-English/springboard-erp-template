@@ -11,6 +11,7 @@ import type { ExerciseMode } from "./frame";
 import { InlineBlank } from "./inline-blank";
 import { McqChoiceGroup } from "./mcq-choice-group";
 import { ShortAnswer } from "./short-answer";
+import { SpeakingResponse } from "./speaking-response";
 import { SplitView } from "./split-view";
 import { TrueFalse } from "./true-false";
 
@@ -47,6 +48,8 @@ export function ExerciseRenderer({ node, mode = "practice", value, onChange, roo
       return <TrueFalse node={node} mode={mode} value={value} onChange={onChange} />;
     case "essay":
       return <EssayResponse node={node} mode={mode} value={value} onChange={onChange} />;
+    case "speaking":
+      return <SpeakingResponse node={node} mode={mode} value={value} onChange={onChange} />;
     default:
       return <Card><CardContent className="flex items-center gap-3 p-6 text-sm font-bold text-muted-foreground"><CircleAlert className="size-5 text-warning" />{t("exercise.renderer.unsupported", "This question type is not supported yet.")}<Button variant="ghost" size="sm"><RotateCcw className="size-4" />{t("exercise.renderer.reset", "Reset")}</Button></CardContent></Card>;
   }

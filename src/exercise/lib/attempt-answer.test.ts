@@ -254,6 +254,24 @@ describe("formatAnswerKey", () => {
       value: "My answer",
     });
   });
+
+  it("names an essay or a recording handed in as a file", () => {
+    const essay = {
+      ...base,
+      type: "essay",
+      content: { prompt: "Discuss.", placeholder: "" },
+    } as ExerciseNode;
+    const speaking = {
+      ...base,
+      type: "speaking",
+      content: { prompt: "Talk about a trip." },
+    } as ExerciseNode;
+    const handedIn = { kind: "text", value: "Handed in as a file" };
+    expect(formatAnswer(essay, { file_key: "f1" })).toEqual(handedIn);
+    expect(formatAnswer(speaking, { file_key: "f2" })).toEqual(handedIn);
+    expect(formatAnswer(speaking, null)).toEqual({ kind: "none" });
+    expect(formatAnswerKey(speaking)).toEqual({ kind: "none" });
+  });
 });
 
 describe("formattedAnswerText", () => {

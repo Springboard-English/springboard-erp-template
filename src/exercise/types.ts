@@ -24,7 +24,9 @@ export type CollectionLayout =
   | "gapped-text"
   | "jumbled-paragraph"
   | "multi-select"
-  | "multiple-matching";
+  | "multiple-matching"
+  // A speaking task of alternative prompts; each attempt is given one.
+  | "topic-pool";
 
 /** A collection's display extras: its layout, and the one word pool a run draws on when the paper has one. */
 export interface CollectionInfo {

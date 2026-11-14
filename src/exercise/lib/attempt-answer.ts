@@ -17,6 +17,7 @@
 import { answerSpan, spanText, wordAt } from "./error-correction";
 import {
   answerRecord,
+  fileAnswerKey,
   rootedAnswer,
   type ExerciseAnswer,
   type ExerciseNode,
@@ -124,8 +125,14 @@ export function formatAnswer(
       return parts.length ? { kind: "pairs", value: parts } : NONE;
     }
 
-    case "short-answer":
     case "essay":
+    case "speaking":
+      // Handed in as a file (the student's Doc, or a recording): the file is
+      // the answer, and the screen showing this links it.
+      if (fileAnswerKey(answer)) return text("Handed in as a file");
+      return typeof answer === "string" ? text(answer) : NONE;
+
+    case "short-answer":
       // Typed answers are shown verbatim — the student's own words are the
       // thing being marked, so nothing is normalised or truncated here.
       return typeof answer === "string" ? text(answer) : NONE;
@@ -195,6 +202,7 @@ export function formatAnswerKey(node: ExerciseNode): FormattedAnswer {
     }
 
     case "essay":
+    case "speaking":
       // Human-graded: there is no key, and inventing one would be worse than
       // the blank.
       return NONE;

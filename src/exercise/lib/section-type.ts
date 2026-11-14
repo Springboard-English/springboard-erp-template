@@ -30,6 +30,7 @@ const LAYOUT_LABELS: Record<CollectionLayout, string> = {
   "jumbled-paragraph": "Jumbled paragraphs",
   "multi-select": "Choose several",
   "multiple-matching": "Multiple matching",
+  "topic-pool": "Speaking topic pool",
 };
 
 /** Every task a section can declare, in the order a picker offers them. */
@@ -139,5 +140,6 @@ export function layoutRequiredType(
   layout?: CollectionLayout | null,
 ): QuestionType | null {
   if (!layout) return null;
+  if (layout === "topic-pool") return "speaking";
   return GAP_LAYOUTS.has(layout) ? "gap-filling" : "mcq";
 }

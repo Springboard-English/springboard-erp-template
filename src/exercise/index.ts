@@ -7,6 +7,7 @@ export * from "./types";
 export * from "./i18n";
 export * from "./messages";
 
+export * from "./lib/answer-files";
 export * from "./lib/attempt-answer";
 export * from "./lib/collection-info";
 export * from "./lib/error-correction";
@@ -24,6 +25,7 @@ export * from "./lib/passage";
 export * from "./lib/passage-markup";
 export * from "./lib/prompt-scale";
 export * from "./lib/question-summary";
+export * from "./lib/recorder";
 export * from "./lib/recording-deck";
 export * from "./lib/section-type";
 export * from "./lib/api-error";
@@ -62,6 +64,7 @@ export * from "./components/passage-text";
 export * from "./components/recording-deck";
 export * from "./components/root-pick";
 export * from "./components/short-answer";
+export * from "./components/speaking-response";
 export * from "./components/split-view";
 export * from "./components/true-false";
 

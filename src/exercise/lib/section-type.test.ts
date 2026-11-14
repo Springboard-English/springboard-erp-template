@@ -97,6 +97,8 @@ describe("layoutRequiredType", () => {
     // reference list beside the passage, not options on the question. Getting
     // this wrong puts an MCQ with no options in the middle of the run.
     expect(layoutRequiredType("banked-cloze")).toBe("gap-filling");
+    // A topic pool is a section of speaking questions, one per prompt.
+    expect(layoutRequiredType("topic-pool")).toBe("speaking");
   });
 
   it("leaves the choice open when the section has no layout", () => {

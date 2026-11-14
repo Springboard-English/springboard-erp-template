@@ -40,6 +40,7 @@ export const questionTypeSchema = z.enum([
   "reading-full-test",
   "true-false-not-given",
   "essay",
+  "speaking",
 ]);
 export type QuestionType = z.infer<typeof questionTypeSchema>;
 
@@ -53,6 +54,7 @@ export const QUESTION_TYPE_LABELS: Record<QuestionType, string> = {
   "reading-full-test": "Reading passage + question",
   "true-false-not-given": "True / False / Not Given",
   essay: "Essay",
+  speaking: "Speaking",
 };
 
 const optionSchema = z.object({
@@ -218,6 +220,16 @@ const essayExerciseSchema = baseExerciseSchema.extend({
   }),
 });
 
+// speaking: a spoken answer the student records, marked by a teacher. In a
+// topic pool the prompt is the one this attempt drew.
+const speakingExerciseSchema = baseExerciseSchema.extend({
+  type: z.literal("speaking"),
+  content: z.object({
+    prompt: z.string(),
+    max_seconds: z.number().int().positive().optional(),
+  }),
+});
+
 export const exerciseNodeSchema = z.discriminatedUnion("type", [
   choiceExerciseSchema,
   gapExerciseSchema,
@@ -226,6 +238,7 @@ export const exerciseNodeSchema = z.discriminatedUnion("type", [
   splitExerciseSchema,
   tfngExerciseSchema,
   essayExerciseSchema,
+  speakingExerciseSchema,
 ]);
 export type ExerciseNode = z.infer<typeof exerciseNodeSchema>;
 
@@ -267,6 +280,15 @@ export function answerRecord(
   value: ExerciseAnswer | undefined,
 ): Record<string, string> {
   return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+}
+
+/**
+ * The submission file an essay or a speaking answer was handed in as: the API
+ * records `{ file_key }` for an essay written in the student's Doc and for a
+ * recording. Null for a typed answer or none.
+ */
+export function fileAnswerKey(value: ExerciseAnswer | undefined): string | null {
+  return answerRecord(value).file_key ?? null;
 }
 
 /**
