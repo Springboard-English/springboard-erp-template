@@ -135,8 +135,7 @@ export function DetailSectionShell<T extends string>({
                         })}
                     </div>
                     {endItems.length > 0 ? (
-                        // While the pending-changes bar floats over the page's foot, the pinned rows rise above it.
-                        <ul className="shrink-0 space-y-0.5 border-t border-border/70 bg-background pt-2 pb-4 [body:has([data-pending-bar=open])_&]:pb-24">
+                        <ul className="shrink-0 space-y-0.5 border-t border-border/70 bg-background pt-2 pb-4">
                             {endItems.map((item) => (
                                 <li key={item.value}>
                                     <SidebarRow item={item} active={item.value === activeSection} onSelect={select} />
@@ -161,7 +160,7 @@ export function DetailSectionShell<T extends string>({
                     data-detail-tab-content
                     // A column, so a section wrapped in `flex-1 flex-col` can grow a `fill` card to the
                     // window's foot; other children keep their own height and the pane scrolls past them.
-                    className="min-h-0 min-w-0 flex-1 pb-6 md:flex md:flex-col md:overflow-y-auto md:overflow-x-hidden md:pr-1 md:[&>*]:shrink-0 [body:has([data-pending-bar=open])_&]:pb-24"
+                    className="min-h-0 min-w-0 flex-1 pb-6 md:flex md:flex-col md:overflow-y-auto md:overflow-x-hidden md:pr-1 md:[&>*]:shrink-0"
                 >
                     {children}
                 </div>
