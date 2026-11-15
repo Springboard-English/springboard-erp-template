@@ -1,6 +1,6 @@
 import { createContext, useContext, type ReactNode } from "react";
 
-import type { RecordingTimes } from "./recorder";
+import type { RecordingWindow } from "./recorder";
 
 /** One student's file for one question, as the app's API reports it. */
 export interface AnswerFile {
@@ -34,10 +34,14 @@ export interface AnswerFiles {
   /** False once time is up: no new recording starts, one under way still hands in. */
   canStartRecording?: boolean;
   /**
-   * A speaking question's preparation and speaking times, from its part's
-   * timers. Absent, or a field left out, falls back to the question's longest take.
+   * A speaking question's part clock, when its part is timed: the recorder
+   * counts down preparation, records by itself when it ends (for the question
+   * the runner marks), and hands in at the deadline. Absent: press to record,
+   * capped by the question's longest take.
    */
-  recordingTimes?: (nodeId: string) => Partial<RecordingTimes> | undefined;
+  recordingWindow?: (nodeId: string) => RecordingWindow | undefined;
+  /** The server's clock in ms, so a skewed device clock can't move the countdowns. */
+  serverNow?: () => number;
 }
 
 const NO_FILES: AnswerFiles = { file: () => undefined };

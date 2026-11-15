@@ -1,22 +1,40 @@
 import { describe, expect, it } from "vitest";
 
-import { pickRecordingType, resolveRecordingTimes, secondsLeft, uploadType } from "./recorder";
+import { pickRecordingType, secondsUntil, takeEndsAt, uploadType, windowStage, type RecordingWindow } from "./recorder";
 
-describe("resolveRecordingTimes", () => {
-  it("takes the runner's times over the question's longest take", () => {
-    expect(resolveRecordingTimes({ prepareSeconds: 60, speakSeconds: 120 }, 30)).toEqual({ prepareSeconds: 60, speakSeconds: 120 });
+const at = (iso: string) => Date.parse(iso);
+const window: RecordingWindow = {
+  openedAt: "2026-11-15T05:00:00Z",
+  prepEndsAt: "2026-11-15T05:01:00Z",
+  deadlineAt: "2026-11-15T05:03:00Z",
+  autoStart: true,
+};
+
+describe("windowStage", () => {
+  it("prepares until prep ends, is open until the deadline, then over", () => {
+    expect(windowStage(window, at("2026-11-15T05:00:30Z"))).toBe("preparing");
+    expect(windowStage(window, at("2026-11-15T05:01:00Z"))).toBe("open");
+    expect(windowStage(window, at("2026-11-15T05:03:00Z"))).toBe("over");
   });
 
-  it("falls back to the question's longest take, and reads 0 as none", () => {
-    expect(resolveRecordingTimes(undefined, 45)).toEqual({ prepareSeconds: null, speakSeconds: 45 });
-    expect(resolveRecordingTimes({ prepareSeconds: 0 }, undefined)).toEqual({ prepareSeconds: null, speakSeconds: null });
+  it("never blocks on a missing time", () => {
+    expect(windowStage({ ...window, prepEndsAt: null, deadlineAt: null }, at("2026-11-15T05:00:30Z"))).toBe("open");
   });
 });
 
-describe("secondsLeft", () => {
-  it("counts down from the start and stops at zero", () => {
-    expect(secondsLeft(30, 1000, 11_000)).toBe(20);
-    expect(secondsLeft(30, 1000, 40_000)).toBe(0);
+describe("takeEndsAt", () => {
+  it("stops at the longest take or the deadline, whichever is first", () => {
+    const start = at("2026-11-15T05:02:00Z");
+    expect(takeEndsAt(start, 30, window.deadlineAt)).toBe(start + 30_000);
+    expect(takeEndsAt(start, 120, window.deadlineAt)).toBe(at("2026-11-15T05:03:00Z"));
+    expect(takeEndsAt(start, null, null)).toBeNull();
+  });
+});
+
+describe("secondsUntil", () => {
+  it("counts down and stops at zero", () => {
+    expect(secondsUntil(11_000, 1_000)).toBe(10);
+    expect(secondsUntil(1_000, 5_000)).toBe(0);
   });
 });
 
