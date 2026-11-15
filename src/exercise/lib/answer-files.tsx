@@ -1,5 +1,7 @@
 import { createContext, useContext, type ReactNode } from "react";
 
+import type { RecordingTimes } from "./recorder";
+
 /** One student's file for one question, as the app's API reports it. */
 export interface AnswerFile {
   /** `pending` until the file exists in Drive and is shared to the student. */
@@ -31,6 +33,11 @@ export interface AnswerFiles {
   beginRecording?: (nodeId: string, contentType: string) => Promise<FinishRecording>;
   /** False once time is up: no new recording starts, one under way still hands in. */
   canStartRecording?: boolean;
+  /**
+   * A speaking question's preparation and speaking times, from its part's
+   * timers. Absent, or a field left out, falls back to the question's longest take.
+   */
+  recordingTimes?: (nodeId: string) => Partial<RecordingTimes> | undefined;
 }
 
 const NO_FILES: AnswerFiles = { file: () => undefined };

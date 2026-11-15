@@ -21,3 +21,31 @@ export function uploadType(type: string): string {
   const base = type.split(";")[0].trim().toLowerCase();
   return base.startsWith("audio/") ? base : "audio/webm";
 }
+
+/** How long a speaking question prepares and records for; null is no limit. */
+export interface RecordingTimes {
+  /** Seconds to prepare before recording starts on its own; null is none. */
+  prepareSeconds: number | null;
+  /** Seconds a take may run before it stops and hands in on its own; null is no limit. */
+  speakSeconds: number | null;
+}
+
+/**
+ * The times a question records with: the runner's (a timed part, a preparation
+ * timer) where it gives them, else the question's own longest take.
+ */
+export function resolveRecordingTimes(
+  fromRunner: Partial<RecordingTimes> | undefined,
+  maxSeconds: number | undefined,
+): RecordingTimes {
+  const positive = (value: number | null | undefined) => (value && value > 0 ? value : null);
+  return {
+    prepareSeconds: positive(fromRunner?.prepareSeconds),
+    speakSeconds: positive(fromRunner?.speakSeconds) ?? positive(maxSeconds),
+  };
+}
+
+/** Seconds left of a countdown of `total` started at `startedAt` (ms), never below 0. */
+export function secondsLeft(total: number, startedAt: number, now: number): number {
+  return Math.max(0, total - (now - startedAt) / 1000);
+}
