@@ -586,7 +586,8 @@ registers, removes and tests the device (`api_calls/pushNotifications.ts`,
 
 - **Mount `LiveEventsProvider` once, inside the `QueryClientProvider`.** It
   keeps one `GET /v2/events` stream per tab for every topic on screen.
-- **A screen calls `useLiveTopic("<kind>:<key>", [queryKey])`** and gets its
+- **A screen calls `useLiveTopic("<kind>:<key>", [queryKey])`** (or a list of
+  topics, as a table of open rows does) and gets its
   queries invalidated when the API says that row moved. Kinds today:
   `submission`, `class`, `assessment`, `esign_document`. Pass `null` when
   nothing on screen can still change, so the stream closes.

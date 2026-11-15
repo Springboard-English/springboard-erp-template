@@ -108,6 +108,17 @@ describe("LiveEventsProvider", () => {
         expect(fake.opened()).toBe(1);
     });
 
+    it("takes a list of topics on one stream", async () => {
+        function List() {
+            useLiveTopic(["esign_document:a", "esign_document:b"], [["esign-documents"]]);
+            return null;
+        }
+        mount(<List />);
+        await act(() => vi.advanceTimersByTimeAsync(300));
+        expect(fake.opened()).toBe(1);
+        expect(fake.urls[0]).toContain("topic=esign_document%3Aa&topic=esign_document%3Ab");
+    });
+
     it("opens nothing while no topic is asked for", async () => {
         mount(<Screen topic={null} live={() => undefined} />);
         await act(() => vi.advanceTimersByTimeAsync(1_000));

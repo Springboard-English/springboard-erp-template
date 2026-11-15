@@ -163,21 +163,31 @@ export function LiveEventsProvider({ children }: { children: ReactNode }) {
 }
 
 /**
- * Refetch `queryKeys` whenever `topic` (`<kind>:<key>`) moves. Pass `null` to
- * subscribe to nothing, as while nothing on screen can still change. Returns
- * true while the stream is live, so a screen can slow its fallback poll.
- * Without a `LiveEventsProvider` it does nothing and returns false.
+ * Refetch `queryKeys` whenever `topic` (`<kind>:<key>`), or any of a list of
+ * topics, moves. Pass `null` or an empty list to subscribe to nothing, as
+ * while nothing on screen can still change. Returns true while the stream is
+ * live, so a screen can slow its fallback poll. Without a
+ * `LiveEventsProvider` it does nothing and returns false.
  */
-export function useLiveTopic(topic: string | null | undefined, queryKeys: readonly QueryKey[]): boolean {
+export function useLiveTopic(
+    topic: string | readonly string[] | null | undefined,
+    queryKeys: readonly QueryKey[],
+): boolean {
     const context = useContext(LiveEventsContext);
     const register = context?.register;
-    // Keyed by value: callers build the array inline on every render.
+    // Keyed by value: callers build these arrays inline on every render.
+    const topics = topic == null ? [] : typeof topic === "string" ? [topic] : [...topic];
+    const topicsJson = JSON.stringify(topics.filter(Boolean).sort());
     const keysJson = JSON.stringify(queryKeys);
     useEffect(() => {
-        if (!register || !topic) return;
-        return register(topic, JSON.parse(keysJson) as QueryKey[]);
-    }, [register, topic, keysJson]);
-    return Boolean(context?.connected && topic);
+        if (!register) return;
+        const keys = JSON.parse(keysJson) as QueryKey[];
+        const releases = (JSON.parse(topicsJson) as string[]).map((t) => register(t, keys));
+        return () => {
+            for (const release of releases) release();
+        };
+    }, [register, topicsJson, keysJson]);
+    return Boolean(context?.connected && topicsJson !== "[]");
 }
 
 /** Resolve after `ms`, or as soon as `signal` aborts. */
