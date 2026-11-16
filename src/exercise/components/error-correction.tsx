@@ -1,3 +1,7 @@
+import { useState } from "react";
+import { Pencil } from "lucide-react";
+
+import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { useI18n } from "../../context/I18nContext";
 import { cn } from "../../lib/utils";
@@ -27,6 +31,7 @@ type ErrorNode = Extract<ExerciseNode, { type: "error-correction" }>;
 export function ErrorCorrection({ node, mode, value, onChange }: SubProps<ErrorNode>) {
   const { t } = useI18n();
   const edit = useNodeEdit(node);
+  const [editingSentence, setEditingSentence] = useState(false);
   const sentence = node.content.sentence;
   const record = answerRecord(value);
   const picked = answerSpan(sentence, record);
@@ -53,18 +58,19 @@ export function ErrorCorrection({ node, mode, value, onChange }: SubProps<ErrorN
   return (
     <Frame node={node} mode={mode}>
       <div className="space-y-5">
-        {edit ? (
-          // The sentence as typed; the mistake is still picked in the line below.
-          <EditableText
-            value={sentence}
-            className="text-[15px] font-semibold leading-7"
-            label={t("exercise.edit.sentence", "Sentence")}
-            onChange={(next) => {
-              const at = node.content.error ? next.indexOf(node.content.error) : -1;
-              edit({ sentence: next, error_offset: at >= 0 ? at : undefined, ...(at >= 0 ? {} : { error: undefined }) });
-            }}
-          />
-        ) : null}
+        {edit && editingSentence ? (
+          // The sentence typed in place of the clickable one; Done brings the words back.
+          <p className="text-[17px] font-semibold leading-9">
+            <EditableText
+              value={sentence}
+              label={t("exercise.edit.sentence", "Sentence")}
+              onChange={(next) => {
+                const at = node.content.error ? next.indexOf(node.content.error) : -1;
+                edit({ sentence: next, error_offset: at >= 0 ? at : undefined, ...(at >= 0 ? {} : { error: undefined }) });
+              }}
+            />
+          </p>
+        ) : (
         <ClickableSentence
           sentence={sentence}
           selected={mode === "result" ? null : picked}
@@ -85,6 +91,13 @@ export function ErrorCorrection({ node, mode, value, onChange }: SubProps<ErrorN
               : undefined
           }
         />
+        )}
+        {edit ? (
+          <Button type="button" variant="ghost" size="sm" onClick={() => setEditingSentence((v) => !v)}>
+            <Pencil className="size-4" />
+            {editingSentence ? t("exercise.edit.done", "Done") : t("exercise.edit.editSentence", "Edit sentence")}
+          </Button>
+        ) : null}
         {mode === "practice" ? (
           <p className="text-xs font-bold text-muted-foreground">
             {t("exercise.renderer.mistakeHint", "A mistake can be more than one word — click the next word to add it.")}

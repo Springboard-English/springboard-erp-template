@@ -9,7 +9,7 @@ import { formatMarks } from "../lib/grading";
 import { questionTypeLabel } from "../lib/section-type";
 import { CategoryPill } from "./category-pill";
 import { Explanation, explanationOf } from "./explanation";
-import { useExerciseEditor } from "./exercise-edit";
+import { QuestionMetaControls, useExerciseEditor } from "./exercise-edit";
 import { cn } from "../../lib/utils";
 
 export type ExerciseMode = "practice" | "review" | "result";
@@ -44,9 +44,10 @@ export function Frame({ node, children, mode }: { node: ExerciseNode; children: 
       {node.points === 1 ? t("exercise.renderer.pointOne", "1 point") : t("exercise.renderer.pointOther", "{n} points", { n: formatMarks(node.points) })}
     </Badge>
   );
-  const points = tools ? (
-    <div className="flex items-center gap-1.5">
-      {badge}
+  // In edit mode the marks chip is the type, skill and marks, editable.
+  const points = editor ? (
+    <div className="flex flex-wrap items-center gap-1.5">
+      <QuestionMetaControls node={node} />
       {tools}
     </div>
   ) : (

@@ -36,7 +36,8 @@ import { HighlightScope } from "./highlighter";
 import {
   ClozeBlanksEditor,
   EditablePassage,
-  PoolOptionsEditor,
+  PoolAddOption,
+  PoolEditProvider,
   useExerciseEditor,
 } from "./exercise-edit";
 import { Button } from "../../components/ui/button";
@@ -226,9 +227,12 @@ function EditPageBody(props: ExercisePageProps) {
           ))}
         </div>
       ) : null}
-      {active === "answers" && pooledLayout ? <PoolOptionsEditor nodes={pageNodes} /> : null}
       {active === "answers" ? (
-        <AnswerPageBody {...props} answers={answers} onChange={onChange} enableAnnotations={false} />
+        // A pooled section's option list is edited where the student's task prints it.
+        <PoolEditProvider nodes={pooledLayout ? pageNodes : []}>
+          <AnswerPageBody {...props} answers={answers} onChange={onChange} enableAnnotations={false} />
+          {layout.kind === "gapped-text" || layout.kind === "jumbled-paragraph" ? <PoolAddOption className="self-start" /> : null}
+        </PoolEditProvider>
       ) : (
         <CollectionContext stub={page.stub} hideHeader preferPartPassage>
           <SectionLead stub={page.stub} ownsText />

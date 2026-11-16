@@ -59,3 +59,39 @@ export function moveGap(
   const order = next.filter((piece): piece is Extract<GapPiece, { kind: "gap" }> => piece.kind === "gap").map((piece) => piece.index);
   return { text: piecesText(next), order };
 }
+
+/**
+ * Make the word at piece index `wordPiece` blank `gap`'s answer: the blank
+ * moves onto that word (its punctuation stays in the text), and the blank's
+ * old answer is printed back where the blank was. Returns the new text, the
+ * blanks' new `order` as `moveGap` does, and the word that is now the answer.
+ */
+export function gapOntoWord(
+  text: string,
+  gap: number,
+  wordPiece: number,
+  oldAnswer: string,
+): { text: string; order: number[]; word: string } | null {
+  const pieces = gapPieces(text);
+  const from = pieces.findIndex((piece) => piece.kind === "gap" && piece.index === gap);
+  const target = pieces[wordPiece];
+  if (from < 0 || !target || target.kind !== "word") return null;
+  const [, lead, core, trail] = /^([^\p{L}\p{N}]*)(.*?)([^\p{L}\p{N}]*)$/u.exec(target.text) ?? ["", "", target.text, ""];
+  if (!core) return null;
+  const next: GapPiece[] = pieces.flatMap((piece, at): GapPiece[] => {
+    if (at === from) return oldAnswer ? [{ kind: "word", text: oldAnswer }] : [];
+    if (at !== wordPiece) return [piece];
+    return [
+      ...(lead ? [{ kind: "word" as const, text: lead }] : []),
+      pieces[from],
+      ...(trail ? [{ kind: "word" as const, text: trail }] : []),
+    ];
+  });
+  const textOut = piecesText(next).replace(/ {2,}/g, " ");
+  const order = gapPieces(textOut)
+    .filter((piece): piece is Extract<GapPiece, { kind: "gap" }> => piece.kind === "gap")
+    .map((_, at) => at);
+  // Which old blank sits at each position: walk the new pieces' gap origins.
+  const origins = next.filter((piece): piece is Extract<GapPiece, { kind: "gap" }> => piece.kind === "gap").map((piece) => piece.index);
+  return { text: textOut, order: origins.length === order.length ? origins : order, word: core };
+}

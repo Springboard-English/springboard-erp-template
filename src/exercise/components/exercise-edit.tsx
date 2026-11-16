@@ -1,4 +1,4 @@
-import { createContext, useContext, useRef, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { GripVertical, ImagePlus, Loader2, Pencil, Plus, X } from "lucide-react";
 
 import { Button } from "../../components/ui/button";
@@ -6,10 +6,20 @@ import { Textarea } from "../../components/ui/textarea";
 import { useI18n } from "../../context/I18nContext";
 import { touchHitArea } from "../../lib/touchTarget";
 import { cn } from "../../lib/utils";
-import type { ExerciseNode } from "../lib/exercises";
-import { gapPieces, moveGap } from "../lib/gap-move";
+import {
+  QUESTION_TYPE_DESCRIPTIONS,
+  QUESTION_TYPE_LABELS,
+  SKILL_LABELS,
+  questionTypeSchema,
+  skillTagSchema,
+  type ExerciseNode,
+  type QuestionType,
+  type SkillTag,
+} from "../lib/exercises";
+import { SearchableSelect } from "../../components/ui/searchable-select";
+import { valueLabel } from "../i18n";
+import { gapOntoWord, gapPieces, moveGap } from "../lib/gap-move";
 import { joinPassage, splitPassage } from "../lib/passage";
-import { optionLetters } from "../lib/option-letters";
 import { PassageText } from "./passage-text";
 
 // Edit mode for the runner page.
@@ -38,11 +48,22 @@ export interface ExerciseEditor {
   onBlanksMove: (collectionKey: string, passage: string[], order: string[]) => void;
   /** The host's controls beside a question's marks (its settings button). */
   questionTools?: (node: ExerciseNode) => ReactNode;
+  /** What of a question's type and marks may change here; see `QuestionMeta`. */
+  questionMeta?: (node: ExerciseNode) => QuestionMeta;
   /**
    * Stores a picture for an option and answers its key and a URL to show it.
    * Without it, options offer no picture controls.
    */
   uploadOptionImage?: (file: File) => Promise<{ image_key: string; url: string }>;
+}
+
+/** A question's type and marks as the host lets them change. */
+export interface QuestionMeta {
+  /** Swaps the question for a blank of another type; omitted keeps the type. */
+  retype?: (type: QuestionType) => void;
+  /** The marks shown on the question: a test's own, or the library default. */
+  points: number | null;
+  onPointsChange?: (points: number) => void;
 }
 
 const EditContext = createContext<ExerciseEditor | null>(null);
@@ -70,8 +91,8 @@ export function useNodeEdit(node: ExerciseNode): ((patch: Record<string, unknown
 
 /**
  * A piece of a question's printed text: plain text for a student, and in edit
- * mode the same text as a borderless field that grows with it, so a teacher
- * types where the words are printed.
+ * mode the same words as an editable span that flows and wraps exactly like
+ * the printed sentence, so editing keeps the student's line layout.
  */
 export function EditableText({
   value,
@@ -79,7 +100,6 @@ export function EditableText({
   placeholder,
   label,
   className,
-  inline = false,
 }: {
   value: string;
   /** Omitted outside edit mode, which prints the text. */
@@ -87,25 +107,172 @@ export function EditableText({
   placeholder?: string;
   label: string;
   className?: string;
-  /** Inside a sentence (the words either side of a blank). */
+  /** Kept for callers; the span is always inline now. */
   inline?: boolean;
 }) {
   if (!onChange) return <>{value}</>;
+  return <InlineEditable value={value} onChange={onChange} placeholder={placeholder} label={label} className={className} />;
+}
+
+/** The editable span behind `EditableText`: plain text in, plain text out. */
+function InlineEditable({
+  value,
+  onChange,
+  placeholder,
+  label,
+  className,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  label: string;
+  className?: string;
+}) {
+  const ref = useRef<HTMLSpanElement>(null);
+  // Written only when the text differs, so typing never moves the caret.
+  useEffect(() => {
+    const element = ref.current;
+    if (element && element.textContent !== value) element.textContent = value;
+  }, [value]);
+  const stop = (event: { stopPropagation: () => void }) => event.stopPropagation();
   return (
-    <textarea
-      value={value}
-      rows={1}
+    <span
+      ref={ref}
+      role="textbox"
+      tabIndex={0}
       aria-label={label}
-      placeholder={placeholder}
-      onChange={(event) => onChange(event.target.value)}
-      // Inside a choice row a click would also pick the row.
-      onClick={(event) => event.stopPropagation()}
+      contentEditable="plaintext-only"
+      suppressContentEditableWarning
+      data-placeholder={placeholder ?? label}
+      onInput={(event) => onChange(event.currentTarget.textContent ?? "")}
+      // Inside a choice row or a draggable piece, a click or drag would also act on it.
+      onClick={stop}
+      onPointerDown={stop}
+      onKeyDown={(event) => {
+        event.stopPropagation();
+        if (event.key === "Enter") event.preventDefault();
+      }}
       className={cn(
-        "field-sizing-content resize-none rounded-md border border-dashed border-ink-300 bg-transparent px-1 align-baseline font-[inherit] text-[length:inherit] leading-[inherit] text-[inherit] outline-none hover:border-rose-300 focus:border-solid focus:border-rose-400",
-        inline ? "inline-block min-w-12 max-w-full align-middle" : "block w-full",
+        "rounded-sm decoration-ink-300 decoration-dashed underline-offset-4 outline-none [text-decoration-line:underline] hover:decoration-rose-400 focus:bg-rose-50 focus:decoration-rose-500",
+        "empty:before:text-muted-foreground empty:before:content-[attr(data-placeholder)]",
         className,
       )}
     />
+  );
+}
+
+/** One choice as an option list stores it. */
+export interface EditableOption {
+  id: string;
+  label: string;
+  image_key?: string;
+  image_url?: string;
+}
+
+/** A pooled section's one option list and how to change it for every question. */
+export interface PoolEdit {
+  options: EditableOption[];
+  write: (next: EditableOption[]) => void;
+}
+
+const PoolEditContext = createContext<PoolEdit | null>(null);
+
+/**
+ * Makes the option list of a pooled section (gapped text, matching, jumbled,
+ * "choose several") editable where the student's renderer prints it. Each
+ * question stores a copy, so every change goes to all of them; a removed
+ * option clears the key of a question that pointed at it.
+ */
+export function PoolEditProvider({ nodes, children }: { nodes: ExerciseNode[]; children: ReactNode }) {
+  const editor = useExerciseEditor();
+  const first = nodes.find((node) => node.type === "mcq");
+  if (!editor || !first || first.type !== "mcq") return <>{children}</>;
+  const value: PoolEdit = {
+    options: first.content.options as EditableOption[],
+    write: (next) => {
+      const ids = new Set(next.map((option) => option.id));
+      for (const node of nodes) {
+        if (node.type !== "mcq") continue;
+        const keep = node.content.correct_option_id && ids.has(node.content.correct_option_id);
+        editor.onNodeChange(node.id, {
+          ...node,
+          content: {
+            ...node.content,
+            options: next.map((option) => ({ ...option })),
+            correct_option_id: keep ? node.content.correct_option_id : "",
+          },
+        } as ExerciseNode);
+      }
+    },
+  };
+  return <PoolEditContext.Provider value={value}>{children}</PoolEditContext.Provider>;
+}
+
+/** The pooled section's options in edit mode, else null. */
+export function usePoolEdit(): PoolEdit | null {
+  return useContext(PoolEditContext);
+}
+
+/**
+ * One pooled option's label where a renderer prints it: the printed label for a
+ * student, and in edit mode the label typed in place with its picture and
+ * remove controls beside it.
+ */
+export function PoolOptionLabel({ id, label, letter }: { id: string; label: string; letter: string }) {
+  const { t } = useI18n();
+  const pool = usePoolEdit();
+  if (!pool) return <>{label}</>;
+  const option = pool.options.find((candidate) => candidate.id === id);
+  if (!option) return <>{label}</>;
+  const replace = (next: EditableOption) => pool.write(pool.options.map((other) => (other.id === id ? next : other)));
+  return (
+    <>
+      <EditableText
+        value={option.label}
+        label={t("exercise.renderer.optionAria", "Option {letter}", { letter })}
+        onChange={(next) => replace({ ...option, label: next })}
+      />
+      <span className="ml-1 inline-flex align-middle">
+        <OptionImageControls option={option} letter={letter} onChange={replace} />
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="size-7"
+          aria-label={t("exercise.edit.removeOption", "Remove option {letter}", { letter })}
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={(event) => {
+            event.stopPropagation();
+            pool.write(pool.options.filter((other) => other.id !== id));
+          }}
+        >
+          <X className="size-4" />
+        </Button>
+      </span>
+    </>
+  );
+}
+
+/** "Add option" at the end of a pooled section's list, in edit mode only. */
+export function PoolAddOption({ className }: { className?: string }) {
+  const { t } = useI18n();
+  const pool = usePoolEdit();
+  if (!pool) return null;
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      className={className}
+      onClick={() => {
+        let n = pool.options.length + 1;
+        while (pool.options.some((option) => option.id === `opt-${n}`)) n += 1;
+        pool.write([...pool.options, { id: `opt-${n}`, label: "" }]);
+      }}
+    >
+      <Plus className="size-4" />
+      {t("exercise.edit.addOption", "Add option")}
+    </Button>
   );
 }
 
@@ -211,8 +378,24 @@ export function ClozeBlanksEditor({
   const editor = useExerciseEditor();
   const [dragging, setDragging] = useState<number | null>(null);
   const [over, setOver] = useState<number | null>(null);
+  // A blank picked to take another word: the next word clicked becomes its answer.
+  const [armed, setArmed] = useState<number | null>(null);
   if (!editor) return null;
   const text = joinPassage(passage);
+  const takeWord = (gap: number, wordPiece: number) => {
+    const node = nodes[gap];
+    if (!node) return;
+    const content = node.content as { accepted_answers?: string[] };
+    const result = gapOntoWord(text, gap, wordPiece, content.accepted_answers?.[0] ?? "");
+    if (!result) return;
+    const order = result.order.map((old) => nodes[old]?.id).filter((id): id is string => Boolean(id));
+    editor.onBlanksMove(collectionKey, splitPassage(result.text) ?? [result.text], order);
+    editor.onNodeChange(node.id, {
+      ...node,
+      content: { ...node.content, accepted_answers: [result.word, ...(content.accepted_answers ?? []).slice(1)] },
+    } as ExerciseNode);
+    setArmed(null);
+  };
   const pieces = gapPieces(text);
   const words = pieces.map((piece, at) => (piece.kind === "word" ? at : -1)).filter((at) => at >= 0);
 
@@ -237,7 +420,9 @@ export function ClozeBlanksEditor({
   return (
     <div className="rounded-2xl border bg-card p-5 text-[15px] leading-[2.6] text-foreground shadow-sm sm:p-7">
       <p className="mb-2 text-[11px] font-extrabold leading-5 text-muted-foreground">
-        {t("exercise.edit.dragBlanks", "Drag a numbered blank before another word to move it. Arrow keys move the focused blank.")}
+        {armed !== null
+          ? t("exercise.edit.pickWord", "Click the word that blank {n} should be. Its old answer goes back into the text.", { n: numbers[armed] ?? armed + 1 })
+          : t("exercise.edit.dragBlanks", "Drag a numbered blank before another word to move it, or click a blank and then a word to make that word its answer. Arrow keys move the focused blank.")}
       </p>
       <div className="whitespace-pre-wrap">
         {pieces.map((piece, at) => {
@@ -258,7 +443,12 @@ export function ClozeBlanksEditor({
                   setDragging(null);
                   setOver(null);
                 }}
-                className={cn("rounded-sm", over === at && "shadow-[inset_3px_0_0_var(--color-rose-500)] bg-rose-50")}
+                onClick={() => (armed !== null ? takeWord(armed, at) : undefined)}
+                className={cn(
+                  "rounded-sm",
+                  over === at && "shadow-[inset_3px_0_0_var(--color-rose-500)] bg-rose-50",
+                  armed !== null && "cursor-pointer hover:bg-rose-100",
+                )}
               >
                 {piece.text}
               </span>
@@ -280,7 +470,10 @@ export function ClozeBlanksEditor({
                 setDragging(null);
                 setOver(null);
               }}
-              onClick={() => node && editor.onSelect(node.id)}
+              onClick={() => {
+                if (node) editor.onSelect(node.id);
+                setArmed((current) => (current === piece.index ? null : piece.index));
+              }}
               onKeyDown={(event) => {
                 if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
                   event.preventDefault();
@@ -316,14 +509,6 @@ export function EditablePrompt({ node }: { node: ExerciseNode & { content: { pro
       label={t("exercise.edit.prompt", "Question")}
     />
   );
-}
-
-/** One choice as an option list stores it. */
-interface EditableOption {
-  id: string;
-  label: string;
-  image_key?: string;
-  image_url?: string;
 }
 
 /**
@@ -402,74 +587,66 @@ export function OptionImageControls({
 }
 
 /**
- * The one lettered list a pooled section draws from (gapped text, matching,
- * jumbled paragraphs, "choose several"), edited once for every question in it.
- * Each question stores a copy, so every change goes to all of them; a removed
- * option clears the key of a question that pointed at it.
+ * A question's type, skill and marks where its card prints them, editable in
+ * edit mode: the type is a searchable list with a line on each (only while the
+ * host allows a retype), the skill a select, the marks a number.
  */
-export function PoolOptionsEditor({ nodes }: { nodes: ExerciseNode[] }) {
+export function QuestionMetaControls({ node }: { node: ExerciseNode }) {
   const { t } = useI18n();
   const editor = useExerciseEditor();
-  const first = nodes.find((node) => node.type === "mcq");
-  if (!editor || !first || first.type !== "mcq") return null;
-  const options = first.content.options as EditableOption[];
-  const letters = optionLetters(options);
-  const write = (next: EditableOption[]) => {
-    const ids = new Set(next.map((option) => option.id));
-    for (const node of nodes) {
-      if (node.type !== "mcq") continue;
-      const keep = node.content.correct_option_id && ids.has(node.content.correct_option_id);
-      editor.onNodeChange(node.id, {
-        ...node,
-        content: { ...node.content, options: next.map((option) => ({ ...option })), correct_option_id: keep ? node.content.correct_option_id : "" },
-      } as ExerciseNode);
-    }
-  };
+  if (!editor) return null;
+  const meta = editor.questionMeta?.(node) ?? { points: node.points ?? null };
+  const typeId = `question-type-${node.id}`;
   return (
-    <div className="space-y-2 rounded-2xl border bg-card p-4 shadow-sm">
-      <p className="text-[11px] font-extrabold text-muted-foreground">
-        {t("exercise.edit.poolOptions", "The options every question in this section draws from")}
-      </p>
-      {options.map((option, index) => (
-        <div key={option.id} className="flex items-start gap-2">
-          <span className="grid size-7 shrink-0 place-items-center rounded-[9px] bg-muted text-[13px] font-extrabold text-ink-700">
-            {letters[index]}
-          </span>
-          <EditableText
-            value={option.label}
-            label={t("exercise.renderer.optionAria", "Option {letter}", { letter: letters[index] })}
-            onChange={(label) => write(options.map((other) => (other.id === option.id ? { ...other, label } : other)))}
-            className="text-sm font-semibold leading-6"
-          />
-          <OptionImageControls
-            option={option}
-            letter={letters[index]}
-            onChange={(next) => write(options.map((other) => (other.id === option.id ? next : other)))}
-          />
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            aria-label={t("exercise.edit.removeOption", "Remove option {letter}", { letter: letters[index] })}
-            onClick={() => write(options.filter((other) => other.id !== option.id))}
-          >
-            <X className="size-4" />
-          </Button>
-        </div>
-      ))}
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        onClick={() => {
-          let n = options.length + 1;
-          while (options.some((option) => option.id === `opt-${n}`)) n += 1;
-          write([...options, { id: `opt-${n}`, label: "" }]);
-        }}
+    <span className="inline-flex flex-wrap items-center gap-1.5">
+      {meta.retype ? (
+        <SearchableSelect
+          id={typeId}
+          value={node.type}
+          className="h-8 w-52 text-xs"
+          options={questionTypeSchema.options.map((type) => ({
+            value: type,
+            label: valueLabel(t, QUESTION_TYPE_LABELS[type]),
+            description: valueLabel(t, QUESTION_TYPE_DESCRIPTIONS[type]),
+          }))}
+          onValueChange={(next) => (next && next !== node.type ? meta.retype?.(next as QuestionType) : undefined)}
+        />
+      ) : (
+        <span
+          className="rounded-full border bg-muted px-2.5 py-1 text-[11px] font-bold text-muted-foreground"
+          title={t("exercise.edit.typeFixed", "A saved question keeps its type. Add a new question for another type.")}
+        >
+          {valueLabel(t, QUESTION_TYPE_LABELS[node.type])}
+        </span>
+      )}
+      <select
+        aria-label={t("exercise.edit.skill", "Skill")}
+        value={node.skillTag}
+        onChange={(event) => editor.onNodeChange(node.id, { ...node, skillTag: event.target.value as SkillTag })}
+        className="h-8 rounded-full border bg-card px-2.5 text-xs font-bold text-foreground"
       >
-        <Plus className="size-4" />
-        {t("exercise.edit.addOption", "Add option")}
-      </Button>
-    </div>
+        {skillTagSchema.options.map((skill) => (
+          <option key={skill} value={skill}>
+            {valueLabel(t, SKILL_LABELS[skill])}
+          </option>
+        ))}
+      </select>
+      <label className="inline-flex h-8 items-center gap-1 rounded-full border bg-card px-2.5 text-xs font-bold text-foreground">
+        <input
+          type="number"
+          min={0}
+          step={0.25}
+          aria-label={t("exercise.edit.marks", "Marks")}
+          value={meta.points ?? 0}
+          disabled={!meta.onPointsChange}
+          onChange={(event) => {
+            const value = Number.parseFloat(event.target.value);
+            meta.onPointsChange?.(Number.isFinite(value) && value >= 0 ? value : 0);
+          }}
+          className="w-12 bg-transparent text-right outline-none"
+        />
+        {t("exercise.edit.points", "pts")}
+      </label>
+    </span>
   );
 }
