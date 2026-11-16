@@ -582,7 +582,7 @@ registers, removes and tests the device (`api_calls/pushNotifications.ts`,
   the app has more than one locale), so `LocaleSelect` belongs in the desktop
   header only.
 
-## Live status (`LiveEventsProvider`, `useLiveTopic`, since 6.12.0)
+## Live status (`LiveEventsProvider`, `useLiveTopic`, since 6.18.0)
 
 - **Mount `LiveEventsProvider` once, inside the `QueryClientProvider`.** It
   keeps one `GET /v2/events` stream per tab for every topic on screen.

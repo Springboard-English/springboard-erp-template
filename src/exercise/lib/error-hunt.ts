@@ -269,3 +269,48 @@ export function labelsByParagraphOffset(
   });
   return labels;
 }
+
+/** A stretch of the hunt passage as the editor types it: free text, or a marked mistake. */
+export type HuntRun = { kind: "text"; start: number; end: number } | { kind: "mark"; row: number; start: number; end: number };
+
+/**
+ * The passage cut into its marked mistakes and the text between them, in
+ * order. A mark overlapping an earlier one is left out (it stays in the text).
+ * There is always a text run before, between and after the marks.
+ */
+export function huntRuns(textLength: number, picked: PickedSpans): HuntRun[] {
+  const marks = picked
+    .map((span, row) => (span ? { row, ...span } : null))
+    .filter((mark): mark is { row: number; start: number; end: number } => mark !== null)
+    .sort((a, b) => a.start - b.start);
+  const runs: HuntRun[] = [];
+  let cursor = 0;
+  for (const mark of marks) {
+    if (mark.start < cursor || mark.end > textLength) continue;
+    runs.push({ kind: "text", start: cursor, end: mark.start });
+    runs.push({ kind: "mark", row: mark.row, start: mark.start, end: mark.end });
+    cursor = mark.end;
+  }
+  runs.push({ kind: "text", start: cursor, end: textLength });
+  return runs;
+}
+
+/**
+ * One text run of the hunt passage retyped: the new passage, and every mark
+ * moved by however much the text before it grew or shrank, so each still
+ * covers the same words.
+ */
+export function editHuntRun(
+  text: string,
+  picked: PickedSpans,
+  run: { start: number; end: number },
+  value: string,
+): { text: string; picked: PickedSpans } {
+  const delta = value.length - (run.end - run.start);
+  return {
+    text: text.slice(0, run.start) + value + text.slice(run.end),
+    picked: picked.map((span) =>
+      span && span.start >= run.end ? { start: span.start + delta, end: span.end + delta } : span,
+    ),
+  };
+}

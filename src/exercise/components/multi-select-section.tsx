@@ -1,6 +1,7 @@
 import { Check, CircleAlert } from "lucide-react";
 
 import { useI18n } from "../../context/I18nContext";
+import { EditableText, PoolAddOption, PoolOptionLabel, useExerciseEditor, usePoolEdit } from "./exercise-edit";
 import { cn } from "../../lib/utils";
 import type { ExerciseAnswer, ExerciseNode } from "../lib/exercises";
 import { hasOptionImages } from "../lib/option-images";
@@ -47,6 +48,10 @@ export function MultiSelectSection({
   mode?: "practice" | "result";
 }) {
   const { t } = useI18n();
+  const editor = useExerciseEditor();
+  // In edit mode a row holds editable text, which a <button> can't.
+  const pool = usePoolEdit();
+  const Row = pool ? "div" : "button";
   // One stem and one option pool, shared by every question in the section.
   const first = nodes[0];
   const options = first?.content.options ?? [];
@@ -90,14 +95,24 @@ export function MultiSelectSection({
   return (
     <div className="rounded-2xl border bg-card p-5 shadow-sm sm:p-6">
       <p className={cn(promptTextClass(promptDensity(prompt)), "text-foreground")}>
-        {prompt}
+        {/* The group's one stem: every question in it stores a copy. */}
+        <EditableText
+          value={prompt}
+          label={t("exercise.edit.prompt", "Question")}
+          onChange={
+            editor &&
+            ((next) => {
+              for (const node of nodes) editor.onNodeChange(node.id, { ...node, content: { ...node.content, prompt: next } });
+            })
+          }
+        />
       </p>
       {mode !== "result" ? (
         <p className="mt-1.5 text-xs font-bold text-muted-foreground">
           {t("exercise.renderer.chooseSelected", "Choose {n} · {selected} selected", { n: nodes.length, selected: chosen.size })}
         </p>
       ) : null}
-      <div className={cn("mt-5 grid gap-2.5", pictured && PICTURED_ROW)}>
+      <div className={cn("mt-5 grid w-full grid-cols-1 auto-rows-fr gap-2.5", pictured && PICTURED_ROW)}>
         {options.map((option, index) => {
           const isSelected = chosen.has(option.id);
           const isCorrect = mode === "result" && correct.has(option.id);
@@ -109,15 +124,26 @@ export function MultiSelectSection({
             // inside it AND the browser re-dispatches that click, which bubbles
             // back to the label's own onClick: `toggle` would run twice per click
             // and every selection undo itself. One control, one click, one toggle.
-            <button
+            <Row
               key={option.id}
-              type="button"
+              type={pool ? undefined : "button"}
               role="checkbox"
+              tabIndex={pool ? 0 : undefined}
               aria-checked={isSelected}
-              disabled={mode !== "practice"}
+              disabled={pool ? undefined : mode !== "practice"}
               onClick={() => toggle(option.id)}
+              onKeyDown={
+                pool
+                  ? (event: { key: string; preventDefault: () => void }) => {
+                      if (event.key === " " || event.key === "Enter") {
+                        event.preventDefault();
+                        toggle(option.id);
+                      }
+                    }
+                  : undefined
+              }
               className={cn(
-                "flex w-full gap-3 rounded-sm border-2 px-4 py-[13px] text-[15px] font-semibold transition-all duration-200 ease-bounce",
+                "flex w-full min-w-0 gap-3 rounded-sm border-2 px-4 py-[13px] text-[15px] font-semibold transition-all duration-200 ease-bounce",
                 pictured ? PICTURED_TILE : "items-center text-left",
                 mode === "practice" && "cursor-pointer",
                 mode === "practice" && !pictured && "hover:translate-x-1",
@@ -137,11 +163,17 @@ export function MultiSelectSection({
               >
                 {letters[index]}
               </span>
-              <span className={cn("flex flex-1 flex-col gap-2", pictured ? "items-center" : "items-start")}>
+              <span className={cn("flex min-w-0 flex-1 flex-col gap-2", pictured ? "items-center" : "items-start")}>
                 {option.image_url ? (
                   <OptionImage url={option.image_url} alt={option.label || t("exercise.renderer.optionPicture", "Picture for option {letter}", { letter: letters[index] })} />
                 ) : null}
-                {option.label ? <span>{option.label}</span> : null}
+                {pool ? (
+                  <span>
+                    <PoolOptionLabel id={option.id} label={option.label} letter={letters[index]} />
+                  </span>
+                ) : option.label ? (
+                  <span>{option.label}</span>
+                ) : null}
               </span>
               {isCorrect ? (
                 <span className="flex items-center gap-1 text-xs font-extrabold text-success">
@@ -150,10 +182,13 @@ export function MultiSelectSection({
                 </span>
               ) : null}
               {isWrongPick ? <CircleAlert className="size-4 text-error" /> : null}
-            </button>
+            </Row>
           );
         })}
+        {/* Same width and height as the option rows: it is a cell of their grid. */}
+        {!pictured ? <PoolAddOption className="h-full rounded-sm px-4 py-[13px] text-[15px]" chipClassName="size-7 rounded-[9px]" /> : null}
       </div>
+      {pictured ? <div className="mt-2"><PoolAddOption /></div> : null}
     </div>
   );
 }

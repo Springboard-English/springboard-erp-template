@@ -11,12 +11,15 @@ import {
   spanText,
 } from "../lib/error-correction";
 import {
+  editHuntRun,
   huntMarks,
+  huntRuns,
   initialActiveRow,
   labelsByParagraphOffset,
+  markFromParagraph,
   pickParagraphWord,
 } from "../lib/error-hunt";
-import { joinPassage } from "../lib/passage";
+import { joinPassage, typedParagraphs } from "../lib/passage";
 import {
   answerRecord,
   type ExerciseAnswer,
@@ -24,6 +27,8 @@ import {
 } from "../lib/exercises";
 import { EXAM_FIELD_PROPS } from "../lib/exam-field";
 import { ClickableSentence, type HighlightRun } from "./clickable-sentence";
+import { EditableText, useExerciseEditor } from "./exercise-edit";
+import { Button } from "../../components/ui/button";
 
 // A paragraph-wide error hunt as the STUDENT sits it: "the passage below
 // contains FIVE mistakes — underline them and write their correct forms."
@@ -42,7 +47,9 @@ import { ClickableSentence, type HighlightRun } from "./clickable-sentence";
 
 export type ErrorHuntNode = Extract<ExerciseNode, { type: "error-correction" }>;
 
+/** The hunt as a student sits it; in edit mode its text is also typed into. */
 export function ErrorHuntSection({
+  editKey,
   passage,
   nodes,
   numbers,
@@ -58,8 +65,18 @@ export function ErrorHuntSection({
   answers: Record<string, ExerciseAnswer>;
   onChange: (nodeId: string, value: ExerciseAnswer) => void;
   mode?: "practice" | "result";
+  /**
+   * The section's key in edit mode: the text between the marked mistakes is
+   * typed into in place, and a row's number arms clicking words to mark them.
+   */
+  editKey?: string;
 }) {
   const { t } = useI18n();
+  const editor = useExerciseEditor();
+  const editing = Boolean(editor && editKey && mode === "practice");
+  // Edit mode: a row's number was pressed, so the passage takes clicks on words
+  // (as a student's does) rather than typing, until Done.
+  const [marking, setMarking] = useState(false);
   const text = joinPassage(passage);
   // The row the student chose. Null until they choose one, which reads as "the
   // first row still missing a word".
@@ -128,28 +145,104 @@ export function ErrorHuntSection({
     setActiveRowId(nodes[nextActive]?.id ?? null);
   };
 
+  /**
+   * One stretch of unmarked text retyped. Every mark after it moves with the
+   * text, and each question's stored offset and sentence follow, so marked
+   * mistakes keep pointing at their words.
+   */
+  const retype = (run: { start: number; end: number }, value: string) => {
+    if (!editor || !editKey) return;
+    const next = editHuntRun(text, pickedSpans, run, value);
+    editor.onPassageChange(editKey, typedParagraphs(next.text));
+    nodes.forEach((node, row) => {
+      const span = next.picked[row];
+      if (!span) return;
+      const sentence = markFromParagraph(next.text, span)?.sentence ?? node.content.sentence;
+      if (span.start === node.content.error_offset && sentence === node.content.sentence) return;
+      editor.onNodeChange(node.id, {
+        ...node,
+        content: { ...node.content, error_offset: span.start, error: spanText(next.text, span), sentence },
+      });
+    });
+  };
+  const runsToType = editing && !marking ? huntRuns(text.length, pickedSpans) : null;
+  const markRow = (row: number) => {
+    setActiveRowId(nodes[row]?.id ?? null);
+    setMarking(true);
+  };
+
   return (
     <div className="space-y-4">
       <div className="rounded-2xl border-2 bg-card p-4 shadow-sm sm:p-5">
-        <p className="mb-3 text-[11px] font-extrabold text-muted-foreground">
-          {mode === "practice" ? (
-            <>
-              {t("exercise.renderer.huntInstruction", "Click the {n} mistakes in the passage — click the next word to add it to a mistake · marking", { n: nodes.length })}{" "}
-              <span className="text-lav-700">{numbers[activeIndex]}</span>
-            </>
-          ) : (
-            t("exercise.renderer.thePassage", "The passage")
-          )}
-        </p>
-        <ClickableSentence
-          sentence={text}
-          selected={null}
-          disabled={mode !== "practice"}
-          onSelect={pickWord}
-          className="text-[15px] leading-8"
-          wordBadge={(paragraphOffset) => labels.get(paragraphOffset)}
-          runs={runs}
-        />
+        {editing ? (
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <p className="text-[11px] font-extrabold text-muted-foreground">
+              {marking
+                ? t("exercise.edit.huntMarking", "Click the words of mistake {n} in the passage.", { n: numbers[activeIndex] })
+                : t("exercise.edit.huntInline", "Type in the passage to change it. Click a mistake, or its number below, to mark its words.")}
+            </p>
+            {marking ? (
+              <Button type="button" size="sm" onClick={() => setMarking(false)}>
+                {t("exercise.edit.done", "Done")}
+              </Button>
+            ) : null}
+          </div>
+        ) : null}
+        {/* Edit mode, not marking: the unmarked text typed in place, each
+            mistake a chip that arms marking its row. */}
+        {runsToType ? (
+          <p className="whitespace-pre-wrap text-base leading-8 text-foreground">
+            {runsToType.map((run, i) =>
+              run.kind === "text" ? (
+                <EditableText
+                  key={i}
+                  value={text.slice(run.start, run.end)}
+                  multiline
+                  label={t("exercise.edit.passageText", "Passage text")}
+                  // Between two marks an empty stretch prints nothing.
+                  placeholder={runsToType.length > 1 ? "" : undefined}
+                  onChange={(value) => retype(run, value)}
+                />
+              ) : (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => markRow(run.row)}
+                  aria-label={t("exercise.renderer.mistakeNo", "Mistake {n}", { n: numbers[run.row] })}
+                  className="rounded-md bg-lav-bg px-1 font-extrabold text-lav-700 box-decoration-clone hover:bg-lav-300"
+                >
+                  {text.slice(run.start, run.end)}
+                  <sup className="ml-0.5 inline-block rounded bg-lav-500 px-1 text-[10px] leading-4 font-extrabold text-white">
+                    {numbers[run.row]}
+                  </sup>
+                </button>
+              ),
+            )}
+          </p>
+        ) : null}
+        {editing ? null : (
+          <p className="mb-3 text-[11px] font-extrabold text-muted-foreground">
+            {mode === "practice" ? (
+              <>
+                {t("exercise.renderer.huntInstruction", "Click the {n} mistakes in the passage — click the next word to add it to a mistake · marking", { n: nodes.length })}{" "}
+                <span className="text-lav-700">{numbers[activeIndex]}</span>
+              </>
+            ) : (
+              t("exercise.renderer.thePassage", "The passage")
+            )}
+          </p>
+        )}
+        {runsToType ? null : (
+          <ClickableSentence
+            sentence={text}
+            selected={null}
+            disabled={mode !== "practice"}
+            onSelect={pickWord}
+            className="text-base leading-8"
+            wordBadge={(paragraphOffset) => labels.get(paragraphOffset)}
+            runs={runs}
+          />
+        )}
       </div>
 
       <div className="space-y-2">
@@ -171,7 +264,8 @@ export function ErrorHuntSection({
                 disabled={mode !== "practice"}
                 aria-pressed={isActive}
                 aria-label={t("exercise.renderer.mistakeNo", "Mistake {n}", { n: numbers[index] })}
-                onClick={() => setActiveRowId(node.id)}
+                // In edit mode the number arms marking that row's words.
+                onClick={() => (editing ? markRow(index) : setActiveRowId(node.id))}
                 className={cn(
                   "grid size-11 shrink-0 place-items-center rounded-lg text-[13px] font-extrabold transition-colors md:pointer-fine:size-9",
                   isActive

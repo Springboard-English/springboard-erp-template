@@ -219,12 +219,14 @@ describe("pageLayout", () => {
     expect(pageLayout(page, nodes).kind).toBe("jumbled-paragraph");
   });
 
-  it("keeps the shell narrow for the drag layouts", () => {
+  it("keeps the shell narrow for the drag layouts, even under a part passage", () => {
     // They draw their own text inline (the passage with its gaps, or the
-    // paragraphs themselves), so a side passage column would print it twice.
+    // paragraphs themselves) beside their pool, so no passage column sits
+    // beside them: the part's would squeeze the task into select mode.
     const nodes = [mcq("a"), mcq("b")];
+    const parent = stub({ kind: "part", appsheet_key: "p1", passage: ["Reading."] });
     for (const layout of ["gapped-text", "jumbled-paragraph"] as const) {
-      const section = stub({ info: { layout }, passage: ["A {gap} passage {gap}."] });
+      const section = stub({ info: { layout }, passage: ["A {gap} passage {gap}."], parent });
       const [page] = pagesOf(nodes, { a: section, b: section });
       expect(pageLayout(page, nodes).hasPassage).toBe(false);
     }

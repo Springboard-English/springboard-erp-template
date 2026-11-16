@@ -26,6 +26,7 @@ import { GripVertical } from "lucide-react";
 import { useI18n } from "../../context/I18nContext";
 import { touchHitArea } from "../../lib/touchTarget";
 import { cn } from "../../lib/utils";
+import { PoolAddOption, PoolOptionLabel, useExerciseEditor } from "./exercise-edit";
 import type { Translate } from "../i18n";
 
 // Assign N paragraphs to N slots, with the pool DEPLETING — a paragraph fills
@@ -136,7 +137,7 @@ function ItemCard({
         {item.letter}
       </span>
       <span className={cn("min-w-0 text-foreground", compact && "line-clamp-2")}>
-        {item.label}
+        <PoolOptionLabel id={item.id} label={item.label} letter={item.letter} />
       </span>
     </div>
   );
@@ -286,7 +287,10 @@ export function ParagraphDrop({
   slots.forEach((slotId, index) => {
     nameOf.set(slotId, slotNames?.[index] ?? t("exercise.renderer.slotName", "slot {n}", { n: index + 1 }));
   });
-  const pool = items.filter((item) => !slotOf.has(item.id));
+  // In the editor every paragraph stays in the list, placed or not, so each one
+  // can still be edited; a student's pool empties as the gaps fill.
+  const editing = Boolean(useExerciseEditor());
+  const pool = editing ? items : items.filter((item) => !slotOf.has(item.id));
 
   /**
    * One slot's choice, from the select. Same rule as a drop: a paragraph lives
@@ -460,6 +464,8 @@ function PoolArea({
         ) : null}
       </p>
       {children}
+      {/* Edit mode: a new paragraph joins the end of the list it adds to. */}
+      <PoolAddOption />
     </div>
   );
 }
@@ -507,7 +513,7 @@ function ReferenceList({
               {item.letter}
             </span>
             <span className="min-w-0 text-foreground">
-              {item.label}
+              <PoolOptionLabel id={item.id} label={item.label} letter={item.letter} />
               {/* Its own line, not trailing the prose: run into the end of a
                   paragraph it reads as part of the sentence. */}
               {placedIn ? (
@@ -519,6 +525,7 @@ function ReferenceList({
           </div>
         );
       })}
+      <PoolAddOption />
     </div>
   );
 }

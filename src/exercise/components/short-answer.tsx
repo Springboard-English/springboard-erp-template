@@ -6,6 +6,7 @@ import { promptDensity, promptTextClass } from "../lib/prompt-scale";
 import { EXAM_FIELD_PROPS } from "../lib/exam-field";
 
 import { Frame, type SubProps } from "./frame";
+import { EditableText, useNodeEdit } from "./exercise-edit";
 
 // A short answer: the question, then a place to write it.
 //
@@ -20,6 +21,7 @@ type ShortAnswerNode = Extract<ExerciseNode, { type: "short-answer" }>;
 
 export function ShortAnswer({ node, mode, value, onChange }: SubProps<ShortAnswerNode>) {
   const { t } = useI18n();
+  const edit = useNodeEdit(node);
   const answer = typeof value === "string" ? value : "";
   // Absent whenever the reader isn't allowed the key (the student-safe payload
   // drops it), so this can't be indexed blind.
@@ -37,7 +39,11 @@ export function ShortAnswer({ node, mode, value, onChange }: SubProps<ShortAnswe
           "text-foreground",
         )}
       >
-        {node.content.prompt}
+        <EditableText
+          value={node.content.prompt}
+          onChange={edit && ((next) => edit({ prompt: next }))}
+          label={t("exercise.edit.prompt", "Question")}
+        />
       </p>
       {/* Full width, because the answer is a phrase rather than one word — an
           input sized to its content would start narrower than anything it

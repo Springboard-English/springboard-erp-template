@@ -1,3 +1,6 @@
+import { useState } from "react";
+import { GripVertical } from "lucide-react";
+
 import { Input } from "../../components/ui/input";
 import { useI18n } from "../../context/I18nContext";
 import { cn } from "../../lib/utils";
@@ -12,6 +15,11 @@ import { optionLetters } from "../lib/option-letters";
 import { EXAM_FIELD_PROPS } from "../lib/exam-field";
 
 import { RootPick } from "./root-pick";
+import { EditableText, QuestionMenu, useExerciseEditor } from "./exercise-edit";
+import { Button } from "../../components/ui/button";
+import { gapOntoWord, gapPieces, moveGap, piecesText } from "../lib/gap-move";
+import { countGapTokens } from "../lib/gap-token";
+import { splitPassage } from "../lib/passage";
 
 // A run of gap-filling questions rendered as ONE cloze paragraph, with each
 // question's input dropped inline where its blank belongs.
@@ -239,7 +247,14 @@ export function ClozeSection({
   onChange,
   mode = "practice",
   rootBank = null,
+  editKey,
 }: {
+  /**
+   * The section's key in edit mode: its blanks then drag between words (or
+   * move with the arrow keys), and a blank then a word makes that word its
+   * answer. The edit goes to the editor's `onBlanksMove`.
+   */
+  editKey?: string;
   /** The section's cloze passage (paragraphs). Empty → reconstruct from before/after. */
   passage: string[] | null;
   nodes: ClozeNode[];
@@ -252,7 +267,109 @@ export function ClozeSection({
   rootBank?: string[] | null;
 }) {
   const { t } = useI18n();
-  const blank = (index: number) => {
+  const editor = useExerciseEditor();
+  const [dragging, setDragging] = useState<number | null>(null);
+  // A blank picked to take another word: the next word clicked becomes its answer.
+  const [armed, setArmed] = useState<number | null>(null);
+  const [over, setOver] = useState<number | null>(null);
+  // The passage's text is typed into only after "Edit passage".
+  const [textEditing, setTextEditing] = useState(false);
+  // The blank whose settings are open, anchored to its number.
+  const [menuFor, setMenuFor] = useState<number | null>(null);
+  const fullText = (passage ?? []).join("\n\n").trim();
+  const editing = Boolean(editor && editKey && countGapTokens(fullText) > 0);
+  const pieces = editing ? gapPieces(fullText) : [];
+  const words = pieces.map((piece, at) => (piece.kind === "word" ? at : -1)).filter((at) => at >= 0);
+  const ids = (order: number[]) => order.map((old) => nodes[old]?.id).filter((id): id is string => Boolean(id));
+  const move = (gap: number, beforeWord: number) => {
+    const result = moveGap(fullText, gap, beforeWord);
+    if (!result || !editor || !editKey) return;
+    editor.onBlanksMove(editKey, splitPassage(result.text) ?? [result.text], ids(result.order));
+  };
+  const take = (gap: number, wordPiece: number) => {
+    const node = nodes[gap];
+    if (!node || !editor || !editKey || isChoice(node)) return;
+    const accepted = node.content.accepted_answers ?? [];
+    const result = gapOntoWord(fullText, gap, wordPiece, accepted[0] ?? "");
+    if (!result) return;
+    editor.onBlanksMove(editKey, splitPassage(result.text) ?? [result.text], ids(result.order));
+    editor.onNodeChange(node.id, {
+      ...node,
+      content: { ...node.content, accepted_answers: [result.word, ...accepted.slice(1)] },
+    } as ExerciseNode);
+    setArmed(null);
+  };
+  // One word left or right of where the blank sits.
+  const nudge = (pieceAt: number, gap: number, direction: -1 | 1) => {
+    const nextWordAfter = words.find((at) => at > pieceAt);
+    const position = nextWordAfter === undefined ? words.length : words.indexOf(nextWordAfter);
+    const target = words[position + direction];
+    if (target !== undefined) move(gap, target);
+  };
+  /** A blank's number: a plain badge, or in edit mode the handle that moves it. */
+  const badge = (index: number, pieceAt?: number) =>
+    editing && pieceAt !== undefined ? (
+      <span className="relative inline-flex">
+      <button
+        type="button"
+        draggable
+        onDragStart={(event) => {
+          event.dataTransfer.setData("text/plain", String(index));
+          event.dataTransfer.effectAllowed = "move";
+          setDragging(index);
+        }}
+        onDragEnd={() => {
+          setDragging(null);
+          setOver(null);
+        }}
+        onClick={() => {
+          setArmed(null);
+          setMenuFor((current) => (current === index ? null : index));
+        }}
+        onKeyDown={(event) => {
+          if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+            event.preventDefault();
+            nudge(pieceAt, index, event.key === "ArrowLeft" ? -1 : 1);
+          }
+        }}
+        aria-label={t("exercise.edit.blank", "Blank {n}, drag to move", { n: numbers[index] ?? index + 1 })}
+        aria-expanded={menuFor === index}
+        className={cn(
+          "mr-1 inline-flex h-6 shrink-0 cursor-grab items-center gap-0.5 rounded-full px-1.5 text-[10px] font-extrabold active:cursor-grabbing",
+          armed === index ? "bg-rose-600 text-white" : "bg-rose-100 text-rose-700 hover:bg-rose-200",
+        )}
+      >
+        <GripVertical className="size-3" aria-hidden />
+        {numbers[index]}
+      </button>
+      {menuFor === index && nodes[index] ? (
+        <QuestionMenu
+          node={nodes[index]}
+          onClose={() => setMenuFor(null)}
+          extra={
+            isChoice(nodes[index]) ? null : (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setMenuFor(null);
+                  setArmed(index);
+                }}
+              >
+                {t("exercise.edit.pickWord.action", "Make another word this blank")}
+              </Button>
+            )
+          }
+        />
+      ) : null}
+      </span>
+    ) : (
+      <span className="mr-1 grid size-5 shrink-0 place-items-center rounded-full bg-rose-100 text-[10px] font-extrabold text-rose-700">
+        {numbers[index]}
+      </span>
+    );
+  const blank = (index: number, pieceAt?: number) => {
     const node = nodes[index];
     const raw = answers[node.id];
     const { root, word: value } = rootedAnswer(raw);
@@ -266,9 +383,7 @@ export function ClozeSection({
       const isCorrect = mode === "result" && value === chosen;
       return (
         <span className="mx-0.5 inline-flex items-center align-middle">
-          <span className="mr-1 grid size-5 shrink-0 place-items-center rounded-full bg-rose-100 text-[10px] font-extrabold text-rose-700">
-            {numbers[index]}
-          </span>
+          {badge(index, pieceAt)}
           <select
             value={value}
             disabled={mode === "result"}
@@ -303,9 +418,7 @@ export function ClozeSection({
       onChange(node.id, rootBank ? rootedValue(nextRoot, nextWord) : nextWord);
     return (
       <span className="mx-0.5 inline-flex items-center align-middle">
-        <span className="mr-1 grid size-5 shrink-0 place-items-center rounded-full bg-rose-100 text-[10px] font-extrabold text-rose-700">
-          {numbers[index]}
-        </span>
+        {badge(index, pieceAt)}
         {rootBank ? (
           <RootPick
             bank={rootBank}
@@ -347,7 +460,7 @@ export function ClozeSection({
 
   const text = (passage ?? []).join("\n\n").trim();
 
-  const wrapper = "rounded-2xl border bg-card p-5 text-[15px] leading-[2.4] text-foreground shadow-sm sm:p-7";
+  const wrapper = "rounded-2xl border bg-card p-5 text-base leading-[2.4] text-foreground shadow-sm sm:p-7";
 
   // No passage: reconstruct the sentence from each gap's before/after.
   if (!text) {
@@ -367,6 +480,82 @@ export function ClozeSection({
             {afterOf(node) ? <> {afterOf(node)}</> : null}{" "}
           </span>
         ))}
+      </div>
+    );
+  }
+
+  if (editing) {
+    // Read-only by default: blanks drag between words, and a blank's number
+    // opens its settings. "Edit passage" makes the text between the blanks
+    // typed into in place; "Done" goes back.
+    const canonical = piecesText(pieces);
+    const runs = canonical.split("{gap}");
+    const changeRun = (run: number, value: string) => {
+      if (!editor || !editKey) return;
+      const next = runs.map((current, i) => (i === run ? value : current)).join("{gap}");
+      editor.onPassageChange(editKey, splitPassage(next) ?? [next]);
+    };
+    const missing = (key: number) => (
+      // A token with no question to fill it (more blanks than questions).
+      <span key={key} className="rounded-sm border-2 border-dashed border-error px-2 text-xs font-bold text-error">{"{gap}"}</span>
+    );
+    return (
+      <div className="space-y-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-[11px] font-extrabold text-muted-foreground">
+            {textEditing
+              ? t("exercise.edit.typePassage", "Type in the passage to change it. Enter starts a new paragraph.")
+              : armed !== null
+                ? t("exercise.edit.pickWord", "Click the word that blank {n} should be. Its old answer goes back into the text.", { n: numbers[armed] ?? armed + 1 })
+                : t("exercise.edit.dragBlanksMenu", "Drag a blank's number before another word to move it, or use the arrow keys. Click the number for its settings.")}
+          </p>
+          <Button type="button" size="sm" variant={textEditing ? "default" : "outline"} onClick={() => setTextEditing((value) => !value)}>
+            {textEditing ? t("exercise.edit.done", "Done") : t("exercise.edit.editPassage", "Edit passage")}
+          </Button>
+        </div>
+        <div className={cn(wrapper, "whitespace-pre-wrap")}>
+          {textEditing
+            ? runs.map((run, i) => (
+                <span key={i}>
+                  <EditableText
+                    value={run}
+                    multiline
+                    label={t("exercise.edit.passageText", "Passage text")}
+                    onChange={(value) => changeRun(i, value)}
+                  />
+                  {i < runs.length - 1 ? (nodes[i] ? <span>{blank(i)}</span> : missing(i)) : null}
+                </span>
+              ))
+            : pieces.map((piece, at) => {
+                if (piece.kind === "space") return <span key={at}>{piece.text}</span>;
+                if (piece.kind === "gap") return nodes[piece.index] ? <span key={at}>{blank(piece.index, at)}</span> : missing(at);
+                return (
+                  <span
+                    key={at}
+                    onDragOver={(event) => {
+                      if (dragging === null) return;
+                      event.preventDefault();
+                      setOver(at);
+                    }}
+                    onDragLeave={() => setOver((current) => (current === at ? null : current))}
+                    onDrop={(event) => {
+                      event.preventDefault();
+                      if (dragging !== null) move(dragging, at);
+                      setDragging(null);
+                      setOver(null);
+                    }}
+                    onClick={() => (armed !== null ? take(armed, at) : undefined)}
+                    className={cn(
+                      "rounded-sm",
+                      over === at && "bg-rose-50 shadow-[inset_3px_0_0_var(--color-rose-500)]",
+                      armed !== null && "cursor-pointer hover:bg-rose-100",
+                    )}
+                  >
+                    {piece.text}
+                  </span>
+                );
+              })}
+        </div>
       </div>
     );
   }
@@ -391,7 +580,7 @@ export function ClozeSection({
           <p className="mb-3 text-[11px] font-extrabold text-muted-foreground">
             {t("exercise.renderer.alsoComplete", "Also complete")}
           </p>
-          <div className="space-y-3 text-[15px] leading-9 text-foreground">
+          <div className="space-y-3 text-base leading-9 text-foreground">
             {unplaced.map((index) => (
               <div key={nodes[index].id}>
                 {beforeOf(nodes[index]) ? <>{beforeOf(nodes[index])} </> : null}

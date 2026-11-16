@@ -4,9 +4,10 @@ import {
   type DropItem,
 } from "./paragraph-drop";
 import { useI18n } from "../../context/I18nContext";
-import { splitPassageOnGaps } from "../lib/gap-token";
+import { joinGapMarkerSplit, splitPassageOnGapMarkers } from "../lib/gap-token";
 import type { ExerciseAnswer, ExerciseNode } from "../lib/exercises";
 import { optionLetters } from "../lib/option-letters";
+import { EditableText } from "./exercise-edit";
 
 // A gapped-text section: a passage with whole paragraphs removed, refilled from
 // a lettered pool by DRAGGING each paragraph into its gap.
@@ -29,7 +30,13 @@ export function GappedTextSection({
   answers,
   onChange,
   mode = "practice",
+  onTextChange,
 }: {
+  /**
+   * Edit mode: the text between the gaps is typed in place, and the whole
+   * passage, its gap markers kept, comes back here.
+   */
+  onTextChange?: (text: string) => void;
   /** The passage with its gap markers. */
   passage: string[] | null;
   nodes: GappedChoiceNode[];
@@ -74,7 +81,23 @@ export function GappedTextSection({
   // accounts for exactly this section's gaps. When none does — an import with no
   // markers at all — the fallback still stands: the passage, then a numbered
   // slot per gap. Draggable either way, just without the text woven around them.
-  const chunks = text ? splitPassageOnGaps(text, nodes.length) : null;
+  const split = text ? splitPassageOnGapMarkers(text, nodes.length) : null;
+  const chunks = split?.chunks ?? null;
+  const chunkLabel = t("exercise.edit.passageText", "Passage text");
+  /** One chunk as printed, or typed into in edit mode. */
+  const chunkText = (index: number, chunk: string) =>
+    onTextChange && split ? (
+      <EditableText
+        value={chunk}
+        multiline
+        label={chunkLabel}
+        onChange={(value) =>
+          onTextChange(joinGapMarkerSplit({ ...split, chunks: split.chunks.map((c, at) => (at === index ? value : c)) }))
+        }
+      />
+    ) : (
+      chunk
+    );
 
   // `placeholder` doubles as the select's empty option in select mode, so the
   // instruction has to match the control the student is actually looking at.
@@ -110,11 +133,11 @@ export function GappedTextSection({
             ? t("exercise.renderer.choosePlaceholder", "choose…")
             : t("exercise.renderer.dropParagraph", "drop a paragraph");
         return (
-          <div className="rounded-2xl border bg-card p-5 text-[15px] leading-8 text-foreground shadow-sm sm:p-6">
+          <div className="rounded-2xl border bg-card p-5 text-base leading-8 text-foreground shadow-sm sm:p-6">
             {chunks ? (
               chunks.map((chunk, index) => (
                 <span key={index}>
-                  <span className="whitespace-pre-wrap">{chunk}</span>
+                  <span className="whitespace-pre-wrap">{chunkText(index, chunk)}</span>
                   {index < nodes.length
                     ? slot(nodes[index].id, gapSlot(index, placeholder))
                     : null}
@@ -122,7 +145,11 @@ export function GappedTextSection({
               ))
             ) : (
               <div className="space-y-3">
-                {text ? (
+                {onTextChange ? (
+                  <p className="whitespace-pre-wrap text-muted-foreground">
+                    <EditableText value={text} multiline label={chunkLabel} onChange={onTextChange} />
+                  </p>
+                ) : text ? (
                   <p className="whitespace-pre-wrap text-muted-foreground">{text}</p>
                 ) : null}
                 {nodes.map((node, index) => (
