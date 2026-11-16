@@ -57,11 +57,9 @@ import { countGapTokens } from "../lib/gap-token";
 // tested; this is only their presentation.
 
 /**
- * The section's own words, in full, at the top of the questions column.
- *
- * Both callers lift the heading into the top bar, which holds the instruction to
- * ONE truncated line — and a paper puts the rules a student is marked by there:
- * "NO MORE THAN TWO WORDS", "Write T, F or NG". This shows them in full.
+ * The section's passage title and its own text, at the top of the questions
+ * column, where the layout leaves them nowhere else. The instruction lives in
+ * the runner heading's drop-down (the top bar shows its first line).
  *
  * `ownsText` is for a layout that draws the section's passage itself (cloze,
  * gapped text, error hunt, jumbled): the side column then holds the PART's
@@ -78,17 +76,13 @@ function SectionLead({
   showPassage?: boolean;
 }) {
   const section = stub?.kind === "section" ? stub : null;
-  const instruction = section?.instruction?.trim() ?? "";
   const title = ownsText ? (section?.passage_title?.trim() ?? "") : "";
   const paragraphs = showPassage ? (section?.passage ?? []) : [];
-  if (!instruction && !title && paragraphs.length === 0) return null;
+  // The section's instruction is not repeated here: it is read (and, in the
+  // editor, edited) in the runner heading's drop-down, which shows its first line.
+  if (!title && paragraphs.length === 0) return null;
   return (
     <div className="mb-5 space-y-3">
-      {instruction ? (
-        <p className="whitespace-pre-wrap text-sm font-bold leading-6 text-foreground">
-          {instruction}
-        </p>
-      ) : null}
       {title || paragraphs.length ? (
         <div className="overflow-hidden rounded-2xl border bg-card shadow-sm">
           {title ? (

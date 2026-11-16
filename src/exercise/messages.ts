@@ -135,6 +135,8 @@ export const EXERCISE_VIETNAMESE_MESSAGES: Record<string, string> = {
   "exercise.edit.after": "Phần sau chỗ trống",
   "exercise.edit.givenWord": "Từ cho sẵn",
   "exercise.edit.sentence": "Câu",
+  "exercise.questionNav.title": "Câu hỏi",
+  "exercise.questionNav.close": "Đóng",
   "exercise.edit.pickWord": "Bấm vào từ sẽ là đáp án của chỗ trống {n}. Đáp án cũ được trả lại vào đoạn văn.",
   "exercise.edit.typeFixed": "Câu đã lưu giữ nguyên loại. Thêm câu mới nếu cần loại khác.",
   "exercise.edit.skill": "Kỹ năng",

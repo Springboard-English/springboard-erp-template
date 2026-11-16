@@ -1,4 +1,5 @@
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { LayoutGrid } from "lucide-react";
 
 import { useI18n } from "../../context/I18nContext";
@@ -21,7 +22,13 @@ export function QuestionNav({
   onJump,
   open,
   onOpenChange,
+  panel = false,
+  actions,
 }: {
+  /** Opens as a side panel down the left edge instead of a palette above the footer. */
+  panel?: boolean;
+  /** Extra controls under the numbers (the editor's new question, section and part). */
+  actions?: ReactNode;
   test: SpringboardTest;
   answers: Record<string, ExerciseAnswer>;
   currentIndex: number;
@@ -33,7 +40,14 @@ export function QuestionNav({
   const anchor = useExerciseTourAnchor("questionList");
   const setOpen = onOpenChange;
   const rootRef = useRef<HTMLDivElement>(null);
-  useDismissOutside(rootRef, open, () => setOpen(false));
+  useDismissOutside(rootRef, open && !panel, () => setOpen(false));
+  // The side panel closes on Escape too.
+  useEffect(() => {
+    if (!open || !panel) return;
+    const onKey = (event: KeyboardEvent) => (event.key === "Escape" ? setOpen(false) : undefined);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, panel, setOpen]);
 
   const unanswered = useMemo(
     () => new Set(unansweredNodeIds(test, answers)),
@@ -45,20 +59,25 @@ export function QuestionNav({
   const width = String(test.nodes.length).length;
   const pad = (n: number) => String(n).padStart(width, "0");
 
-  // A one-question test needs no navigator (pagination handles it).
-  if (test.nodes.length < 2) return null;
+  // A one-question test needs no navigator (pagination handles it), unless it has actions.
+  if (test.nodes.length < 2 && !actions) return null;
 
-  return (
-    <div ref={rootRef} className="relative">
-      {open ? (
-        // The palette floats above the footer. A press outside it, or Escape,
-        // closes it without swallowing that press — see `useDismissOutside`
-        // for why there is no backdrop.
-        <>
-          <div className="absolute bottom-full left-1/2 z-10 mb-3 w-[min(90vw,28rem)] -translate-x-1/2 rounded-2xl border-2 border-border bg-card p-3 shadow-xl">
+  const palette = (
+          <div
+            className={cn(
+              panel
+                ? "fixed inset-y-0 left-0 z-[60] flex w-[min(90vw,24rem)] flex-col overflow-y-auto border-r-2 border-border bg-card p-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))] shadow-xl"
+                : "absolute bottom-full left-1/2 z-10 mb-3 w-[min(90vw,28rem)] -translate-x-1/2 rounded-2xl border-2 border-border bg-card p-3 shadow-xl",
+            )}
+          >
+            {panel ? (
+              <p className="mb-3 text-sm font-extrabold text-foreground">
+                {t("exercise.questionNav.title", "Questions")}
+              </p>
+            ) : null}
             {/* Six across on a phone and eight on a touch tablet keep each chip at
                 least 44px; the list scrolls so a long paper stays on screen. */}
-            <div className="-m-1 grid max-h-[50dvh] grid-cols-6 gap-1.5 overflow-y-auto p-1 sm:grid-cols-10 sm:gap-2 sm:pointer-coarse:grid-cols-8">
+            <div className={cn("-m-1 grid grid-cols-6 gap-1.5 overflow-y-auto p-1", panel ? "sm:gap-2" : "max-h-[50dvh] sm:grid-cols-10 sm:gap-2 sm:pointer-coarse:grid-cols-8")}>
               {test.nodes.map((node, index) => {
                 const isCurrent = index === currentIndex;
                 const isAnswered = !unanswered.has(node.id);
@@ -95,9 +114,34 @@ export function QuestionNav({
               <span className="inline-flex items-center gap-1.5"><span className="size-3 rounded bg-mint-bg" />{t("exercise.questionNav.answered", "Answered")}</span>
               <span className="inline-flex items-center gap-1.5"><span className="size-3 rounded border-2 border-dashed border-border" />{t("exercise.questionNav.blank", "Blank")}</span>
             </div>
+            {actions ? <div className="mt-3 flex flex-col gap-2 border-t pt-3">{actions}</div> : null}
           </div>
-        </>
+  );
+
+  return (
+    <div ref={rootRef} className="relative">
+      {open && !panel ? (
+        // The palette floats above the footer. A press outside it, or Escape,
+        // closes it without swallowing that press — see `useDismissOutside`
+        // for why there is no backdrop.
+        palette
       ) : null}
+      {open && panel
+        ? // A side panel is portalled so a transformed footer can't trap it,
+          // with a backdrop that closes it.
+          createPortal(
+            <>
+              <button
+                type="button"
+                aria-label={t("exercise.questionNav.close", "Close")}
+                className="fixed inset-0 z-[59] cursor-default bg-black/30"
+                onClick={() => setOpen(false)}
+              />
+              {palette}
+            </>,
+            document.body,
+          )
+        : null}
 
       <button
         type="button"
