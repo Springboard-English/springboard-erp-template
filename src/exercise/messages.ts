@@ -47,6 +47,7 @@ export const EXERCISE_VIETNAMESE_MESSAGES: Record<string, string> = {
   "exercise.speaking.timeUp": "Đã hết giờ nên không thể bắt đầu bản ghi âm mới.",
   "exercise.speaking.handedInAt": "Đã nộp bản ghi âm lúc {time}.",
   "exercise.speaking.handedIn": "Bản ghi âm của em đã được nộp. Bản ghi mới sẽ thay thế bản này.",
+  "exercise.speaking.handedInClosed": "Bản ghi âm của em đã được nộp.",
   "exercise.speaking.noMic": "Trang này không dùng được micro. Hãy cho phép trong trình duyệt rồi thử lại.",
   "exercise.speaking.noDevice": "Không tìm thấy micro. Hãy kết nối micro rồi thử lại.",
   "exercise.speaking.failed": "Không nộp được bản ghi âm. Hãy thử lại.",

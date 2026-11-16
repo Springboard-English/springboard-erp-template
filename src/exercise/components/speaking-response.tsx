@@ -170,7 +170,12 @@ export function SpeakingResponse({ node, mode, value, onChange }: SubProps<Speak
           ? t("exercise.speaking.starting", "Getting ready to record…")
           : phase === "sending"
             ? t("exercise.speaking.sending", "Handing in your recording…")
-            : stage === "over"
+            : (stage === "over" || files.canStartRecording === false) && handedIn
+              ? // Closed with a take in: say it went in, not only that time is up.
+                file?.handedInAt
+                ? t("exercise.speaking.handedInAt", "Recording handed in {time}.", { time: formatStamp(file.handedInAt) })
+                : t("exercise.speaking.handedInClosed", "Your recording is handed in.")
+              : stage === "over"
               ? t("exercise.speaking.partOver", "Time is up for this part.")
               : files.canStartRecording === false
                 ? t("exercise.speaking.timeUp", "Time is up, so no new recording can start.")
