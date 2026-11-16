@@ -493,7 +493,11 @@ export function ClozeSection({
         <div className={cn(wrapper, "whitespace-pre-wrap")}>
           {pieces.map((piece, at) => {
             if (piece.kind === "space") return <span key={at}>{piece.text}</span>;
-            if (piece.kind === "gap") return <span key={at}>{blank(piece.index, at)}</span>;
+            if (piece.kind === "gap") {
+              // A token with no question to fill it (more blanks than questions).
+              if (!nodes[piece.index]) return <span key={at} className="rounded-sm border-2 border-dashed border-error px-2 text-xs font-bold text-error">{"{gap}"}</span>;
+              return <span key={at}>{blank(piece.index, at)}</span>;
+            }
             return (
               <span
                 key={at}
