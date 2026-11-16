@@ -591,19 +591,20 @@ export function OptionImageControls({
  * edit mode: the type is a searchable list with a line on each (only while the
  * host allows a retype), the skill a select, the marks a number.
  */
-export function QuestionMetaControls({ node }: { node: ExerciseNode }) {
+export function QuestionMetaControls({ node, stacked = false }: { node: ExerciseNode; stacked?: boolean }) {
   const { t } = useI18n();
   const editor = useExerciseEditor();
   if (!editor) return null;
   const meta = editor.questionMeta?.(node) ?? { points: node.points ?? null };
   const typeId = `question-type-${node.id}`;
   return (
-    <span className="inline-flex flex-wrap items-center gap-1.5">
+    // Stacked on a card, so the three take a narrow column and the question keeps its width.
+    <span className={cn("inline-flex gap-1.5", stacked ? "flex-col items-stretch" : "flex-wrap items-center")}>
       {meta.retype ? (
         <SearchableSelect
           id={typeId}
           value={node.type}
-          className="h-8 w-52 text-xs"
+          className={cn("h-8 text-xs", stacked ? "w-44" : "w-52")}
           options={questionTypeSchema.options.map((type) => ({
             value: type,
             label: valueLabel(t, QUESTION_TYPE_LABELS[type]),

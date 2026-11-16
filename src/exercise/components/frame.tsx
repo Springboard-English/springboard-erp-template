@@ -46,9 +46,9 @@ export function Frame({ node, children, mode }: { node: ExerciseNode; children: 
   );
   // In edit mode the marks chip is the type, skill and marks, editable.
   const points = editor ? (
-    <div className="flex flex-wrap items-center gap-1.5">
-      <QuestionMetaControls node={node} />
-      {tools}
+    <div className="flex shrink-0 items-start gap-1.5">
+      <QuestionMetaControls node={node} stacked />
+      <div className="flex flex-col items-center gap-1.5">{tools}</div>
     </div>
   ) : (
     badge
