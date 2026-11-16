@@ -17,9 +17,9 @@ import { EXAM_FIELD_PROPS } from "../lib/exam-field";
 import { RootPick } from "./root-pick";
 import { EditableText, QuestionMenu, useExerciseEditor } from "./exercise-edit";
 import { Button } from "../../components/ui/button";
-import { gapOntoWord, gapPieces, moveGap, piecesText, wordAtRunOffset } from "../lib/gap-move";
+import { gapOntoWord, gapPieces, moveGap, piecesText } from "../lib/gap-move";
 import { countGapTokens } from "../lib/gap-token";
-import { typedParagraphs } from "../lib/passage";
+import { splitPassage } from "../lib/passage";
 
 // A run of gap-filling questions rendered as ONE cloze paragraph, with each
 // question's input dropped inline where its blank belongs.
@@ -239,36 +239,6 @@ function buildCloze(
   return buildByAnchors(passage, nodes);
 }
 
-/**
- * Where a point falls in an editable span's text, as a character offset into
- * it: the caret a drop or click there would put down. Null when the browser
- * can't say or the point is outside the span.
- */
-function caretOffsetIn(element: HTMLElement, x: number, y: number): number | null {
-  const doc = element.ownerDocument as Document & {
-    caretPositionFromPoint?: (x: number, y: number) => { offsetNode: Node; offset: number } | null;
-    caretRangeFromPoint?: (x: number, y: number) => Range | null;
-  };
-  let node: Node | null = null;
-  let offset = 0;
-  if (doc.caretPositionFromPoint) {
-    const position = doc.caretPositionFromPoint(x, y);
-    if (position) ({ offsetNode: node, offset } = position);
-  } else if (doc.caretRangeFromPoint) {
-    const range = doc.caretRangeFromPoint(x, y);
-    if (range) {
-      node = range.startContainer;
-      offset = range.startOffset;
-    }
-  }
-  if (!node || !element.contains(node)) return null;
-  const range = doc.createRange();
-  range.setStart(element, 0);
-  range.setEnd(node, offset);
-  return range.toString().length;
-}
-
-/** A run of blanks drawn as one cloze passage; see the notes above. */
 export function ClozeSection({
   passage,
   nodes,
@@ -302,6 +272,8 @@ export function ClozeSection({
   // A blank picked to take another word: the next word clicked becomes its answer.
   const [armed, setArmed] = useState<number | null>(null);
   const [over, setOver] = useState<number | null>(null);
+  // The passage's text is typed into only after "Edit passage".
+  const [textEditing, setTextEditing] = useState(false);
   // The blank whose settings are open, anchored to its number.
   const [menuFor, setMenuFor] = useState<number | null>(null);
   const fullText = (passage ?? []).join("\n\n").trim();
@@ -312,7 +284,7 @@ export function ClozeSection({
   const move = (gap: number, beforeWord: number) => {
     const result = moveGap(fullText, gap, beforeWord);
     if (!result || !editor || !editKey) return;
-    editor.onBlanksMove(editKey, typedParagraphs(result.text), ids(result.order));
+    editor.onBlanksMove(editKey, splitPassage(result.text) ?? [result.text], ids(result.order));
   };
   const take = (gap: number, wordPiece: number) => {
     const node = nodes[gap];
@@ -320,7 +292,7 @@ export function ClozeSection({
     const accepted = node.content.accepted_answers ?? [];
     const result = gapOntoWord(fullText, gap, wordPiece, accepted[0] ?? "");
     if (!result) return;
-    editor.onBlanksMove(editKey, typedParagraphs(result.text), ids(result.order));
+    editor.onBlanksMove(editKey, splitPassage(result.text) ?? [result.text], ids(result.order));
     editor.onNodeChange(node.id, {
       ...node,
       content: { ...node.content, accepted_answers: [result.word, ...accepted.slice(1)] },
@@ -513,22 +485,15 @@ export function ClozeSection({
   }
 
   if (editing) {
-    // The text between the blanks is typed into in place, and the blanks stay
-    // their controls: a blank's number drags it before another word (dropped
-    // on the typed text, where the caret lands), the arrow keys nudge it, and
-    // a click opens its settings.
+    // Read-only by default: blanks drag between words, and a blank's number
+    // opens its settings. "Edit passage" makes the text between the blanks
+    // typed into in place; "Done" goes back.
     const canonical = piecesText(pieces);
     const runs = canonical.split("{gap}");
-    const gapAt = new Map<number, number>();
-    pieces.forEach((piece, at) => (piece.kind === "gap" ? gapAt.set(piece.index, at) : undefined));
     const changeRun = (run: number, value: string) => {
       if (!editor || !editKey) return;
       const next = runs.map((current, i) => (i === run ? value : current)).join("{gap}");
-      editor.onPassageChange(editKey, typedParagraphs(next));
-    };
-    const wordAt = (run: number, event: { currentTarget: HTMLElement; clientX: number; clientY: number }, intent: "on" | "before") => {
-      const offset = caretOffsetIn(event.currentTarget, event.clientX, event.clientY);
-      return offset === null ? null : wordAtRunOffset(pieces, run, offset, intent);
+      editor.onPassageChange(editKey, splitPassage(next) ?? [next]);
     };
     const missing = (key: number) => (
       // A token with no question to fill it (more blanks than questions).
@@ -536,46 +501,60 @@ export function ClozeSection({
     );
     return (
       <div className="space-y-2">
-        <p className="text-[11px] font-extrabold text-muted-foreground">
-          {armed !== null
-            ? t("exercise.edit.pickWord", "Click the word that blank {n} should be. Its old answer goes back into the text.", { n: numbers[armed] ?? armed + 1 })
-            : t("exercise.edit.clozeInline", "Type in the passage to change it. Drag a blank's number before another word to move it, or use the arrow keys. Click the number for its settings.")}
-        </p>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-[11px] font-extrabold text-muted-foreground">
+            {textEditing
+              ? t("exercise.edit.typePassage", "Type in the passage to change it. Enter starts a new paragraph.")
+              : armed !== null
+                ? t("exercise.edit.pickWord", "Click the word that blank {n} should be. Its old answer goes back into the text.", { n: numbers[armed] ?? armed + 1 })
+                : t("exercise.edit.dragBlanksMenu", "Drag a blank's number before another word to move it, or use the arrow keys. Click the number for its settings.")}
+          </p>
+          <Button type="button" size="sm" variant={textEditing ? "default" : "outline"} onClick={() => setTextEditing((value) => !value)}>
+            {textEditing ? t("exercise.edit.done", "Done") : t("exercise.edit.editPassage", "Edit passage")}
+          </Button>
+        </div>
         <div className={cn(wrapper, "whitespace-pre-wrap")}>
-          {runs.map((run, i) => (
-            <span key={i}>
-              <EditableText
-                value={run}
-                multiline
-                label={t("exercise.edit.passageText", "Passage text")}
-                onChange={(value) => changeRun(i, value)}
-                className={cn(over === i && "bg-rose-50", armed !== null && "cursor-pointer")}
-                spanProps={{
-                  onDragOver: (event) => {
-                    if (dragging === null) return;
-                    event.preventDefault();
-                    setOver(i);
-                  },
-                  onDragLeave: () => setOver((current) => (current === i ? null : current)),
-                  onDrop: (event) => {
-                    if (dragging === null) return;
-                    // The blank's number, not text to insert.
-                    event.preventDefault();
-                    const target = wordAt(i, event, "before");
-                    if (target !== null) move(dragging, target);
-                    setDragging(null);
-                    setOver(null);
-                  },
-                  onClick: (event) => {
-                    if (armed === null) return;
-                    const target = wordAt(i, event, "on");
-                    if (target !== null) take(armed, target);
-                  },
-                }}
-              />
-              {i < runs.length - 1 ? (nodes[i] ? <span>{blank(i, gapAt.get(i))}</span> : missing(i)) : null}
-            </span>
-          ))}
+          {textEditing
+            ? runs.map((run, i) => (
+                <span key={i}>
+                  <EditableText
+                    value={run}
+                    multiline
+                    label={t("exercise.edit.passageText", "Passage text")}
+                    onChange={(value) => changeRun(i, value)}
+                  />
+                  {i < runs.length - 1 ? (nodes[i] ? <span>{blank(i)}</span> : missing(i)) : null}
+                </span>
+              ))
+            : pieces.map((piece, at) => {
+                if (piece.kind === "space") return <span key={at}>{piece.text}</span>;
+                if (piece.kind === "gap") return nodes[piece.index] ? <span key={at}>{blank(piece.index, at)}</span> : missing(at);
+                return (
+                  <span
+                    key={at}
+                    onDragOver={(event) => {
+                      if (dragging === null) return;
+                      event.preventDefault();
+                      setOver(at);
+                    }}
+                    onDragLeave={() => setOver((current) => (current === at ? null : current))}
+                    onDrop={(event) => {
+                      event.preventDefault();
+                      if (dragging !== null) move(dragging, at);
+                      setDragging(null);
+                      setOver(null);
+                    }}
+                    onClick={() => (armed !== null ? take(armed, at) : undefined)}
+                    className={cn(
+                      "rounded-sm",
+                      over === at && "bg-rose-50 shadow-[inset_3px_0_0_var(--color-rose-500)]",
+                      armed !== null && "cursor-pointer hover:bg-rose-100",
+                    )}
+                  >
+                    {piece.text}
+                  </span>
+                );
+              })}
         </div>
       </div>
     );

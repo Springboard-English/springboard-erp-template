@@ -10,8 +10,8 @@ import { optionLetters } from "../lib/option-letters";
 import { promptDensity, promptTextClass } from "../lib/prompt-scale";
 
 import { Frame, type SubProps } from "./frame";
-import { EditableText, OptionImageControls, useNodeEdit } from "./exercise-edit";
-import { Plus, X } from "lucide-react";
+import { AddRow, EditableText, OptionImageControls, useNodeEdit } from "./exercise-edit";
+import { X } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { OptionImage, PICTURED_ROW, PICTURED_TILE } from "./option-image";
 
@@ -125,20 +125,19 @@ export function McqChoiceGroup({ node, mode, value, onChange, lead }: SubProps<C
         })}
       </RadioGroup>
       {edit ? (
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="mt-3"
-          onClick={() => {
-            let n = options.length + 1;
-            while (options.some((option) => option.id === `opt-${n}`)) n += 1;
-            edit({ options: [...options, { id: `opt-${n}`, label: "" }] });
-          }}
-        >
-          <Plus className="size-4" />
-          {t("exercise.edit.addOption", "Add option")}
-        </Button>
+        // One more option row, the same size as the options, outlined dashed.
+        <div className="mt-2.5">
+          <AddRow
+            className="rounded-sm px-4 py-[13px] text-[15px]"
+            chipClassName="size-7 rounded-[9px]"
+            label={t("exercise.edit.addOption", "Add option")}
+            onClick={() => {
+              let n = options.length + 1;
+              while (options.some((option) => option.id === `opt-${n}`)) n += 1;
+              edit({ options: [...options, { id: `opt-${n}`, label: "" }] });
+            }}
+          />
+        </div>
       ) : null}
     </Frame>
   );

@@ -72,7 +72,7 @@ export function MatchingButtons({
               </div>
             ))}
           </div>
-          <PoolAddOption className="mt-3" />
+          <div className="mt-2"><PoolAddOption /></div>
         </div>
       ) : null}
 

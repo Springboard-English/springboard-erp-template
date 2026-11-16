@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { createContext, useContext, useState, type ReactNode } from "react";
 import { BookOpen } from "lucide-react";
 
 import { useI18n } from "../../context/I18nContext";
@@ -35,6 +35,11 @@ import { ExerciseRenderer } from "./exercise-renderer";
 import { PageRecordings } from "./page-recordings";
 import { HighlightScope } from "./highlighter";
 import { EditableText, PoolEditProvider, useExerciseEditor } from "./exercise-edit";
+import { Button } from "../../components/ui/button";
+
+// In the editor a section's own text reads as the student sees it until "Edit
+// text"; this says whether it is being typed into.
+const TextEditing = createContext(false);
 import { answerFromKey, keyFromAnswer } from "../lib/answer-key-bridge";
 import { joinPassage, typedParagraphs } from "../lib/passage";
 
@@ -70,6 +75,7 @@ function SectionLead({
 }) {
   const { t } = useI18n();
   const editor = useExerciseEditor();
+  const textEditing = useContext(TextEditing);
   const section = stub?.kind === "section" ? stub : null;
   const title = ownsText ? (section?.passage_title?.trim() ?? "") : "";
   const paragraphs = showPassage ? (section?.passage ?? []) : [];
@@ -78,7 +84,7 @@ function SectionLead({
   if (!title && paragraphs.length === 0) return null;
   // In the editor the text is typed into where the student reads it.
   const editText =
-    editor && section
+    editor && section && textEditing
       ? (value: string) => editor.onPassageChange(section.appsheet_key, typedParagraphs(value))
       : null;
   return (
@@ -169,6 +175,13 @@ function EditPageBody(props: ExercisePageProps) {
   const section = page.stub?.kind === "section" ? page.stub : null;
   const huntText = layout.kind === "error-hunt" ? joinPassage(section?.passage ?? []) : null;
   const pooled = layout.kind === "multi-select";
+  const [textEditing, setTextEditing] = useState(false);
+  // Error hunts, gapped text and jumbled paragraphs print the section's own
+  // text in the task: read-only until "Edit text".
+  const ownText =
+    !!section?.passage?.length &&
+    (layout.kind === "error-hunt" || layout.kind === "gapped-text" || layout.kind === "jumbled-paragraph");
+  const { t } = useI18n();
   if (!editor) return null;
 
   // "Choose several" hands every question the group's whole selection.
@@ -199,7 +212,21 @@ function EditPageBody(props: ExercisePageProps) {
     // A pooled section's option list is edited where the student's task prints
     // it, and its "Add option" sits at the end of that list.
     <PoolEditProvider nodes={pooledLayout ? pageNodes : []}>
-      <AnswerPageBody {...props} answers={answers} onChange={onChange} enableAnnotations={false} />
+      <TextEditing.Provider value={ownText && textEditing}>
+        {ownText ? (
+          <div className="mb-3 flex justify-end">
+            <Button
+              type="button"
+              size="sm"
+              variant={textEditing ? "default" : "outline"}
+              onClick={() => setTextEditing((value) => !value)}
+            >
+              {textEditing ? t("exercise.edit.done", "Done") : t("exercise.edit.editText", "Edit text")}
+            </Button>
+          </div>
+        ) : null}
+        <AnswerPageBody {...props} answers={answers} onChange={onChange} enableAnnotations={false} />
+      </TextEditing.Provider>
     </PoolEditProvider>
   );
 }
@@ -210,8 +237,10 @@ function AnswerPageBody({ page, nodes, answers, onChange, enableAnnotations }: E
   const pageNodes = page.nodeIndices.map((i) => nodes[i]).filter(Boolean);
   const numbers = page.nodeIndices.map((i) => i + 1);
   const layout = pageLayout(page, nodes);
-  // In the editor, the section's key: its own text is typed into in place.
+  // In the editor, the section's key. The cloze has its own Edit passage
+  // toggle; the hunt and gapped text are typed into only after "Edit text".
   const editKey = editor && page.stub?.kind === "section" ? page.stub.appsheet_key : undefined;
+  const textKey = useContext(TextEditing) ? editKey : undefined;
   // The questions column is highlightable too — instructions, labels, prompts.
   // Its highlights are saved per page, named by the page's first question: React
   // reuses text nodes across pages of the same layout, so a range kept across
@@ -265,7 +294,7 @@ function AnswerPageBody({ page, nodes, answers, onChange, enableAnnotations }: E
           <>
             <SectionLead stub={page.stub} ownsText />
             <ErrorHuntSection
-              editKey={editKey}
+              editKey={textKey}
               passage={page.stub?.passage ?? null}
               nodes={pageNodes as ErrorHuntNode[]}
               numbers={numbers}
@@ -289,7 +318,7 @@ function AnswerPageBody({ page, nodes, answers, onChange, enableAnnotations }: E
             <SectionLead stub={page.stub} ownsText />
             <GappedTextSection
               onTextChange={
-                editor && editKey ? (text) => editor.onPassageChange(editKey, typedParagraphs(text)) : undefined
+                editor && textKey ? (text) => editor.onPassageChange(textKey, typedParagraphs(text)) : undefined
               }
               passage={page.stub?.passage ?? null}
               nodes={pageNodes as GappedChoiceNode[]}

@@ -290,26 +290,55 @@ export function PoolOptionLabel({ id, label, letter }: { id: string; label: stri
   );
 }
 
-/** "Add option" at the end of a pooled section's list, in edit mode only. */
+/**
+ * An add control drawn as one more row of the list it adds to: the same shape
+ * and size as its rows, a dashed outline, a "+" where the row's letter or
+ * number sits. `className` gives the row's own shape (radius, padding, text).
+ */
+export function AddRow({
+  label,
+  onClick,
+  className,
+  chipClassName,
+}: {
+  label: string;
+  onClick: () => void;
+  className?: string;
+  /** The "+" chip's shape, matching the rows' letter chip. */
+  chipClassName?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "flex w-full items-center gap-3 border-2 border-dashed border-border bg-transparent text-left font-semibold text-muted-foreground transition-colors hover:border-rose-300 hover:text-foreground",
+        className ?? "rounded-xl p-2.5 text-sm",
+      )}
+    >
+      <span className={cn("grid shrink-0 place-items-center bg-muted text-ink-700", chipClassName ?? "size-5 rounded")}>
+        <Plus className="size-3.5" />
+      </span>
+      {label}
+    </button>
+  );
+}
+
+/** "Add option" as the last row of a pooled section's list, in edit mode only. */
 export function PoolAddOption({ className }: { className?: string }) {
   const { t } = useI18n();
   const pool = usePoolEdit();
   if (!pool) return null;
   return (
-    <Button
-      type="button"
-      variant="outline"
-      size="sm"
+    <AddRow
       className={className}
+      label={t("exercise.edit.addOption", "Add option")}
       onClick={() => {
         let n = pool.options.length + 1;
         while (pool.options.some((option) => option.id === `opt-${n}`)) n += 1;
         pool.write([...pool.options, { id: `opt-${n}`, label: "" }]);
       }}
-    >
-      <Plus className="size-4" />
-      {t("exercise.edit.addOption", "Add option")}
-    </Button>
+    />
   );
 }
 

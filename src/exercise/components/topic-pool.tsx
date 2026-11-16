@@ -1,11 +1,11 @@
 import { createContext, useContext, type ReactNode } from "react";
-import { Plus, X } from "lucide-react";
+import { X } from "lucide-react";
 
 import { Button } from "../../components/ui/button";
 import { useI18n } from "../../context/I18nContext";
 import { cn } from "../../lib/utils";
 import { promptDensity, promptTextClass } from "../lib/prompt-scale";
-import { EditableText, useExerciseEditor } from "./exercise-edit";
+import { AddRow, EditableText, useExerciseEditor } from "./exercise-edit";
 
 // A speaking topic pool: a section laid out as `topic-pool` holds one
 // placeholder speaking question and, on the section, the topics an attempt
@@ -95,16 +95,14 @@ export function TopicPoolPrompts({ sectionKey }: { sectionKey: string }) {
               {t("exercise.topicPool.empty", "No topics yet. Students need at least one.")}
             </p>
           ) : null}
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="mt-3"
-            onClick={() => pool.onChange([...pool.prompts, ""])}
-          >
-            <Plus className="size-4" />
-            {t("exercise.topicPool.addTopic", "Add topic")}
-          </Button>
+          <div className="mt-1.5">
+            <AddRow
+              className="rounded-lg px-1.5 py-1 text-base"
+              chipClassName="size-5 rounded"
+              label={t("exercise.topicPool.addTopic", "Add topic")}
+              onClick={() => pool.onChange([...pool.prompts, ""])}
+            />
+          </div>
         </>
       ) : (
         <p className="mt-2 text-sm font-semibold text-muted-foreground">
