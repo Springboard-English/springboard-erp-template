@@ -6,12 +6,13 @@ import { cn } from "../../lib/utils";
 import { useAnswerFiles, type FinishRecording } from "../lib/answer-files";
 import { fileAnswerKey, type ExerciseNode } from "../lib/exercises";
 import { promptDensity, promptTextClass } from "../lib/prompt-scale";
-import { EditablePrompt } from "./exercise-edit";
+import { EditablePrompt, useExerciseEditor } from "./exercise-edit";
 import { formatClock } from "../lib/media-window";
 import { pickRecordingType, secondsUntil, takeEndsAt, uploadType, windowStage } from "../lib/recorder";
 
 import { formatStamp } from "./essay-response";
 import { Frame, type SubProps } from "./frame";
+import { DrawnTopic, TopicPoolPrompts, useTopicPool } from "./topic-pool";
 
 type SpeakingNode = Extract<ExerciseNode, { type: "speaking" }>;
 
@@ -27,11 +28,15 @@ const RING_LENGTH = 2 * Math.PI * RING_R;
  * down from the part's opening, recording starts by itself when it ends (for
  * the question the runner marks), and every take stops and hands in at the
  * part's deadline or the question's longest take. Without the runner's
- * `beginRecording` the prompt shows alone.
+ * `beginRecording` the prompt shows alone. In a topic pool the prompt is the
+ * topic the attempt drew, set apart as "Your topic"; the editor shows the
+ * pool's whole list there instead.
  */
 export function SpeakingResponse({ node, mode, value, onChange }: SubProps<SpeakingNode>) {
   const { t } = useI18n();
   const files = useAnswerFiles();
+  const pool = useTopicPool();
+  const editing = Boolean(useExerciseEditor());
   const file = files.file(node.id);
   const handedIn = Boolean(fileAnswerKey(value));
   const partClock = files.recordingWindow?.(node.id);
@@ -190,7 +195,14 @@ export function SpeakingResponse({ node, mode, value, onChange }: SubProps<Speak
 
   return (
     <Frame node={node} mode={mode}>
-      <p className={cn(promptTextClass(promptDensity(node.content.prompt)), "text-foreground")}><EditablePrompt node={node} /></p>
+      {pool && editing ? (
+        // The question's own prompt is a placeholder the API replaces with the drawn topic.
+        <TopicPoolPrompts sectionKey={pool.sectionKey} />
+      ) : pool ? (
+        <DrawnTopic prompt={node.content.prompt} />
+      ) : (
+        <p className={cn(promptTextClass(promptDensity(node.content.prompt)), "text-foreground")}><EditablePrompt node={node} /></p>
+      )}
       {canRecord || handedIn || file ? (
         <div className="mt-6 flex flex-col items-center gap-3 rounded-2xl border-2 bg-card px-4 py-6 text-center">
           {canRecord ? (

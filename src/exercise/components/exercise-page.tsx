@@ -9,6 +9,7 @@ import { showMatchingLegend } from "../lib/matching-legend";
 import type { CollectionStub } from "../types";
 import { CollectionContext } from "./collection-context";
 import { PassageText } from "./passage-text";
+import { TopicPoolProvider } from "./topic-pool";
 import { ClozeSection, type ClozeNode } from "./cloze-section";
 import {
   GappedTextSection,
@@ -366,10 +367,12 @@ function AnswerPageBody({ page, nodes, answers, onChange, enableAnnotations }: E
     );
   }
 
+  // A speaking topic pool's question shows its topic (or, editing, the pool's list).
+  const poolKey = page.stub?.kind === "section" && page.stub.info?.layout === "topic-pool" ? page.stub.appsheet_key : null;
   return (
     <CollectionContext stub={page.stub} hideHeader enableAnnotations={enableAnnotations}>
       {scoped(
-        <>
+        <TopicPoolProvider sectionKey={poolKey}>
           <SectionLead stub={page.stub} />
           <div className="space-y-6">
             {pageNodes.map((node, k) => (
@@ -391,7 +394,7 @@ function AnswerPageBody({ page, nodes, answers, onChange, enableAnnotations }: E
               </div>
             ))}
           </div>
-        </>,
+        </TopicPoolProvider>,
       )}
     </CollectionContext>
   );

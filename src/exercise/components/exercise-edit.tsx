@@ -1,9 +1,10 @@
 import { createContext, useContext, useEffect, useRef, useState, type HTMLAttributes, type ReactNode } from "react";
-import { ImagePlus, Loader2, Pencil, Plus, X } from "lucide-react";
+import { ChevronDown, ImagePlus, Loader2, Pencil, Plus, X } from "lucide-react";
 
 import { Button } from "../../components/ui/button";
 import { Textarea } from "../../components/ui/textarea";
 import { useI18n } from "../../context/I18nContext";
+import { fieldHeight } from "../../lib/touchTarget";
 import { cn } from "../../lib/utils";
 import {
   QUESTION_TYPE_DESCRIPTIONS,
@@ -52,6 +53,18 @@ export interface ExerciseEditor {
    * Without it, options offer no picture controls.
    */
   uploadOptionImage?: (file: File) => Promise<{ image_key: string; url: string }>;
+  /**
+   * A speaking topic pool's topics, by section key, and where a change to them
+   * goes. Null while the host doesn't have them; omitted, the pool's speaking
+   * question says the topics are set in the section's settings.
+   */
+  topicPrompts?: (sectionKey: string) => TopicPromptsEdit | null;
+}
+
+/** A topic pool's topics as the editor shows them, and their setter. */
+export interface TopicPromptsEdit {
+  prompts: string[];
+  onChange: (prompts: string[]) => void;
 }
 
 /** A question's type and marks as the host lets them change. */
@@ -469,10 +482,19 @@ export function OptionImageControls({
   );
 }
 
+// The type, skill and marks controls share one look: the field style of the
+// type's searchable list (height, border, text size and weight), so the three
+// read as one stack of the same kind of control.
+const META_FIELD = cn(
+  fieldHeight,
+  "flex w-full min-w-0 items-center rounded-md border border-input bg-background px-3 text-base font-normal text-foreground shadow-xs md:text-sm",
+);
+
 /**
  * A question's type, skill and marks where its card prints them, editable in
  * edit mode: the type is a searchable list with a line on each (only while the
- * host allows a retype), the skill a select, the marks a number.
+ * host allows a retype, else the same field read-only), the skill a select, the
+ * marks a number. All three use one field style.
  */
 export function QuestionMetaControls({ node, stacked = false }: { node: ExerciseNode; stacked?: boolean }) {
   const { t } = useI18n();
@@ -480,6 +502,7 @@ export function QuestionMetaControls({ node, stacked = false }: { node: Exercise
   if (!editor) return null;
   const meta = editor.questionMeta?.(node) ?? { points: node.points ?? null };
   const typeId = `question-type-${node.id}`;
+  const width = stacked ? "w-44" : "w-52";
   return (
     // Stacked on a card, so the three take a narrow column and the question keeps its width.
     <span className={cn("inline-flex gap-1.5", stacked ? "flex-col items-stretch" : "flex-wrap items-center")}>
@@ -487,7 +510,7 @@ export function QuestionMetaControls({ node, stacked = false }: { node: Exercise
         <SearchableSelect
           id={typeId}
           value={node.type}
-          className={cn("h-8 text-xs", stacked ? "w-44" : "w-52")}
+          className={width}
           options={questionTypeSchema.options.map((type) => ({
             value: type,
             label: valueLabel(t, QUESTION_TYPE_LABELS[type]),
@@ -497,25 +520,35 @@ export function QuestionMetaControls({ node, stacked = false }: { node: Exercise
         />
       ) : (
         <span
-          className="rounded-full border bg-muted px-2.5 py-1 text-[11px] font-bold text-muted-foreground"
+          className={cn(META_FIELD, width, "cursor-default bg-muted/50")}
           title={t("exercise.edit.typeFixed", "A saved question keeps its type. Add a new question for another type.")}
         >
-          {valueLabel(t, QUESTION_TYPE_LABELS[node.type])}
+          <span className="truncate">{valueLabel(t, QUESTION_TYPE_LABELS[node.type])}</span>
         </span>
       )}
-      <select
-        aria-label={t("exercise.edit.skill", "Skill")}
-        value={node.skillTag}
-        onChange={(event) => editor.onNodeChange(node.id, { ...node, skillTag: event.target.value as SkillTag })}
-        className="h-8 rounded-full border bg-card px-2.5 text-xs font-bold text-foreground"
+      <span className={cn("relative", width)}>
+        <select
+          aria-label={t("exercise.edit.skill", "Skill")}
+          value={node.skillTag}
+          onChange={(event) => editor.onNodeChange(node.id, { ...node, skillTag: event.target.value as SkillTag })}
+          className={cn(META_FIELD, "cursor-pointer appearance-none pr-9 outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring")}
+        >
+          {skillTagSchema.options.map((skill) => (
+            <option key={skill} value={skill}>
+              {valueLabel(t, SKILL_LABELS[skill])}
+            </option>
+          ))}
+        </select>
+        <ChevronDown className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-muted-foreground" />
+      </span>
+      <label
+        className={cn(
+          META_FIELD,
+          width,
+          "gap-1 focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring",
+          !meta.onPointsChange && "bg-muted/50",
+        )}
       >
-        {skillTagSchema.options.map((skill) => (
-          <option key={skill} value={skill}>
-            {valueLabel(t, SKILL_LABELS[skill])}
-          </option>
-        ))}
-      </select>
-      <label className="inline-flex h-8 items-center gap-1 rounded-full border bg-card px-2.5 text-xs font-bold text-foreground">
         <input
           type="number"
           min={0}
@@ -527,9 +560,9 @@ export function QuestionMetaControls({ node, stacked = false }: { node: Exercise
             const value = Number.parseFloat(event.target.value);
             meta.onPointsChange?.(Number.isFinite(value) && value >= 0 ? value : 0);
           }}
-          className="w-12 bg-transparent text-right outline-none"
+          className="w-0 min-w-0 flex-1 bg-transparent outline-none disabled:cursor-default"
         />
-        {t("exercise.edit.points", "pts")}
+        <span className="text-muted-foreground">{t("exercise.edit.points", "pts")}</span>
       </label>
     </span>
   );
