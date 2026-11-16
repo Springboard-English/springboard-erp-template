@@ -60,6 +60,8 @@ export interface QuestionNavPanelProps {
   onHide?: () => void;
   /** A column in the layout from `md` up (hidden below it) instead of overlay content. */
   docked?: boolean;
+  /** Leaves out the "Questions" heading, for a host that titles its own dialog. */
+  untitled?: boolean;
 }
 
 interface NavChipProps {
@@ -212,6 +214,7 @@ export function QuestionNavPanel({
   onReorder,
   onHide,
   docked = false,
+  untitled = false,
 }: QuestionNavPanelProps) {
   const { t } = useI18n();
   const groups = useMemo(() => navGroups(test.nodes, collectionByNode), [test.nodes, collectionByNode]);
@@ -223,10 +226,10 @@ export function QuestionNavPanel({
   }, [currentIndex]);
   const doneLabel = states === "keys" ? t("exercise.questionNav.keySet", "Key set") : t("exercise.questionNav.answered", "Answered");
   const blankLabel = states === "keys" ? t("exercise.questionNav.noKey", "No key") : t("exercise.questionNav.blank", "Blank");
-  // Six across keeps each chip at least 44px in the sheet; the column fits as many as its width allows.
-  const grid = docked
-    ? "grid grid-cols-[repeat(auto-fill,minmax(2.75rem,1fr))] gap-1.5 md:pointer-fine:grid-cols-[repeat(auto-fill,minmax(2.25rem,1fr))]"
-    : "grid grid-cols-6 gap-1.5 sm:gap-2";
+  // As many 44px chips (36px with a mouse) as the width holds, each capped so a
+  // wide dialog doesn't stretch them into tiles.
+  const grid =
+    "grid grid-cols-[repeat(auto-fill,minmax(2.75rem,3rem))] gap-1.5 md:pointer-fine:grid-cols-[repeat(auto-fill,minmax(2.25rem,2.75rem))]";
   const title = t("exercise.questionNav.title", "Questions");
 
   const list = (
@@ -270,7 +273,7 @@ export function QuestionNavPanel({
   if (!docked) {
     return (
       <div ref={listRef}>
-        <p className="mb-3 text-sm font-extrabold text-foreground">{title}</p>
+        {untitled ? null : <p className="mb-3 text-sm font-extrabold text-foreground">{title}</p>}
         {list}
         <div className="mt-4 border-t pt-3">{legend}</div>
         {actions ? <div className="mt-3 flex flex-col gap-2 border-t pt-3">{actions}</div> : null}
