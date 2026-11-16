@@ -10,6 +10,9 @@ import { optionLetters } from "../lib/option-letters";
 import { promptDensity, promptTextClass } from "../lib/prompt-scale";
 
 import { Frame, type SubProps } from "./frame";
+import { EditableText, OptionImageControls, useNodeEdit } from "./exercise-edit";
+import { Plus, X } from "lucide-react";
+import { Button } from "../../components/ui/button";
 import { OptionImage, PICTURED_ROW, PICTURED_TILE } from "./option-image";
 
 // Choice-based answering for mcq. Options render as boxed
@@ -26,6 +29,9 @@ export function McqChoiceGroup({ node, mode, value, onChange }: SubProps<ChoiceN
   const [local, setLocal] = useState("");
   const controlled = onChange !== undefined;
   const selected = controlled ? (typeof value === "string" ? value : "") : local;
+  const edit = useNodeEdit(node);
+  const relabel = (id: string, label: string) =>
+    edit?.({ options: options.map((option) => (option.id === id ? { ...option, label } : option)) });
   const pick = (id: string) => {
     if (mode === "result") return;
     if (controlled) onChange?.(id);
@@ -33,7 +39,14 @@ export function McqChoiceGroup({ node, mode, value, onChange }: SubProps<ChoiceN
   };
   return (
     <Frame node={node} mode={mode}>
-      <p className={cn(promptTextClass(promptDensity(prompt)), "text-foreground")}>{prompt}</p>
+      <p className={cn(promptTextClass(promptDensity(prompt)), "text-foreground")}>
+        <EditableText
+          value={prompt}
+          onChange={edit && ((next) => edit({ prompt: next }))}
+          label={t("exercise.edit.prompt", "Question")}
+          placeholder={t("exercise.edit.promptPlaceholder", "Type the question")}
+        />
+      </p>
       <RadioGroup value={selected} onValueChange={pick} className={cn("mt-5 grid gap-2.5", pictured && PICTURED_ROW)}>
         {options.map((option, index) => {
           const isSelected = selected === option.id;
@@ -64,14 +77,63 @@ export function McqChoiceGroup({ node, mode, value, onChange }: SubProps<ChoiceN
                 {option.image_url ? (
                   <OptionImage url={option.image_url} alt={option.label || t("exercise.renderer.optionPicture", "Picture for option {letter}", { letter: letters[index] })} />
                 ) : null}
-                {option.label ? <span>{option.label}</span> : null}
+                {edit ? (
+                  <EditableText
+                    value={option.label}
+                    onChange={(next) => relabel(option.id, next)}
+                    label={t("exercise.renderer.optionAria", "Option {letter}", { letter: letters[index] })}
+                    placeholder={t("exercise.renderer.optionAria", "Option {letter}", { letter: letters[index] })}
+                  />
+                ) : option.label ? (
+                  <span>{option.label}</span>
+                ) : null}
               </span>
               {isCorrect ? <span className="flex items-center gap-1 text-xs font-extrabold text-success"><Check className="springboard-pop size-4" />{t("exercise.renderer.correct", "correct")}</span> : null}
               {isWrong ? <CircleAlert className="size-4 text-error" /> : null}
+              {edit ? (
+                <OptionImageControls
+                  option={option}
+                  letter={letters[index]}
+                  onChange={(next) => edit({ options: options.map((other) => (other.id === option.id ? next : other)) })}
+                />
+              ) : null}
+              {edit && options.length > 2 ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  aria-label={t("exercise.edit.removeOption", "Remove option {letter}", { letter: letters[index] })}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    edit({
+                      options: options.filter((other) => other.id !== option.id),
+                      ...(correct_option_id === option.id ? { correct_option_id: "" } : {}),
+                    });
+                  }}
+                >
+                  <X className="size-4" />
+                </Button>
+              ) : null}
             </label>
           );
         })}
       </RadioGroup>
+      {edit ? (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="mt-3"
+          onClick={() => {
+            let n = options.length + 1;
+            while (options.some((option) => option.id === `opt-${n}`)) n += 1;
+            edit({ options: [...options, { id: `opt-${n}`, label: "" }] });
+          }}
+        >
+          <Plus className="size-4" />
+          {t("exercise.edit.addOption", "Add option")}
+        </Button>
+      ) : null}
     </Frame>
   );
 }

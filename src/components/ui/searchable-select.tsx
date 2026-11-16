@@ -12,6 +12,8 @@ import { toPageSize, type FetchCursorPage } from '../../utils/cursorPagination';
 export interface SearchableSelectOption {
   value: string;
   label: string;
+  /** A second, muted line under the label in the list; also searched. */
+  description?: string;
   disabled?: boolean;
   keywords?: string;
 }
@@ -178,7 +180,7 @@ export function SearchableSelect({
     }
 
     return options.filter((option) => {
-      const haystack = `${option.label} ${option.keywords ?? ''} ${option.value}`.toLowerCase();
+      const haystack = `${option.label} ${option.description ?? ''} ${option.keywords ?? ''} ${option.value}`.toLowerCase();
       return haystack.includes(normalizedQuery);
     });
   }, [asyncOptions, isAsync, options, searchText]);
@@ -350,7 +352,16 @@ export function SearchableSelect({
                   disabled={option.disabled}
                   className={cn(comboboxItemClassName(index === activeIndex), isSelected && 'font-medium')}
                 >
-                  <span className="min-w-0 flex-1 truncate">{option.label}</span>
+                  {option.description ? (
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate">{option.label}</span>
+                      <span className="block whitespace-normal text-xs font-normal text-muted-foreground">
+                        {option.description}
+                      </span>
+                    </span>
+                  ) : (
+                    <span className="min-w-0 flex-1 truncate">{option.label}</span>
+                  )}
                   {isSelected ? <Check className="size-4 shrink-0" /> : null}
                 </button>
               );

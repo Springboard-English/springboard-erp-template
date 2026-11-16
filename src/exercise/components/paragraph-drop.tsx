@@ -26,6 +26,7 @@ import { GripVertical } from "lucide-react";
 import { useI18n } from "../../context/I18nContext";
 import { touchHitArea } from "../../lib/touchTarget";
 import { cn } from "../../lib/utils";
+import { PoolOptionLabel } from "./exercise-edit";
 import type { Translate } from "../i18n";
 
 // Assign N paragraphs to N slots, with the pool DEPLETING — a paragraph fills
@@ -136,7 +137,7 @@ function ItemCard({
         {item.letter}
       </span>
       <span className={cn("min-w-0 text-foreground", compact && "line-clamp-2")}>
-        {item.label}
+        <PoolOptionLabel id={item.id} label={item.label} letter={item.letter} />
       </span>
     </div>
   );
@@ -507,7 +508,7 @@ function ReferenceList({
               {item.letter}
             </span>
             <span className="min-w-0 text-foreground">
-              {item.label}
+              <PoolOptionLabel id={item.id} label={item.label} letter={item.letter} />
               {/* Its own line, not trailing the prose: run into the end of a
                   paragraph it reads as part of the sentence. */}
               {placedIn ? (

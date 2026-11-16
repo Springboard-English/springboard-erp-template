@@ -1,4 +1,5 @@
 import { useI18n } from "../../context/I18nContext";
+import { EditableText, PoolAddOption, PoolOptionLabel, useExerciseEditor, usePoolEdit } from "./exercise-edit";
 import { cn } from "../../lib/utils";
 import type { ExerciseAnswer, ExerciseNode } from "../lib/exercises";
 import { optionLetters } from "../lib/option-letters";
@@ -41,6 +42,8 @@ export function MatchingButtons({
   showLegend?: boolean;
 }) {
   const { t } = useI18n();
+  const editor = useExerciseEditor();
+  const pool = usePoolEdit();
   // The options are shared; take them from the first item. Letters are the
   // paper's own where the ids carry them ("E for Emma"), else by position.
   const options = nodes[0]?.content.options ?? [];
@@ -50,7 +53,7 @@ export function MatchingButtons({
   return (
     <div className="space-y-4">
       {/* The legend, once — and only when nothing else is printing it. */}
-      {showLegend ? (
+      {showLegend || pool ? (
         <div className="rounded-2xl border bg-card p-4 shadow-sm">
           <p className="mb-2 text-[11px] font-extrabold text-muted-foreground">
             {t("exercise.renderer.chooseFrom", "Choose from")}
@@ -61,10 +64,13 @@ export function MatchingButtons({
                 <span className="grid size-6 shrink-0 place-items-center rounded-lg bg-rose-100 text-xs font-extrabold text-rose-700">
                   {letterOf(index)}
                 </span>
-                <span className="min-w-0 text-foreground">{option.label}</span>
+                <span className="min-w-0 text-foreground">
+                  <PoolOptionLabel id={option.id} label={option.label} letter={letterOf(index)} />
+                </span>
               </div>
             ))}
           </div>
+          <PoolAddOption className="mt-3" />
         </div>
       ) : null}
 
@@ -82,7 +88,15 @@ export function MatchingButtons({
                 {numbers[index]}
               </span>
               <span className="min-w-0 flex-1 text-sm font-semibold text-foreground">
-                {node.content.prompt}
+                <EditableText
+                  value={node.content.prompt}
+                  label={t("exercise.edit.prompt", "Question")}
+                  onChange={
+                    editor &&
+                    ((prompt) =>
+                      editor.onNodeChange(node.id, { ...node, content: { ...node.content, prompt } }))
+                  }
+                />
               </span>
               <div
                 role="radiogroup"

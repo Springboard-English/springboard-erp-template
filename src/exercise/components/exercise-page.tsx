@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { BookOpen } from "lucide-react";
 
 import { useI18n } from "../../context/I18nContext";
@@ -33,6 +33,17 @@ import {
 import { ExerciseRenderer } from "./exercise-renderer";
 import { PageRecordings } from "./page-recordings";
 import { HighlightScope } from "./highlighter";
+import {
+  ClozeBlanksEditor,
+  EditablePassage,
+  PoolAddOption,
+  PoolEditProvider,
+  useExerciseEditor,
+} from "./exercise-edit";
+import { Button } from "../../components/ui/button";
+import { answerFromKey, keyFromAnswer } from "../lib/answer-key-bridge";
+import { joinPassage } from "../lib/passage";
+import { countGapTokens } from "../lib/gap-token";
 
 // ONE screen of the student-facing activity, and the single source of truth for
 // what a student sees on it.
@@ -46,11 +57,9 @@ import { HighlightScope } from "./highlighter";
 // tested; this is only their presentation.
 
 /**
- * The section's own words, in full, at the top of the questions column.
- *
- * Both callers lift the heading into the top bar, which holds the instruction to
- * ONE truncated line — and a paper puts the rules a student is marked by there:
- * "NO MORE THAN TWO WORDS", "Write T, F or NG". This shows them in full.
+ * The section's passage title and its own text, at the top of the questions
+ * column, where the layout leaves them nowhere else. The instruction lives in
+ * the runner heading's drop-down (the top bar shows its first line).
  *
  * `ownsText` is for a layout that draws the section's passage itself (cloze,
  * gapped text, error hunt, jumbled): the side column then holds the PART's
@@ -67,17 +76,13 @@ function SectionLead({
   showPassage?: boolean;
 }) {
   const section = stub?.kind === "section" ? stub : null;
-  const instruction = section?.instruction?.trim() ?? "";
   const title = ownsText ? (section?.passage_title?.trim() ?? "") : "";
   const paragraphs = showPassage ? (section?.passage ?? []) : [];
-  if (!instruction && !title && paragraphs.length === 0) return null;
+  // The section's instruction is not repeated here: it is read (and, in the
+  // editor, edited) in the runner heading's drop-down, which shows its first line.
+  if (!title && paragraphs.length === 0) return null;
   return (
     <div className="mb-5 space-y-3">
-      {instruction ? (
-        <p className="whitespace-pre-wrap text-sm font-bold leading-6 text-foreground">
-          {instruction}
-        </p>
-      ) : null}
       {title || paragraphs.length ? (
         <div className="overflow-hidden rounded-2xl border bg-card shadow-sm">
           {title ? (
@@ -136,7 +141,112 @@ export function ExercisePage(props: ExercisePageProps) {
  * `hideHeader` because both callers lift the part/section heading into the top
  * bar (`RunnerHeading`); rendering it here too would duplicate it.
  */
-function PageBody({ page, nodes, answers, onChange, enableAnnotations }: ExercisePageProps) {
+function PageBody(props: ExercisePageProps) {
+  const editor = useExerciseEditor();
+  return editor ? <EditPageBody {...props} /> : <AnswerPageBody {...props} />;
+}
+
+/** Which part of a section's own text a teacher is working on in edit mode. */
+type EditTool = "answers" | "text" | "blanks";
+
+/**
+ * The page in edit mode: the student's own page, answered with each
+ * question's key. Answering sets the key and question text edits in place in
+ * the renderers. A section whose text the student component draws (a cloze,
+ * an error hunt, a gapped text) also offers that text as paragraphs, and a
+ * cloze's blanks can be dragged between words.
+ */
+function EditPageBody(props: ExercisePageProps) {
+  const { t } = useI18n();
+  const editor = useExerciseEditor();
+  const [tool, setTool] = useState<EditTool>("answers");
+  const { page, nodes } = props;
+  const pageNodes = page.nodeIndices.map((i) => nodes[i]).filter(Boolean);
+  const numbers = page.nodeIndices.map((i) => i + 1);
+  const layout = pageLayout(page, nodes);
+  const section = page.stub?.kind === "section" ? page.stub : null;
+  const ownText = section?.passage ?? [];
+  const huntText = layout.kind === "error-hunt" ? joinPassage(ownText) : null;
+  const pooled = layout.kind === "multi-select";
+  if (!editor) return null;
+
+  // "Choose several" hands every question the group's whole selection.
+  const keyed = pageNodes.map((node) => answerFromKey(node));
+  const answers: Record<string, ExerciseAnswer> = {};
+  pageNodes.forEach((node, k) => {
+    answers[node.id] = pooled ? keyed.filter((id): id is string => typeof id === "string") : keyed[k];
+  });
+  const onChange = (nodeId: string, value: ExerciseAnswer) => {
+    editor.onSelect(nodeId);
+    if (pooled) {
+      const picked = Array.isArray(value) ? value : [];
+      pageNodes.forEach((node, k) => editor.onNodeChange(node.id, keyFromAnswer(node, picked[k] ?? "")));
+      return;
+    }
+    const node = pageNodes.find((candidate) => candidate.id === nodeId);
+    if (node) editor.onNodeChange(nodeId, keyFromAnswer(node, value, huntText));
+  };
+
+  const ownsText =
+    section !== null &&
+    (layout.kind === "cloze" || layout.kind === "error-hunt" || layout.kind === "gapped-text" || layout.kind === "jumbled-paragraph");
+  const canMoveBlanks = layout.kind === "cloze" && countGapTokens(joinPassage(ownText)) > 0;
+  const tools: Array<{ value: EditTool; label: string }> = [
+    { value: "answers", label: t("exercise.edit.toolAnswers", "Questions and answers") },
+    { value: "text", label: t("exercise.edit.toolText", "Section text") },
+    ...(canMoveBlanks ? [{ value: "blanks" as const, label: t("exercise.edit.toolBlanks", "Move blanks") }] : []),
+  ];
+  const active = ownsText ? tool : "answers";
+  // Sections whose questions all draw from one lettered list.
+  const pooledLayout =
+    layout.kind === "gapped-text" ||
+    layout.kind === "multiple-matching" ||
+    layout.kind === "jumbled-paragraph" ||
+    layout.kind === "multi-select";
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
+      {ownsText ? (
+        <div role="group" aria-label={t("exercise.edit.tools", "Edit")} className="flex shrink-0 flex-wrap gap-1.5">
+          {tools.map((option) => (
+            <Button
+              key={option.value}
+              size="sm"
+              variant={active === option.value ? "default" : "outline"}
+              aria-pressed={active === option.value}
+              onClick={() => setTool(option.value)}
+            >
+              {option.label}
+            </Button>
+          ))}
+        </div>
+      ) : null}
+      {active === "answers" ? (
+        // A pooled section's option list is edited where the student's task prints it.
+        <PoolEditProvider nodes={pooledLayout ? pageNodes : []}>
+          <AnswerPageBody {...props} answers={answers} onChange={onChange} enableAnnotations={false} />
+          {layout.kind === "gapped-text" || layout.kind === "jumbled-paragraph" ? <PoolAddOption className="self-start" /> : null}
+        </PoolEditProvider>
+      ) : (
+        <CollectionContext stub={page.stub} hideHeader preferPartPassage>
+          <SectionLead stub={page.stub} ownsText />
+          {active === "blanks" ? (
+            <ClozeBlanksEditor
+              collectionKey={section!.appsheet_key}
+              passage={ownText}
+              nodes={pageNodes}
+              numbers={numbers}
+            />
+          ) : (
+            <EditablePassage collectionKey={section!.appsheet_key} paragraphs={ownText} />
+          )}
+        </CollectionContext>
+      )}
+    </div>
+  );
+}
+
+function AnswerPageBody({ page, nodes, answers, onChange, enableAnnotations }: ExercisePageProps) {
   const { t } = useI18n();
   const pageNodes = page.nodeIndices.map((i) => nodes[i]).filter(Boolean);
   const numbers = page.nodeIndices.map((i) => i + 1);
