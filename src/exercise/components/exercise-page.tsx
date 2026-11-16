@@ -195,6 +195,7 @@ function EditPageBody(props: ExercisePageProps) {
     // A pooled section's option list is edited where the student's task prints it.
     <PoolEditProvider nodes={pooledLayout ? pageNodes : []}>
       {ownPassage && section ? (
+        // "Edit text", so it reads apart from a side passage's "Edit passage".
         <div className="mb-3 flex justify-end">
           <Button
             type="button"
@@ -202,7 +203,7 @@ function EditPageBody(props: ExercisePageProps) {
             variant={passageEditing ? "default" : "outline"}
             onClick={() => setPassageEditing((value) => !value)}
           >
-            {passageEditing ? t("exercise.edit.done", "Done") : t("exercise.edit.editPassage", "Edit passage")}
+            {passageEditing ? t("exercise.edit.done", "Done") : t("exercise.edit.editText", "Edit text")}
           </Button>
         </div>
       ) : null}

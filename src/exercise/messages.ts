@@ -119,6 +119,7 @@ export const EXERCISE_VIETNAMESE_MESSAGES: Record<string, string> = {
   "exercise.edit.removeParagraph": "Xóa đoạn",
   "exercise.edit.done": "Xong",
   "exercise.edit.editPassage": "Sửa đoạn văn",
+  "exercise.edit.editText": "Sửa văn bản",
   "exercise.edit.dragBlanksMenu": "Kéo số của chỗ trống tới trước một từ khác để dời, hoặc dùng phím mũi tên. Bấm vào số để mở cài đặt.",
   "exercise.edit.editParagraph": "Sửa đoạn {n}",
   "exercise.edit.addParagraph": "Thêm đoạn",
