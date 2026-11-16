@@ -9,7 +9,7 @@ import { useExerciseTourAnchor } from "../lib/tour-anchors";
 import { useScrollPane } from "../lib/use-scroll-pane";
 import type { CollectionStub } from "../types";
 import { AnnotatablePassage } from "./annotatable-passage";
-import { EditablePassage, useExerciseEditor } from "./exercise-edit";
+import { useExerciseEditor } from "./exercise-edit";
 import { PassageText } from "./passage-text";
 
 // The part/section title lines for a stub, for surfaces that show the heading
@@ -116,10 +116,7 @@ export function CollectionContext({
 
   // No context at all — render the question exactly as if this wrapper weren't
   // here, so a standalone question is never boxed in an empty layout.
-  // In edit mode a section or part with no passage yet still offers one.
-  const passageSlot = editor && !hidePassage && !preferPartPassage ? (section ?? part ?? null) : null;
-
-  if (!stub || (!hasHeader && !passageHolder && !wordBankPanel && !passageSlot)) {
+  if (!stub || (!hasHeader && !passageHolder && !wordBankPanel)) {
     return <>{children}</>;
   }
 
@@ -170,14 +167,6 @@ export function CollectionContext({
       <>
         {header}
         {wordBankPanel}
-        {passageSlot ? (
-          <details className="mb-4 rounded-2xl border border-dashed bg-card px-4 py-3">
-            <summary className="cursor-pointer text-sm font-bold text-muted-foreground">
-              {t("exercise.edit.addPassage", "Add a passage")}
-            </summary>
-            <EditablePassage collectionKey={passageSlot.appsheet_key} paragraphs={[]} className="mt-3" />
-          </details>
-        ) : null}
         {children}
       </>
     );
@@ -254,15 +243,13 @@ export function CollectionContext({
             !showPassage && "hidden lg:block",
           )}
         >
-          {editor ? (
-            <EditablePassage collectionKey={passageHolder.appsheet_key} paragraphs={passageHolder.passage} />
-          ) : (
-            <AnnotatablePassage
-              paragraphs={passageHolder.passage}
-              enable={enableAnnotations}
-              scopeKey={`p:${passageHolder.appsheet_key}`}
-            />
-          )}
+          {/* In the editor the passage reads as a student's does; it is edited
+              from the runner heading. */}
+          <AnnotatablePassage
+            paragraphs={passageHolder.passage}
+            enable={enableAnnotations && !editor}
+            scopeKey={`p:${passageHolder.appsheet_key}`}
+          />
         </div>
       </div>
     </div>

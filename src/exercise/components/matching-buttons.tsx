@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { useI18n } from "../../context/I18nContext";
-import { EditableText, PoolAddOption, PoolOptionLabel, useExerciseEditor, usePoolEdit } from "./exercise-edit";
+import { EditableText, PoolAddOption, PoolOptionLabel, QuestionMenu, useExerciseEditor, usePoolEdit } from "./exercise-edit";
 import { cn } from "../../lib/utils";
 import type { ExerciseAnswer, ExerciseNode } from "../lib/exercises";
 import { optionLetters } from "../lib/option-letters";
@@ -44,6 +45,7 @@ export function MatchingButtons({
   const { t } = useI18n();
   const editor = useExerciseEditor();
   const pool = usePoolEdit();
+  const [menuFor, setMenuFor] = useState<string | null>(null);
   // The options are shared; take them from the first item. Letters are the
   // paper's own where the ids carry them ("E for Emma"), else by position.
   const options = nodes[0]?.content.options ?? [];
@@ -84,9 +86,24 @@ export function MatchingButtons({
               key={node.id}
               className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b px-4 py-3 last:border-0"
             >
-              <span className="grid size-7 shrink-0 place-items-center rounded-xl bg-muted text-sm font-extrabold text-ink-700">
-                {numbers[index]}
-              </span>
+              {editor ? (
+                <span className="relative inline-flex">
+                  <button
+                    type="button"
+                    aria-expanded={menuFor === node.id}
+                    aria-label={t("exercise.edit.questionSettings", "Question {n} settings", { n: numbers[index] })}
+                    onClick={() => setMenuFor((current) => (current === node.id ? null : node.id))}
+                    className="grid size-7 shrink-0 place-items-center rounded-xl bg-muted text-sm font-extrabold text-ink-700 hover:bg-rose-100"
+                  >
+                    {numbers[index]}
+                  </button>
+                  {menuFor === node.id ? <QuestionMenu node={node} onClose={() => setMenuFor(null)} /> : null}
+                </span>
+              ) : (
+                <span className="grid size-7 shrink-0 place-items-center rounded-xl bg-muted text-sm font-extrabold text-ink-700">
+                  {numbers[index]}
+                </span>
+              )}
               <span className="min-w-0 flex-1 text-sm font-semibold text-foreground">
                 <EditableText
                   value={node.content.prompt}

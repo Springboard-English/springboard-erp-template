@@ -1,10 +1,9 @@
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
-import { GripVertical, ImagePlus, Loader2, Pencil, Plus, X } from "lucide-react";
+import { ImagePlus, Loader2, Pencil, Plus, X } from "lucide-react";
 
 import { Button } from "../../components/ui/button";
 import { Textarea } from "../../components/ui/textarea";
 import { useI18n } from "../../context/I18nContext";
-import { touchHitArea } from "../../lib/touchTarget";
 import { cn } from "../../lib/utils";
 import {
   QUESTION_TYPE_DESCRIPTIONS,
@@ -18,8 +17,6 @@ import {
 } from "../lib/exercises";
 import { SearchableSelect } from "../../components/ui/searchable-select";
 import { valueLabel } from "../i18n";
-import { gapOntoWord, gapPieces, moveGap } from "../lib/gap-move";
-import { joinPassage, splitPassage } from "../lib/passage";
 import { PassageText } from "./passage-text";
 
 // Edit mode for the runner page.
@@ -357,147 +354,6 @@ export function EditablePassage({
   );
 }
 
-/**
- * A cloze section's passage with its blanks as chips a teacher drags between
- * words. Each chip is a `{gap}` token; dropping it before a word moves the token,
- * and the section's questions follow the new token order. Arrow keys on a chip
- * move it one word, so the move works without a pointer.
- */
-export function ClozeBlanksEditor({
-  collectionKey,
-  passage,
-  nodes,
-  numbers,
-}: {
-  collectionKey: string;
-  passage: string[];
-  nodes: ExerciseNode[];
-  numbers: number[];
-}) {
-  const { t } = useI18n();
-  const editor = useExerciseEditor();
-  const [dragging, setDragging] = useState<number | null>(null);
-  const [over, setOver] = useState<number | null>(null);
-  // A blank picked to take another word: the next word clicked becomes its answer.
-  const [armed, setArmed] = useState<number | null>(null);
-  if (!editor) return null;
-  const text = joinPassage(passage);
-  const takeWord = (gap: number, wordPiece: number) => {
-    const node = nodes[gap];
-    if (!node) return;
-    const content = node.content as { accepted_answers?: string[] };
-    const result = gapOntoWord(text, gap, wordPiece, content.accepted_answers?.[0] ?? "");
-    if (!result) return;
-    const order = result.order.map((old) => nodes[old]?.id).filter((id): id is string => Boolean(id));
-    editor.onBlanksMove(collectionKey, splitPassage(result.text) ?? [result.text], order);
-    editor.onNodeChange(node.id, {
-      ...node,
-      content: { ...node.content, accepted_answers: [result.word, ...(content.accepted_answers ?? []).slice(1)] },
-    } as ExerciseNode);
-    setArmed(null);
-  };
-  const pieces = gapPieces(text);
-  const words = pieces.map((piece, at) => (piece.kind === "word" ? at : -1)).filter((at) => at >= 0);
-
-  const move = (gap: number, beforeWord: number) => {
-    const result = moveGap(text, gap, beforeWord);
-    if (!result) return;
-    const order = result.order.map((old) => nodes[old]?.id).filter((id): id is string => Boolean(id));
-    editor.onBlanksMove(collectionKey, splitPassage(result.text) ?? [result.text], order);
-    const movedTo = result.order.indexOf(gap);
-    if (nodes[gap]) editor.onSelect(nodes[gap].id);
-    return movedTo;
-  };
-
-  // The word before which a blank sits, one word left or right of where it is.
-  const nudge = (pieceAt: number, gap: number, direction: -1 | 1) => {
-    const nextWordAfter = words.find((at) => at > pieceAt);
-    const position = nextWordAfter === undefined ? words.length : words.indexOf(nextWordAfter);
-    const target = words[position + direction];
-    if (target !== undefined) move(gap, target);
-  };
-
-  return (
-    <div className="rounded-2xl border bg-card p-5 text-[15px] leading-[2.6] text-foreground shadow-sm sm:p-7">
-      <p className="mb-2 text-[11px] font-extrabold leading-5 text-muted-foreground">
-        {armed !== null
-          ? t("exercise.edit.pickWord", "Click the word that blank {n} should be. Its old answer goes back into the text.", { n: numbers[armed] ?? armed + 1 })
-          : t("exercise.edit.dragBlanks", "Drag a numbered blank before another word to move it, or click a blank and then a word to make that word its answer. Arrow keys move the focused blank.")}
-      </p>
-      <div className="whitespace-pre-wrap">
-        {pieces.map((piece, at) => {
-          if (piece.kind === "space") return <span key={at}>{piece.text}</span>;
-          if (piece.kind === "word") {
-            return (
-              <span
-                key={at}
-                onDragOver={(event) => {
-                  if (dragging === null) return;
-                  event.preventDefault();
-                  setOver(at);
-                }}
-                onDragLeave={() => setOver((current) => (current === at ? null : current))}
-                onDrop={(event) => {
-                  event.preventDefault();
-                  if (dragging !== null) move(dragging, at);
-                  setDragging(null);
-                  setOver(null);
-                }}
-                onClick={() => (armed !== null ? takeWord(armed, at) : undefined)}
-                className={cn(
-                  "rounded-sm",
-                  over === at && "shadow-[inset_3px_0_0_var(--color-rose-500)] bg-rose-50",
-                  armed !== null && "cursor-pointer hover:bg-rose-100",
-                )}
-              >
-                {piece.text}
-              </span>
-            );
-          }
-          const node = nodes[piece.index];
-          const selected = node && editor.selectedId === node.id;
-          return (
-            <button
-              key={at}
-              type="button"
-              draggable
-              onDragStart={(event) => {
-                event.dataTransfer.setData("text/plain", String(piece.index));
-                event.dataTransfer.effectAllowed = "move";
-                setDragging(piece.index);
-              }}
-              onDragEnd={() => {
-                setDragging(null);
-                setOver(null);
-              }}
-              onClick={() => {
-                if (node) editor.onSelect(node.id);
-                setArmed((current) => (current === piece.index ? null : piece.index));
-              }}
-              onKeyDown={(event) => {
-                if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
-                  event.preventDefault();
-                  nudge(at, piece.index, event.key === "ArrowLeft" ? -1 : 1);
-                }
-              }}
-              aria-label={t("exercise.edit.blank", "Blank {n}, drag to move", { n: numbers[piece.index] ?? piece.index + 1 })}
-              className={cn(
-                touchHitArea,
-                "mx-0.5 inline-flex h-8 cursor-grab items-center gap-1 rounded-md border-2 px-2 align-middle text-xs font-extrabold active:cursor-grabbing",
-                selected ? "border-rose-500 bg-rose-100 text-rose-700" : "border-dashed border-ink-300 bg-muted text-ink-700",
-                node ? "" : "border-error text-error",
-              )}
-            >
-              <GripVertical className="size-3.5" aria-hidden />
-              {numbers[piece.index] ?? "?"}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 /** A question's `prompt`, printed, or editable in place in edit mode. */
 export function EditablePrompt({ node }: { node: ExerciseNode & { content: { prompt: string } } }) {
   const { t } = useI18n();
@@ -649,5 +505,49 @@ export function QuestionMetaControls({ node, stacked = false }: { node: Exercise
         {t("exercise.edit.points", "pts")}
       </label>
     </span>
+  );
+}
+
+/**
+ * A question's settings, anchored to its number on a section page where no
+ * card holds them: type, skill and marks, the host's tools (its settings
+ * button, keep or discard) and any action the caller adds. Closes on a press
+ * outside or Escape.
+ */
+export function QuestionMenu({
+  node,
+  onClose,
+  extra,
+}: {
+  node: ExerciseNode;
+  onClose: () => void;
+  extra?: ReactNode;
+}) {
+  const editor = useExerciseEditor();
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const onDown = (event: PointerEvent) => {
+      if (!ref.current?.contains(event.target as Node)) onClose();
+    };
+    const onKey = (event: KeyboardEvent) => (event.key === "Escape" ? onClose() : undefined);
+    document.addEventListener("pointerdown", onDown);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onDown);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [onClose]);
+  if (!editor) return null;
+  return (
+    <div
+      ref={ref}
+      role="dialog"
+      onClick={(event) => event.stopPropagation()}
+      className="absolute left-0 top-full z-30 mt-2 flex w-60 flex-col gap-2 rounded-2xl border bg-card p-3 text-left text-sm leading-normal shadow-xl"
+    >
+      <QuestionMetaControls node={node} stacked />
+      <div className="flex flex-wrap items-center gap-1.5">{editor.questionTools?.(node)}</div>
+      {extra}
+    </div>
   );
 }
