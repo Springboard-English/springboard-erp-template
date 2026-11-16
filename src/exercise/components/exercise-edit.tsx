@@ -312,7 +312,7 @@ export function AddRow({
       type="button"
       onClick={onClick}
       className={cn(
-        "flex w-full items-center gap-3 border-2 border-dashed border-border bg-transparent text-left font-semibold text-muted-foreground transition-colors hover:border-rose-300 hover:text-foreground",
+        "flex w-full items-center justify-center gap-3 border-2 border-dashed border-border bg-transparent text-center font-semibold text-muted-foreground transition-colors hover:border-rose-300 hover:text-foreground",
         className ?? "rounded-xl p-2.5 text-sm",
       )}
     >
