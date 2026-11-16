@@ -1,34 +1,34 @@
-import { createContext, useContext, useState, type ReactNode } from "react";
-import { GripVertical, Pencil } from "lucide-react";
+import { createContext, useContext, useRef, useState, type ReactNode } from "react";
+import { GripVertical, ImagePlus, Loader2, Pencil, Plus, X } from "lucide-react";
 
 import { Button } from "../../components/ui/button";
 import { Textarea } from "../../components/ui/textarea";
 import { useI18n } from "../../context/I18nContext";
 import { touchHitArea } from "../../lib/touchTarget";
 import { cn } from "../../lib/utils";
-import { wordAt } from "../lib/error-correction";
-import { huntMarks, markFromParagraph } from "../lib/error-hunt";
 import type { ExerciseNode } from "../lib/exercises";
 import { gapPieces, moveGap } from "../lib/gap-move";
 import { joinPassage, splitPassage } from "../lib/passage";
-import { ClickableSentence, type HighlightRun } from "./clickable-sentence";
+import { optionLetters } from "../lib/option-letters";
 import { PassageText } from "./passage-text";
 
 // Edit mode for the runner page.
 //
-// A teacher edits a paper on the same screen a student sits it on. When an
-// `ExerciseEditProvider` wraps `ExercisePage`, the page keeps its layout but
-// swaps what a student would answer for what a teacher edits: passage
-// paragraphs open in place, cloze blanks drag between words, an error hunt's
-// words mark the selected question's mistake, and each question renders the
-// host's own editor (`renderQuestion`). Nothing here saves: every change goes
-// to the host, which holds the drafts and the pending-changes bar.
+// A teacher edits a paper on the screen a student sits it on. When an
+// `ExerciseEditProvider` wraps `ExercisePage`, the page draws the same student
+// renderers, answered with the question's key: answering one sets its key
+// (see `lib/answer-key-bridge.ts`), its text edits in place (`EditableText`),
+// passages edit by paragraph and cloze blanks can be dragged between words.
+// Nothing here saves: every change goes to the host, which holds the drafts
+// and the pending-changes bar.
 
 /** What the host supplies to put the runner page in edit mode. */
 export interface ExerciseEditor {
   /** The question being edited, highlighted wherever the page shows it. */
   selectedId: string | null;
   onSelect: (nodeId: string) => void;
+  /** A question changed: its text, or its key from an answer given on it. */
+  onNodeChange: (nodeId: string, node: ExerciseNode) => void;
   /** A collection's passage changed: its key and every paragraph. */
   onPassageChange: (collectionKey: string, passage: string[]) => void;
   /**
@@ -36,10 +36,13 @@ export interface ExerciseEditor {
    * their new order, which is the order of the `{gap}` tokens.
    */
   onBlanksMove: (collectionKey: string, passage: string[], order: string[]) => void;
-  /** An error hunt word was picked as a question's mistake, in the joined passage. */
-  onHuntMark: (nodeId: string, mark: { error: string; error_offset: number; sentence: string }) => void;
-  /** The host's editor for one question, drawn where the student's question would be. */
-  renderQuestion: (node: ExerciseNode, number: number) => ReactNode;
+  /** The host's controls beside a question's marks (its settings button). */
+  questionTools?: (node: ExerciseNode) => ReactNode;
+  /**
+   * Stores a picture for an option and answers its key and a URL to show it.
+   * Without it, options offer no picture controls.
+   */
+  uploadOptionImage?: (file: File) => Promise<{ image_key: string; url: string }>;
 }
 
 const EditContext = createContext<ExerciseEditor | null>(null);
@@ -55,26 +58,54 @@ export function useExerciseEditor(): ExerciseEditor | null {
 }
 
 /**
- * One question's slot in edit mode: the host's editor, framed and selectable.
- * Focus or a press anywhere inside selects it, so the passage can show which
- * blank or mistake belongs to the question being worked on.
+ * A setter for a question's content fields in edit mode, or null outside it.
+ * Renderers use it to make their text editable in place.
  */
-export function EditableQuestion({ node, number }: { node: ExerciseNode; number: number }) {
+export function useNodeEdit(node: ExerciseNode): ((patch: Record<string, unknown>) => void) | null {
   const editor = useExerciseEditor();
   if (!editor) return null;
-  const selected = editor.selectedId === node.id;
+  return (patch) =>
+    editor.onNodeChange(node.id, { ...node, content: { ...node.content, ...patch } } as ExerciseNode);
+}
+
+/**
+ * A piece of a question's printed text: plain text for a student, and in edit
+ * mode the same text as a borderless field that grows with it, so a teacher
+ * types where the words are printed.
+ */
+export function EditableText({
+  value,
+  onChange,
+  placeholder,
+  label,
+  className,
+  inline = false,
+}: {
+  value: string;
+  /** Omitted outside edit mode, which prints the text. */
+  onChange?: ((value: string) => void) | null;
+  placeholder?: string;
+  label: string;
+  className?: string;
+  /** Inside a sentence (the words either side of a blank). */
+  inline?: boolean;
+}) {
+  if (!onChange) return <>{value}</>;
   return (
-    <div
-      data-question-id={node.id}
-      onFocusCapture={() => (selected ? undefined : editor.onSelect(node.id))}
-      onPointerDownCapture={() => (selected ? undefined : editor.onSelect(node.id))}
+    <textarea
+      value={value}
+      rows={1}
+      aria-label={label}
+      placeholder={placeholder}
+      onChange={(event) => onChange(event.target.value)}
+      // Inside a choice row a click would also pick the row.
+      onClick={(event) => event.stopPropagation()}
       className={cn(
-        "scroll-mt-4 rounded-2xl transition-shadow",
-        selected && "ring-2 ring-rose-400 ring-offset-2 ring-offset-background",
+        "field-sizing-content resize-none rounded-md border border-dashed border-ink-300 bg-transparent px-1 align-baseline font-[inherit] text-[length:inherit] leading-[inherit] text-[inherit] outline-none hover:border-rose-300 focus:border-solid focus:border-rose-400",
+        inline ? "inline-block min-w-12 max-w-full align-middle" : "block w-full",
+        className,
       )}
-    >
-      {editor.renderQuestion(node, number)}
-    </div>
+    />
   );
 }
 
@@ -274,58 +305,171 @@ export function ClozeBlanksEditor({
   );
 }
 
+/** A question's `prompt`, printed, or editable in place in edit mode. */
+export function EditablePrompt({ node }: { node: ExerciseNode & { content: { prompt: string } } }) {
+  const { t } = useI18n();
+  const edit = useNodeEdit(node);
+  return (
+    <EditableText
+      value={node.content.prompt}
+      onChange={edit && ((next) => edit({ prompt: next }))}
+      label={t("exercise.edit.prompt", "Question")}
+    />
+  );
+}
+
+/** One choice as an option list stores it. */
+interface EditableOption {
+  id: string;
+  label: string;
+  image_key?: string;
+  image_url?: string;
+}
+
 /**
- * An error hunt's passage in edit mode: clicking a word marks it as the
- * selected question's mistake. Every question's mistake shows with its number.
+ * Add, replace or remove an option's picture in edit mode. The file goes to
+ * the host's `uploadOptionImage` as soon as it is picked; the option changes
+ * through `onChange` like any other edit, so it saves with the question.
  */
-export function HuntMarksEditor({
-  passage,
-  nodes,
-  numbers,
+export function OptionImageControls({
+  option,
+  letter,
+  onChange,
 }: {
-  passage: string[];
-  nodes: Array<Extract<ExerciseNode, { type: "error-correction" }>>;
-  numbers: number[];
+  option: EditableOption;
+  letter: string;
+  onChange: (option: EditableOption) => void;
 }) {
   const { t } = useI18n();
   const editor = useExerciseEditor();
-  if (!editor) return null;
-  const text = joinPassage(passage);
-  const { marks } = huntMarks(text, nodes.map((node) => node.content));
-  const selectedIndex = nodes.findIndex((node) => node.id === editor.selectedId);
-  const runs: HighlightRun[] = marks.map((mark) => ({
-    span: mark.span,
-    className:
-      mark.index === selectedIndex
-        ? "bg-rose-100 font-extrabold text-rose-700 ring-2 ring-rose-400"
-        : "bg-lav-bg font-extrabold text-lav-700",
-  }));
-  const labels = new Map(marks.map((mark) => [mark.paragraphOffset, String(numbers[mark.index] ?? "")]));
-  const pick = (offset: number) => {
-    const node = nodes[selectedIndex];
-    if (!node) return;
-    const word = wordAt(text, offset);
-    if (!word) return;
-    const mark = markFromParagraph(text, { start: offset, end: offset + word.length });
-    if (!mark) return;
-    editor.onHuntMark(node.id, { error: mark.error, error_offset: mark.paragraphOffset, sentence: mark.sentence });
+  const input = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState<string | null>(null);
+  const upload = editor?.uploadOptionImage;
+  if (!upload) return null;
+  const pick = async (file: File | undefined) => {
+    if (!file) return;
+    setBusy(true);
+    setFailed(null);
+    try {
+      const image = await upload(file);
+      onChange({ ...option, image_key: image.image_key, image_url: image.url });
+    } catch (error) {
+      setFailed(error instanceof Error ? error.message : t("exercise.edit.imageFailed", "The picture couldn’t be uploaded."));
+    } finally {
+      setBusy(false);
+      if (input.current) input.current.value = "";
+    }
   };
   return (
-    <div className="rounded-2xl border-2 bg-card p-4 shadow-sm sm:p-5">
-      <p className="mb-3 text-[11px] font-extrabold text-muted-foreground">
-        {selectedIndex >= 0
-          ? t("exercise.edit.huntPick", "Click the word that is question {n}'s mistake", { n: numbers[selectedIndex] })
-          : t("exercise.edit.huntSelect", "Select a question to mark its mistake")}
-      </p>
-      <ClickableSentence
-        sentence={text}
-        selected={null}
-        disabled={selectedIndex < 0}
-        onSelect={pick}
-        className="text-[15px] leading-8"
-        wordBadge={(offset) => labels.get(offset)}
-        runs={runs}
+    <span className="inline-flex shrink-0 items-center gap-1" onClick={(event) => event.stopPropagation()}>
+      <input
+        ref={input}
+        type="file"
+        accept="image/png,image/jpeg,image/webp,image/gif"
+        className="sr-only"
+        tabIndex={-1}
+        onChange={(event) => void pick(event.target.files?.[0])}
       />
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        disabled={busy}
+        aria-label={
+          option.image_url
+            ? t("exercise.edit.replaceImage", "Replace option {letter}'s picture", { letter })
+            : t("exercise.edit.addImage", "Add a picture to option {letter}", { letter })
+        }
+        onClick={() => input.current?.click()}
+      >
+        {busy ? <Loader2 className="size-4 animate-spin" /> : <ImagePlus className="size-4" />}
+      </Button>
+      {option.image_url ? (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          aria-label={t("exercise.edit.removeImage", "Remove option {letter}'s picture", { letter })}
+          onClick={() => onChange({ id: option.id, label: option.label })}
+        >
+          <X className="size-4" />
+        </Button>
+      ) : null}
+      {failed ? <span className="text-xs font-bold text-error">{failed}</span> : null}
+    </span>
+  );
+}
+
+/**
+ * The one lettered list a pooled section draws from (gapped text, matching,
+ * jumbled paragraphs, "choose several"), edited once for every question in it.
+ * Each question stores a copy, so every change goes to all of them; a removed
+ * option clears the key of a question that pointed at it.
+ */
+export function PoolOptionsEditor({ nodes }: { nodes: ExerciseNode[] }) {
+  const { t } = useI18n();
+  const editor = useExerciseEditor();
+  const first = nodes.find((node) => node.type === "mcq");
+  if (!editor || !first || first.type !== "mcq") return null;
+  const options = first.content.options as EditableOption[];
+  const letters = optionLetters(options);
+  const write = (next: EditableOption[]) => {
+    const ids = new Set(next.map((option) => option.id));
+    for (const node of nodes) {
+      if (node.type !== "mcq") continue;
+      const keep = node.content.correct_option_id && ids.has(node.content.correct_option_id);
+      editor.onNodeChange(node.id, {
+        ...node,
+        content: { ...node.content, options: next.map((option) => ({ ...option })), correct_option_id: keep ? node.content.correct_option_id : "" },
+      } as ExerciseNode);
+    }
+  };
+  return (
+    <div className="space-y-2 rounded-2xl border bg-card p-4 shadow-sm">
+      <p className="text-[11px] font-extrabold text-muted-foreground">
+        {t("exercise.edit.poolOptions", "The options every question in this section draws from")}
+      </p>
+      {options.map((option, index) => (
+        <div key={option.id} className="flex items-start gap-2">
+          <span className="grid size-7 shrink-0 place-items-center rounded-[9px] bg-muted text-[13px] font-extrabold text-ink-700">
+            {letters[index]}
+          </span>
+          <EditableText
+            value={option.label}
+            label={t("exercise.renderer.optionAria", "Option {letter}", { letter: letters[index] })}
+            onChange={(label) => write(options.map((other) => (other.id === option.id ? { ...other, label } : other)))}
+            className="text-sm font-semibold leading-6"
+          />
+          <OptionImageControls
+            option={option}
+            letter={letters[index]}
+            onChange={(next) => write(options.map((other) => (other.id === option.id ? next : other)))}
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            aria-label={t("exercise.edit.removeOption", "Remove option {letter}", { letter: letters[index] })}
+            onClick={() => write(options.filter((other) => other.id !== option.id))}
+          >
+            <X className="size-4" />
+          </Button>
+        </div>
+      ))}
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={() => {
+          let n = options.length + 1;
+          while (options.some((option) => option.id === `opt-${n}`)) n += 1;
+          write([...options, { id: `opt-${n}`, label: "" }]);
+        }}
+      >
+        <Plus className="size-4" />
+        {t("exercise.edit.addOption", "Add option")}
+      </Button>
     </div>
   );
 }

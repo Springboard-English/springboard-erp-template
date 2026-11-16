@@ -14,6 +14,7 @@ import { EXAM_FIELD_PROPS } from "../lib/exam-field";
 
 import { ClickableSentence } from "./clickable-sentence";
 import { Frame, type SubProps } from "./frame";
+import { EditableText, useNodeEdit } from "./exercise-edit";
 
 // Error identification & correction. The student selects the wrong word or
 // words in an unmarked sentence (identification) and types the fix
@@ -25,6 +26,7 @@ type ErrorNode = Extract<ExerciseNode, { type: "error-correction" }>;
 
 export function ErrorCorrection({ node, mode, value, onChange }: SubProps<ErrorNode>) {
   const { t } = useI18n();
+  const edit = useNodeEdit(node);
   const sentence = node.content.sentence;
   const record = answerRecord(value);
   const picked = answerSpan(sentence, record);
@@ -51,6 +53,18 @@ export function ErrorCorrection({ node, mode, value, onChange }: SubProps<ErrorN
   return (
     <Frame node={node} mode={mode}>
       <div className="space-y-5">
+        {edit ? (
+          // The sentence as typed; the mistake is still picked in the line below.
+          <EditableText
+            value={sentence}
+            className="text-[15px] font-semibold leading-7"
+            label={t("exercise.edit.sentence", "Sentence")}
+            onChange={(next) => {
+              const at = node.content.error ? next.indexOf(node.content.error) : -1;
+              edit({ sentence: next, error_offset: at >= 0 ? at : undefined, ...(at >= 0 ? {} : { error: undefined }) });
+            }}
+          />
+        ) : null}
         <ClickableSentence
           sentence={sentence}
           selected={mode === "result" ? null : picked}

@@ -3,6 +3,8 @@ import type { ExerciseNode } from "../lib/exercises";
 import { promptDensity, promptTextClass } from "../lib/prompt-scale";
 
 import { Frame, type SubProps } from "./frame";
+import { EditableText, useNodeEdit } from "./exercise-edit";
+import { useI18n } from "../../context/I18nContext";
 
 // true-false-not-given: one statement, three fixed choices. The passage the
 // statement is judged against lives on the question's collection (its
@@ -16,6 +18,8 @@ const CHOICES = [
 ] as const;
 
 export function TrueFalse({ node, mode, value, onChange }: SubProps<TfngNode>) {
+  const { t } = useI18n();
+  const edit = useNodeEdit(node);
   const chosen = typeof value === "string" ? value : "";
   const pick = (next: string) => {
     if (mode === "result") return;
@@ -29,7 +33,11 @@ export function TrueFalse({ node, mode, value, onChange }: SubProps<TfngNode>) {
           "text-foreground",
         )}
       >
-        {node.content.statement}
+        <EditableText
+          value={node.content.statement}
+          onChange={edit && ((next) => edit({ statement: next }))}
+          label={t("exercise.edit.statement", "Statement")}
+        />
       </p>
       <div className="mt-5 grid gap-2.5 sm:grid-cols-3">
         {CHOICES.map((choice) => {

@@ -9,6 +9,8 @@ import { formatMarks } from "../lib/grading";
 import { questionTypeLabel } from "../lib/section-type";
 import { CategoryPill } from "./category-pill";
 import { Explanation, explanationOf } from "./explanation";
+import { useExerciseEditor } from "./exercise-edit";
+import { cn } from "../../lib/utils";
 
 export type ExerciseMode = "practice" | "review" | "result";
 
@@ -23,20 +25,38 @@ export type SubProps<T extends ExerciseNode = ExerciseNode> = {
 /** The white learner-shell card that wraps every question type (skill pill, title, instruction, points). */
 export function Frame({ node, children, mode }: { node: ExerciseNode; children: ReactNode; mode: ExerciseMode }) {
   const { t } = useI18n();
+  const editor = useExerciseEditor();
+  // In edit mode the question is selectable and carries the host's controls.
+  const selected = editor?.selectedId === node.id;
+  const select = () => (editor && !selected ? editor.onSelect(node.id) : undefined);
+  const cardClass = cn(
+    "gap-0 overflow-hidden border bg-card pt-0 shadow-sm",
+    editor && "scroll-mt-4",
+    selected && "ring-2 ring-rose-400 ring-offset-2 ring-offset-background",
+  );
+  const tools = editor?.questionTools?.(node) ?? null;
   // Not while answering: a printed paper names no skill or task type, and the
   // instruction already says what to do.
   const showPill = mode !== "practice";
   const hasText = Boolean(node.title?.trim() || node.instruction?.trim());
-  const points = (
+  const badge = (
     <Badge variant={mode === "result" ? "secondary" : "outline"}>
       {node.points === 1 ? t("exercise.renderer.pointOne", "1 point") : t("exercise.renderer.pointOther", "{n} points", { n: formatMarks(node.points) })}
     </Badge>
+  );
+  const points = tools ? (
+    <div className="flex items-center gap-1.5">
+      {badge}
+      {tools}
+    </div>
+  ) : (
+    badge
   );
   // With no pill and no text the header would be a tinted band holding only
   // the marks, so the marks sit at the top of the question instead.
   if (!showPill && !hasText) {
     return (
-      <Card className="gap-0 overflow-hidden border bg-card pt-0 shadow-sm">
+      <Card data-question-id={node.id} onFocusCapture={select} onPointerDownCapture={select} className={cardClass}>
         <CardContent className="p-5 sm:p-7">
           <div className="float-right mb-2 ml-3">{points}</div>
           {children}
@@ -49,7 +69,7 @@ export function Frame({ node, children, mode }: { node: ExerciseNode; children: 
     // `gap-0 pt-0`: the template's Card spaces its children by 24px and pads its
     // top, which would leave an untinted strip above the header and a gap below it on
     // top of the content's own padding.
-    <Card className="gap-0 overflow-hidden border bg-card pt-0 shadow-sm">
+    <Card data-question-id={node.id} onFocusCapture={select} onPointerDownCapture={select} className={cardClass}>
       {/* `flex` spelled out: the template's CardHeader is a grid, where the
           row classes do nothing and the points badge stacks under the pills. */}
       <CardHeader className="flex flex-col gap-4 border-b bg-muted/30 pt-5 pb-5 sm:flex-row sm:items-start sm:justify-between">

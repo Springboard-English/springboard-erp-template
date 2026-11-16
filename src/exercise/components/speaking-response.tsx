@@ -6,6 +6,7 @@ import { cn } from "../../lib/utils";
 import { useAnswerFiles, type FinishRecording } from "../lib/answer-files";
 import { fileAnswerKey, type ExerciseNode } from "../lib/exercises";
 import { promptDensity, promptTextClass } from "../lib/prompt-scale";
+import { EditablePrompt } from "./exercise-edit";
 import { formatClock } from "../lib/media-window";
 import { pickRecordingType, secondsUntil, takeEndsAt, uploadType, windowStage } from "../lib/recorder";
 
@@ -189,7 +190,7 @@ export function SpeakingResponse({ node, mode, value, onChange }: SubProps<Speak
 
   return (
     <Frame node={node} mode={mode}>
-      <p className={cn(promptTextClass(promptDensity(node.content.prompt)), "text-foreground")}>{node.content.prompt}</p>
+      <p className={cn(promptTextClass(promptDensity(node.content.prompt)), "text-foreground")}><EditablePrompt node={node} /></p>
       {canRecord || handedIn || file ? (
         <div className="mt-6 flex flex-col items-center gap-3 rounded-2xl border-2 bg-card px-4 py-6 text-center">
           {canRecord ? (

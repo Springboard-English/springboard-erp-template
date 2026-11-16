@@ -6,6 +6,7 @@ import { cn } from "../../lib/utils";
 import { driveFileUrl, useAnswerFiles, type AnswerFile } from "../lib/answer-files";
 import type { ExerciseNode } from "../lib/exercises";
 import { promptDensity, promptTextClass } from "../lib/prompt-scale";
+import { EditablePrompt } from "./exercise-edit";
 import { EXAM_FIELD_PROPS } from "../lib/exam-field";
 
 import { Frame, type SubProps } from "./frame";
@@ -25,7 +26,7 @@ export function EssayResponse({ node, mode, value, onChange }: SubProps<EssayNod
     : t("exercise.renderer.writeClearly", "Write clearly and support your ideas");
   return (
     <Frame node={node} mode={mode}>
-      <p className={cn(promptTextClass(promptDensity(node.content.prompt)), "text-foreground")}>{node.content.prompt}</p>
+      <p className={cn(promptTextClass(promptDensity(node.content.prompt)), "text-foreground")}><EditablePrompt node={node} /></p>
       {doc ? (
         <>
           <EssayDocCard doc={doc} />

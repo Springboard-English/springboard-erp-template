@@ -1,4 +1,5 @@
 import { useI18n } from "../../context/I18nContext";
+import { EditableText, useExerciseEditor } from "./exercise-edit";
 import { cn } from "../../lib/utils";
 import type { ExerciseAnswer, ExerciseNode } from "../lib/exercises";
 import { optionLetters } from "../lib/option-letters";
@@ -41,6 +42,7 @@ export function MatchingButtons({
   showLegend?: boolean;
 }) {
   const { t } = useI18n();
+  const editor = useExerciseEditor();
   // The options are shared; take them from the first item. Letters are the
   // paper's own where the ids carry them ("E for Emma"), else by position.
   const options = nodes[0]?.content.options ?? [];
@@ -82,7 +84,15 @@ export function MatchingButtons({
                 {numbers[index]}
               </span>
               <span className="min-w-0 flex-1 text-sm font-semibold text-foreground">
-                {node.content.prompt}
+                <EditableText
+                  value={node.content.prompt}
+                  label={t("exercise.edit.prompt", "Question")}
+                  onChange={
+                    editor &&
+                    ((prompt) =>
+                      editor.onNodeChange(node.id, { ...node, content: { ...node.content, prompt } }))
+                  }
+                />
               </span>
               <div
                 role="radiogroup"

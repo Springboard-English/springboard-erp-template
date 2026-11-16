@@ -1,6 +1,7 @@
 import { Check, CircleAlert } from "lucide-react";
 
 import { useI18n } from "../../context/I18nContext";
+import { EditableText, useExerciseEditor } from "./exercise-edit";
 import { cn } from "../../lib/utils";
 import type { ExerciseAnswer, ExerciseNode } from "../lib/exercises";
 import { hasOptionImages } from "../lib/option-images";
@@ -47,6 +48,7 @@ export function MultiSelectSection({
   mode?: "practice" | "result";
 }) {
   const { t } = useI18n();
+  const editor = useExerciseEditor();
   // One stem and one option pool, shared by every question in the section.
   const first = nodes[0];
   const options = first?.content.options ?? [];
@@ -90,7 +92,17 @@ export function MultiSelectSection({
   return (
     <div className="rounded-2xl border bg-card p-5 shadow-sm sm:p-6">
       <p className={cn(promptTextClass(promptDensity(prompt)), "text-foreground")}>
-        {prompt}
+        {/* The group's one stem: every question in it stores a copy. */}
+        <EditableText
+          value={prompt}
+          label={t("exercise.edit.prompt", "Question")}
+          onChange={
+            editor &&
+            ((next) => {
+              for (const node of nodes) editor.onNodeChange(node.id, { ...node, content: { ...node.content, prompt: next } });
+            })
+          }
+        />
       </p>
       {mode !== "result" ? (
         <p className="mt-1.5 text-xs font-bold text-muted-foreground">

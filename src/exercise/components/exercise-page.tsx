@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { BookOpen } from "lucide-react";
 
 import { useI18n } from "../../context/I18nContext";
@@ -36,10 +36,12 @@ import { HighlightScope } from "./highlighter";
 import {
   ClozeBlanksEditor,
   EditablePassage,
-  EditableQuestion,
-  HuntMarksEditor,
+  PoolOptionsEditor,
   useExerciseEditor,
 } from "./exercise-edit";
+import { Button } from "../../components/ui/button";
+import { answerFromKey, keyFromAnswer } from "../lib/answer-key-bridge";
+import { joinPassage } from "../lib/passage";
 import { countGapTokens } from "../lib/gap-token";
 
 // ONE screen of the student-facing activity, and the single source of truth for
@@ -149,74 +151,100 @@ function PageBody(props: ExercisePageProps) {
   return editor ? <EditPageBody {...props} /> : <AnswerPageBody {...props} />;
 }
 
+/** Which part of a section's own text a teacher is working on in edit mode. */
+type EditTool = "answers" | "text" | "blanks";
+
 /**
- * The page in edit mode: the same layout, with the section's own text editable
- * and each question replaced by the host's editor. A cloze's blanks and an
- * error hunt's mistakes are placed on the passage itself.
+ * The page in edit mode: the student's own page, answered with each
+ * question's key. Answering sets the key and question text edits in place in
+ * the renderers. A section whose text the student component draws (a cloze,
+ * an error hunt, a gapped text) also offers that text as paragraphs, and a
+ * cloze's blanks can be dragged between words.
  */
-function EditPageBody({ page, nodes }: ExercisePageProps) {
+function EditPageBody(props: ExercisePageProps) {
   const { t } = useI18n();
+  const editor = useExerciseEditor();
+  const [tool, setTool] = useState<EditTool>("answers");
+  const { page, nodes } = props;
   const pageNodes = page.nodeIndices.map((i) => nodes[i]).filter(Boolean);
   const numbers = page.nodeIndices.map((i) => i + 1);
   const layout = pageLayout(page, nodes);
   const section = page.stub?.kind === "section" ? page.stub : null;
   const ownText = section?.passage ?? [];
-  const questions = (
-    <div className="space-y-4">
-      {pageNodes.map((node, k) => (
-        <EditableQuestion key={node.id} node={node} number={numbers[k]} />
-      ))}
-    </div>
-  );
-  // The section's own text, editable as prose, under the blanks or marks drawn on it.
-  const sectionText = section ? (
-    <details className="rounded-2xl border bg-card p-4 shadow-sm" open={ownText.length === 0}>
-      <summary className="cursor-pointer text-sm font-bold text-foreground">
-        {t("exercise.edit.sectionText", "The section's passage")}
-      </summary>
-      <EditablePassage collectionKey={section.appsheet_key} paragraphs={ownText} className="mt-3" />
-    </details>
-  ) : null;
+  const huntText = layout.kind === "error-hunt" ? joinPassage(ownText) : null;
+  const pooled = layout.kind === "multi-select";
+  if (!editor) return null;
 
-  if (section && (layout.kind === "cloze" || layout.kind === "error-hunt")) {
-    return (
-      <CollectionContext stub={page.stub} hideHeader preferPartPassage>
-        <SectionLead stub={page.stub} ownsText />
-        <div className="space-y-4">
-          {layout.kind === "cloze" ? (
-            countGapTokens(ownText.join("\n\n")) > 0 ? (
-              <ClozeBlanksEditor
-                collectionKey={section.appsheet_key}
-                passage={ownText}
-                nodes={pageNodes}
-                numbers={numbers}
-              />
-            ) : (
-              <p className="rounded-2xl border border-butter-300 bg-butter-bg px-4 py-3 text-sm font-bold text-ink-700">
-                {t("exercise.edit.noBlanks", "This passage has no {gap} markers yet. Edit it and put {gap} where each question's blank goes.")}
-              </p>
-            )
-          ) : (
-            <HuntMarksEditor
+  // "Choose several" hands every question the group's whole selection.
+  const keyed = pageNodes.map((node) => answerFromKey(node));
+  const answers: Record<string, ExerciseAnswer> = {};
+  pageNodes.forEach((node, k) => {
+    answers[node.id] = pooled ? keyed.filter((id): id is string => typeof id === "string") : keyed[k];
+  });
+  const onChange = (nodeId: string, value: ExerciseAnswer) => {
+    editor.onSelect(nodeId);
+    if (pooled) {
+      const picked = Array.isArray(value) ? value : [];
+      pageNodes.forEach((node, k) => editor.onNodeChange(node.id, keyFromAnswer(node, picked[k] ?? "")));
+      return;
+    }
+    const node = pageNodes.find((candidate) => candidate.id === nodeId);
+    if (node) editor.onNodeChange(nodeId, keyFromAnswer(node, value, huntText));
+  };
+
+  const ownsText =
+    section !== null &&
+    (layout.kind === "cloze" || layout.kind === "error-hunt" || layout.kind === "gapped-text" || layout.kind === "jumbled-paragraph");
+  const canMoveBlanks = layout.kind === "cloze" && countGapTokens(joinPassage(ownText)) > 0;
+  const tools: Array<{ value: EditTool; label: string }> = [
+    { value: "answers", label: t("exercise.edit.toolAnswers", "Questions and answers") },
+    { value: "text", label: t("exercise.edit.toolText", "Section text") },
+    ...(canMoveBlanks ? [{ value: "blanks" as const, label: t("exercise.edit.toolBlanks", "Move blanks") }] : []),
+  ];
+  const active = ownsText ? tool : "answers";
+  // Sections whose questions all draw from one lettered list.
+  const pooledLayout =
+    layout.kind === "gapped-text" ||
+    layout.kind === "multiple-matching" ||
+    layout.kind === "jumbled-paragraph" ||
+    layout.kind === "multi-select";
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
+      {ownsText ? (
+        <div role="group" aria-label={t("exercise.edit.tools", "Edit")} className="flex shrink-0 flex-wrap gap-1.5">
+          {tools.map((option) => (
+            <Button
+              key={option.value}
+              size="sm"
+              variant={active === option.value ? "default" : "outline"}
+              aria-pressed={active === option.value}
+              onClick={() => setTool(option.value)}
+            >
+              {option.label}
+            </Button>
+          ))}
+        </div>
+      ) : null}
+      {active === "answers" && pooledLayout ? <PoolOptionsEditor nodes={pageNodes} /> : null}
+      {active === "answers" ? (
+        <AnswerPageBody {...props} answers={answers} onChange={onChange} enableAnnotations={false} />
+      ) : (
+        <CollectionContext stub={page.stub} hideHeader preferPartPassage>
+          <SectionLead stub={page.stub} ownsText />
+          {active === "blanks" ? (
+            <ClozeBlanksEditor
+              collectionKey={section!.appsheet_key}
               passage={ownText}
-              nodes={pageNodes as ErrorHuntNode[]}
+              nodes={pageNodes}
               numbers={numbers}
             />
+          ) : (
+            <EditablePassage collectionKey={section!.appsheet_key} paragraphs={ownText} />
           )}
-          {sectionText}
-          {questions}
-        </div>
-      </CollectionContext>
-    );
-  }
-
-  // Every other layout: the section's passage sits in the side column, where
-  // `CollectionContext` makes it editable, and the questions stack beside it.
-  return (
-    <CollectionContext stub={page.stub} hideHeader>
-      <SectionLead stub={page.stub} />
-      {questions}
-    </CollectionContext>
+        </CollectionContext>
+      )}
+    </div>
   );
 }
 
