@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Check, CircleAlert } from "lucide-react";
 
 import { RadioGroup, RadioGroupItem } from "../../components/ui/radio-group";
@@ -19,7 +19,12 @@ import { OptionImage, PICTURED_ROW, PICTURED_TILE } from "./option-image";
 // lettered rows with hover, selected, and (in result mode) correct/wrong states.
 type ChoiceNode = Extract<ExerciseNode, { type: "mcq" | "reading-full-test" }>;
 
-export function McqChoiceGroup({ node, mode, value, onChange }: SubProps<ChoiceNode>) {
+/**
+ * One choice question: its prompt and lettered options, answered by a pick.
+ * `lead` is drawn above the prompt inside the same card (a question's own
+ * source text).
+ */
+export function McqChoiceGroup({ node, mode, value, onChange, lead }: SubProps<ChoiceNode> & { lead?: ReactNode }) {
   const { t } = useI18n();
   const { options, prompt, correct_option_id } = node.content;
   const letters = optionLetters(options);
@@ -39,6 +44,7 @@ export function McqChoiceGroup({ node, mode, value, onChange }: SubProps<ChoiceN
   };
   return (
     <Frame node={node} mode={mode}>
+      {lead}
       <p className={cn(promptTextClass(promptDensity(prompt)), "text-foreground")}>
         <EditableText
           value={prompt}

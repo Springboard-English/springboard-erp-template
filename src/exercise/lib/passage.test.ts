@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { joinPassage, splitPassage } from "./passage";
+import { joinPassage, splitPassage, typedParagraphs } from "./passage";
 
 describe("joinPassage", () => {
   it("joins paragraphs with a blank line, and tolerates nothing", () => {
@@ -28,5 +28,13 @@ describe("splitPassage", () => {
   it("round-trips whatever it produced", () => {
     const paragraphs = ["First para.", "Second para."];
     expect(splitPassage(joinPassage(paragraphs))).toEqual(paragraphs);
+  });
+});
+
+describe("typedParagraphs", () => {
+  it("is the exact inverse of joinPassage, spaces and empty paragraphs kept", () => {
+    for (const text of ["one ", "one\n\n", "a\n\nb  \n\nc", ""]) {
+      expect(joinPassage(typedParagraphs(text))).toBe(text);
+    }
   });
 });

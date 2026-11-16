@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import { tokenizeSentence, type WordSpan } from "./error-correction";
 import {
+  editHuntRun,
   huntMarks,
+  huntRuns,
   huntParagraph,
   initialActiveRow,
   labelsByParagraphOffset,
@@ -280,5 +282,28 @@ describe("picking words for numbered rows", () => {
       [at("with"), 52],
       [at("analysis"), 54],
     ]);
+  });
+});
+
+describe("typing in a hunt passage around its marks", () => {
+  const text = "She go home and he eat lunch.";
+  const picked = [{ start: 4, end: 6 }, null, { start: 19, end: 22 }];
+
+  it("cuts the passage into text and marks, in passage order", () => {
+    expect(huntRuns(text.length, picked)).toEqual([
+      { kind: "text", start: 0, end: 4 },
+      { kind: "mark", row: 0, start: 4, end: 6 },
+      { kind: "text", start: 6, end: 19 },
+      { kind: "mark", row: 2, start: 19, end: 22 },
+      { kind: "text", start: 22, end: text.length },
+    ]);
+  });
+
+  it("moves only the marks after the retyped run, onto the same words", () => {
+    const next = editHuntRun(text, picked, { start: 6, end: 19 }, " back home and then he ");
+    expect(next.picked[0]).toEqual({ start: 4, end: 6 });
+    const moved = next.picked[2]!;
+    expect(next.text.slice(moved.start, moved.end)).toBe("eat");
+    expect(next.text.slice(4, 6)).toBe("go");
   });
 });

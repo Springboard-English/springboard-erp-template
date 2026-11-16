@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { gapOntoWord, gapPieces, moveGap, piecesText } from "./gap-move";
+import { gapOntoWord, gapPieces, moveGap, piecesText, wordAtRunOffset } from "./gap-move";
 
 describe("moveGap", () => {
   const text = "People used honey to {gap} their food. It was a {gap} trade.";
@@ -41,5 +41,25 @@ describe("gapOntoWord", () => {
     expect(result?.text).toBe("People used honey to sweeten their {gap}.");
     expect(result?.word).toBe("food");
     expect(result?.order).toEqual([0]);
+  });
+});
+
+describe("wordAtRunOffset", () => {
+  // Runs: "The cat " | " on the mat." ; pieces: The,_,cat,_,{gap},_,on,_,the,_,mat.
+  const pieces = gapPieces("The cat {gap} on the mat.");
+  const word = (at: number | null) => (at === null ? null : (pieces[at] as { text: string }).text);
+
+  it("finds the word a caret sits in, or the nearest in its run", () => {
+    expect(word(wordAtRunOffset(pieces, 0, 5, "on"))).toBe("cat");
+    expect(word(wordAtRunOffset(pieces, 0, 3, "on"))).toBe("The");
+    expect(word(wordAtRunOffset(pieces, 1, 0, "on"))).toBe("on");
+    expect(word(wordAtRunOffset(pieces, 1, 9, "on"))).toBe("mat.");
+  });
+
+  it("drops before the word under the caret's first half, else the next", () => {
+    expect(word(wordAtRunOffset(pieces, 0, 4, "before"))).toBe("cat");
+    expect(word(wordAtRunOffset(pieces, 0, 6, "before"))).toBe("on");
+    expect(word(wordAtRunOffset(pieces, 1, 4, "before"))).toBe("the");
+    expect(wordAtRunOffset(pieces, 1, 12, "before")).toBeNull();
   });
 });
