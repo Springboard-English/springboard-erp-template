@@ -37,3 +37,18 @@ export function navGroups(
   });
   return groups;
 }
+
+/**
+ * `ids` with the ids in `ordered` rearranged into that order, each landing in
+ * one of the slots those ids held; every other id keeps its place, and an id
+ * not in `ids` is ignored. How a section reordered in the navigator becomes
+ * the paper's new order.
+ */
+export function placeInOrder(ids: string[], ordered: string[]): string[] {
+  // An id no longer in the list drops out, so the run fills exactly its slots.
+  const present = new Set(ids);
+  const run = ordered.filter((id) => present.has(id));
+  const moving = new Set(run);
+  let next = 0;
+  return ids.map((id) => (moving.has(id) ? run[next++] : id));
+}

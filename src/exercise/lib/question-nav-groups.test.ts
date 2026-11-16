@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { navGroups } from "./question-nav-groups";
+import { navGroups, placeInOrder } from "./question-nav-groups";
 import type { ExerciseNode } from "./exercises";
 import type { CollectionStub } from "../types";
 
@@ -21,5 +21,19 @@ describe("navGroups", () => {
 
   it("is one group without collections", () => {
     expect(navGroups([node("a"), node("b")], undefined).map((g) => g.indices)).toEqual([[0, 1]]);
+  });
+});
+
+describe("placeInOrder", () => {
+  it("reorders a run in the slots it held and leaves the rest", () => {
+    expect(placeInOrder(["a", "b", "c", "d", "e"], ["d", "b", "c"])).toEqual(["a", "d", "b", "c", "e"]);
+  });
+
+  it("ignores an id that is gone", () => {
+    expect(placeInOrder(["a", "b", "c"], ["c", "x", "a"])).toEqual(["c", "b", "a"]);
+  });
+
+  it("is the same list for the same order", () => {
+    expect(placeInOrder(["a", "b"], ["a", "b"])).toEqual(["a", "b"]);
   });
 });
