@@ -50,6 +50,7 @@ export * from "./components/error-correction";
 export * from "./components/error-hunt-section";
 export * from "./components/essay-response";
 export * from "./components/exercise-edit";
+export * from "./components/topic-pool";
 export * from "./components/exercise-page";
 export * from "./components/exercise-renderer";
 export * from "./components/explanation";
