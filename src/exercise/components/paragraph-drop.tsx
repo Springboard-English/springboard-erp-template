@@ -26,7 +26,7 @@ import { GripVertical } from "lucide-react";
 import { useI18n } from "../../context/I18nContext";
 import { touchHitArea } from "../../lib/touchTarget";
 import { cn } from "../../lib/utils";
-import { PoolOptionLabel } from "./exercise-edit";
+import { PoolAddOption, PoolOptionLabel } from "./exercise-edit";
 import type { Translate } from "../i18n";
 
 // Assign N paragraphs to N slots, with the pool DEPLETING — a paragraph fills
@@ -461,6 +461,8 @@ function PoolArea({
         ) : null}
       </p>
       {children}
+      {/* Edit mode: a new paragraph joins the end of the list it adds to. */}
+      <PoolAddOption />
     </div>
   );
 }
@@ -520,6 +522,7 @@ function ReferenceList({
           </div>
         );
       })}
+      <PoolAddOption />
     </div>
   );
 }

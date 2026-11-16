@@ -86,10 +86,37 @@ export function splitPassageOnGaps(
   passage: string,
   expected: number,
 ): string[] | null {
+  return splitPassageOnGapMarkers(passage, expected)?.chunks ?? null;
+}
+
+/** A gapped text cut at its gaps, with the marker text each gap was printed as. */
+export interface GapMarkerSplit {
+  /** The text around the gaps: one more than there are gaps. */
+  chunks: string[];
+  /** Each gap's marker exactly as written, so the text can be put back together. */
+  markers: string[];
+}
+
+/**
+ * `splitPassageOnGaps`, keeping the markers too, so an editor can change one
+ * chunk and write the passage back with every gap where it was
+ * (`joinGapMarkerSplit`).
+ */
+export function splitPassageOnGapMarkers(
+  passage: string,
+  expected: number,
+): GapMarkerSplit | null {
   if (!passage || expected < 1) return null;
   for (const source of GAP_MARKERS) {
+    const markers = [...passage.matchAll(new RegExp(source, "gi"))].map((match) => match[0]);
+    if (markers.length !== expected) continue;
     const chunks = passage.split(new RegExp(source, "gi"));
-    if (chunks.length - 1 === expected) return chunks;
+    if (chunks.length - 1 === expected) return { chunks, markers };
   }
   return null;
+}
+
+/** The passage back from its chunks and markers: the inverse of the split. */
+export function joinGapMarkerSplit({ chunks, markers }: GapMarkerSplit): string {
+  return chunks.map((chunk, index) => chunk + (markers[index] ?? "")).join("");
 }

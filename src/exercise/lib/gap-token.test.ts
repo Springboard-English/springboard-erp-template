@@ -4,6 +4,8 @@ import {
   countGapTokens,
   hasGapToken,
   showGapTokens,
+  joinGapMarkerSplit,
+  splitPassageOnGapMarkers,
   splitPassageOnGaps,
 } from "./gap-token";
 
@@ -120,5 +122,21 @@ describe("hasGapToken", () => {
 
   it("is false without one", () => {
     expect(hasGapToken("no markers here")).toBe(false);
+  });
+});
+
+describe("splitPassageOnGapMarkers", () => {
+  it("keeps each marker as printed, so an edited chunk joins back", () => {
+    expect(splitPassageOnGapMarkers("no gaps here", 1)).toBeNull();
+    const split = splitPassageOnGapMarkers("a [37] b [38] c", 2);
+    expect(split?.markers).toEqual(["[37]", "[38]"]);
+    expect(joinGapMarkerSplit({ ...split!, chunks: ["a ", " changed ", " c"] })).toBe("a [37] changed [38] c");
+  });
+
+  it("round-trips a number alone on its own line", () => {
+    const passage = "First paragraph.\n\n37\n\nSecond paragraph.";
+    const split = splitPassageOnGapMarkers(passage, 1);
+    expect(split).not.toBeNull();
+    expect(joinGapMarkerSplit(split!)).toBe(passage);
   });
 });

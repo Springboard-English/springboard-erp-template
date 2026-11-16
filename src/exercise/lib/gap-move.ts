@@ -95,3 +95,49 @@ export function gapOntoWord(
   const origins = next.filter((piece): piece is Extract<GapPiece, { kind: "gap" }> => piece.kind === "gap").map((piece) => piece.index);
   return { text: textOut, order: origins.length === order.length ? origins : order, word: core };
 }
+
+/**
+ * Which word a point in the typed passage means. The passage is typed as runs,
+ * the text between blanks (`piecesText(pieces).split("{gap}")`), so a caret is
+ * a run and an offset into it. `"on"` answers the word the offset sits in (else
+ * the nearest one in that run), for picking a word; `"before"` answers the word
+ * a blank dropped there would go before: the one under the caret when it is in
+ * the word's first half, else the next word. Null when there is none.
+ */
+export function wordAtRunOffset(
+  pieces: GapPiece[],
+  run: number,
+  offset: number,
+  intent: "on" | "before",
+): number | null {
+  let current = 0;
+  let position = 0;
+  let nearest: number | null = null;
+  let nearestDistance = Infinity;
+  for (let at = 0; at < pieces.length; at += 1) {
+    const piece = pieces[at];
+    if (piece.kind === "gap") {
+      current += 1;
+      position = 0;
+      continue;
+    }
+    const start = position;
+    const end = position + piece.text.length;
+    position = end;
+    if (piece.kind !== "word") continue;
+    if (current < run) continue;
+    // Past the run: only a drop goes on to the next word, wherever it is.
+    if (current > run) return intent === "before" ? at : nearest;
+    if (intent === "before") {
+      if (offset <= start + (end - start) / 2) return at;
+      continue;
+    }
+    if (offset >= start && offset <= end) return at;
+    const distance = offset < start ? start - offset : offset - end;
+    if (distance < nearestDistance) {
+      nearest = at;
+      nearestDistance = distance;
+    }
+  }
+  return intent === "before" ? null : nearest;
+}

@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { BookOpen } from "lucide-react";
 
 import { useI18n } from "../../context/I18nContext";
@@ -33,15 +33,9 @@ import {
 import { ExerciseRenderer } from "./exercise-renderer";
 import { PageRecordings } from "./page-recordings";
 import { HighlightScope } from "./highlighter";
-import {
-  EditableText,
-  PoolAddOption,
-  PoolEditProvider,
-  useExerciseEditor,
-} from "./exercise-edit";
-import { Button } from "../../components/ui/button";
+import { EditableText, PoolEditProvider, useExerciseEditor } from "./exercise-edit";
 import { answerFromKey, keyFromAnswer } from "../lib/answer-key-bridge";
-import { joinPassage } from "../lib/passage";
+import { joinPassage, typedParagraphs } from "../lib/passage";
 
 // ONE screen of the student-facing activity, and the single source of truth for
 // what a student sees on it.
@@ -73,12 +67,19 @@ function SectionLead({
   ownsText?: boolean;
   showPassage?: boolean;
 }) {
+  const { t } = useI18n();
+  const editor = useExerciseEditor();
   const section = stub?.kind === "section" ? stub : null;
   const title = ownsText ? (section?.passage_title?.trim() ?? "") : "";
   const paragraphs = showPassage ? (section?.passage ?? []) : [];
   // The section's instruction is not repeated here: it is read (and, in the
   // editor, edited) in the runner heading's drop-down, which shows its first line.
   if (!title && paragraphs.length === 0) return null;
+  // In the editor the text is typed into where the student reads it.
+  const editText =
+    editor && section
+      ? (value: string) => editor.onPassageChange(section.appsheet_key, typedParagraphs(value))
+      : null;
   return (
     <div className="mb-5 space-y-3">
       {title || paragraphs.length ? (
@@ -89,7 +90,16 @@ function SectionLead({
               {title}
             </p>
           ) : null}
-          {paragraphs.length ? (
+          {paragraphs.length && editText ? (
+            <p className="whitespace-pre-wrap p-5 text-[14.5px] leading-7 text-muted-foreground">
+              <EditableText
+                value={joinPassage(paragraphs)}
+                multiline
+                label={t("exercise.edit.passageText", "Passage text")}
+                onChange={editText}
+              />
+            </p>
+          ) : paragraphs.length ? (
             <div className="p-5">
               {paragraphs.map((paragraph, index) => (
                 <p
@@ -147,11 +157,10 @@ function PageBody(props: ExercisePageProps) {
 /**
  * The page in edit mode: the student's own page, answered with each
  * question's key. Answering sets the key and question text edits in place in
- * the renderers; a cloze's blanks drag between words where they are typed.
- * The section's own text is edited from the runner heading, not here.
+ * the renderers, the section's own text included: it is typed into where the
+ * student reads it, between the gaps, blanks and marked mistakes.
  */
 function EditPageBody(props: ExercisePageProps) {
-  const { t } = useI18n();
   const editor = useExerciseEditor();
   const { page, nodes } = props;
   const pageNodes = page.nodeIndices.map((i) => nodes[i]).filter(Boolean);
@@ -159,12 +168,6 @@ function EditPageBody(props: ExercisePageProps) {
   const section = page.stub?.kind === "section" ? page.stub : null;
   const huntText = layout.kind === "error-hunt" ? joinPassage(section?.passage ?? []) : null;
   const pooled = layout.kind === "multi-select";
-  // Error hunts, gapped text and jumbled paragraphs print the section's passage
-  // in the task itself: read-only until "Edit passage".
-  const [passageEditing, setPassageEditing] = useState(false);
-  const ownPassage =
-    !!section?.passage?.length &&
-    (layout.kind === "error-hunt" || layout.kind === "gapped-text" || layout.kind === "jumbled-paragraph");
   if (!editor) return null;
 
   // "Choose several" hands every question the group's whole selection.
@@ -192,47 +195,22 @@ function EditPageBody(props: ExercisePageProps) {
     layout.kind === "multi-select";
 
   return (
-    // A pooled section's option list is edited where the student's task prints it.
+    // A pooled section's option list is edited where the student's task prints
+    // it, and its "Add option" sits at the end of that list.
     <PoolEditProvider nodes={pooledLayout ? pageNodes : []}>
-      {ownPassage && section ? (
-        // "Edit text", so it reads apart from a side passage's "Edit passage".
-        <div className="mb-3 flex justify-end">
-          <Button
-            type="button"
-            size="sm"
-            variant={passageEditing ? "default" : "outline"}
-            onClick={() => setPassageEditing((value) => !value)}
-          >
-            {passageEditing ? t("exercise.edit.done", "Done") : t("exercise.edit.editText", "Edit text")}
-          </Button>
-        </div>
-      ) : null}
-      {ownPassage && section && passageEditing ? (
-        // The passage as typed text; {gap} marks stay where the gaps go.
-        <div className="whitespace-pre-wrap rounded-2xl border bg-card p-5 text-[15px] leading-8 text-foreground">
-          <EditableText
-            value={section.passage!.join("\n\n")}
-            multiline
-            label={t("exercise.edit.passageText", "Passage text")}
-            onChange={(value) => {
-              const paragraphs = value.split(/\n\s*\n/).map((part) => part.trim()).filter(Boolean);
-              editor.onPassageChange(section.appsheet_key, paragraphs.length ? paragraphs : [value]);
-            }}
-          />
-        </div>
-      ) : (
-        <AnswerPageBody {...props} answers={answers} onChange={onChange} enableAnnotations={false} />
-      )}
-      {layout.kind === "gapped-text" || layout.kind === "jumbled-paragraph" ? <PoolAddOption className="mt-3 self-start" /> : null}
+      <AnswerPageBody {...props} answers={answers} onChange={onChange} enableAnnotations={false} />
     </PoolEditProvider>
   );
 }
 
 function AnswerPageBody({ page, nodes, answers, onChange, enableAnnotations }: ExercisePageProps) {
   const { t } = useI18n();
+  const editor = useExerciseEditor();
   const pageNodes = page.nodeIndices.map((i) => nodes[i]).filter(Boolean);
   const numbers = page.nodeIndices.map((i) => i + 1);
   const layout = pageLayout(page, nodes);
+  // In the editor, the section's key: its own text is typed into in place.
+  const editKey = editor && page.stub?.kind === "section" ? page.stub.appsheet_key : undefined;
   // The questions column is highlightable too — instructions, labels, prompts.
   // Its highlights are saved per page, named by the page's first question: React
   // reuses text nodes across pages of the same layout, so a range kept across
@@ -257,7 +235,7 @@ function AnswerPageBody({ page, nodes, answers, onChange, enableAnnotations }: E
           <>
             <SectionLead stub={page.stub} ownsText />
             <ClozeSection
-              editKey={page.stub?.kind === "section" ? page.stub.appsheet_key : undefined}
+              editKey={editKey}
               passage={page.stub?.passage ?? null}
               nodes={pageNodes as ClozeNode[]}
               numbers={numbers}
@@ -286,6 +264,7 @@ function AnswerPageBody({ page, nodes, answers, onChange, enableAnnotations }: E
           <>
             <SectionLead stub={page.stub} ownsText />
             <ErrorHuntSection
+              editKey={editKey}
               passage={page.stub?.passage ?? null}
               nodes={pageNodes as ErrorHuntNode[]}
               numbers={numbers}
@@ -300,16 +279,17 @@ function AnswerPageBody({ page, nodes, answers, onChange, enableAnnotations }: E
 
   if (layout.kind === "gapped-text") {
     return (
-      <CollectionContext
-        stub={page.stub}
-        hideHeader
-        preferPartPassage
-        enableAnnotations={enableAnnotations}
-      >
+      // `hidePassage`: the task is the passage with its gaps beside the pool,
+      // and takes the page's whole width; a reading passage beside it would
+      // squeeze it out of dragging.
+      <CollectionContext stub={page.stub} hideHeader hidePassage enableAnnotations={enableAnnotations}>
         {scoped(
           <>
             <SectionLead stub={page.stub} ownsText />
             <GappedTextSection
+              onTextChange={
+                editor && editKey ? (text) => editor.onPassageChange(editKey, typedParagraphs(text)) : undefined
+              }
               passage={page.stub?.passage ?? null}
               nodes={pageNodes as GappedChoiceNode[]}
               numbers={numbers}
@@ -366,15 +346,11 @@ function AnswerPageBody({ page, nodes, answers, onChange, enableAnnotations }: E
 
   if (layout.kind === "jumbled-paragraph") {
     return (
-      <CollectionContext
-        stub={page.stub}
-        hideHeader
-        preferPartPassage
-        enableAnnotations={enableAnnotations}
-      >
+      // The pieces and their pool take the page's whole width, as a gapped text's do.
+      <CollectionContext stub={page.stub} hideHeader hidePassage enableAnnotations={enableAnnotations}>
         {/* A jumbled section's OWN text — an opening paragraph the paper keeps
-            in place as the example — shows here: the component draws
-            only the pieces, and the side column holds the part's passage. */}
+            in place as the example — shows here: the component draws only
+            the pieces. */}
         {scoped(
           <>
             <SectionLead stub={page.stub} ownsText showPassage />

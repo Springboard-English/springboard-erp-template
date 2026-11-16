@@ -30,3 +30,13 @@ export function splitPassage(text: string): string[] | null {
     .filter(Boolean);
   return paragraphs.length ? paragraphs : null;
 }
+
+/**
+ * Text typed into a passage in place, back into paragraphs, exactly the inverse
+ * of `joinPassage`. Nothing is trimmed: the typed span is rewritten whenever its
+ * value differs, so trimming would eat a space or a new paragraph as it is typed
+ * and would move every hunt offset after it.
+ */
+export function typedParagraphs(text: string): string[] {
+  return text.split(PARAGRAPH_SEPARATOR);
+}

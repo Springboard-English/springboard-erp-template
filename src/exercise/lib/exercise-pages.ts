@@ -177,11 +177,12 @@ export function pageLayout(page: RunPage, nodes: ExerciseNode[]): PageLayout {
           ? "cloze"
           : "questions",
     // An error hunt owns its passage (it renders it itself, clickable), so the
-    // shell must not ALSO put it in a side column.
-    // The drag layouts and the hunt draw their own text inline, so the shell
-    // must not ALSO put a passage in a side column — it would print twice.
-    hasPassage:
-      isErrorHunt || isGappedText || isJumbled
+    // shell must not ALSO put it in a side column; only the part's can go there.
+    // The drag layouts draw their own two columns (text, then the pool) and
+    // take the page's full width, so no passage column sits beside them.
+    hasPassage: isGappedText || isJumbled
+      ? false
+      : isErrorHunt
         ? Boolean(stub.parent?.passage?.length)
         : hasPassage,
   };
