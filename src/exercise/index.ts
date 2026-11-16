@@ -18,6 +18,7 @@ export * from "./lib/exercises";
 export * from "./lib/gap-token";
 export * from "./lib/gap-move";
 export * from "./lib/answer-key-bridge";
+export * from "./lib/question-nav-groups";
 export * from "./lib/matching-legend";
 export * from "./lib/media-file";
 export * from "./lib/media-window";

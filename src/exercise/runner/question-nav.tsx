@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, type ReactNode } from "react";
+import { useEffect, useMemo, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { LayoutGrid } from "lucide-react";
 
@@ -7,12 +7,15 @@ import { cn } from "../../lib/utils";
 import type { ExerciseAnswer, SpringboardTest } from "../lib/exercises";
 import { unansweredNodeIds } from "../lib/grading";
 import { useExerciseTourAnchor } from "../lib/tour-anchors";
-import { useDismissOutside } from "../lib/use-dismiss-outside";
+import { navGroups } from "../lib/question-nav-groups";
+import type { CollectionStub } from "../types";
+import { collectionHeading } from "../components/collection-context";
 
-// The question navigator for the live-session runner, designed to sit in the
-// fixed bottom bar: a compact toggle (current position + answered count) whose
-// numbered palette opens UPWARD so it clears the footer. Each cell shows its
-// state (current / answered / blank), so the palette doubles as "what have I
+// The question navigator for the runner, in the fixed bottom bar: a compact
+// toggle (current position + answered count) that opens the paper's question
+// list as a side panel down the left edge (a bottom sheet on a phone, per the
+// mobile contract). Numbers sit under their part and section, and each shows
+// its state (current / answered / blank), so the list doubles as "what have I
 // left". Jumping is via the runner's existing `jumpToNode`.
 // `open` is CONTROLLED by the bottom bar — see NotesButton for why.
 export function QuestionNav({
@@ -22,11 +25,11 @@ export function QuestionNav({
   onJump,
   open,
   onOpenChange,
-  panel = false,
+  collectionByNode,
   actions,
 }: {
-  /** Opens as a side panel down the left edge instead of a palette above the footer. */
-  panel?: boolean;
+  /** Each question's part/section, so the numbers sit under their headings. */
+  collectionByNode?: Map<string, CollectionStub | null>;
   /** Extra controls under the numbers (the editor's new question, section and part). */
   actions?: ReactNode;
   test: SpringboardTest;
@@ -39,15 +42,14 @@ export function QuestionNav({
   const { t } = useI18n();
   const anchor = useExerciseTourAnchor("questionList");
   const setOpen = onOpenChange;
-  const rootRef = useRef<HTMLDivElement>(null);
-  useDismissOutside(rootRef, open && !panel, () => setOpen(false));
-  // The side panel closes on Escape too.
+  // The panel closes on Escape and on its backdrop.
   useEffect(() => {
-    if (!open || !panel) return;
+    if (!open) return;
     const onKey = (event: KeyboardEvent) => (event.key === "Escape" ? setOpen(false) : undefined);
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open, panel, setOpen]);
+  }, [open, setOpen]);
+  const groups = useMemo(() => navGroups(test.nodes, collectionByNode), [test.nodes, collectionByNode]);
 
   const unanswered = useMemo(
     () => new Set(unansweredNodeIds(test, answers)),
@@ -62,73 +64,79 @@ export function QuestionNav({
   // A one-question test needs no navigator (pagination handles it), unless it has actions.
   if (test.nodes.length < 2 && !actions) return null;
 
+  const chip = (index: number) => {
+    const node = test.nodes[index];
+    const isCurrent = index === currentIndex;
+    const isAnswered = !unanswered.has(node.id);
+    return (
+      <button
+        key={node.id}
+        type="button"
+        onClick={() => {
+          onJump(index);
+          setOpen(false);
+        }}
+        title={node.title || t("exercise.questionNav.questionNo", "Question {n}", { n: index + 1 })}
+        aria-current={isCurrent ? "true" : undefined}
+        className={cn(
+          "grid aspect-square place-items-center rounded-xl text-sm font-extrabold transition-all duration-150 ease-bounce hover:-translate-y-0.5",
+          isCurrent
+            ? "bg-rose-600 text-white shadow-md ring-2 ring-rose-300"
+            : isAnswered
+              // Half-strength `mint-300`: `mint-100` does not exist, so a hover on
+              // it would do nothing, and the full rung crowds the `mint-700` number.
+              ? "bg-mint-bg text-mint-700 hover:bg-mint-300/50"
+              : "border-2 border-dashed border-border bg-background text-muted-foreground hover:border-rose-200",
+        )}
+      >
+        {index + 1}
+      </button>
+    );
+  };
+
   const palette = (
-          <div
-            className={cn(
-              panel
-                ? "fixed inset-y-0 left-0 z-[60] flex w-[min(90vw,24rem)] flex-col overflow-y-auto border-r-2 border-border bg-card p-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))] shadow-xl"
-                : "absolute bottom-full left-1/2 z-10 mb-3 w-[min(90vw,28rem)] -translate-x-1/2 rounded-2xl border-2 border-border bg-card p-3 shadow-xl",
-            )}
-          >
-            {panel ? (
-              <p className="mb-3 text-sm font-extrabold text-foreground">
-                {t("exercise.questionNav.title", "Questions")}
-              </p>
-            ) : null}
-            {/* Six across on a phone and eight on a touch tablet keep each chip at
-                least 44px; the list scrolls so a long paper stays on screen. */}
-            <div className={cn("-m-1 grid grid-cols-6 gap-1.5 overflow-y-auto p-1", panel ? "sm:gap-2" : "max-h-[50dvh] sm:grid-cols-10 sm:gap-2 sm:pointer-coarse:grid-cols-8")}>
-              {test.nodes.map((node, index) => {
-                const isCurrent = index === currentIndex;
-                const isAnswered = !unanswered.has(node.id);
-                return (
-                  <button
-                    key={node.id}
-                    type="button"
-                    onClick={() => {
-                      onJump(index);
-                      setOpen(false);
-                    }}
-                    title={node.title || t("exercise.questionNav.questionNo", "Question {n}", { n: index + 1 })}
-                    aria-current={isCurrent ? "true" : undefined}
-                    className={cn(
-                      "grid aspect-square place-items-center rounded-xl text-sm font-extrabold transition-all duration-150 ease-bounce hover:-translate-y-0.5",
-                      isCurrent
-                        ? "bg-rose-600 text-white shadow-md ring-2 ring-rose-300"
-                        : isAnswered
-                          // Half-strength `mint-300`: `mint-100` does not exist,
-                          // so a hover on it would do nothing, and the full rung
-                          // is dark enough
-                          // to crowd the `mint-700` number sitting on it.
-                          ? "bg-mint-bg text-mint-700 hover:bg-mint-300/50"
-                          : "border-2 border-dashed border-border bg-background text-muted-foreground hover:border-rose-200",
-                    )}
-                  >
-                    {index + 1}
-                  </button>
-                );
-              })}
+    <div
+      role="dialog"
+      aria-label={t("exercise.questionNav.title", "Questions")}
+      className={cn(
+        "fixed z-[60] flex flex-col overflow-y-auto border-border bg-card shadow-xl",
+        // A bottom sheet on a phone, a side panel from `md` up.
+        "inset-x-0 bottom-0 max-h-[80dvh] rounded-t-3xl border-t-2 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]",
+        "md:inset-x-auto md:inset-y-0 md:left-0 md:max-h-none md:w-[min(90vw,24rem)] md:rounded-none md:border-r-2 md:border-t-0 md:pt-[max(1rem,env(safe-area-inset-top))]",
+      )}
+    >
+      <p className="mb-3 text-sm font-extrabold text-foreground">{t("exercise.questionNav.title", "Questions")}</p>
+      <div className="space-y-4">
+        {groups.map((group) => {
+          const heading = collectionHeading(group.section ?? group.part, t);
+          return (
+            <div key={`${group.key}:${group.indices[0]}`} className="space-y-2">
+              {group.part ? (
+                <p className="text-[11px] font-extrabold text-rose-700">{collectionHeading(group.part, t).part}</p>
+              ) : null}
+              {group.section && heading.section ? (
+                <p className="line-clamp-2 text-xs font-bold text-muted-foreground">{heading.section}</p>
+              ) : null}
+              {/* Six across keeps each chip at least 44px in the panel's width. */}
+              <div className="grid grid-cols-6 gap-1.5 sm:gap-2">{group.indices.map(chip)}</div>
             </div>
-            <div className="mt-3 flex flex-wrap items-center gap-4 border-t pt-3 text-[11px] font-semibold text-muted-foreground">
-              <span className="inline-flex items-center gap-1.5"><span className="size-3 rounded bg-rose-600" />{t("exercise.questionNav.current", "Current")}</span>
-              <span className="inline-flex items-center gap-1.5"><span className="size-3 rounded bg-mint-bg" />{t("exercise.questionNav.answered", "Answered")}</span>
-              <span className="inline-flex items-center gap-1.5"><span className="size-3 rounded border-2 border-dashed border-border" />{t("exercise.questionNav.blank", "Blank")}</span>
-            </div>
-            {actions ? <div className="mt-3 flex flex-col gap-2 border-t pt-3">{actions}</div> : null}
-          </div>
+          );
+        })}
+      </div>
+      <div className="mt-4 flex flex-wrap items-center gap-4 border-t pt-3 text-[11px] font-semibold text-muted-foreground">
+        <span className="inline-flex items-center gap-1.5"><span className="size-3 rounded bg-rose-600" />{t("exercise.questionNav.current", "Current")}</span>
+        <span className="inline-flex items-center gap-1.5"><span className="size-3 rounded bg-mint-bg" />{t("exercise.questionNav.answered", "Answered")}</span>
+        <span className="inline-flex items-center gap-1.5"><span className="size-3 rounded border-2 border-dashed border-border" />{t("exercise.questionNav.blank", "Blank")}</span>
+      </div>
+      {actions ? <div className="mt-3 flex flex-col gap-2 border-t pt-3">{actions}</div> : null}
+    </div>
   );
 
   return (
-    <div ref={rootRef} className="relative">
-      {open && !panel ? (
-        // The palette floats above the footer. A press outside it, or Escape,
-        // closes it without swallowing that press — see `useDismissOutside`
-        // for why there is no backdrop.
-        palette
-      ) : null}
-      {open && panel
-        ? // A side panel is portalled so a transformed footer can't trap it,
-          // with a backdrop that closes it.
+    <div className="relative">
+      {open
+        ? // Portalled so a transformed footer can't trap it, with a backdrop
+          // that closes it.
           createPortal(
             <>
               <button
