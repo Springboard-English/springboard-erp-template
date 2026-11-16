@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { BookOpen } from "lucide-react";
 
 import { useI18n } from "../../context/I18nContext";
@@ -34,10 +34,12 @@ import { ExerciseRenderer } from "./exercise-renderer";
 import { PageRecordings } from "./page-recordings";
 import { HighlightScope } from "./highlighter";
 import {
+  EditableText,
   PoolAddOption,
   PoolEditProvider,
   useExerciseEditor,
 } from "./exercise-edit";
+import { Button } from "../../components/ui/button";
 import { answerFromKey, keyFromAnswer } from "../lib/answer-key-bridge";
 import { joinPassage } from "../lib/passage";
 
@@ -149,6 +151,7 @@ function PageBody(props: ExercisePageProps) {
  * The section's own text is edited from the runner heading, not here.
  */
 function EditPageBody(props: ExercisePageProps) {
+  const { t } = useI18n();
   const editor = useExerciseEditor();
   const { page, nodes } = props;
   const pageNodes = page.nodeIndices.map((i) => nodes[i]).filter(Boolean);
@@ -156,6 +159,12 @@ function EditPageBody(props: ExercisePageProps) {
   const section = page.stub?.kind === "section" ? page.stub : null;
   const huntText = layout.kind === "error-hunt" ? joinPassage(section?.passage ?? []) : null;
   const pooled = layout.kind === "multi-select";
+  // Error hunts, gapped text and jumbled paragraphs print the section's passage
+  // in the task itself: read-only until "Edit passage".
+  const [passageEditing, setPassageEditing] = useState(false);
+  const ownPassage =
+    !!section?.passage?.length &&
+    (layout.kind === "error-hunt" || layout.kind === "gapped-text" || layout.kind === "jumbled-paragraph");
   if (!editor) return null;
 
   // "Choose several" hands every question the group's whole selection.
@@ -185,7 +194,34 @@ function EditPageBody(props: ExercisePageProps) {
   return (
     // A pooled section's option list is edited where the student's task prints it.
     <PoolEditProvider nodes={pooledLayout ? pageNodes : []}>
-      <AnswerPageBody {...props} answers={answers} onChange={onChange} enableAnnotations={false} />
+      {ownPassage && section ? (
+        <div className="mb-3 flex justify-end">
+          <Button
+            type="button"
+            size="sm"
+            variant={passageEditing ? "default" : "outline"}
+            onClick={() => setPassageEditing((value) => !value)}
+          >
+            {passageEditing ? t("exercise.edit.done", "Done") : t("exercise.edit.editPassage", "Edit passage")}
+          </Button>
+        </div>
+      ) : null}
+      {ownPassage && section && passageEditing ? (
+        // The passage as typed text; {gap} marks stay where the gaps go.
+        <div className="whitespace-pre-wrap rounded-2xl border bg-card p-5 text-[15px] leading-8 text-foreground">
+          <EditableText
+            value={section.passage!.join("\n\n")}
+            multiline
+            label={t("exercise.edit.passageText", "Passage text")}
+            onChange={(value) => {
+              const paragraphs = value.split(/\n\s*\n/).map((part) => part.trim()).filter(Boolean);
+              editor.onPassageChange(section.appsheet_key, paragraphs.length ? paragraphs : [value]);
+            }}
+          />
+        </div>
+      ) : (
+        <AnswerPageBody {...props} answers={answers} onChange={onChange} enableAnnotations={false} />
+      )}
       {layout.kind === "gapped-text" || layout.kind === "jumbled-paragraph" ? <PoolAddOption className="mt-3 self-start" /> : null}
     </PoolEditProvider>
   );

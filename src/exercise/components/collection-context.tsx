@@ -9,7 +9,7 @@ import { useExerciseTourAnchor } from "../lib/tour-anchors";
 import { useScrollPane } from "../lib/use-scroll-pane";
 import type { CollectionStub } from "../types";
 import { AnnotatablePassage } from "./annotatable-passage";
-import { useExerciseEditor } from "./exercise-edit";
+import { EditableText, useExerciseEditor } from "./exercise-edit";
 import { PassageText } from "./passage-text";
 
 // The part/section title lines for a stub, for surfaces that show the heading
@@ -68,6 +68,8 @@ export function CollectionContext({
   const passageAnchor = useExerciseTourAnchor("passage");
   const [showPassage, setShowPassage] = useState(true);
   const [showHeading, setShowHeading] = useState(true);
+  // In the editor the passage reads as the student sees it until "Edit passage".
+  const [passageEditing, setPassageEditing] = useState(false);
   // The questions column is its own scroll pane in the side-by-side layout, so
   // it publishes its height for the drag pool that pins inside it.
   const questionsRef = useScrollPane<HTMLDivElement>();
@@ -226,15 +228,27 @@ export function CollectionContext({
             <BookOpen className="size-4 shrink-0" />
             <span className="truncate">{passageHolder.passage_title || t("exercise.renderer.passage", "Passage")}</span>
           </p>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="lg:hidden"
-            onClick={() => setShowPassage((current) => !current)}
-          >
-            {showPassage ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-            {showPassage ? t("exercise.renderer.hide", "Hide") : t("exercise.renderer.show", "Show")}
-          </Button>
+          <div className="flex shrink-0 items-center gap-1">
+            {editor ? (
+              <Button
+                type="button"
+                size="sm"
+                variant={passageEditing ? "default" : "outline"}
+                onClick={() => setPassageEditing((value) => !value)}
+              >
+                {passageEditing ? t("exercise.edit.done", "Done") : t("exercise.edit.editPassage", "Edit passage")}
+              </Button>
+            ) : null}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="lg:hidden"
+              onClick={() => setShowPassage((current) => !current)}
+            >
+              {showPassage ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+              {showPassage ? t("exercise.renderer.hide", "Hide") : t("exercise.renderer.show", "Show")}
+            </Button>
+          </div>
         </div>
         <div
           className={cn(
@@ -243,13 +257,27 @@ export function CollectionContext({
             !showPassage && "hidden lg:block",
           )}
         >
-          {/* In the editor the passage reads as a student's does; it is edited
-              from the runner heading. */}
-          <AnnotatablePassage
-            paragraphs={passageHolder.passage}
-            enable={enableAnnotations && !editor}
-            scopeKey={`p:${passageHolder.appsheet_key}`}
-          />
+          {editor && passageEditing ? (
+            // After "Edit passage" it is typed into where it sits; Enter starts
+            // a new paragraph.
+            <p className="whitespace-pre-wrap text-[14.5px] leading-7 text-muted-foreground">
+              <EditableText
+                value={passageHolder.passage.join("\n\n")}
+                multiline
+                label={t("exercise.edit.passageText", "Passage text")}
+                onChange={(value) => {
+                  const paragraphs = value.split(/\n\s*\n/).map((part) => part.trim()).filter(Boolean);
+                  editor.onPassageChange(passageHolder.appsheet_key, paragraphs.length ? paragraphs : [value]);
+                }}
+              />
+            </p>
+          ) : (
+            <AnnotatablePassage
+              paragraphs={passageHolder.passage}
+              enable={enableAnnotations && !editor}
+              scopeKey={`p:${passageHolder.appsheet_key}`}
+            />
+          )}
         </div>
       </div>
     </div>

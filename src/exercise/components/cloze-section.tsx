@@ -15,9 +15,9 @@ import { optionLetters } from "../lib/option-letters";
 import { EXAM_FIELD_PROPS } from "../lib/exam-field";
 
 import { RootPick } from "./root-pick";
-import { QuestionMenu, useExerciseEditor } from "./exercise-edit";
+import { EditableText, QuestionMenu, useExerciseEditor } from "./exercise-edit";
 import { Button } from "../../components/ui/button";
-import { gapOntoWord, gapPieces, moveGap } from "../lib/gap-move";
+import { gapOntoWord, gapPieces, moveGap, piecesText } from "../lib/gap-move";
 import { countGapTokens } from "../lib/gap-token";
 import { splitPassage } from "../lib/passage";
 
@@ -269,9 +269,11 @@ export function ClozeSection({
   const { t } = useI18n();
   const editor = useExerciseEditor();
   const [dragging, setDragging] = useState<number | null>(null);
-  const [over, setOver] = useState<number | null>(null);
   // A blank picked to take another word: the next word clicked becomes its answer.
   const [armed, setArmed] = useState<number | null>(null);
+  const [over, setOver] = useState<number | null>(null);
+  // The passage's text is typed into only after "Edit passage".
+  const [textEditing, setTextEditing] = useState(false);
   // The blank whose settings are open, anchored to its number.
   const [menuFor, setMenuFor] = useState<number | null>(null);
   const fullText = (passage ?? []).join("\n\n").trim();
@@ -483,47 +485,76 @@ export function ClozeSection({
   }
 
   if (editing) {
+    // Read-only by default: blanks drag between words, and a blank's number
+    // opens its settings. "Edit passage" makes the text between the blanks
+    // typed into in place; "Done" goes back.
+    const canonical = piecesText(pieces);
+    const runs = canonical.split("{gap}");
+    const changeRun = (run: number, value: string) => {
+      if (!editor || !editKey) return;
+      const next = runs.map((current, i) => (i === run ? value : current)).join("{gap}");
+      editor.onPassageChange(editKey, splitPassage(next) ?? [next]);
+    };
+    const missing = (key: number) => (
+      // A token with no question to fill it (more blanks than questions).
+      <span key={key} className="rounded-sm border-2 border-dashed border-error px-2 text-xs font-bold text-error">{"{gap}"}</span>
+    );
     return (
       <div className="space-y-2">
-        <p className="text-[11px] font-extrabold text-muted-foreground">
-          {armed !== null
-            ? t("exercise.edit.pickWord", "Click the word that blank {n} should be. Its old answer goes back into the text.", { n: numbers[armed] ?? armed + 1 })
-            : t("exercise.edit.dragBlanksMenu", "Drag a blank's number before another word to move it, or use the arrow keys. Click the number for its settings.")}
-        </p>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-[11px] font-extrabold text-muted-foreground">
+            {textEditing
+              ? t("exercise.edit.typePassage", "Type in the passage to change it. Enter starts a new paragraph.")
+              : armed !== null
+                ? t("exercise.edit.pickWord", "Click the word that blank {n} should be. Its old answer goes back into the text.", { n: numbers[armed] ?? armed + 1 })
+                : t("exercise.edit.dragBlanksMenu", "Drag a blank's number before another word to move it, or use the arrow keys. Click the number for its settings.")}
+          </p>
+          <Button type="button" size="sm" variant={textEditing ? "default" : "outline"} onClick={() => setTextEditing((value) => !value)}>
+            {textEditing ? t("exercise.edit.done", "Done") : t("exercise.edit.editPassage", "Edit passage")}
+          </Button>
+        </div>
         <div className={cn(wrapper, "whitespace-pre-wrap")}>
-          {pieces.map((piece, at) => {
-            if (piece.kind === "space") return <span key={at}>{piece.text}</span>;
-            if (piece.kind === "gap") {
-              // A token with no question to fill it (more blanks than questions).
-              if (!nodes[piece.index]) return <span key={at} className="rounded-sm border-2 border-dashed border-error px-2 text-xs font-bold text-error">{"{gap}"}</span>;
-              return <span key={at}>{blank(piece.index, at)}</span>;
-            }
-            return (
-              <span
-                key={at}
-                onDragOver={(event) => {
-                  if (dragging === null) return;
-                  event.preventDefault();
-                  setOver(at);
-                }}
-                onDragLeave={() => setOver((current) => (current === at ? null : current))}
-                onDrop={(event) => {
-                  event.preventDefault();
-                  if (dragging !== null) move(dragging, at);
-                  setDragging(null);
-                  setOver(null);
-                }}
-                onClick={() => (armed !== null ? take(armed, at) : undefined)}
-                className={cn(
-                  "rounded-sm",
-                  over === at && "bg-rose-50 shadow-[inset_3px_0_0_var(--color-rose-500)]",
-                  armed !== null && "cursor-pointer hover:bg-rose-100",
-                )}
-              >
-                {piece.text}
-              </span>
-            );
-          })}
+          {textEditing
+            ? runs.map((run, i) => (
+                <span key={i}>
+                  <EditableText
+                    value={run}
+                    multiline
+                    label={t("exercise.edit.passageText", "Passage text")}
+                    onChange={(value) => changeRun(i, value)}
+                  />
+                  {i < runs.length - 1 ? (nodes[i] ? <span>{blank(i)}</span> : missing(i)) : null}
+                </span>
+              ))
+            : pieces.map((piece, at) => {
+                if (piece.kind === "space") return <span key={at}>{piece.text}</span>;
+                if (piece.kind === "gap") return nodes[piece.index] ? <span key={at}>{blank(piece.index, at)}</span> : missing(at);
+                return (
+                  <span
+                    key={at}
+                    onDragOver={(event) => {
+                      if (dragging === null) return;
+                      event.preventDefault();
+                      setOver(at);
+                    }}
+                    onDragLeave={() => setOver((current) => (current === at ? null : current))}
+                    onDrop={(event) => {
+                      event.preventDefault();
+                      if (dragging !== null) move(dragging, at);
+                      setDragging(null);
+                      setOver(null);
+                    }}
+                    onClick={() => (armed !== null ? take(armed, at) : undefined)}
+                    className={cn(
+                      "rounded-sm",
+                      over === at && "bg-rose-50 shadow-[inset_3px_0_0_var(--color-rose-500)]",
+                      armed !== null && "cursor-pointer hover:bg-rose-100",
+                    )}
+                  >
+                    {piece.text}
+                  </span>
+                );
+              })}
         </div>
       </div>
     );

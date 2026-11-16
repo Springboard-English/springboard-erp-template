@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type HTMLAttributes, type ReactNode } from "react";
 import { ImagePlus, Loader2, Pencil, Plus, X } from "lucide-react";
 
 import { Button } from "../../components/ui/button";
@@ -97,6 +97,8 @@ export function EditableText({
   placeholder,
   label,
   className,
+  multiline = false,
+  spanProps,
 }: {
   value: string;
   /** Omitted outside edit mode, which prints the text. */
@@ -106,9 +108,23 @@ export function EditableText({
   className?: string;
   /** Kept for callers; the span is always inline now. */
   inline?: boolean;
+  /** Enter starts a new paragraph (a blank line) instead of being ignored. */
+  multiline?: boolean;
+  /** Extra handlers for the span (a cloze's drops and word picks). */
+  spanProps?: HTMLAttributes<HTMLSpanElement>;
 }) {
   if (!onChange) return <>{value}</>;
-  return <InlineEditable value={value} onChange={onChange} placeholder={placeholder} label={label} className={className} />;
+  return (
+    <InlineEditable
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      label={label}
+      className={className}
+      multiline={multiline}
+      spanProps={spanProps}
+    />
+  );
 }
 
 /** The editable span behind `EditableText`: plain text in, plain text out. */
@@ -118,12 +134,16 @@ function InlineEditable({
   placeholder,
   label,
   className,
+  multiline = false,
+  spanProps,
 }: {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
   label: string;
   className?: string;
+  multiline?: boolean;
+  spanProps?: HTMLAttributes<HTMLSpanElement>;
 }) {
   const ref = useRef<HTMLSpanElement>(null);
   // Written only when the text differs, so typing never moves the caret.
@@ -134,6 +154,7 @@ function InlineEditable({
   const stop = (event: { stopPropagation: () => void }) => event.stopPropagation();
   return (
     <span
+      {...spanProps}
       ref={ref}
       role="textbox"
       tabIndex={0}
@@ -143,11 +164,17 @@ function InlineEditable({
       data-placeholder={placeholder ?? label}
       onInput={(event) => onChange(event.currentTarget.textContent ?? "")}
       // Inside a choice row or a draggable piece, a click or drag would also act on it.
-      onClick={stop}
+      onClick={(event) => {
+        spanProps?.onClick?.(event);
+        stop(event);
+      }}
       onPointerDown={stop}
       onKeyDown={(event) => {
         event.stopPropagation();
-        if (event.key === "Enter") event.preventDefault();
+        if (event.key !== "Enter") return;
+        event.preventDefault();
+        // A new paragraph is a blank line in the stored text.
+        if (multiline) document.execCommand("insertText", false, "\n\n");
       }}
       className={cn(
         "rounded-sm decoration-ink-300 decoration-dashed underline-offset-4 outline-none [text-decoration-line:underline] hover:decoration-rose-400 focus:bg-rose-50 focus:decoration-rose-500",
