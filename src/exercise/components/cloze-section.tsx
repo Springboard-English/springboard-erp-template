@@ -460,7 +460,7 @@ export function ClozeSection({
 
   const text = (passage ?? []).join("\n\n").trim();
 
-  const wrapper = "rounded-2xl border bg-card p-5 text-[15px] leading-[2.4] text-foreground shadow-sm sm:p-7";
+  const wrapper = "rounded-2xl border bg-card p-5 text-base leading-[2.4] text-foreground shadow-sm sm:p-7";
 
   // No passage: reconstruct the sentence from each gap's before/after.
   if (!text) {
@@ -580,7 +580,7 @@ export function ClozeSection({
           <p className="mb-3 text-[11px] font-extrabold text-muted-foreground">
             {t("exercise.renderer.alsoComplete", "Also complete")}
           </p>
-          <div className="space-y-3 text-[15px] leading-9 text-foreground">
+          <div className="space-y-3 text-base leading-9 text-foreground">
             {unplaced.map((index) => (
               <div key={nodes[index].id}>
                 {beforeOf(nodes[index]) ? <>{beforeOf(nodes[index])} </> : null}

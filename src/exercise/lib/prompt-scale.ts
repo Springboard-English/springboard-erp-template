@@ -11,7 +11,7 @@
 // The scale is the design system's own, not invented here — see
 // `knowledge/design-system/13-question-patterns.html`: a short stem is 16px
 // bold, a long inline-blank sentence is 15px at line-height 1.9, and body
-// passage text is 14.5px at 1.7. The same file is why the inline input inherits
+// passage text is 16px at 1.75 (never smaller than the 15px choices). The same file is why the inline input inherits
 // its size from the sentence (`.iblank { font-size: inherit }`) rather than
 // fixing its own — a 16px input inside a 15px sentence sits visibly proud of it.
 export type PromptDensity = "short" | "medium" | "long";

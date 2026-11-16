@@ -46,7 +46,7 @@ function SourceText({ node }: { node: SplitNode }) {
           />
         </p>
       ) : null}
-      <div className="space-y-3 p-4 text-[14.5px] leading-7 text-muted-foreground">
+      <div className="space-y-3 p-4 text-base leading-7 text-muted-foreground">
         {edit ? (
           <p className="whitespace-pre-wrap">
             <EditableText

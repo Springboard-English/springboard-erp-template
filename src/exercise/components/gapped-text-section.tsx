@@ -133,7 +133,7 @@ export function GappedTextSection({
             ? t("exercise.renderer.choosePlaceholder", "choose…")
             : t("exercise.renderer.dropParagraph", "drop a paragraph");
         return (
-          <div className="rounded-2xl border bg-card p-5 text-[15px] leading-8 text-foreground shadow-sm sm:p-6">
+          <div className="rounded-2xl border bg-card p-5 text-base leading-8 text-foreground shadow-sm sm:p-6">
             {chunks ? (
               chunks.map((chunk, index) => (
                 <span key={index}>

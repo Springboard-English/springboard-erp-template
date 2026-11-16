@@ -112,7 +112,7 @@ export function MultiSelectSection({
           {t("exercise.renderer.chooseSelected", "Choose {n} · {selected} selected", { n: nodes.length, selected: chosen.size })}
         </p>
       ) : null}
-      <div className={cn("mt-5 grid gap-2.5", pictured && PICTURED_ROW)}>
+      <div className={cn("mt-5 grid w-full grid-cols-1 auto-rows-fr gap-2.5", pictured && PICTURED_ROW)}>
         {options.map((option, index) => {
           const isSelected = chosen.has(option.id);
           const isCorrect = mode === "result" && correct.has(option.id);
@@ -143,7 +143,7 @@ export function MultiSelectSection({
                   : undefined
               }
               className={cn(
-                "flex w-full gap-3 rounded-sm border-2 px-4 py-[13px] text-[15px] font-semibold transition-all duration-200 ease-bounce",
+                "flex w-full min-w-0 gap-3 rounded-sm border-2 px-4 py-[13px] text-[15px] font-semibold transition-all duration-200 ease-bounce",
                 pictured ? PICTURED_TILE : "items-center text-left",
                 mode === "practice" && "cursor-pointer",
                 mode === "practice" && !pictured && "hover:translate-x-1",
@@ -163,7 +163,7 @@ export function MultiSelectSection({
               >
                 {letters[index]}
               </span>
-              <span className={cn("flex flex-1 flex-col gap-2", pictured ? "items-center" : "items-start")}>
+              <span className={cn("flex min-w-0 flex-1 flex-col gap-2", pictured ? "items-center" : "items-start")}>
                 {option.image_url ? (
                   <OptionImage url={option.image_url} alt={option.label || t("exercise.renderer.optionPicture", "Picture for option {letter}", { letter: letters[index] })} />
                 ) : null}
@@ -185,8 +185,10 @@ export function MultiSelectSection({
             </Row>
           );
         })}
+        {/* Same width and height as the option rows: it is a cell of their grid. */}
+        {!pictured ? <PoolAddOption className="h-full rounded-sm px-4 py-[13px] text-[15px]" chipClassName="size-7 rounded-[9px]" /> : null}
       </div>
-      <div className="mt-2"><PoolAddOption /></div>
+      {pictured ? <div className="mt-2"><PoolAddOption /></div> : null}
     </div>
   );
 }

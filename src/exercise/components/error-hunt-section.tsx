@@ -191,7 +191,7 @@ export function ErrorHuntSection({
         {/* Edit mode, not marking: the unmarked text typed in place, each
             mistake a chip that arms marking its row. */}
         {runsToType ? (
-          <p className="whitespace-pre-wrap text-[15px] leading-8 text-foreground">
+          <p className="whitespace-pre-wrap text-base leading-8 text-foreground">
             {runsToType.map((run, i) =>
               run.kind === "text" ? (
                 <EditableText
@@ -238,7 +238,7 @@ export function ErrorHuntSection({
             selected={null}
             disabled={mode !== "practice"}
             onSelect={pickWord}
-            className="text-[15px] leading-8"
+            className="text-base leading-8"
             wordBadge={(paragraphOffset) => labels.get(paragraphOffset)}
             runs={runs}
           />

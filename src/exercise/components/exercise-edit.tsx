@@ -325,13 +325,14 @@ export function AddRow({
 }
 
 /** "Add option" as the last row of a pooled section's list, in edit mode only. */
-export function PoolAddOption({ className }: { className?: string }) {
+export function PoolAddOption({ className, chipClassName }: { className?: string; chipClassName?: string }) {
   const { t } = useI18n();
   const pool = usePoolEdit();
   if (!pool) return null;
   return (
     <AddRow
       className={className}
+      chipClassName={chipClassName}
       label={t("exercise.edit.addOption", "Add option")}
       onClick={() => {
         let n = pool.options.length + 1;
@@ -381,7 +382,7 @@ export function EditablePassage({
               aria-label={t("exercise.edit.paragraph", "Paragraph {n}", { n: index + 1 })}
               value={paragraph}
               onChange={(event) => change(index, event.target.value)}
-              className="min-h-32 text-[14.5px] leading-7"
+              className="min-h-32 text-base leading-7"
             />
             <div className="flex flex-wrap items-center justify-between gap-2">
               <Button variant="ghost" size="sm" className="text-error" onClick={() => remove(index)}>
@@ -394,7 +395,7 @@ export function EditablePassage({
           </div>
         ) : (
           <div key={index} className="group relative rounded-xl border border-dashed border-transparent p-1 hover:border-border">
-            <p className="whitespace-pre-wrap pr-10 text-[14.5px] leading-7 text-muted-foreground">
+            <p className="whitespace-pre-wrap pr-10 text-base leading-7 text-muted-foreground">
               <PassageText text={paragraph} />
             </p>
             <Button

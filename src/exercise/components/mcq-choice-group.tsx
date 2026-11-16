@@ -42,6 +42,20 @@ export function McqChoiceGroup({ node, mode, value, onChange, lead }: SubProps<C
     if (controlled) onChange?.(id);
     else setLocal(id);
   };
+  // One more option row, the same width and height as the options (it sits in
+  // the options' grid, whose rows are all as tall as the tallest), dashed.
+  const addRow = edit ? (
+    <AddRow
+      className="h-full rounded-sm px-4 py-[13px] text-[15px]"
+      chipClassName="size-7 rounded-[9px]"
+      label={t("exercise.edit.addOption", "Add option")}
+      onClick={() => {
+        let n = options.length + 1;
+        while (options.some((option) => option.id === `opt-${n}`)) n += 1;
+        edit({ options: [...options, { id: `opt-${n}`, label: "" }] });
+      }}
+    />
+  ) : null;
   return (
     <Frame node={node} mode={mode}>
       {lead}
@@ -53,7 +67,7 @@ export function McqChoiceGroup({ node, mode, value, onChange, lead }: SubProps<C
           placeholder={t("exercise.edit.promptPlaceholder", "Type the question")}
         />
       </p>
-      <RadioGroup value={selected} onValueChange={pick} className={cn("mt-5 grid gap-2.5", pictured && PICTURED_ROW)}>
+      <RadioGroup value={selected} onValueChange={pick} className={cn("mt-5 grid w-full grid-cols-1 auto-rows-fr gap-2.5", pictured && PICTURED_ROW)}>
         {options.map((option, index) => {
           const isSelected = selected === option.id;
           const isCorrect = mode === "result" && option.id === correct_option_id;
@@ -69,7 +83,7 @@ export function McqChoiceGroup({ node, mode, value, onChange, lead }: SubProps<C
               // hover slides right. Exactly one border-color state is active at a time so
               // the selected/result color always wins over hover — and selection is shown
               // by the rose border + rose letter chip, with no background fill.
-              "flex cursor-pointer gap-3 rounded-sm border-2 px-4 py-[13px] text-[15px] font-semibold transition-all duration-200 ease-bounce",
+              "flex w-full min-w-0 cursor-pointer gap-3 rounded-sm border-2 px-4 py-[13px] text-[15px] font-semibold transition-all duration-200 ease-bounce",
               pictured ? PICTURED_TILE : "items-center hover:translate-x-1",
               mode !== "result" && !isSelected && "border-border hover:border-rose-300",
               mode !== "result" && isSelected && "border-rose-500 bg-rose-50",
@@ -79,7 +93,7 @@ export function McqChoiceGroup({ node, mode, value, onChange, lead }: SubProps<C
             )}>
               <RadioGroupItem value={option.id} aria-label={option.label || t("exercise.renderer.optionAria", "Option {letter}", { letter: letters[index] })} className="sr-only" />
               <span className={cn("grid size-7 shrink-0 place-items-center rounded-[9px] bg-muted text-[13px] font-extrabold text-ink-700", mode !== "result" && isSelected && "bg-rose-600 text-white", mode === "result" && isCorrect && "bg-success text-white")}>{letters[index]}</span>
-              <span className={cn("flex flex-1 flex-col gap-2", pictured ? "items-center" : "items-start")}>
+              <span className={cn("flex min-w-0 flex-1 flex-col gap-2", pictured ? "items-center" : "items-start")}>
                 {option.image_url ? (
                   <OptionImage url={option.image_url} alt={option.label || t("exercise.renderer.optionPicture", "Picture for option {letter}", { letter: letters[index] })} />
                 ) : null}
@@ -123,22 +137,9 @@ export function McqChoiceGroup({ node, mode, value, onChange, lead }: SubProps<C
             </label>
           );
         })}
+        {edit && !pictured ? addRow : null}
       </RadioGroup>
-      {edit ? (
-        // One more option row, the same size as the options, outlined dashed.
-        <div className="mt-2.5">
-          <AddRow
-            className="rounded-sm px-4 py-[13px] text-[15px]"
-            chipClassName="size-7 rounded-[9px]"
-            label={t("exercise.edit.addOption", "Add option")}
-            onClick={() => {
-              let n = options.length + 1;
-              while (options.some((option) => option.id === `opt-${n}`)) n += 1;
-              edit({ options: [...options, { id: `opt-${n}`, label: "" }] });
-            }}
-          />
-        </div>
-      ) : null}
+      {edit && pictured ? <div className="mt-2.5">{addRow}</div> : null}
     </Frame>
   );
 }

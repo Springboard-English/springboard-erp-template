@@ -185,7 +185,7 @@ export function CollectionContext({
   const paragraphs = passageHolder.passage.map((paragraph) => (
     <p
       key={paragraph}
-      className="mt-3 whitespace-pre-wrap text-[14.5px] leading-7 text-muted-foreground first:mt-0"
+      className="mt-3 whitespace-pre-wrap text-base leading-7 text-muted-foreground first:mt-0"
     >
       <PassageText text={paragraph} />
     </p>
@@ -260,7 +260,7 @@ export function CollectionContext({
           {editor && passageEditing ? (
             // After "Edit passage" it is typed into where it sits; Enter starts
             // a new paragraph.
-            <p className="whitespace-pre-wrap text-[14.5px] leading-7 text-muted-foreground">
+            <p className="whitespace-pre-wrap text-base leading-7 text-muted-foreground">
               <EditableText
                 value={passageHolder.passage.join("\n\n")}
                 multiline

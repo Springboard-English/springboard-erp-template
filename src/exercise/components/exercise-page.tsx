@@ -98,7 +98,7 @@ function SectionLead({
             </p>
           ) : null}
           {paragraphs.length && editText ? (
-            <p className="whitespace-pre-wrap p-5 text-[14.5px] leading-7 text-muted-foreground">
+            <p className="whitespace-pre-wrap p-5 text-base leading-7 text-muted-foreground">
               <EditableText
                 value={joinPassage(paragraphs)}
                 multiline
@@ -111,7 +111,7 @@ function SectionLead({
               {paragraphs.map((paragraph, index) => (
                 <p
                   key={index}
-                  className="mt-3 whitespace-pre-wrap text-[14.5px] leading-7 text-muted-foreground first:mt-0"
+                  className="mt-3 whitespace-pre-wrap text-base leading-7 text-muted-foreground first:mt-0"
                 >
                   <PassageText text={paragraph} />
                 </p>
