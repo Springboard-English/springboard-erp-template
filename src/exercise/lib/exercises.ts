@@ -31,6 +31,19 @@ export const SKILL_LABELS: Record<SkillTag, string> = {
   speaking: "Speaking",
 };
 
+/** One line per question type saying what a student does, for type pickers. */
+export const QUESTION_TYPE_DESCRIPTIONS: Record<QuestionType, string> = {
+  mcq: "Pick one option from a lettered list.",
+  "gap-filling": "Type the missing word into a blank in a sentence or passage.",
+  "short-answer": "Type a short answer to a question.",
+  rewriting: "Rewrite a sentence so it keeps its meaning, often from a given start.",
+  "error-correction": "Find the wrong word in a sentence or passage and correct it.",
+  "reading-full-test": "Answer a question beside its own reading passage.",
+  "true-false-not-given": "Judge a statement against the passage: True, False or Not Given.",
+  essay: "Write a longer answer, marked by a teacher.",
+  speaking: "Record a spoken answer, marked by a teacher.",
+};
+
 export const questionTypeSchema = z.enum([
   "mcq",
   "gap-filling",

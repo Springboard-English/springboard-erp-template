@@ -33,6 +33,14 @@ import {
 import { ExerciseRenderer } from "./exercise-renderer";
 import { PageRecordings } from "./page-recordings";
 import { HighlightScope } from "./highlighter";
+import {
+  ClozeBlanksEditor,
+  EditablePassage,
+  EditableQuestion,
+  HuntMarksEditor,
+  useExerciseEditor,
+} from "./exercise-edit";
+import { countGapTokens } from "../lib/gap-token";
 
 // ONE screen of the student-facing activity, and the single source of truth for
 // what a student sees on it.
@@ -136,7 +144,83 @@ export function ExercisePage(props: ExercisePageProps) {
  * `hideHeader` because both callers lift the part/section heading into the top
  * bar (`RunnerHeading`); rendering it here too would duplicate it.
  */
-function PageBody({ page, nodes, answers, onChange, enableAnnotations }: ExercisePageProps) {
+function PageBody(props: ExercisePageProps) {
+  const editor = useExerciseEditor();
+  return editor ? <EditPageBody {...props} /> : <AnswerPageBody {...props} />;
+}
+
+/**
+ * The page in edit mode: the same layout, with the section's own text editable
+ * and each question replaced by the host's editor. A cloze's blanks and an
+ * error hunt's mistakes are placed on the passage itself.
+ */
+function EditPageBody({ page, nodes }: ExercisePageProps) {
+  const { t } = useI18n();
+  const pageNodes = page.nodeIndices.map((i) => nodes[i]).filter(Boolean);
+  const numbers = page.nodeIndices.map((i) => i + 1);
+  const layout = pageLayout(page, nodes);
+  const section = page.stub?.kind === "section" ? page.stub : null;
+  const ownText = section?.passage ?? [];
+  const questions = (
+    <div className="space-y-4">
+      {pageNodes.map((node, k) => (
+        <EditableQuestion key={node.id} node={node} number={numbers[k]} />
+      ))}
+    </div>
+  );
+  // The section's own text, editable as prose, under the blanks or marks drawn on it.
+  const sectionText = section ? (
+    <details className="rounded-2xl border bg-card p-4 shadow-sm" open={ownText.length === 0}>
+      <summary className="cursor-pointer text-sm font-bold text-foreground">
+        {t("exercise.edit.sectionText", "The section's passage")}
+      </summary>
+      <EditablePassage collectionKey={section.appsheet_key} paragraphs={ownText} className="mt-3" />
+    </details>
+  ) : null;
+
+  if (section && (layout.kind === "cloze" || layout.kind === "error-hunt")) {
+    return (
+      <CollectionContext stub={page.stub} hideHeader preferPartPassage>
+        <SectionLead stub={page.stub} ownsText />
+        <div className="space-y-4">
+          {layout.kind === "cloze" ? (
+            countGapTokens(ownText.join("\n\n")) > 0 ? (
+              <ClozeBlanksEditor
+                collectionKey={section.appsheet_key}
+                passage={ownText}
+                nodes={pageNodes}
+                numbers={numbers}
+              />
+            ) : (
+              <p className="rounded-2xl border border-butter-300 bg-butter-bg px-4 py-3 text-sm font-bold text-ink-700">
+                {t("exercise.edit.noBlanks", "This passage has no {gap} markers yet. Edit it and put {gap} where each question's blank goes.")}
+              </p>
+            )
+          ) : (
+            <HuntMarksEditor
+              passage={ownText}
+              nodes={pageNodes as ErrorHuntNode[]}
+              numbers={numbers}
+            />
+          )}
+          {sectionText}
+          {questions}
+        </div>
+      </CollectionContext>
+    );
+  }
+
+  // Every other layout: the section's passage sits in the side column, where
+  // `CollectionContext` makes it editable, and the questions stack beside it.
+  return (
+    <CollectionContext stub={page.stub} hideHeader>
+      <SectionLead stub={page.stub} />
+      {questions}
+    </CollectionContext>
+  );
+}
+
+function AnswerPageBody({ page, nodes, answers, onChange, enableAnnotations }: ExercisePageProps) {
   const { t } = useI18n();
   const pageNodes = page.nodeIndices.map((i) => nodes[i]).filter(Boolean);
   const numbers = page.nodeIndices.map((i) => i + 1);
