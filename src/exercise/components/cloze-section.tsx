@@ -2,6 +2,10 @@ import { useState } from "react";
 import { GripVertical } from "lucide-react";
 
 import { Input } from "../../components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
+
+// The "nothing chosen" item: a select item can't carry an empty value.
+const NO_OPTION = "__none__";
 import { useI18n } from "../../context/I18nContext";
 import { cn } from "../../lib/utils";
 import { GAP_TOKEN_SOURCE } from "../lib/gap-token";
@@ -418,25 +422,33 @@ export function ClozeSection({
       return (
         <span className="mx-0.5 inline-flex items-center align-middle">
           {badge(index, pieceAt)}
-          <select
+          <Select
             value={value}
             disabled={mode === "result"}
-            onChange={(event) => onChange(node.id, event.target.value)}
-            className={cn(
-              "inline-flex h-8 max-w-[16rem] shrink-0 rounded-sm border-2 bg-card px-2 py-0.5 text-[inherit] font-bold",
-              mode === "result" &&
-                (isCorrect
-                  ? "border-success bg-success-bg text-mint-700"
-                  : "border-error bg-error-bg text-error"),
-            )}
+            onValueChange={(next) => onChange(node.id, next === NO_OPTION ? "" : next)}
           >
-            <option value="">{t("exercise.renderer.chooseOption", "— choose —")}</option>
-            {options.map((option, i) => (
-              <option key={option.id} value={option.id}>
-                {optionLetters(options)[i]}. {option.label}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger
+              size="sm"
+              aria-label={t("exercise.renderer.blankN", "Blank {n}", { n: numbers[index] ?? index + 1 })}
+              className={cn(
+                "inline-flex h-8 max-w-[16rem] shrink-0 gap-1 rounded-sm border-2 bg-card px-2 py-0.5 text-[inherit] font-bold shadow-none",
+                mode === "result" &&
+                  (isCorrect
+                    ? "border-success bg-success-bg text-mint-700"
+                    : "border-error bg-error-bg text-error"),
+              )}
+            >
+              <SelectValue placeholder={t("exercise.renderer.chooseOption", "— choose —")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={NO_OPTION}>{t("exercise.renderer.chooseOption", "— choose —")}</SelectItem>
+              {options.map((option, i) => (
+                <SelectItem key={option.id} value={option.id}>
+                  {optionLetters(options)[i]}. {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </span>
       );
     }

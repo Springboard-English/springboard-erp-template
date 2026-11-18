@@ -66,6 +66,7 @@ export const EXERCISE_VIETNAMESE_MESSAGES: Record<string, string> = {
   "exercise.renderer.chooseFallback": "Chọn…",
   "exercise.renderer.chooseFrom": "Chọn từ",
   "exercise.renderer.chooseOption": "— chọn —",
+  "exercise.renderer.blankN": "Chỗ trống {n}",
   "exercise.renderer.chooseParagraphFor": "Chọn đoạn cho {name}",
   "exercise.renderer.choosePlaceholder": "chọn…",
   "exercise.renderer.chooseSelected": "Chọn {n} · đã chọn {selected}",

@@ -23,8 +23,12 @@ import {
 import { getEventCoordinates } from "@dnd-kit/utilities";
 import { GripVertical } from "lucide-react";
 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { useI18n } from "../../context/I18nContext";
 import { touchHitArea } from "../../lib/touchTarget";
+
+// The "no paragraph" item: a select item can't carry an empty value.
+const NO_PICK = "__none__";
 import { cn } from "../../lib/utils";
 import { PoolAddOption, PoolOptionLabel, useExerciseEditor } from "./exercise-edit";
 import type { Translate } from "../i18n";
@@ -577,34 +581,38 @@ export function SlotContent({
   if (picker && slotId && !disabled && !picker.disabled) {
     const name = picker.nameOf.get(slotId) ?? t("exercise.renderer.thisSlot", "this slot");
     return (
-      <select
-        aria-label={t("exercise.renderer.chooseParagraphFor", "Choose the paragraph for {name}", { name })}
-        value={item?.id ?? ""}
-        onChange={(event) => picker.choose(slotId, event.target.value || null)}
-        className={cn(
-          // Kept narrow and truncating: this sits INSIDE a line of prose in a
-          // gapped text, and a select as wide as its longest option would break
-          // the passage into ribbons.
-          "inline-flex h-9 max-w-[12rem] truncate rounded-xl border-2 bg-card px-2 align-middle text-xs font-bold text-foreground",
-          item ? "border-mint-500 bg-mint-bg" : "border-dashed border-border",
-        )}
-      >
-        <option value="">{placeholder || t("exercise.renderer.chooseFallback", "Choose…")}</option>
-        {picker.items.map((option) => {
-          const placedIn = picker.slotOf.get(option.id);
-          return (
-            <option key={option.id} value={option.id}>
-              {optionText(
-                option,
-                placedIn && placedIn !== slotId
-                  ? (picker.nameOf.get(placedIn) ?? null)
-                  : null,
-                t,
-              )}
-            </option>
-          );
-        })}
-      </select>
+      <Select value={item?.id ?? ""} onValueChange={(next) => picker.choose(slotId, next === NO_PICK ? null : next)}>
+        <SelectTrigger
+          size="sm"
+          aria-label={t("exercise.renderer.chooseParagraphFor", "Choose the paragraph for {name}", { name })}
+          className={cn(
+            // Kept narrow and truncating: this sits INSIDE a line of prose in a
+            // gapped text, and a select as wide as its longest option would break
+            // the passage into ribbons.
+            "inline-flex h-9 max-w-[12rem] gap-1 rounded-xl border-2 bg-card px-2 align-middle text-xs font-bold text-foreground shadow-none",
+            item ? "border-mint-500 bg-mint-bg" : "border-dashed border-border",
+          )}
+        >
+          <SelectValue placeholder={placeholder || t("exercise.renderer.chooseFallback", "Choose…")} />
+        </SelectTrigger>
+        <SelectContent className="max-w-[min(92vw,28rem)]">
+          <SelectItem value={NO_PICK}>{placeholder || t("exercise.renderer.chooseFallback", "Choose…")}</SelectItem>
+          {picker.items.map((option) => {
+            const placedIn = picker.slotOf.get(option.id);
+            return (
+              <SelectItem key={option.id} value={option.id}>
+                {optionText(
+                  option,
+                  placedIn && placedIn !== slotId
+                    ? (picker.nameOf.get(placedIn) ?? null)
+                    : null,
+                  t,
+                )}
+              </SelectItem>
+            );
+          })}
+        </SelectContent>
+      </Select>
     );
   }
 
