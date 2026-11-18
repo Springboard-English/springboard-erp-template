@@ -599,7 +599,7 @@ registers, removes and tests the device (`api_calls/pushNotifications.ts`,
 - **A tab hidden for a minute drops its stream**; returning reopens it.
 - **It uses `fetch`, not `EventSource`,** because the token rides an
   Authorization header. Without the provider the hook is a no-op.
-- **`useLiveEvent("<kind>:<key>", onEvent)` (since 6.20.0) hands the screen
+- **`useLiveEvent("<kind>:<key>", onEvent)` hands the screen
   the event itself** instead of refetching: each `status` (with `fields`, the
   changed part of the state, for a kind that sends them, today only
   `live_session`), plus `ready` and `resync`, after which the screen rereads
