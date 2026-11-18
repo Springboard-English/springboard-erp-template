@@ -84,15 +84,20 @@ export function McqChoiceGroup({ node, mode, value, onChange, lead }: SubProps<C
               // the selected/result color always wins over hover — and selection is shown
               // by the rose border + rose letter chip, with no background fill.
               "flex w-full min-w-0 cursor-pointer gap-3 rounded-sm border-2 px-4 py-[13px] text-[15px] font-semibold transition-all duration-200 ease-bounce",
+              // In the editor a phone gives the option's words the whole row and
+              // puts its controls on a second one.
+              edit && "max-sm:flex-wrap",
               pictured ? PICTURED_TILE : "items-center hover:translate-x-1",
               mode !== "result" && !isSelected && "border-border hover:border-rose-300",
-              mode !== "result" && isSelected && "border-rose-500 bg-rose-50",
+              mode !== "result" && isSelected && !edit && "border-rose-500 bg-rose-50",
+              // In edit mode the picked option is the answer key, so it reads as correct.
+              mode !== "result" && isSelected && edit && "border-success bg-success-bg",
               mode === "result" && isCorrect && "border-success bg-success-bg",
               mode === "result" && isWrong && "border-error bg-error-bg",
               mode === "result" && !isCorrect && !isWrong && "border-border",
             )}>
               <RadioGroupItem value={option.id} aria-label={option.label || t("exercise.renderer.optionAria", "Option {letter}", { letter: letters[index] })} className="sr-only" />
-              <span className={cn("grid size-7 shrink-0 place-items-center rounded-[9px] bg-muted text-[13px] font-extrabold text-ink-700", mode !== "result" && isSelected && "bg-rose-600 text-white", mode === "result" && isCorrect && "bg-success text-white")}>{letters[index]}</span>
+              <span className={cn("grid size-7 shrink-0 place-items-center rounded-[9px] bg-muted text-[13px] font-extrabold text-ink-700", mode !== "result" && isSelected && (edit ? "bg-success text-white" : "bg-rose-600 text-white"), mode === "result" && isCorrect && "bg-success text-white")}>{letters[index]}</span>
               <span className={cn("flex min-w-0 flex-1 flex-col gap-2", pictured ? "items-center" : "items-start")}>
                 {option.image_url ? (
                   <OptionImage url={option.image_url} alt={option.label || t("exercise.renderer.optionPicture", "Picture for option {letter}", { letter: letters[index] })} />
@@ -108,32 +113,35 @@ export function McqChoiceGroup({ node, mode, value, onChange, lead }: SubProps<C
                   <span>{option.label}</span>
                 ) : null}
               </span>
+              {edit ? (
+                <span className="flex shrink-0 items-center gap-1 max-sm:basis-full max-sm:justify-end">
+                  {isSelected ? <span className="mr-1 flex items-center gap-1 text-xs font-extrabold text-success"><Check className="size-4" />{t("exercise.edit.answerTag", "answer")}</span> : null}
+                  <OptionImageControls
+                    option={option}
+                    letter={letters[index]}
+                    onChange={(next) => edit({ options: options.map((other) => (other.id === option.id ? next : other)) })}
+                  />
+                  {options.length > 2 ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      aria-label={t("exercise.edit.removeOption", "Remove option {letter}", { letter: letters[index] })}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        edit({
+                          options: options.filter((other) => other.id !== option.id),
+                          ...(correct_option_id === option.id ? { correct_option_id: "" } : {}),
+                        });
+                      }}
+                    >
+                      <X className="size-4" />
+                    </Button>
+                  ) : null}
+                </span>
+              ) : null}
               {isCorrect ? <span className="flex items-center gap-1 text-xs font-extrabold text-success"><Check className="springboard-pop size-4" />{t("exercise.renderer.correct", "correct")}</span> : null}
               {isWrong ? <CircleAlert className="size-4 text-error" /> : null}
-              {edit ? (
-                <OptionImageControls
-                  option={option}
-                  letter={letters[index]}
-                  onChange={(next) => edit({ options: options.map((other) => (other.id === option.id ? next : other)) })}
-                />
-              ) : null}
-              {edit && options.length > 2 ? (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  aria-label={t("exercise.edit.removeOption", "Remove option {letter}", { letter: letters[index] })}
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    edit({
-                      options: options.filter((other) => other.id !== option.id),
-                      ...(correct_option_id === option.id ? { correct_option_id: "" } : {}),
-                    });
-                  }}
-                >
-                  <X className="size-4" />
-                </Button>
-              ) : null}
             </label>
           );
         })}

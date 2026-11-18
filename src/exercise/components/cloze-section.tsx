@@ -469,7 +469,9 @@ export function ClozeSection({
         <Input
           {...EXAM_FIELD_PROPS}
           value={value}
-          // The number badge already labels the blank, so the input stays clean.
+          // The number badge already labels the blank, so a student's input
+          // stays clean; in the editor it says the box takes the answer key.
+          placeholder={editor ? t("exercise.edit.answerShort", "Answer") : undefined}
           disabled={mode === "result"}
           onChange={(event) => emit(root, event.target.value)}
           size={Math.max(value.length, 6)}
