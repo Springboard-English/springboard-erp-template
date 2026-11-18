@@ -190,8 +190,12 @@ function InlineEditable({
         if (multiline) document.execCommand("insertText", false, "\n\n");
       }}
       className={cn(
-        "rounded-sm decoration-ink-300 decoration-dashed underline-offset-4 outline-none [text-decoration-line:underline] hover:decoration-rose-400 focus:bg-rose-50 focus:decoration-rose-500",
-        "empty:before:text-muted-foreground empty:before:content-[attr(data-placeholder)]",
+        // A mouse shows the dashed underline on hover and focus only, so a page
+        // of questions reads as text; touch has no hover and keeps it.
+        "cursor-text rounded-sm decoration-ink-300 decoration-dashed underline-offset-4 outline-none [text-decoration-line:underline] pointer-fine:[text-decoration-line:none] pointer-fine:hover:[text-decoration-line:underline] pointer-fine:focus:[text-decoration-line:underline] hover:decoration-rose-400 focus:bg-rose-50 focus:decoration-rose-500",
+        // An empty field is a hint, not content: lighter and thinner than the
+        // words around it, and always underlined so it can be found.
+        "empty:[text-decoration-line:underline] empty:before:font-medium empty:before:text-ink-300 empty:before:content-[attr(data-placeholder)]",
         className,
       )}
     />
@@ -512,6 +516,36 @@ export function OptionImageControls({
   );
 }
 
+/** How each auto-marked type's answer is set on its own renderer. */
+const ANSWER_HOW: Partial<Record<QuestionType, [string, string]>> = {
+  mcq: ["exercise.edit.howChoice", "click the correct option"],
+  "reading-full-test": ["exercise.edit.howChoice", "click the correct option"],
+  "gap-filling": ["exercise.edit.howBlank", "type it in the answer box"],
+  rewriting: ["exercise.edit.howBlank", "type it in the answer box"],
+  "short-answer": ["exercise.edit.howBlank", "type it in the answer box"],
+  "true-false-not-given": ["exercise.edit.howVerdict", "click the right verdict"],
+  "error-correction": ["exercise.edit.howError", "click the wrong word, then type its correction"],
+};
+
+/**
+ * In edit mode, a tag on a question that has no answer key yet, saying how to
+ * set one. Nothing for a question with a key, a human-marked type, or outside
+ * edit mode.
+ */
+export function NoAnswerHint({ node, keyed }: { node: ExerciseNode; keyed: boolean }) {
+  const { t } = useI18n();
+  const editor = useExerciseEditor();
+  const how = ANSWER_HOW[node.type];
+  if (!editor || keyed || !how) return null;
+  return (
+    <p className="mb-3 inline-flex rounded-full bg-butter-bg px-3 py-1 text-xs font-bold text-ink-700">
+      {t("exercise.edit.noAnswer", "No answer yet")}
+      {": "}
+      {t(how[0], how[1])}
+    </p>
+  );
+}
+
 // The type, skill and marks controls share one look: the field style of the
 // type's searchable list (height, border, text size and weight), so the three
 // read as one stack of the same kind of control.
@@ -534,7 +568,7 @@ export function QuestionMetaControls({ node, stacked = false }: { node: Exercise
   const typeId = `question-type-${node.id}`;
   const width = stacked ? "w-44" : "w-52";
   return (
-    // Stacked on a card, so the three take a narrow column and the question keeps its width.
+    // Stacked in a menu, so the three take one narrow column.
     <span className={cn("inline-flex gap-1.5", stacked ? "flex-col items-stretch" : "flex-wrap items-center")}>
       {meta.retype ? (
         <SearchableSelect
@@ -608,10 +642,16 @@ export function QuestionMenu({
   node,
   onClose,
   extra,
+  tools = true,
+  align = "start",
 }: {
   node: ExerciseNode;
   onClose: () => void;
   extra?: ReactNode;
+  /** False where the host's tools already sit beside the menu's opener. */
+  tools?: boolean;
+  /** Which edge of its opener the menu hangs from. */
+  align?: "start" | "end";
 }) {
   const editor = useExerciseEditor();
   const ref = useRef<HTMLDivElement>(null);
@@ -633,11 +673,54 @@ export function QuestionMenu({
       ref={ref}
       role="dialog"
       onClick={(event) => event.stopPropagation()}
-      className="absolute left-0 top-full z-30 mt-2 flex w-60 flex-col gap-2 rounded-2xl border bg-card p-3 text-left text-sm leading-normal shadow-xl"
+      className={cn(
+        "absolute top-full z-30 mt-2 flex w-60 flex-col gap-2 rounded-2xl border bg-card p-3 text-left text-sm leading-normal shadow-xl",
+        align === "end" ? "right-0" : "left-0",
+      )}
     >
       <QuestionMetaControls node={node} stacked />
-      <div className="flex flex-wrap items-center gap-1.5">{editor.questionTools?.(node)}</div>
+      {tools ? <div className="flex flex-wrap items-center gap-1.5">{editor.questionTools?.(node)}</div> : null}
       {extra}
     </div>
+  );
+}
+
+/**
+ * A question's type, skill and marks on its card in edit mode, as one line of
+ * text that opens them in a `QuestionMenu`. The fields stay out of the way
+ * until wanted, so the card is as tall as its question.
+ */
+export function QuestionMetaSummary({ node }: { node: ExerciseNode }) {
+  const { t } = useI18n();
+  const editor = useExerciseEditor();
+  const [open, setOpen] = useState(false);
+  if (!editor) return null;
+  const points = editor.questionMeta?.(node).points ?? node.points ?? 0;
+  return (
+    <span className="relative inline-flex min-w-0">
+      <button
+        type="button"
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        aria-label={t("exercise.edit.metaOpen", "Type, skill and marks")}
+        onClick={() => setOpen((current) => !current)}
+        className={cn(
+          fieldHeight,
+          "inline-flex min-w-0 items-center gap-1.5 rounded-full border border-input bg-background px-3 text-xs font-semibold text-muted-foreground transition-colors hover:border-ink-300 hover:text-foreground",
+        )}
+      >
+        <span className="truncate">
+          {valueLabel(t, QUESTION_TYPE_LABELS[node.type])}
+          {" · "}
+          {valueLabel(t, SKILL_LABELS[node.skillTag])}
+          {" · "}
+          {points === 1
+            ? t("exercise.renderer.pointOne", "1 point")
+            : t("exercise.renderer.pointOther", "{n} points", { n: points })}
+        </span>
+        <ChevronDown className="size-3.5 shrink-0" />
+      </button>
+      {open ? <QuestionMenu node={node} tools={false} align="end" onClose={() => setOpen(false)} /> : null}
+    </span>
   );
 }

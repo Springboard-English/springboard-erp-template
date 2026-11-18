@@ -51,7 +51,7 @@ export function ShortAnswer({ node, mode, value, onChange }: SubProps<ShortAnswe
       <Input
         {...EXAM_FIELD_PROPS}
         value={answer}
-        placeholder={node.content.placeholder ?? t("exercise.renderer.typeAnswer", "Type your answer")}
+        placeholder={edit ? t("exercise.edit.acceptedAnswer", "Accepted answer") : (node.content.placeholder ?? t("exercise.renderer.typeAnswer", "Type your answer"))}
         disabled={mode === "result"}
         onChange={(event) => onChange?.(event.target.value)}
         className={cn(

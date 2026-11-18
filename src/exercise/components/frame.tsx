@@ -9,7 +9,8 @@ import { formatMarks } from "../lib/grading";
 import { questionTypeLabel } from "../lib/section-type";
 import { CategoryPill } from "./category-pill";
 import { Explanation, explanationOf } from "./explanation";
-import { QuestionMetaControls, useExerciseEditor } from "./exercise-edit";
+import { NoAnswerHint, QuestionMetaSummary, useExerciseEditor } from "./exercise-edit";
+import { answerFromKey } from "../lib/answer-key-bridge";
 import { cn } from "../../lib/utils";
 
 export type ExerciseMode = "practice" | "review" | "result";
@@ -30,11 +31,17 @@ export function Frame({ node, children, mode }: { node: ExerciseNode; children: 
   const selected = editor?.selectedId === node.id;
   const select = () => (editor && !selected ? editor.onSelect(node.id) : undefined);
   const cardClass = cn(
-    "gap-0 overflow-hidden border bg-card pt-0 shadow-sm",
-    editor && "scroll-mt-4",
-    selected && "ring-2 ring-rose-400 ring-offset-2 ring-offset-background",
+    "gap-0 border bg-card pt-0 shadow-sm",
+    // In edit mode the type, skill and marks menu hangs out of the card.
+    editor ? "scroll-mt-4" : "overflow-hidden",
+    // Quiet: rose is the page's one action (Next), not the card being edited.
+    selected && "ring-2 ring-ink-300 ring-offset-2 ring-offset-background",
   );
   const tools = editor?.questionTools?.(node) ?? null;
+  // A rooted blank answers `{ root, word }`; only the word is its key.
+  const key = editor ? answerFromKey(node) : null;
+  const keyed = typeof key === "object" && key !== null && "word" in key ? Boolean(key.word) : Boolean(key);
+  const hint = editor ? <NoAnswerHint node={node} keyed={keyed} /> : null;
   // Not while answering: a printed paper names no skill or task type, and the
   // instruction already says what to do.
   const showPill = mode !== "practice";
@@ -46,9 +53,10 @@ export function Frame({ node, children, mode }: { node: ExerciseNode; children: 
   );
   // In edit mode the marks chip is the type, skill and marks, editable.
   const points = editor ? (
-    <div className="flex shrink-0 items-start gap-1.5">
-      <QuestionMetaControls node={node} stacked />
-      <div className="flex flex-col items-center gap-1.5">{tools}</div>
+    // One line: what the question is, opening its fields, then the host's tools.
+    <div className="flex min-w-0 flex-wrap items-center gap-1.5 sm:shrink-0">
+      <QuestionMetaSummary node={node} />
+      {tools}
     </div>
   ) : (
     badge
@@ -59,7 +67,8 @@ export function Frame({ node, children, mode }: { node: ExerciseNode; children: 
     return (
       <Card data-question-id={node.id} onFocusCapture={select} onPointerDownCapture={select} className={cardClass}>
         <CardContent className="p-5 sm:p-7">
-          <div className="float-right mb-2 ml-3">{points}</div>
+          <div className={cn("mb-2", editor ? "mb-4 sm:float-right sm:mb-2 sm:ml-3" : "float-right ml-3")}>{points}</div>
+          {hint}
           {children}
           <Explanation text={explanationOf(node.content)} mode={mode} />
         </CardContent>
@@ -73,7 +82,7 @@ export function Frame({ node, children, mode }: { node: ExerciseNode; children: 
     <Card data-question-id={node.id} onFocusCapture={select} onPointerDownCapture={select} className={cardClass}>
       {/* `flex` spelled out: the template's CardHeader is a grid, where the
           row classes do nothing and the points badge stacks under the pills. */}
-      <CardHeader className="flex flex-col gap-4 border-b bg-muted/30 pt-5 pb-5 sm:flex-row sm:items-start sm:justify-between">
+      <CardHeader className="flex flex-col gap-4 rounded-t-[inherit] border-b bg-muted/30 pt-5 pb-5 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-3">
           {showPill ? (
             <CategoryPill skill={node.skillTag} type={valueLabel(t, questionTypeLabel(node.type))} />
@@ -92,6 +101,7 @@ export function Frame({ node, children, mode }: { node: ExerciseNode; children: 
         {points}
       </CardHeader>
       <CardContent className="p-5 sm:p-7">
+        {hint}
         {children}
         {/* Every per-question renderer goes through here, so the explanation is
             drawn once rather than in each of the nine, whatever the question
