@@ -97,6 +97,41 @@ export function gapOntoWord(
 }
 
 /**
+ * Turn the word at piece index `wordPiece` into a NEW blank, for a question
+ * that has no `{gap}` in the passage yet (`blank` is the order it will be
+ * known by). Punctuation stays in the text. Returns the new text, the blanks'
+ * `order` as `moveGap` does with `blank` where the new one landed, and the
+ * word that is now its answer. With `keepWord` the word stays and the blank
+ * goes just before it, for a blank whose answer is an option, not the text.
+ * Null when the piece is not a word.
+ */
+export function gapIntoWord(
+  text: string,
+  wordPiece: number,
+  blank: number,
+  keepWord = false,
+): { text: string; order: number[]; word: string } | null {
+  const pieces = gapPieces(text);
+  const target = pieces[wordPiece];
+  if (!target || target.kind !== "word") return null;
+  const [, lead, core, trail] = /^([^\p{L}\p{N}]*)(.*?)([^\p{L}\p{N}]*)$/u.exec(target.text) ?? ["", "", target.text, ""];
+  if (!core) return null;
+  const next: GapPiece[] = pieces.flatMap((piece, at): GapPiece[] =>
+    at !== wordPiece
+      ? [piece]
+      : keepWord
+        ? [{ kind: "gap" as const, index: blank }, { kind: "space" as const, text: " " }, piece]
+        : [
+          ...(lead ? [{ kind: "word" as const, text: lead }] : []),
+          { kind: "gap" as const, index: blank },
+          ...(trail ? [{ kind: "word" as const, text: trail }] : []),
+        ],
+  );
+  const order = next.filter((piece): piece is Extract<GapPiece, { kind: "gap" }> => piece.kind === "gap").map((piece) => piece.index);
+  return { text: piecesText(next), order, word: core };
+}
+
+/**
  * Which word a point in the typed passage means. The passage is typed as runs,
  * the text between blanks (`piecesText(pieces).split("{gap}")`), so a caret is
  * a run and an offset into it. `"on"` answers the word the offset sits in (else
@@ -140,4 +175,27 @@ export function wordAtRunOffset(
     }
   }
   return intent === "before" ? null : nearest;
+}
+
+/**
+ * The passage without the blanks at the given orders (0-based), each taken out
+ * with one neighbouring space. For a question removed from a cloze: its token
+ * must go too, or every later question would fill the blank before its own.
+ */
+export function dropGaps(text: string, drop: number[]): string {
+  if (!drop.length) return text;
+  const gone = new Set(drop);
+  const pieces = gapPieces(text);
+  const next: GapPiece[] = [];
+  for (let at = 0; at < pieces.length; at += 1) {
+    const piece = pieces[at];
+    if (piece.kind !== "gap" || !gone.has(piece.index)) {
+      next.push(piece);
+      continue;
+    }
+    // Take one space with it: the one after, else the one before.
+    if (pieces[at + 1]?.kind === "space") at += 1;
+    else if (next[next.length - 1]?.kind === "space") next.pop();
+  }
+  return piecesText(next);
 }

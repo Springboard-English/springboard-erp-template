@@ -17,7 +17,7 @@ import { EXAM_FIELD_PROPS } from "../lib/exam-field";
 import { RootPick } from "./root-pick";
 import { EditableText, QuestionMenu, useExerciseEditor } from "./exercise-edit";
 import { Button } from "../../components/ui/button";
-import { gapOntoWord, gapPieces, moveGap, piecesText } from "../lib/gap-move";
+import { gapIntoWord, gapOntoWord, gapPieces, moveGap, piecesText } from "../lib/gap-move";
 import { countGapTokens } from "../lib/gap-token";
 import { splitPassage } from "../lib/passage";
 
@@ -277,16 +277,50 @@ export function ClozeSection({
   // The blank whose settings are open, anchored to its number.
   const [menuFor, setMenuFor] = useState<number | null>(null);
   const fullText = (passage ?? []).join("\n\n").trim();
-  const editing = Boolean(editor && editKey && countGapTokens(fullText) > 0);
+  const tokenCount = countGapTokens(fullText);
+  // A passage with no blanks yet is editable too when nothing else places its
+  // questions: no printed blanks and no before/after to anchor on.
+  const blankSlate =
+    tokenCount === 0 &&
+    fullText.length > 0 &&
+    !new RegExp(BLANK_RUN).test(fullText) &&
+    nodes.every((node) => !beforeOf(node).trim() && !afterOf(node).trim());
+  const editing = Boolean(editor && editKey && (tokenCount > 0 || blankSlate));
   const pieces = editing ? gapPieces(fullText) : [];
   const words = pieces.map((piece, at) => (piece.kind === "word" ? at : -1)).filter((at) => at >= 0);
-  const ids = (order: number[]) => order.map((old) => nodes[old]?.id).filter((id): id is string => Boolean(id));
+  // Tokens fill questions in order, so the questions past the last token have
+  // no blank in the text yet: they wait above the passage to be placed.
+  const unplacedInText = editing ? nodes.map((_, index) => index).filter((index) => index >= tokenCount) : [];
+  // Every question goes in the order, the unplaced ones last, so a host that
+  // sorts by it keeps them after the placed ones instead of shuffling them in.
+  const ids = (order: number[]) =>
+    [...order, ...unplacedInText.filter((index) => !order.includes(index))]
+      .map((old) => nodes[old]?.id)
+      .filter((id): id is string => Boolean(id));
   const move = (gap: number, beforeWord: number) => {
     const result = moveGap(fullText, gap, beforeWord);
     if (!result || !editor || !editKey) return;
     editor.onBlanksMove(editKey, splitPassage(result.text) ?? [result.text], ids(result.order));
   };
+  // Give an unplaced question its blank at a word: the word becomes its
+  // answer, or for an options blank the blank goes in front of the word.
+  const place = (index: number, wordPiece: number) => {
+    const node = nodes[index];
+    if (!node || !editor || !editKey) return;
+    const result = gapIntoWord(fullText, wordPiece, index, isChoice(node));
+    if (!result) return;
+    editor.onBlanksMove(editKey, splitPassage(result.text) ?? [result.text], ids(result.order));
+    if (!isChoice(node)) {
+      const accepted = node.content.accepted_answers ?? [];
+      editor.onNodeChange(node.id, {
+        ...node,
+        content: { ...node.content, accepted_answers: [result.word, ...accepted.filter((answer) => answer && answer !== result.word)] },
+      } as ExerciseNode);
+    }
+    setArmed(null);
+  };
   const take = (gap: number, wordPiece: number) => {
+    if (gap >= tokenCount) return place(gap, wordPiece);
     const node = nodes[gap];
     if (!node || !editor || !editKey || isChoice(node)) return;
     const accepted = node.content.accepted_answers ?? [];
@@ -505,14 +539,52 @@ export function ClozeSection({
           <p className="text-[11px] font-extrabold text-muted-foreground">
             {textEditing
               ? t("exercise.edit.typePassage", "Type in the passage to change it. Enter starts a new paragraph.")
-              : armed !== null
-                ? t("exercise.edit.pickWord", "Click the word that blank {n} should be. Its old answer goes back into the text.", { n: numbers[armed] ?? armed + 1 })
-                : t("exercise.edit.dragBlanksMenu", "Drag a blank's number before another word to move it, or use the arrow keys. Click the number for its settings.")}
+              : armed !== null && armed >= tokenCount
+                ? nodes[armed] && isChoice(nodes[armed])
+                  ? t("exercise.edit.placeBefore", "Click the word that question {n}'s blank should go before.", { n: numbers[armed] ?? armed + 1 })
+                  : t("exercise.edit.placeWord", "Click the word that question {n} should replace. That word becomes its answer.", { n: numbers[armed] ?? armed + 1 })
+                : armed !== null
+                  ? t("exercise.edit.pickWord", "Click the word that blank {n} should be. Its old answer goes back into the text.", { n: numbers[armed] ?? armed + 1 })
+                  : t("exercise.edit.dragBlanksMenu", "Drag a blank's number before another word to move it, or use the arrow keys. Click the number for its settings.")}
           </p>
-          <Button type="button" size="sm" variant={textEditing ? "default" : "outline"} onClick={() => setTextEditing((value) => !value)}>
-            {textEditing ? t("exercise.edit.done", "Done") : t("exercise.edit.editPassage", "Edit passage")}
-          </Button>
+          <div className="flex items-center gap-2">
+            {armed !== null ? (
+              <Button type="button" size="sm" variant="ghost" onClick={() => setArmed(null)}>
+                {t("exercise.edit.cancel", "Cancel")}
+              </Button>
+            ) : null}
+            <Button type="button" size="sm" variant={textEditing ? "default" : "outline"} onClick={() => setTextEditing((value) => !value)}>
+              {textEditing ? t("exercise.edit.done", "Done") : t("exercise.edit.editPassage", "Edit passage")}
+            </Button>
+          </div>
         </div>
+        {unplacedInText.length ? (
+          // Questions with no blank in the text yet, such as one just added.
+          <div className="flex flex-wrap items-center gap-2 rounded-xl border-2 border-dashed border-rose-300 bg-rose-50 px-3 py-2">
+            <p className="text-[11px] font-extrabold text-rose-700">
+              {unplacedInText.every((index) => isChoice(nodes[index]))
+                ? t("exercise.edit.notInTextChoice", "Not in the passage yet: click a question, then the word its blank goes before.")
+                : t("exercise.edit.notInText", "Not in the passage yet: click a question, then the word it should replace.")}
+            </p>
+            {unplacedInText.map((index) => (
+              <Button
+                key={nodes[index].id}
+                type="button"
+                size="sm"
+                variant={armed === index ? "default" : "outline"}
+                aria-pressed={armed === index}
+                aria-label={t("exercise.edit.placeQuestion", "Place question {n} in the passage", { n: numbers[index] ?? index + 1 })}
+                onClick={() => {
+                  setTextEditing(false);
+                  setMenuFor(null);
+                  setArmed((current) => (current === index ? null : index));
+                }}
+              >
+                {numbers[index] ?? index + 1}
+              </Button>
+            ))}
+          </div>
+        ) : null}
         <div className={cn(wrapper, "whitespace-pre-wrap")}>
           {textEditing
             ? runs.map((run, i) => (

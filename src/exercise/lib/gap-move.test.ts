@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { gapOntoWord, gapPieces, moveGap, piecesText, wordAtRunOffset } from "./gap-move";
+import { dropGaps, gapIntoWord, gapOntoWord, gapPieces, moveGap, piecesText, wordAtRunOffset } from "./gap-move";
 
 describe("moveGap", () => {
   const text = "People used honey to {gap} their food. It was a {gap} trade.";
@@ -44,6 +44,38 @@ describe("gapOntoWord", () => {
   });
 });
 
+describe("gapIntoWord", () => {
+  const text = "People used honey to {gap} their food. It was a {gap} trade.";
+  const wordIndex = (source: string, word: string) =>
+    gapPieces(source).findIndex((piece) => piece.kind === "word" && piece.text === word);
+
+  it("turns a word into a new blank and answers it, keeping punctuation", () => {
+    const result = gapIntoWord(text, wordIndex(text, "food."), 2);
+    expect(result?.text).toBe("People used honey to {gap} their {gap}. It was a {gap} trade.");
+    expect(result?.word).toBe("food");
+    expect(result?.order).toEqual([0, 2, 1]);
+  });
+
+  it("puts the new blank first when its word comes first", () => {
+    const result = gapIntoWord(text, wordIndex(text, "People"), 2);
+    expect(result?.order).toEqual([2, 0, 1]);
+  });
+
+  it("gives a passage with no blanks its first one", () => {
+    const result = gapIntoWord("The cat sat.", wordIndex("The cat sat.", "cat"), 0);
+    expect(result).toEqual({ text: "The {gap} sat.", order: [0], word: "cat" });
+  });
+
+  it("keeps the word and goes before it for an options blank", () => {
+    const result = gapIntoWord("The cat sat.", wordIndex("The cat sat.", "cat"), 0, true);
+    expect(result?.text).toBe("The {gap} cat sat.");
+  });
+
+  it("refuses a piece that is not a word", () => {
+    expect(gapIntoWord(text, 1, 2)).toBeNull();
+  });
+});
+
 describe("wordAtRunOffset", () => {
   // Runs: "The cat " | " on the mat." ; pieces: The,_,cat,_,{gap},_,on,_,the,_,mat.
   const pieces = gapPieces("The cat {gap} on the mat.");
@@ -61,5 +93,21 @@ describe("wordAtRunOffset", () => {
     expect(word(wordAtRunOffset(pieces, 0, 6, "before"))).toBe("on");
     expect(word(wordAtRunOffset(pieces, 1, 4, "before"))).toBe("the");
     expect(wordAtRunOffset(pieces, 1, 12, "before")).toBeNull();
+  });
+});
+
+describe("dropGaps", () => {
+  const text = "People used honey to {gap} their food. It was a {gap} trade, {gap}.";
+
+  it("takes out the named blanks with one space each", () => {
+    expect(dropGaps(text, [1])).toBe("People used honey to {gap} their food. It was a trade, {gap}.");
+  });
+
+  it("takes the space before a blank at the end of a clause", () => {
+    expect(dropGaps(text, [2])).toBe("People used honey to {gap} their food. It was a {gap} trade,.");
+  });
+
+  it("leaves the text alone with nothing to drop", () => {
+    expect(dropGaps(text, [])).toBe(text);
   });
 });

@@ -228,7 +228,9 @@ const essayExerciseSchema = baseExerciseSchema.extend({
   type: z.literal("essay"),
   content: z.object({
     prompt: z.string(),
-    placeholder: z.string(),
+    // The API strips this from extracted questions, so it needs a default like
+    // the other types' hints, or an imported essay fails the schema.
+    placeholder: z.string().default("Write your answer"),
     min_words: z.number().int().positive().optional(),
   }),
 });

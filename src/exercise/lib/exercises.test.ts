@@ -30,6 +30,11 @@ describe("Springboard exercise contracts", () => {
     expect(exerciseNodeSchema.parse(choiceNode)).toMatchObject({ id: "choice-1", type: "mcq" });
   });
 
+  it("accepts an essay without a placeholder, as extraction sends it", () => {
+    const essay = { ...choiceNode, type: "essay", content: { prompt: "Describe your town." }, answer_key: undefined };
+    expect(exerciseNodeSchema.parse(essay)).toMatchObject({ type: "essay", content: { placeholder: "Write your answer" } });
+  });
+
   it("rejects unsupported question types", () => {
     const invalid = { ...choiceNode, type: "invented-question" };
     expect(() => exerciseNodeSchema.parse(invalid)).toThrow();
