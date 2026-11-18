@@ -404,7 +404,8 @@ export {
 export { default as NotificationBell } from "./components/notifications/NotificationBell";
 export { default as PushNotificationsToggle } from "./components/notifications/PushNotificationsToggle";
 export type { PushNotificationsToggleProps } from "./components/notifications/PushNotificationsToggle";
-export { LiveEventsProvider, useLiveTopic } from "./context/LiveEventsContext";
+export { LiveEventsProvider, useLiveEvent, useLiveTopic } from "./context/LiveEventsContext";
+export type { LiveEventMessage } from "./context/LiveEventsContext";
 export {
     LiveEventsHttpError,
     createSseParser,

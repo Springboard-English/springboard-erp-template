@@ -5,8 +5,10 @@ import { fetchWithRefresh } from "./fetchWithRefresh";
  * The API's live status stream, `GET /v2/events`, read with `fetch`.
  *
  * Not `EventSource`: the access token lives in memory and rides an
- * Authorization header, which `EventSource` cannot send. An event only says a
- * row moved; the screen refetches it through its own GET.
+ * Authorization header, which `EventSource` cannot send. An event mostly says
+ * only that a row moved, and the screen refetches it through its own GET. A
+ * topic kind whose events carry `fields` (the changed part of its state) lets
+ * the screen merge them in instead.
  */
 
 /** One server-sent event the API sends. */
@@ -14,7 +16,7 @@ export type LiveEvent =
     | { type: "ready" }
     | { type: "resync" }
     | { type: "close" }
-    | { type: "status"; topic: string; status: string | null };
+    | { type: "status"; topic: string; status: string | null; fields?: Record<string, unknown> };
 
 /** A frame as the wire spells it: the `event:` name and the joined `data:` lines. */
 interface RawFrame {
@@ -62,13 +64,19 @@ export function toLiveEvent(frame: RawFrame): LiveEvent | null {
             return { type: frame.event };
         case "status": {
             try {
-                const data = JSON.parse(frame.data) as { topic?: unknown; status?: unknown };
+                const data = JSON.parse(frame.data) as {
+                    topic?: unknown;
+                    status?: unknown;
+                    fields?: unknown;
+                };
                 if (typeof data.topic !== "string") return null;
-                return {
+                const event: LiveEvent = {
                     type: "status",
                     topic: data.topic,
                     status: typeof data.status === "string" ? data.status : null,
                 };
+                if (isRecord(data.fields)) event.fields = data.fields;
+                return event;
             } catch {
                 return null;
             }
@@ -76,6 +84,11 @@ export function toLiveEvent(frame: RawFrame): LiveEvent | null {
         default:
             return null;
     }
+}
+
+/** Whether `value` is a plain JSON object. */
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 /** The stream URL for these topics. */
