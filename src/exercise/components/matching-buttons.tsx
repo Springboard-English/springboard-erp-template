@@ -25,6 +25,7 @@ export function MatchingButtons({
   onChange,
   mode = "practice",
   showLegend = true,
+  narrow = false,
 }: {
   nodes: MatchingNode[];
   /** 1-based question number per node. */
@@ -41,6 +42,12 @@ export function MatchingButtons({
    * place the choices are spelled out, and bare A-J buttons are unanswerable.
    */
   showLegend?: boolean;
+  /**
+   * Drawn in half the page (a paired task's column): the legend takes one
+   * column, and an item keeps its label whole, letting the letters wrap
+   * beneath it instead of breaking "Speaker 1" over two lines.
+   */
+  narrow?: boolean;
 }) {
   const { t } = useI18n();
   const editor = useExerciseEditor();
@@ -60,7 +67,7 @@ export function MatchingButtons({
           <p className="mb-2 text-[11px] font-extrabold text-muted-foreground">
             {t("exercise.renderer.chooseFrom", "Choose from")}
           </p>
-          <div className="grid gap-1.5 sm:grid-cols-2">
+          <div className={cn("grid gap-1.5", !narrow && "sm:grid-cols-2")}>
             {options.map((option, index) => (
               <div key={option.id} className="flex items-start gap-2 text-sm leading-6">
                 <span className="grid size-6 shrink-0 place-items-center rounded-lg bg-rose-100 text-xs font-extrabold text-rose-700">
@@ -104,7 +111,7 @@ export function MatchingButtons({
                   {numbers[index]}
                 </span>
               )}
-              <span className="min-w-0 flex-1 text-sm font-semibold text-foreground">
+              <span className={cn("min-w-0 flex-1 text-sm font-semibold text-foreground", narrow && "min-w-24")}>
                 <EditableText
                   value={node.content.prompt}
                   label={t("exercise.edit.prompt", "Question")}

@@ -7,8 +7,29 @@ import { GAP_TOKEN_SOURCE } from "./gap-token";
 // teacher previews exactly the pages the student gets. `ExercisePage`
 // (components/exercise/exercise-page.tsx) renders what these describe.
 
-/** One page: the collection it belongs to, and which nodes it holds. */
-export type RunPage = { stub: CollectionStub | null; nodeIndices: number[] };
+/** One task of a paired-matching page: its section and the nodes it holds. */
+export type PageTask = { stub: CollectionStub; nodeIndices: number[] };
+
+/**
+ * One page: the collection it belongs to, and which nodes it holds.
+ *
+ * `tasks` is set only on a paired-matching page (see `pairMatchingTasks`):
+ * `stub` is then the first task's section and `nodeIndices` every task's.
+ */
+export type RunPage = {
+  stub: CollectionStub | null;
+  nodeIndices: number[];
+  tasks?: PageTask[];
+};
+
+export interface BuildPagesOptions {
+  /**
+   * Put a listening part's two matching tasks over the same speakers on one
+   * page. On by default; an editor that attaches settings to `page.stub`
+   * turns it off so each task keeps its own page.
+   */
+  pairMatching?: boolean;
+}
 
 /**
  * Group nodes into pages. `nodeIndices` point into `nodes`.
@@ -24,6 +45,16 @@ export type RunPage = { stub: CollectionStub | null; nodeIndices: number[] };
  * invariant is enforced rather than assumed.
  */
 export function buildPages(
+  nodes: ExerciseNode[],
+  collectionByNode: Map<string, CollectionStub | null>,
+  { pairMatching = true }: BuildPagesOptions = {},
+): RunPage[] {
+  const pages = sectionPages(nodes, collectionByNode);
+  return pairMatching ? pairMatchingTasks(pages, nodes) : pages;
+}
+
+/** One page per section run, one per other question: the grouping rule above. */
+function sectionPages(
   nodes: ExerciseNode[],
   collectionByNode: Map<string, CollectionStub | null>,
 ): RunPage[] {
@@ -43,6 +74,64 @@ export function buildPages(
     }
   });
   return pages;
+}
+
+// A two-task listening matching ("TASK ONE: why each speaker goes to the gym,
+// TASK TWO: what each thinks about fitness", one hearing for both) imports as
+// two multiple-matching sections under one part, each with its own A-H pool.
+// Paged one section per screen, the student would flip between tasks while the
+// recording plays, so consecutive sections like that share one page instead.
+//
+// The test is deliberately narrow: same part, both multiple matching, and the
+// same items in the same order (Speaker 1-5 twice). Two matching sections that
+// match different things — a reading part's "which section A-E" after a
+// "which writer" — stay on their own pages.
+/** Merges consecutive pairable matching pages into one page with `tasks`. */
+function pairMatchingTasks(pages: RunPage[], nodes: ExerciseNode[]): RunPage[] {
+  const out: RunPage[] = [];
+  for (const page of pages) {
+    const last = out[out.length - 1];
+    if (last && pairable(last, page, nodes)) {
+      const tasks = last.tasks ?? [taskOf(last)];
+      out[out.length - 1] = {
+        stub: last.stub,
+        nodeIndices: [...last.nodeIndices, ...page.nodeIndices],
+        tasks: [...tasks, taskOf(page)],
+      };
+    } else {
+      out.push(page);
+    }
+  }
+  return out;
+}
+
+/** A single-section page as one task. */
+function taskOf(page: RunPage): PageTask {
+  return { stub: page.stub as CollectionStub, nodeIndices: page.nodeIndices };
+}
+
+/** A multiple-matching page's normalised item prompts, or null for any other page. */
+function matchingPrompts(page: RunPage, nodes: ExerciseNode[]): string[] | null {
+  const stub = page.stub;
+  if (stub?.kind !== "section" || stub.info?.layout !== "multiple-matching") return null;
+  const prompts: string[] = [];
+  for (const index of page.nodeIndices) {
+    const node = nodes[index];
+    if (node?.type !== "mcq") return null;
+    prompts.push(node.content.prompt.trim().toLowerCase());
+  }
+  return prompts;
+}
+
+/** Whether `page` joins `last`: same part, both matching, the same items in order. */
+function pairable(last: RunPage, page: RunPage, nodes: ExerciseNode[]): boolean {
+  // A merged page compares against its first task; every task has its items.
+  const head = last.tasks ? { stub: last.tasks[0].stub, nodeIndices: last.tasks[0].nodeIndices } : last;
+  const parentKey = head.stub?.parent?.appsheet_key;
+  if (!parentKey || page.stub?.parent?.appsheet_key !== parentKey) return false;
+  const a = matchingPrompts(head, nodes);
+  const b = matchingPrompts(page, nodes);
+  return Boolean(a && b && a.length > 0 && a.length === b.length && a.every((p, i) => p === b[i]));
 }
 
 // A cloze is a HOLE IN A PRINTED TEXT, so only `gap-filling` qualifies — the
@@ -69,6 +158,8 @@ export interface PageLayout {
    *   checkbox group, one mark per correct answer.
    * - `multiple-matching` — the legend once plus a row of A-J buttons per item;
    *   labels may repeat, nothing depletes.
+   * - `paired-matching` — two or more matching tasks over the same items,
+   *   one column each (the page's `tasks`).
    * - `error-hunt` — the whole passage with a numbered correction row per
    *   mistake.
    * - `questions` — the plain stack.
@@ -79,6 +170,7 @@ export interface PageLayout {
     | "jumbled-paragraph"
     | "multi-select"
     | "multiple-matching"
+    | "paired-matching"
     | "error-hunt"
     | "questions";
   /** A passage panel will render, so the shell should go wide. */
@@ -140,6 +232,8 @@ export function pageLayout(page: RunPage, nodes: ExerciseNode[]): PageLayout {
     isSection && stub.info?.layout === "jumbled-paragraph" && allChoice;
   const isMatching =
     isSection && stub.info?.layout === "multiple-matching" && allChoice;
+  // Only `buildPages` sets `tasks`, and only on matching sections.
+  const isPaired = isMatching && (page.tasks?.length ?? 0) > 1;
   const isMultiSelect =
     isSection && stub.info?.layout === "multi-select" && allChoice;
   // Needs the passage: without one there is nothing to hunt in, and the
@@ -169,6 +263,8 @@ export function pageLayout(page: RunPage, nodes: ExerciseNode[]): PageLayout {
         ? "jumbled-paragraph"
         : isMultiSelect
           ? "multi-select"
+          : isPaired
+            ? "paired-matching"
           : isMatching
             ? "multiple-matching"
           : isErrorHunt
