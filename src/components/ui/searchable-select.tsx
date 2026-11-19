@@ -325,9 +325,8 @@ export function SearchableSelect({
         <div
           id={listId}
           role="listbox"
-          className="max-h-64 overflow-y-auto overscroll-contain pr-1 [scrollbar-gutter:stable] touch-pan-y"
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1 [scrollbar-gutter:stable] touch-pan-y"
           style={{ WebkitOverflowScrolling: 'touch' }}
-          onWheelCapture={(event) => event.stopPropagation()}
         >
           {error ? (
             <div className="px-2 py-1.5 text-destructive">{error}</div>
