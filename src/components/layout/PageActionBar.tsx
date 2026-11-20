@@ -66,6 +66,58 @@ export function fitPageActions(
     return shown;
 }
 
+/** The flex row a header bar sits in and that row's items, looking through `display: contents` wrappers. */
+interface HeaderRow {
+    container: HTMLElement;
+    items: HTMLElement[];
+}
+
+/** Finds the flex row holding `root` and every item laid out in it. */
+function headerRow(root: HTMLElement): HeaderRow | null {
+    const isContents = (el: Element) => getComputedStyle(el).display === "contents";
+    let container = root.parentElement;
+    while (container && isContents(container)) {
+        container = container.parentElement;
+    }
+    if (!container) {
+        return null;
+    }
+    const items: HTMLElement[] = [];
+    const collect = (parent: Element) => {
+        for (const child of Array.from(parent.children)) {
+            if (isContents(child)) {
+                collect(child);
+            } else if (getComputedStyle(child).position !== "absolute") {
+                items.push(child as HTMLElement);
+            }
+        }
+    };
+    collect(container);
+    return { container, items };
+}
+
+/**
+ * Unused width in the header row that `root` may grow into. It goes to the
+ * rightmost bar that still has buttons folded, so two bars never claim it at
+ * once and the page's own actions unfold before a section's.
+ */
+function headerRowSpare(root: HTMLElement): number {
+    const row = headerRow(root);
+    if (!row) {
+        return 0;
+    }
+    const after = row.items.slice(row.items.indexOf(root) + 1);
+    if (after.some((item) => item.hasAttribute("data-page-action-bar") && item.hasAttribute("data-folded"))) {
+        return 0;
+    }
+    const style = getComputedStyle(row.container);
+    const gap = Number.parseFloat(style.columnGap) || 0;
+    const inner =
+        row.container.clientWidth - (Number.parseFloat(style.paddingLeft) || 0) - (Number.parseFloat(style.paddingRight) || 0);
+    const used = row.items.reduce((sum, item) => sum + item.getBoundingClientRect().width, 0);
+    return Math.max(0, Math.floor(inner - used - Math.max(row.items.length - 1, 0) * gap));
+}
+
 /**
  * A page header's buttons in one row: as many as fit beside the title, the
  * rest in a "⋯" menu at the end. It measures every button in a hidden copy of
@@ -121,18 +173,24 @@ export default function PageActionBar({
             const menuWidth = menuLifted ? 0 : (items[items.length - 1]?.getBoundingClientRect().width ?? 0);
             const primary = signature.split("|").map((part) => part.endsWith(":default"));
             const leadingWidth = leadingRef.current ? leadingRef.current.getBoundingClientRect().width + GAP : 0;
+            // In a page header the bar is only as wide as what it shows, so the row packs every control on
+            // the right; the row's spare width is room it may grow into.
+            const inHeader = !isMobile && root.closest("[data-page-header]") !== null;
+            const spare = inHeader ? headerRowSpare(root) : 0;
             // A phone's search row has no room for buttons.
-            const available = hasLeading && isMobile ? 0 : root.getBoundingClientRect().width - leadingWidth;
+            const available = hasLeading && isMobile ? 0 : root.getBoundingClientRect().width + spare - leadingWidth;
             const next = fitPageActions(widths, primary, menuWidth, alwaysMenu, available);
             setShown((previous) =>
                 previous && previous.length === next.length && previous.every((value, i) => value === next[i])
                     ? previous
                     : next,
             );
-            // In a page header the spare width stays with the row, which packs every control on the right;
-            // two bars there would otherwise split it, and a bar's `leading` would spill over the title.
-            const inHeader = !isMobile && root.closest("[data-page-header]") !== null;
-            const parts = alwaysMenu && menuWidth > 0 ? [...widths, menuWidth] : widths;
+            const folded = next.some((value) => !value);
+            root.toggleAttribute("data-folded", folded);
+            const parts = [
+                ...widths.filter((_, i) => next[i]),
+                ...((alwaysMenu || folded) && menuWidth > 0 ? [menuWidth] : []),
+            ];
             const buttonsWidth = parts.reduce((sum, w) => sum + w, 0) + Math.max(parts.length - 1, 0) * GAP;
             const leadingOnly = leadingRef.current?.getBoundingClientRect().width ?? 0;
             // `leadingWidth` carries the gap before the buttons, so it counts only when there are some.
@@ -154,6 +212,12 @@ export default function PageActionBar({
         observer.observe(measure);
         if (leadingRef.current) {
             observer.observe(leadingRef.current);
+        }
+        // The row's other controls change the spare room this bar may grow into.
+        const row = headerRow(root);
+        if (row && !isMobile && root.closest("[data-page-header]")) {
+            observer.observe(row.container);
+            row.items.filter((item) => item !== root).forEach((item) => observer.observe(item));
         }
         return () => observer.disconnect();
     }, [signature, alwaysMenu, hasLeading, isMobile, menuLifted]);
