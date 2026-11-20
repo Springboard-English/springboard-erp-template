@@ -6,8 +6,46 @@ export interface NavGroup {
   key: string;
   /** Set on the first group of a part, so its title prints once. */
   part: CollectionStub | null;
+  /** The part this run sits in, on every group of it; null outside any part. */
+  partKey: string | null;
   section: CollectionStub | null;
   indices: number[];
+}
+
+/** A part's runs as the editor's list draws them: its own questions, then its section cards. */
+export interface NavPartBlock {
+  partKey: string | null;
+  /** The runs outside any section (the part's own questions), drawn before the cards. */
+  loose: NavGroup[];
+  /** One run per section, in paper order. */
+  sections: NavGroup[];
+}
+
+/** `groups` split into consecutive part blocks, each with its own runs before its sections. */
+export function navPartBlocks(groups: NavGroup[]): NavPartBlock[] {
+  const blocks: NavPartBlock[] = [];
+  for (const group of groups) {
+    let block = blocks[blocks.length - 1];
+    // A new block where the part changes, or where loose questions follow sections.
+    if (!block || block.partKey !== group.partKey || (!group.section && block.sections.length > 0)) {
+      block = { partKey: group.partKey, loose: [], sections: [] };
+      blocks.push(block);
+    }
+    (group.section ? block.sections : block.loose).push(group);
+  }
+  return blocks;
+}
+
+/**
+ * The node ids of `sections` after moving the section at `from` to `to`, each
+ * section's questions kept together and in order. Handed to `onReorder` as the
+ * part's run, so `placeInOrder` lays it into the slots those sections held.
+ */
+export function moveSection(nodes: ExerciseNode[], sections: NavGroup[], from: number, to: number): string[] {
+  const next = sections.slice();
+  const [moved] = next.splice(from, 1);
+  if (moved) next.splice(to, 0, moved);
+  return next.flatMap((group) => group.indices.map((index) => nodes[index].id));
 }
 
 /**
@@ -32,7 +70,7 @@ export function navGroups(
       return;
     }
     const partKey = part?.appsheet_key ?? null;
-    groups.push({ key, part: partKey !== lastPart ? part : null, section, indices: [index] });
+    groups.push({ key, part: partKey !== lastPart ? part : null, partKey, section, indices: [index] });
     lastPart = partKey;
   });
   return groups;
