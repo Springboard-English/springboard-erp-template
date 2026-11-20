@@ -98,6 +98,8 @@ export default function PageActionBar({
     const candidates = actions.filter((action) => !action.overflow && !action.destructive);
     const alwaysMenu = candidates.length < actions.length;
     const [shown, setShown] = useState<boolean[] | null>(null);
+    // The bar's width bounds in pixels: it grows only to what its contents need and never below its `leading`.
+    const [bounds, setBounds] = useState<{ min: number; max: number } | null>(null);
     // Re-fit when the set of buttons or their weight changes; width changes reach the observer.
     const signature = candidates.map((action) => `${action.id}:${action.variant ?? "outline"}`).join("|");
 
@@ -111,6 +113,7 @@ export default function PageActionBar({
             // Not laid out (a hidden tab, a test DOM): leave every button showing.
             if (root.getBoundingClientRect().width === 0) {
                 setShown(null);
+                setBounds(null);
                 return;
             }
             const items = Array.from(measure.children) as HTMLElement[];
@@ -125,6 +128,20 @@ export default function PageActionBar({
                 previous && previous.length === next.length && previous.every((value, i) => value === next[i])
                     ? previous
                     : next,
+            );
+            // In a page header the spare width stays with the row, which packs every control on the right;
+            // two bars there would otherwise split it, and a bar's `leading` would spill over the title.
+            const inHeader = !isMobile && root.closest("[data-page-header]") !== null;
+            const parts = alwaysMenu && menuWidth > 0 ? [...widths, menuWidth] : widths;
+            const buttonsWidth = parts.reduce((sum, w) => sum + w, 0) + Math.max(parts.length - 1, 0) * GAP;
+            const leadingOnly = leadingRef.current?.getBoundingClientRect().width ?? 0;
+            // `leadingWidth` carries the gap before the buttons, so it counts only when there are some.
+            const needed = parts.length > 0 ? leadingWidth + buttonsWidth : leadingOnly;
+            const nextBounds = inHeader ? { min: Math.ceil(leadingOnly), max: Math.ceil(needed) } : null;
+            setBounds((previous) =>
+                previous && nextBounds && previous.min === nextBounds.min && previous.max === nextBounds.max
+                    ? previous
+                    : nextBounds,
             );
         };
         fit();
@@ -195,6 +212,7 @@ export default function PageActionBar({
             data-page-action-bar
             // `contain` stops the buttons sizing the bar, or a header with no room would grow to fit them.
             className={cn("relative flex min-w-0 flex-1 items-center justify-end gap-2 [contain:inline-size]", className)}
+            style={bounds ? { minWidth: bounds.min, maxWidth: bounds.max } : undefined}
         >
             {/* A copy of every button, never seen, to measure; clipped so it can't widen the page. */}
             <div aria-hidden="true" className="pointer-events-none invisible absolute inset-0 overflow-hidden">

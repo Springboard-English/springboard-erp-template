@@ -224,6 +224,10 @@ anchor in `data`). The bar never wraps.
 - **The title comes first.** A header holding a bar gives the title (on a
   phone, the back link) its full width and the bar the rest, at least room
   for the "⋯".
+- **Controls pack to the right.** On a desktop header a bar grows only to the
+  width its buttons and `leading` need and never shrinks below its `leading`,
+  so with two bars in one header (a record header plus a section's lifted
+  controls) the spare room stays between the title and the controls.
 - **What does not fit moves into "⋯".** The bar measures a hidden copy of
   every button and watches its own width, so a narrow window, a long title or
   a translated label moves buttons in and out. They go from the end, and a
