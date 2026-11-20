@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { LayoutGrid, PanelLeftClose } from "lucide-react";
+import { GripVertical, LayoutGrid, PanelLeftClose } from "lucide-react";
 import {
   DndContext,
   KeyboardSensor,
@@ -17,17 +17,19 @@ import {
   rectSortingStrategy,
   sortableKeyboardCoordinates,
   useSortable,
+  verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
 import { Button } from "../../components/ui/button";
 import { useI18n } from "../../context/I18nContext";
 import useIsMobile from "../../hooks/useIsMobile";
+import { buttonTarget } from "../../lib/touchTarget";
 import { cn } from "../../lib/utils";
 import type { ExerciseAnswer, SpringboardTest } from "../lib/exercises";
 import { unansweredNodeIds } from "../lib/grading";
 import { useExerciseTourAnchor } from "../lib/tour-anchors";
-import { navGroups, type NavGroup } from "../lib/question-nav-groups";
+import { moveSection, navGroups, navPartBlocks, type NavGroup } from "../lib/question-nav-groups";
 import type { CollectionStub } from "../types";
 import { collectionHeading } from "../components/collection-context";
 
@@ -196,6 +198,93 @@ function NavRun({
   );
 }
 
+/** The props a section run needs to draw its chips, shared by every card in a part. */
+type RunProps = Omit<Parameters<typeof NavRun>[0], "group">;
+
+/** A section's heading and chips in a card that drags by its grip within its part. */
+function SectionCard({ id, group, run }: { id: string; group: NavGroup; run: RunProps }) {
+  const { t } = useI18n();
+  const drag = useSortable({ id });
+  const heading = collectionHeading(group.section, t).section;
+  return (
+    <div
+      ref={drag.setNodeRef}
+      style={{ transform: CSS.Transform.toString(drag.transform), transition: drag.transition }}
+      className={cn(
+        "space-y-2 rounded-xl border-2 border-border bg-card p-2",
+        drag.isDragging && "relative z-10 border-rose-300 shadow-lg",
+      )}
+    >
+      <div className="flex items-start gap-1.5">
+        <button
+          type="button"
+          className={cn(
+            buttonTarget,
+            "grid shrink-0 cursor-grab touch-none place-items-center rounded-md text-muted-foreground hover:bg-muted active:cursor-grabbing",
+          )}
+          aria-label={t("exercise.questionNav.dragSection", "Drag to move this section")}
+          {...drag.attributes}
+          {...drag.listeners}
+        >
+          <GripVertical className="size-4" />
+        </button>
+        <p className="line-clamp-2 min-w-0 flex-1 pt-2.5 text-xs font-bold text-muted-foreground md:pointer-fine:pt-2">
+          {heading || t("exercise.questionNav.untitledSection", "Section")}
+        </p>
+      </div>
+      <NavRun group={group} {...run} />
+    </div>
+  );
+}
+
+/** A part's section cards in one sortable list; a drop hands the part's new order to `onReorder`. */
+function SectionCards({
+  sections,
+  run,
+  onReorder,
+}: {
+  sections: NavGroup[];
+  run: RunProps;
+  onReorder: NonNullable<QuestionNavPanelProps["onReorder"]>;
+}) {
+  const { t } = useI18n();
+  // Namespaced so a section id can't collide with a question's in the chips' contexts.
+  const ids = sections.map((group) => `section:${group.key}:${group.indices[0]}`);
+  const sensors = useSensors(
+    useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+  const onDragEnd = ({ active, over }: DragEndEvent) => {
+    if (!over || active.id === over.id) return;
+    const from = ids.indexOf(String(active.id));
+    const to = ids.indexOf(String(over.id));
+    if (from < 0 || to < 0) return;
+    onReorder(sections[0].partKey, moveSection(run.test.nodes, sections, from, to));
+  };
+  const cards = sections.map((group, i) => <SectionCard key={ids[i]} id={ids[i]} group={group} run={run} />);
+  if (sections.length < 2) return <div className="space-y-2">{cards}</div>;
+  return (
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragEnd={onDragEnd}
+      accessibility={{
+        screenReaderInstructions: {
+          draggable: t(
+            "exercise.questionNav.reorderSectionHint",
+            "To move a section, press Space or Enter on its handle, use the arrow keys, then press it again to drop it.",
+          ),
+        },
+      }}
+    >
+      <SortableContext items={ids} strategy={verticalListSortingStrategy}>
+        <div className="space-y-2">{cards}</div>
+      </SortableContext>
+    </DndContext>
+  );
+}
+
 /**
  * The paper's question numbers under their part and section, each marked
  * current, done or blank (answers or keys, per `states`), with a legend and
@@ -232,7 +321,34 @@ export function QuestionNavPanel({
     "grid grid-cols-[repeat(auto-fill,minmax(2.75rem,3rem))] gap-1.5 md:pointer-fine:grid-cols-[repeat(auto-fill,minmax(2.25rem,2.75rem))]";
   const title = t("exercise.questionNav.title", "Questions");
 
-  const list = (
+  const run: RunProps = { test, unanswered, currentIndex, states, grid, onJump, onReorder };
+  // Editing: each section is a card that moves within its part, under a note on how.
+  const editList = onReorder ? (
+    <div className="space-y-4">
+      <p className="rounded-lg bg-muted px-3 py-2 text-xs font-semibold text-muted-foreground">
+        {t(
+          "exercise.questionNav.reorderNote",
+          "Drag a section card by its handle to move the whole section within its part. Drag a question number to move it within its section.",
+        )}
+      </p>
+      {navPartBlocks(groups).map((block) => {
+        const first = block.loose[0] ?? block.sections[0];
+        return (
+          <div key={`${block.partKey}:${first.indices[0]}`} className="space-y-2">
+            {first.part ? (
+              <p className="text-[11px] font-extrabold text-rose-700">{collectionHeading(first.part, t).part}</p>
+            ) : null}
+            {block.loose.map((group) => (
+              <NavRun key={`${group.key}:${group.indices[0]}`} group={group} {...run} />
+            ))}
+            {block.sections.length ? <SectionCards sections={block.sections} run={run} onReorder={onReorder} /> : null}
+          </div>
+        );
+      })}
+    </div>
+  ) : null;
+
+  const list = editList ?? (
     <div className="space-y-4">
       {groups.map((group) => {
         const heading = collectionHeading(group.section ?? group.part, t);
