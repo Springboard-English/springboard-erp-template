@@ -136,6 +136,74 @@ describe("buildPages", () => {
   });
 });
 
+describe("buildPages — paired listening matching", () => {
+  const part = stub({ kind: "part", appsheet_key: "part-4" });
+  const matching = (key: string, parent: CollectionStub | null = part) =>
+    stub({ appsheet_key: key, parent, info: { layout: "multiple-matching" } });
+  const speaker = (id: string, prompt: string) => {
+    const node = mcq(id);
+    return { ...node, content: { ...(node.content as object), prompt } } as ExerciseNode;
+  };
+  const speakers = (prefix: string, n: number) =>
+    Array.from({ length: n }, (_, i) => speaker(`${prefix}${i}`, `Speaker ${i + 1}`));
+  const stubsFor = (nodes: ExerciseNode[], section: CollectionStub) =>
+    Object.fromEntries(nodes.map((node) => [node.id, section]));
+
+  it("puts two matching tasks over the same speakers on one page", () => {
+    const one = speakers("a", 5);
+    const two = speakers("b", 5);
+    const [taskOne, taskTwo] = [matching("t1"), matching("t2")];
+    const pages = pagesOf([...one, ...two], { ...stubsFor(one, taskOne), ...stubsFor(two, taskTwo) });
+    expect(pages).toHaveLength(1);
+    expect(pages[0].stub).toBe(taskOne);
+    expect(pages[0].nodeIndices).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+    expect(pages[0].tasks?.map((t) => [t.stub.appsheet_key, t.nodeIndices])).toEqual([
+      ["t1", [0, 1, 2, 3, 4]],
+      ["t2", [5, 6, 7, 8, 9]],
+    ]);
+    expect(pageLayout(pages[0], [...one, ...two]).kind).toBe("paired-matching");
+  });
+
+  it("keeps each task on its own page when pairing is off", () => {
+    const one = speakers("a", 2);
+    const two = speakers("b", 2);
+    const pages = buildPages(
+      [...one, ...two],
+      new Map(Object.entries({ ...stubsFor(one, matching("t1")), ...stubsFor(two, matching("t2")) })),
+      { pairMatching: false },
+    );
+    expect(pages.map((p) => p.nodeIndices)).toEqual([[0, 1], [2, 3]]);
+    expect(pageLayout(pages[0], [...one, ...two]).kind).toBe("multiple-matching");
+  });
+
+  it("does not pair matchings over different items", () => {
+    const one = speakers("a", 2);
+    const two = [speaker("b0", "Writer A"), speaker("b1", "Writer B")];
+    const pages = pagesOf([...one, ...two], { ...stubsFor(one, matching("t1")), ...stubsFor(two, matching("t2")) });
+    expect(pages.map((p) => p.nodeIndices)).toEqual([[0, 1], [2, 3]]);
+  });
+
+  it("does not pair across parts", () => {
+    const one = speakers("a", 2);
+    const two = speakers("b", 2);
+    const other = stub({ kind: "part", appsheet_key: "part-5" });
+    const pages = pagesOf([...one, ...two], {
+      ...stubsFor(one, matching("t1")),
+      ...stubsFor(two, matching("t2", other)),
+    });
+    expect(pages).toHaveLength(2);
+  });
+
+  it("does not pair a matching with another layout", () => {
+    const one = speakers("a", 2);
+    const two = speakers("b", 2);
+    const plain = stub({ appsheet_key: "t2", parent: part });
+    const pages = pagesOf([...one, ...two], { ...stubsFor(one, matching("t1")), ...stubsFor(two, plain) });
+    expect(pages).toHaveLength(2);
+    expect(pages[0].tasks).toBeUndefined();
+  });
+});
+
 describe("pageLayout", () => {
   it("draws a gap-filling section WITH a passage as one inline cloze", () => {
     const nodes = [gap("a"), gap("b")];

@@ -17,6 +17,7 @@ import {
   type SkillTag,
 } from "../lib/exercises";
 import { SearchableSelect } from "../../components/ui/searchable-select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { valueLabel } from "../i18n";
 import { PassageText } from "./passage-text";
 
@@ -590,21 +591,25 @@ export function QuestionMetaControls({ node, stacked = false }: { node: Exercise
           <span className="truncate">{valueLabel(t, QUESTION_TYPE_LABELS[node.type])}</span>
         </span>
       )}
-      <span className={cn("relative", width)}>
-        <select
+      <Select
+        value={node.skillTag}
+        onValueChange={(value) => editor.onNodeChange(node.id, { ...node, skillTag: value as SkillTag })}
+      >
+        {/* The suite's select, in the meta fields' style so the three line up. */}
+        <SelectTrigger
           aria-label={t("exercise.edit.skill", "Skill")}
-          value={node.skillTag}
-          onChange={(event) => editor.onNodeChange(node.id, { ...node, skillTag: event.target.value as SkillTag })}
-          className={cn(META_FIELD, "cursor-pointer appearance-none pr-9 outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring")}
+          className={cn(META_FIELD, width, "justify-between border-input font-normal")}
         >
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
           {skillTagSchema.options.map((skill) => (
-            <option key={skill} value={skill}>
+            <SelectItem key={skill} value={skill}>
               {valueLabel(t, SKILL_LABELS[skill])}
-            </option>
+            </SelectItem>
           ))}
-        </select>
-        <ChevronDown className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-muted-foreground" />
-      </span>
+        </SelectContent>
+      </Select>
       <label
         className={cn(
           META_FIELD,

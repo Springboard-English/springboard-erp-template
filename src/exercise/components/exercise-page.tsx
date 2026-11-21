@@ -3,7 +3,7 @@ import { BookOpen } from "lucide-react";
 
 import { useI18n } from "../../context/I18nContext";
 import { rootBank } from "../lib/collection-info";
-import { pageLayout, type RunPage } from "../lib/exercise-pages";
+import { pageLayout, type PageTask, type RunPage } from "../lib/exercise-pages";
 import type { ExerciseAnswer, ExerciseNode } from "../lib/exercises";
 import { showMatchingLegend } from "../lib/matching-legend";
 import type { CollectionStub } from "../types";
@@ -36,6 +36,7 @@ import { PageRecordings } from "./page-recordings";
 import { HighlightScope } from "./highlighter";
 import { EditableText, PoolEditProvider, useExerciseEditor } from "./exercise-edit";
 import { Button } from "../../components/ui/button";
+import { cn } from "../../lib/utils";
 
 // In the editor a section's own text reads as the student sees it until "Edit
 // text"; this says whether it is being typed into.
@@ -120,6 +121,56 @@ function SectionLead({
           ) : null}
         </div>
       ) : null}
+    </div>
+  );
+}
+
+/**
+ * A paired-matching page: each task's own instruction over the multiple
+ * matching it already is, side by side from `md` and stacked on a phone, so
+ * both tasks are answerable while one recording plays. Each task keeps its own
+ * pool, edited in place through its own `PoolEditProvider`.
+ */
+function PairedMatching({
+  tasks,
+  nodes,
+  answers,
+  onChange,
+  hasPassage,
+}: {
+  tasks: PageTask[];
+  nodes: ExerciseNode[];
+  answers: Record<string, ExerciseAnswer>;
+  onChange: (nodeId: string, value: ExerciseAnswer) => void;
+  hasPassage: boolean;
+}) {
+  return (
+    // Two columns only with the page to themselves: beside a passage column
+    // each would be too narrow for a row of letters.
+    <div className={cn("grid gap-6", !hasPassage && "md:grid-cols-2")}>
+      {tasks.map((task) => {
+        const taskNodes = task.nodeIndices.map((i) => nodes[i]).filter(Boolean) as MatchingNode[];
+        const instruction = task.stub.instruction?.trim();
+        return (
+          <section key={task.stub.appsheet_key} className="min-w-0 space-y-3">
+            {/* The runner heading shows only the first task's instruction, so
+                each column prints its own: it says what the letters mean. */}
+            {instruction ? (
+              <p className="whitespace-pre-line text-sm leading-6 text-foreground">{instruction}</p>
+            ) : null}
+            <PoolEditProvider nodes={taskNodes}>
+              <MatchingButtons
+                nodes={taskNodes}
+                numbers={task.nodeIndices.map((i) => i + 1)}
+                answers={answers}
+                onChange={onChange}
+                showLegend={showMatchingLegend(taskNodes[0]?.content.options ?? [], hasPassage)}
+                narrow={!hasPassage}
+              />
+            </PoolEditProvider>
+          </section>
+        );
+      })}
     </div>
   );
 }
@@ -367,6 +418,25 @@ function AnswerPageBody({ page, nodes, answers, onChange, enableAnnotations }: E
                 (pageNodes[0] as MatchingNode | undefined)?.content.options ?? [],
                 layout.hasPassage,
               )}
+            />
+          </>,
+        )}
+      </CollectionContext>
+    );
+  }
+
+  if (layout.kind === "paired-matching") {
+    return (
+      <CollectionContext stub={page.stub} hideHeader enableAnnotations={enableAnnotations}>
+        {scoped(
+          <>
+            <SectionLead stub={page.stub} />
+            <PairedMatching
+              tasks={page.tasks ?? []}
+              nodes={nodes}
+              answers={answers}
+              onChange={onChange}
+              hasPassage={layout.hasPassage}
             />
           </>,
         )}
