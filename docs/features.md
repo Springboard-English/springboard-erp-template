@@ -586,14 +586,14 @@ registers, removes and tests the device (`api_calls/pushNotifications.ts`,
   the app has more than one locale), so `LocaleSelect` belongs in the desktop
   header only.
 
-## Live status (`LiveEventsProvider`, `useLiveTopic`, since 6.18.0)
+## Live status (`LiveEventsProvider`, `useLiveTopic`, `useLiveEvent`, since 6.18.0)
 
 - **Mount `LiveEventsProvider` once, inside the `QueryClientProvider`.** It
   keeps one `GET /v2/events` stream per tab for every topic on screen.
 - **A screen calls `useLiveTopic("<kind>:<key>", [queryKey])`** (or a list of
   topics, as a table of open rows does) and gets its
   queries invalidated when the API says that row moved. Kinds today:
-  `submission`, `class`, `assessment`, `esign_document`. Pass `null` when
+  `submission`, `class`, `assessment`, `esign_document`, `live_session`. Pass `null` when
   nothing on screen can still change, so the stream closes.
 - **It returns whether the stream is live.** Keep the screen's
   `refetchInterval`, slowed while live (`live ? 30_000 : 4_000`), so a missing
@@ -603,6 +603,13 @@ registers, removes and tests the device (`api_calls/pushNotifications.ts`,
 - **A tab hidden for a minute drops its stream**; returning reopens it.
 - **It uses `fetch`, not `EventSource`,** because the token rides an
   Authorization header. Without the provider the hook is a no-op.
+- **`useLiveEvent("<kind>:<key>", onEvent)` hands the screen
+  the event itself** instead of refetching: each `status` (with `fields`, the
+  changed part of the state, for a kind that sends them, today only
+  `live_session`), plus `ready` and `resync`, after which the screen rereads
+  what it shows. A `status` with no `fields` means the same. Same stream and
+  provider; the latest `onEvent` is called, and one that throws is logged
+  without closing the stream.
 
 ## Report a problem (`src/components/report/`)
 

@@ -4,7 +4,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ReactNode } from "react";
 
 import { createSseParser, liveEventsUrl, toLiveEvent } from "../../api_calls/liveEvents";
-import { LiveEventsProvider, reconnectDelayMs, useLiveTopic } from "../LiveEventsContext";
+import {
+    LiveEventsProvider,
+    reconnectDelayMs,
+    useLiveEvent,
+    useLiveTopic,
+    type LiveEventMessage,
+} from "../LiveEventsContext";
 
 describe("createSseParser", () => {
     it("joins frames split across chunks and skips comments", () => {
@@ -19,6 +25,14 @@ describe("createSseParser", () => {
     it("types the frames it knows and drops the rest", () => {
         expect(toLiveEvent({ event: "resync", data: "{}" })).toEqual({ type: "resync" });
         expect(toLiveEvent({ event: "status", data: '{"topic":"t","status":null}' })).toEqual({
+            type: "status",
+            topic: "t",
+            status: null,
+        });
+        expect(
+            toLiveEvent({ event: "status", data: '{"topic":"t","status":null,"fields":{"closesAt":null}}' }),
+        ).toEqual({ type: "status", topic: "t", status: null, fields: { closesAt: null } });
+        expect(toLiveEvent({ event: "status", data: '{"topic":"t","fields":[1]}' })).toEqual({
             type: "status",
             topic: "t",
             status: null,
@@ -123,6 +137,56 @@ describe("LiveEventsProvider", () => {
         mount(<Screen topic={null} live={() => undefined} />);
         await act(() => vi.advanceTimersByTimeAsync(1_000));
         expect(fake.opened()).toBe(0);
+    });
+
+    it("hands useLiveEvent the event itself, sharing the one stream", async () => {
+        const spy = vi.spyOn(client, "invalidateQueries");
+        const heard: LiveEventMessage[] = [];
+        function Runner() {
+            useLiveEvent("live_session:k", (event) => heard.push(event));
+            useLiveTopic("class:c", [["class", "c"]]);
+            return null;
+        }
+        mount(<Runner />);
+        await act(() => vi.advanceTimersByTimeAsync(300));
+        expect(fake.opened()).toBe(1);
+        expect(fake.urls[0]).toContain("topic=class%3Ac&topic=live_session%3Ak");
+
+        await act(async () => {
+            fake.send('event: ready\ndata: {}\n\n');
+            fake.send('event: status\ndata: {"topic":"live_session:k","status":"live","fields":{"status":"live"}}\n\n');
+            fake.send('event: status\ndata: {"topic":"class:c","status":"x"}\n\n');
+            await vi.advanceTimersByTimeAsync(1_100);
+        });
+        expect(heard).toEqual([
+            { type: "ready" },
+            { type: "status", topic: "live_session:k", status: "live", fields: { status: "live" } },
+        ]);
+        // The handler's topic refetches nothing; the other screen's still does.
+        expect(spy).toHaveBeenCalledTimes(1);
+        expect(spy).toHaveBeenCalledWith({ queryKey: ["class", "c"] });
+    });
+
+    it("keeps the stream going when a handler throws", async () => {
+        const errors = vi.spyOn(console, "error").mockImplementation(() => undefined);
+        const heard: string[] = [];
+        function Runner() {
+            useLiveEvent("live_session:k", (event) => {
+                if (event.type === "ready") throw new Error("boom");
+                heard.push(event.type);
+            });
+            return null;
+        }
+        mount(<Runner />);
+        await act(() => vi.advanceTimersByTimeAsync(300));
+        await act(async () => {
+            fake.send('event: ready\ndata: {}\n\n');
+            fake.send('event: resync\ndata: {}\n\n');
+            await vi.advanceTimersByTimeAsync(10);
+        });
+        expect(heard).toEqual(["resync"]);
+        expect(errors).toHaveBeenCalledTimes(1);
+        expect(fake.opened()).toBe(1);
     });
 
     it("is a no-op without a provider", () => {

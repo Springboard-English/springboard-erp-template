@@ -18,13 +18,23 @@ import { LiveEventsHttpError, readLiveEvents, type LiveEvent } from "../api_call
  * A screen calls `useLiveTopic("submission:<key>", [queryKey])`; the provider
  * keeps one `GET /v2/events` open for the union of topics on screen, and on an
  * event invalidates the queries registered for it, merged into one refetch per
- * second. The stream is open only while some topic is asked for and the tab has
- * not been hidden for a minute; `useLiveTopic` returns whether it is live, so a
+ * second. A screen that wants the event itself calls `useLiveEvent` on the same
+ * stream. The stream is open only while some topic is asked for and the tab has
+ * not been hidden for a minute; both hooks return whether it is live, so a
  * screen can keep a slow poll as the fallback.
  */
 
+/** What a `useLiveEvent` handler is given: a topic's status, or a stream-wide event. */
+export type LiveEventMessage = Exclude<LiveEvent, { type: "close" }>;
+
+/** One screen's interest in a topic: queries to refetch, or a handler to call. */
+interface Registration {
+    keys: readonly QueryKey[];
+    onEvent?: (event: LiveEventMessage) => void;
+}
+
 interface LiveEventsContextValue {
-    register: (topic: string, keys: readonly QueryKey[]) => () => void;
+    register: (topic: string, registration: Registration) => () => void;
     connected: boolean;
 }
 
@@ -47,8 +57,8 @@ export function reconnectDelayMs(attempt: number, random: () => number = Math.ra
 /** Holds the tab's live stream; mount once, inside the QueryClientProvider. */
 export function LiveEventsProvider({ children }: { children: ReactNode }) {
     const queryClient = useQueryClient();
-    // topic -> registration id -> the query keys it refreshes
-    const registrations = useRef(new Map<string, Map<number, readonly QueryKey[]>>());
+    // topic -> registration id -> what it refreshes or calls
+    const registrations = useRef(new Map<string, Map<number, Registration>>());
     const nextId = useRef(0);
     const [topicsVersion, setTopicsVersion] = useState(0);
     const [connected, setConnected] = useState(false);
@@ -58,11 +68,11 @@ export function LiveEventsProvider({ children }: { children: ReactNode }) {
 
     // Stable for the provider's life: a new identity would re-run every
     // screen's registration, and each re-run would reopen the stream.
-    const register = useCallback((topic: string, keys: readonly QueryKey[]) => {
+    const register = useCallback((topic: string, registration: Registration) => {
         const id = nextId.current++;
-        const byId = registrations.current.get(topic) ?? new Map<number, readonly QueryKey[]>();
+        const byId = registrations.current.get(topic) ?? new Map<number, Registration>();
         const isNewTopic = byId.size === 0;
-        byId.set(id, keys);
+        byId.set(id, registration);
         registrations.current.set(topic, byId);
         if (isNewTopic) setTopicsVersion((v) => v + 1);
         return () => {
@@ -115,18 +125,32 @@ export function LiveEventsProvider({ children }: { children: ReactNode }) {
             }
             pending.clear();
         };
-        const queue = (keys: Iterable<readonly QueryKey[]>) => {
-            for (const list of keys) for (const key of list) pending.add(JSON.stringify(key));
-            if (flushTimer === undefined) flushTimer = window.setTimeout(flush, FLUSH_MS);
+        // Refetch the registrations' queries (once a second) and call their
+        // handlers (at once). A handler that throws must not end the stream.
+        const handOut = (regs: Iterable<Registration>, event: LiveEventMessage) => {
+            for (const { keys, onEvent: handler } of regs) {
+                for (const key of keys) pending.add(JSON.stringify(key));
+                try {
+                    handler?.(event);
+                } catch (error) {
+                    console.error("live events: a handler failed", error);
+                }
+            }
+            if (pending.size > 0 && flushTimer === undefined) {
+                flushTimer = window.setTimeout(flush, FLUSH_MS);
+            }
         };
         const onEvent = (event: LiveEvent) => {
             if (event.type === "status") {
-                queue(registrations.current.get(event.topic)?.values() ?? []);
+                handOut(registrations.current.get(event.topic)?.values() ?? [], event);
                 return;
             }
             if (event.type === "ready") setConnected(true);
             if (event.type === "ready" || event.type === "resync") {
-                for (const byId of registrations.current.values()) queue(byId.values());
+                // A handler on several topics hears a stream-wide event once.
+                const regs = new Set<Registration>();
+                for (const byId of registrations.current.values()) for (const r of byId.values()) regs.add(r);
+                handOut(regs, event);
             }
         };
 
@@ -181,13 +205,38 @@ export function useLiveTopic(
     const keysJson = JSON.stringify(queryKeys);
     useEffect(() => {
         if (!register) return;
-        const keys = JSON.parse(keysJson) as QueryKey[];
-        const releases = (JSON.parse(topicsJson) as string[]).map((t) => register(t, keys));
+        const registration: Registration = { keys: JSON.parse(keysJson) as QueryKey[] };
+        const releases = (JSON.parse(topicsJson) as string[]).map((t) => register(t, registration));
         return () => {
             for (const release of releases) release();
         };
     }, [register, topicsJson, keysJson]);
     return Boolean(context?.connected && topicsJson !== "[]");
+}
+
+/**
+ * Call `onEvent` with each event for `topic` (`<kind>:<key>`): a `status`
+ * (with `fields` when the kind sends them), and `ready` or `resync`, after
+ * which the screen should reread what it shows. Pass `null` to subscribe to
+ * nothing. The latest `onEvent` is called, so it may change every render.
+ * Returns true while the stream is live. Without a `LiveEventsProvider` it
+ * does nothing and returns false.
+ */
+export function useLiveEvent(
+    topic: string | null | undefined,
+    onEvent: (event: LiveEventMessage) => void,
+): boolean {
+    const context = useContext(LiveEventsContext);
+    const register = context?.register;
+    const handler = useRef(onEvent);
+    useEffect(() => {
+        handler.current = onEvent;
+    });
+    useEffect(() => {
+        if (!register || !topic) return;
+        return register(topic, { keys: [], onEvent: (event) => handler.current(event) });
+    }, [register, topic]);
+    return Boolean(context?.connected && topic);
 }
 
 /** Resolve after `ms`, or as soon as `signal` aborts. */
