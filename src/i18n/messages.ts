@@ -407,6 +407,7 @@ export const VIETNAMESE_MESSAGES = {
   "detail.expandView": "Mở rộng khung xem",
   "detail.floatingView": "Khung nổi",
   "detail.moreActions": "Thao tác khác",
+  "detail.unsavedCount": "{count} thay đổi chưa lưu",
   "detail.openClass": "Mở lớp học",
   "recordLink.open": "Mở {name}",
   "layout.resizeColumns": "Đổi độ rộng cột",
