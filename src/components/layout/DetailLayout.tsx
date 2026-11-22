@@ -40,6 +40,7 @@ import {
     type DetailSectionGroup,
     type DetailSectionItem,
 } from "./DetailSectionShell";
+import { pageFrameClassName, type PageFrameVariant } from "./PageFrame";
 import useIsMobile from "@/hooks/useIsMobile";
 import {
     DETAIL_HIDDEN_COLLAPSED_VALUE,
@@ -209,16 +210,31 @@ function menuSignature(actions: DetailMenuAction[] | null | undefined): string {
 
 export const BackgroundDetailViewContext = createContext<boolean>(false);
 
+/** What `DetailView` draws when its `frame` is `false` and no `className` is given. */
+const UNFRAMED_DETAIL_CLASS = "w-full max-w-[1700px] space-y-4";
+
+/**
+ * A record page: the floating and collapsed panel modes, the header slot and
+ * the section menus. By default it renders in the detail `PageFrame`, so on
+ * desktop it fills the window and only its sections scroll; `className` adds
+ * to that frame. `frame="list"` is the list frame (a list drawn behind a
+ * floating record); `frame={false}` draws no frame and `className` then
+ * replaces the plain default, for a DetailView embedded in a tab or dialog.
+ */
 export function DetailView({
     children,
-    className = "w-full max-w-[1700px] space-y-4",
+    className,
+    frame = "detail",
     isBackground: isBackgroundProp,
     contentScrollable = false,
     onCloseFloating,
 }: {
     children: ReactNode;
     className?: string;
+    /** The window frame it renders in; `false` for none. Defaults to `"detail"`. */
+    frame?: PageFrameVariant | false;
     isBackground?: boolean;
+    /** Lets the page itself scroll inside its frame, for content that cannot fill. */
     contentScrollable?: boolean;
     onCloseFloating?: () => void;
 }) {
@@ -366,7 +382,15 @@ export function DetailView({
                         floating && collapsed ? "true" : "false"
                     }
                     className={cn(
-                        className,
+                        frame
+                            ? cn(
+                                  pageFrameClassName({
+                                      variant: frame,
+                                      scroll: contentScrollable ? "content" : "none",
+                                  }),
+                                  className,
+                              )
+                            : (className ?? UNFRAMED_DETAIL_CLASS),
                         contentScrollable && "overflow-y-auto overflow-x-hidden pr-1",
                         floating
                             ? collapsed
@@ -1482,6 +1506,7 @@ export function DetailPendingView<T extends string>({
     sections,
     message,
     className,
+    frame,
     onCloseFloating,
 }: {
     breadcrumbs: BreadcrumbItem[];
@@ -1501,6 +1526,8 @@ export function DetailPendingView<T extends string>({
     };
     message?: ReactNode;
     className?: string;
+    /** As on `DetailView`: the loaded page's frame, so nothing jumps when the record arrives. */
+    frame?: PageFrameVariant | false;
     onCloseFloating?: () => void;
 }) {
     const body = message ? (
@@ -1515,7 +1542,7 @@ export function DetailPendingView<T extends string>({
     );
 
     return (
-        <DetailView className={className} onCloseFloating={onCloseFloating}>
+        <DetailView className={className} frame={frame} onCloseFloating={onCloseFloating}>
             <DetailHeader
                 breadcrumbs={
                     <DetailBreadcrumbs
