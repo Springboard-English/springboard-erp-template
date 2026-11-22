@@ -13,6 +13,7 @@ vi.mock("@/context/AuthContext", () => ({
 
 import { I18nProvider } from "@/context/I18nContext";
 import DashboardLayout, { type DashboardLayoutProps } from "../DashboardLayout";
+import PageHeader from "../PageHeader";
 
 beforeAll(() => {
   Element.prototype.scrollTo ??= () => undefined;
@@ -52,7 +53,7 @@ function renderMenu(props: Partial<DashboardLayoutProps> = {}) {
           menuButtonAttributes={{ "data-tour": "header-menu" }}
           {...props}
         >
-          <p>page</p>
+          <PageHeader title="People" back={[{ label: "Groups" }]} />
         </DashboardLayout>
       </MemoryRouter>
     </I18nProvider>,
@@ -67,7 +68,7 @@ describe("DashboardLayout menu mode", () => {
     expect(screen.getByRole("button", { name: "Menu" })).toHaveAttribute("data-tour", "header-menu");
   });
 
-  it("links back home from any other page, and not from home itself", async () => {
+  it("starts every other page's back trail at home, and not home's own", async () => {
     const onTabSelect = vi.fn();
     const user = userEvent.setup();
     const { unmount } = renderMenu({ onTabSelect });

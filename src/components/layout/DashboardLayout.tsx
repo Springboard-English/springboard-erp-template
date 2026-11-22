@@ -2,12 +2,13 @@ import {
   Suspense,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   type ReactNode,
 } from "react";
 import { animated, easings, useSpring } from "@react-spring/web";
-import { ArrowLeft, ChevronsLeft, ChevronsRight, Menu, RefreshCw } from "lucide-react";
+import { ChevronsLeft, ChevronsRight, Menu, RefreshCw } from "lucide-react";
 import { Outlet, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { headerIconButton } from "@/lib/headerControl";
@@ -32,6 +33,7 @@ import {
   type SidebarIcon,
 } from "./SidebarRow";
 import { SpringboardMark } from "@/components/CustomIcons";
+import { PageHeaderHomeContext } from "@/components/layout/PageHeader";
 import OccasionBackdrop from "@/components/layout/OccasionBackdrop";
 import { useGlobalStatusOptional } from "@/context/GlobalStatusContext";
 import { PullToRefreshProvider, usePageRefresh } from "@/context/PullToRefreshContext";
@@ -159,7 +161,7 @@ export interface DashboardLayoutProps {
    * a drawer (the bottom sheet on a phone).
    */
   navMode?: "sidebar" | "menu";
-  /** In `menu` mode, a back link beside the menu button on every other page. */
+  /** In `menu` mode, the first step of every other page's back trail ("← Home / Parent"). */
   home?: DashboardHome;
   /** Put on the menu button, e.g. a tour anchor. */
   menuButtonAttributes?: SidebarDataAttributes;
@@ -370,6 +372,11 @@ function DashboardLayoutInner({
   menuButtonAttributes,
 }: Omit<DashboardLayoutProps, "disableCustomTheme" | "pullToRefresh" | "reportProblem">) {
   const menuMode = navMode === "menu";
+  // Menu mode has no nav on screen, so every page but home starts its back trail there.
+  const homeBack = useMemo(
+    () => (menuMode && home && activeTab !== home.id ? { label: home.label, onClick: () => onTabSelect(home.id) } : null),
+    [menuMode, home, activeTab, onTabSelect],
+  );
   const isMobile = useIsMobile();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { t } = useI18n();
@@ -521,18 +528,6 @@ function DashboardLayoutInner({
           >
             <Menu className="size-5" />
           </Button>
-          {home && activeTab !== home.id ? (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="gap-1.5 bg-background/80 text-muted-foreground backdrop-blur hover:text-foreground"
-              onClick={() => onTabSelect(home.id)}
-            >
-              <ArrowLeft className="size-4" />
-              {home.label}
-            </Button>
-          ) : null}
         </div>
       ) : null}
 
@@ -714,9 +709,11 @@ function DashboardLayoutInner({
             >
               {pageHeading && activeLabel ? <h1 className="sr-only">{activeLabel}</h1> : null}
               <animated.div style={{ opacity: pageSpring.opacity }} className="w-full">
-                <Suspense fallback={loadingFallback ?? <LazyViewFallback />}>
-                  {children ?? <Outlet />}
-                </Suspense>
+                <PageHeaderHomeContext.Provider value={homeBack}>
+                  <Suspense fallback={loadingFallback ?? <LazyViewFallback />}>
+                    {children ?? <Outlet />}
+                  </Suspense>
+                </PageHeaderHomeContext.Provider>
               </animated.div>
             </div>
           </main>

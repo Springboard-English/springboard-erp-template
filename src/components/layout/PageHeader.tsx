@@ -25,6 +25,12 @@ const ROOT_CLASS = cn(
     "has-[[data-page-action-bar]]:grid-cols-[minmax(0,max-content)_minmax(2.75rem,1fr)]",
 );
 
+/**
+ * The shell's home page as the first step of every page's back trail, set by
+ * `DashboardLayout` in menu mode on every page but home. Null elsewhere.
+ */
+export const PageHeaderHomeContext = createContext<PageHeaderBackItem | null>(null);
+
 // True inside a page-header grid, so a slot drawn on its own can bring one.
 const PageHeaderGridContext = createContext(false);
 
@@ -56,7 +62,10 @@ export function PageHeaderRoot({
  * only the nearest parent shows, as a full-height "‹ Parent" tap target. With
  * neither the row stays on desktop as empty space, so the title never moves.
  */
-export function PageHeaderBack({ items, eyebrow }: { items: PageHeaderBackItem[]; eyebrow?: ReactNode }) {
+export function PageHeaderBack({ items: own, eyebrow }: { items: PageHeaderBackItem[]; eyebrow?: ReactNode }) {
+    const home = useContext(PageHeaderHomeContext);
+    // The trail starts at home, so a top-level page links back to it and a record page's trail leads there.
+    const items = home ? [home, ...own] : own;
     const lastIndex = items.length - 1;
     if (items.length === 0 && eyebrow) {
         return (
@@ -234,7 +243,7 @@ export default function PageHeader({
     actionsAlign = "end",
     className,
 }: PageHeaderProps) {
-    const hasBack = back.length > 0;
+    const hasBack = back.length > 0 || Boolean(useContext(PageHeaderHomeContext));
     const hasEyebrow = !hasBack && Boolean(eyebrow);
     return (
         <PageHeaderRoot
