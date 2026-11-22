@@ -579,6 +579,7 @@ export {
 // explanation following the status.
 export {
   ApiError,
+  errorMessage,
   NetworkError,
   throwIfNotOk,
   toApiError,
