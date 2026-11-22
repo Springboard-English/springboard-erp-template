@@ -1,6 +1,14 @@
 import "./index.css";
 
-export { configureApi, API_CONFIG } from "./config/api";
+export {
+  configureApi,
+  API_CONFIG,
+  DEV_API_BASE_URL,
+  PRODUCTION_API_BASE_URL,
+  resolveApiBaseUrl,
+} from "./config/api";
+export type { ApiBaseUrlEnv } from "./config/api";
+export { clearCachesOnReload, isReloadNavigation } from "./boot/reloadCache";
 
 // Signing in through Ory Hydra — authorization code + PKCE. **There is no
 // `SignIn` view**: the API hosts the one login page, as the
