@@ -311,6 +311,11 @@ export * from "./utils/queryCache";
 // beginning.
 export * from "./utils/cursorPagination";
 export * from "./utils/cursorTrail";
+// Reading the v2 envelope (`{ attributes, objects }`), and one cursor-paged GET
+// built on it, which `toLoadOptions` and `fetchEveryPage` both take.
+export * from "./utils/apiEnvelope";
+export { createApiPageFetcher } from "./api_calls/apiPageFetcher";
+export type { ApiPageFetcher, ApiPageFetcherOptions } from "./api_calls/apiPageFetcher";
 // CSV export. `csvText` wraps an identifier as `="…"` so Excel keeps the
 // leading zero on a CITAD bank code or an account number.
 export * from "./utils/csvExport";

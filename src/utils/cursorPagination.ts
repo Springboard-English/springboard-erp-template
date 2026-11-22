@@ -96,12 +96,7 @@ export type FetchCursorPage<T> = (
   signal?: AbortSignal,
 ) => Promise<CursorPage<T>>;
 
-/**
- * The shape the list endpoints' envelopes parse into. Each app parses its own
- * envelope — the parsers differ over legacy keys, bare arrays and container
- * unwrapping, and each is welded to that app's error handling — so this package
- * deliberately starts at an already-parsed page and names the shape once.
- */
+/** The shape a list endpoint's envelope parses into; `parseCursorPage` reads one. */
 export interface CursorPaginatedResult<T> extends CursorPage<T> {
   pageSize: number;
   cursor: string | null;

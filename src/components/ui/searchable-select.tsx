@@ -8,6 +8,7 @@ import { ComboboxField, comboboxItemClassName } from './combobox-field';
 // specifier into a .d.ts verbatim — a consumer would resolve `@/` against its
 // OWN src and silently get `any`. `scripts/check-dts-portable.mjs` enforces it.
 import { toPageSize, type FetchCursorPage } from '../../utils/cursorPagination';
+import type { InlineOption } from '../../utils/apiEnvelope';
 
 export interface SearchableSelectOption {
   value: string;
@@ -49,7 +50,8 @@ export interface SearchableSelectPage {
  *
  * `extraOptions` pins sentinels such as an "All" entry, and only to the
  * unfiltered first page — a sentinel repeated on page two, or surviving a
- * search that excludes it, reads as a result.
+ * search that excludes it, reads as a result. For an `/inline` endpoint pass
+ * `createApiPageFetcher(url, readInlineOption)` and `inlineSelectOption`.
  */
 export function toLoadOptions<T>(
   fetchPage: (query: string) => FetchCursorPage<T>,
@@ -64,6 +66,11 @@ export function toLoadOptions<T>(
       nextCursor: page.nextCursor,
     };
   };
+}
+
+/** An `/inline` row as a select option: its `value`, labelled by its `name`. */
+export function inlineSelectOption(item: InlineOption): SearchableSelectOption {
+  return { value: item.value, label: item.name };
 }
 
 const DEFAULT_PAGE_SIZE = 25;
