@@ -67,6 +67,15 @@ describe("DetailView frame", () => {
         expect(classes).not.toContain("md:overflow-hidden");
     });
 
+    it("scrolls the frame alone for scroll=content, leaving the tabs as they are", () => {
+        const { container } = render(
+            <MemoryRouter>
+                <DetailView scroll="content">body</DetailView>
+            </MemoryRouter>,
+        );
+        expect(frameOf(container).className).toBe(pageFrameClassName({ variant: "detail", scroll: "content" }));
+    });
+
     it("draws no frame for frame=false, and className replaces the plain default", () => {
         const { container, rerender } = render(
             <MemoryRouter>

@@ -190,10 +190,11 @@ inner regions do. No view writes a `100dvh` calc.
   frame. `frame="list"` is the list frame, for a list drawn as a background
   `DetailView`; `frame={false}` draws none (a `DetailView` in a tab or dialog),
   and `className` then replaces the plain default. `DetailPendingView` takes
-  the same `frame`.
-- **`scroll="content"`** (`contentScrollable` on `DetailView`) lets the frame
-  itself scroll, for a page that cannot be split into filling regions. The
-  window still doesn't.
+  the same `frame` and `scroll`.
+- **`scroll="content"`** (on `PageFrame`, `DetailView` and
+  `DetailPendingView`) lets the frame itself scroll, for a page that cannot be
+  split into filling regions. The window still doesn't. `contentScrollable`
+  implies it, and also makes `DetailTabbedSection` content scroll.
 - **`pageFrameClassName({ variant, scroll })`** returns the same classes for
   a shell that draws its own element.
 - Phones are unaffected: the frame is `md:` only, and a phone page scrolls.

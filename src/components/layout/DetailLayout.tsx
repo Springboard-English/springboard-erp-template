@@ -40,7 +40,7 @@ import {
     type DetailSectionGroup,
     type DetailSectionItem,
 } from "./DetailSectionShell";
-import { pageFrameClassName, type PageFrameVariant } from "./PageFrame";
+import { pageFrameClassName, type PageFrameScroll, type PageFrameVariant } from "./PageFrame";
 import useIsMobile from "@/hooks/useIsMobile";
 import {
     DETAIL_HIDDEN_COLLAPSED_VALUE,
@@ -153,6 +153,7 @@ const UNFRAMED_DETAIL_CLASS = "w-full max-w-[1700px] space-y-4";
  * to that frame. `frame="list"` is the list frame (a list drawn behind a
  * floating record); `frame={false}` draws no frame and `className` then
  * replaces the plain default, for a DetailView embedded in a tab or dialog.
+ * `scroll="content"` lets the frame itself scroll on desktop.
  */
 export function DetailView({
     children,
@@ -160,12 +161,15 @@ export function DetailView({
     frame = "detail",
     isBackground: isBackgroundProp,
     contentScrollable = false,
+    scroll = contentScrollable ? "content" : "none",
     onCloseFloating,
 }: {
     children: ReactNode;
     className?: string;
     /** The window frame it renders in; `false` for none. Defaults to `"detail"`. */
     frame?: PageFrameVariant | false;
+    /** Whether the frame itself scrolls on desktop; `"content"` when `contentScrollable`. */
+    scroll?: PageFrameScroll;
     isBackground?: boolean;
     /** Lets the page itself scroll inside its frame, for content that cannot fill. */
     contentScrollable?: boolean;
@@ -319,7 +323,7 @@ export function DetailView({
                             ? cn(
                                   pageFrameClassName({
                                       variant: frame,
-                                      scroll: contentScrollable ? "content" : "none",
+                                      scroll,
                                   }),
                                   className,
                               )
@@ -1420,6 +1424,7 @@ export function DetailPendingView<T extends string>({
     message,
     className,
     frame,
+    scroll,
     onCloseFloating,
 }: {
     breadcrumbs: BreadcrumbItem[];
@@ -1441,6 +1446,8 @@ export function DetailPendingView<T extends string>({
     className?: string;
     /** As on `DetailView`: the loaded page's frame, so nothing jumps when the record arrives. */
     frame?: PageFrameVariant | false;
+    /** As on `DetailView`. */
+    scroll?: PageFrameScroll;
     onCloseFloating?: () => void;
 }) {
     const body = message ? (
@@ -1455,7 +1462,7 @@ export function DetailPendingView<T extends string>({
     );
 
     return (
-        <DetailView className={className} frame={frame} onCloseFloating={onCloseFloating}>
+        <DetailView className={className} frame={frame} scroll={scroll} onCloseFloating={onCloseFloating}>
             <DetailHeader
                 breadcrumbs={
                     <DetailBreadcrumbs
