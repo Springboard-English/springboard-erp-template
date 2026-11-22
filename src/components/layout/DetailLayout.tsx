@@ -48,35 +48,9 @@ import {
     type DetailViewCollapsedState,
 } from "@/utils/detailViewMode";
 
-export const DETAIL_LAYOUT_MOTION_DEFAULTS = {
-    tabPillSpring: {
-        tension: 300,
-        friction: 26,
-    },
-    tabContentFadeOutMs: 100,
-    tabContentFadeInMs: 200,
-} as const;
+// The active tab's underline spring.
+const TAB_PILL_SPRING = { tension: 300, friction: 26 } as const;
 
-export type DetailLayoutMotionConfig = {
-    tabPillSpring: {
-        tension: number;
-        friction: number;
-    };
-    tabContentFadeOutMs: number;
-    tabContentFadeInMs: number;
-};
-
-export type DetailLayoutMotionConfigInput = Partial<{
-    tabPillSpring: Partial<DetailLayoutMotionConfig["tabPillSpring"]>;
-    tabContentFadeOutMs: number;
-    tabContentFadeInMs: number;
-}>;
-
-let detailLayoutMotionConfig: DetailLayoutMotionConfig = {
-    tabPillSpring: { ...DETAIL_LAYOUT_MOTION_DEFAULTS.tabPillSpring },
-    tabContentFadeOutMs: DETAIL_LAYOUT_MOTION_DEFAULTS.tabContentFadeOutMs,
-    tabContentFadeInMs: DETAIL_LAYOUT_MOTION_DEFAULTS.tabContentFadeInMs,
-};
 let detailTabsDebugInstanceCounter = 0;
 
 function shouldDebugDetailTabs(): boolean {
@@ -110,47 +84,6 @@ function logDetailTabsDebug(
                 : `${window.location.pathname}${window.location.search}`,
         ...payload,
     });
-}
-
-export function getDetailLayoutMotionConfig(): DetailLayoutMotionConfig {
-    return {
-        tabPillSpring: { ...detailLayoutMotionConfig.tabPillSpring },
-        tabContentFadeOutMs: detailLayoutMotionConfig.tabContentFadeOutMs,
-        tabContentFadeInMs: detailLayoutMotionConfig.tabContentFadeInMs,
-    };
-}
-
-export function setDetailLayoutMotionConfig(
-    nextConfig: DetailLayoutMotionConfigInput,
-): DetailLayoutMotionConfig {
-    detailLayoutMotionConfig = {
-        tabPillSpring: {
-            tension:
-                nextConfig.tabPillSpring?.tension ??
-                detailLayoutMotionConfig.tabPillSpring.tension,
-            friction:
-                nextConfig.tabPillSpring?.friction ??
-                detailLayoutMotionConfig.tabPillSpring.friction,
-        },
-        tabContentFadeOutMs:
-            nextConfig.tabContentFadeOutMs ??
-            detailLayoutMotionConfig.tabContentFadeOutMs,
-        tabContentFadeInMs:
-            nextConfig.tabContentFadeInMs ??
-            detailLayoutMotionConfig.tabContentFadeInMs,
-    };
-
-    return getDetailLayoutMotionConfig();
-}
-
-export function resetDetailLayoutMotionConfig(): DetailLayoutMotionConfig {
-    detailLayoutMotionConfig = {
-        tabPillSpring: { ...DETAIL_LAYOUT_MOTION_DEFAULTS.tabPillSpring },
-        tabContentFadeOutMs: DETAIL_LAYOUT_MOTION_DEFAULTS.tabContentFadeOutMs,
-        tabContentFadeInMs: DETAIL_LAYOUT_MOTION_DEFAULTS.tabContentFadeInMs,
-    };
-
-    return getDetailLayoutMotionConfig();
 }
 
 export type BreadcrumbItem = {
@@ -1068,25 +1001,6 @@ export function DetailClassHeaderLabel({
     );
 }
 
-export function DetailActionPanel({
-    title,
-    children,
-}: {
-    title: string;
-    children: ReactNode;
-}) {
-    return (
-        <aside className="rounded-3xl border border-border/70 bg-card p-5 shadow-md">
-            <div className="text-sm font-medium text-muted-foreground">
-                {title}
-            </div>
-            <div className="mt-3 flex flex-col gap-2">
-                {children}
-            </div>
-        </aside>
-    );
-}
-
 export interface DetailTabItem<T extends string> {
     value: T;
     label: ReactNode;
@@ -1171,7 +1085,6 @@ export function DetailTabs<T extends string>({
                 });
                 return false;
             }
-            const motionConfig = getDetailLayoutMotionConfig();
             logDetailTabsDebug(debugInstanceRef.current, "updatePill:start", {
                 activeTab,
                 resolvedActiveTab,
@@ -1186,8 +1099,8 @@ export function DetailTabs<T extends string>({
                 width,
                 immediate: !animate,
                 config: {
-                    tension: motionConfig.tabPillSpring.tension,
-                    friction: motionConfig.tabPillSpring.friction,
+                    tension: TAB_PILL_SPRING.tension,
+                    friction: TAB_PILL_SPRING.friction,
                     clamp: true,
                 },
             });
