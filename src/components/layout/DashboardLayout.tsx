@@ -290,8 +290,8 @@ function SideNavList({
         const heading = !startsGroup ? null : collapsed ? (
           index > 0 ? <div aria-hidden className="mx-3 my-1 h-px bg-border/60" /> : null
         ) : (
-          // Set apart from the rows below it: brand colour and heavier, not another muted label.
-          <p className={cn("px-3 pt-4 pb-1 text-sm font-bold text-primary", classNames?.navGroup)}>
+          // Set apart from the rows below it by weight; grey so it reads as a label, not a link.
+          <p className={cn("px-3 pt-4 pb-1 text-sm font-bold text-muted-foreground", classNames?.navGroup)}>
             {item.group}
           </p>
         );
