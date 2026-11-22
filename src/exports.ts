@@ -331,6 +331,9 @@ export {
   stripDetailViewModeFromPath,
   toDetailReturnUrl,
   getDetailReturnLocation,
+  withReturnUrl,
+  readReturnUrl,
+  getDetailClosePath,
   useResolvedDetailViewMode,
   useDetailViewMode,
 } from "./utils/detailViewMode";
