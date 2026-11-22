@@ -96,6 +96,8 @@ export interface DashboardLayoutClassNames {
   navItem?: string;
   navItemActive?: string;
   navIndicator?: string;
+  /** A nav group's heading. */
+  navGroup?: string;
   header?: string;
   main?: string;
   content?: string;
@@ -286,7 +288,8 @@ function SideNavList({
         const heading = !startsGroup ? null : collapsed ? (
           index > 0 ? <div aria-hidden className="mx-3 my-1 h-px bg-border/60" /> : null
         ) : (
-          <p className="px-3 pt-3 pb-1 text-xs font-medium tracking-wide text-muted-foreground uppercase">
+          // Set apart from the rows below it: brand colour and heavier, not another muted label.
+          <p className={cn("px-3 pt-4 pb-1 text-sm font-bold text-primary", classNames?.navGroup)}>
             {item.group}
           </p>
         );
