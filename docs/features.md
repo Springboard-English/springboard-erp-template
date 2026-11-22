@@ -476,6 +476,29 @@ place, and `DashboardLayout` lifts it away as the side nav slides in.
   reads, and CardShell takes the screen down as it mounts on the same pixels.
   Measure both cards after changing either: they must sit on the same pixels.
 
+## Guided tour (`TourProvider`, `useProductTour`)
+
+`TourProvider` runs an app's product tour on react-joyride. Mount it around
+`<Routes>`. The app supplies the role, `getSteps(role, { isMobile })`
+(translated `TourStep`s), `infoLoaded`/`seen`, `markSeen(role)` (where the
+seen-stamp is stored), `isInWorkspace(role, pathname)` and
+`suppressedStorageKey`. `useProductTour()` gives the replay button
+`startTour`, and the what's-new note `holdsTheScreen`.
+
+- **react-joyride is lazy.** Only `TourHost` imports it, and only TourHost's
+  types are exported, so the library stays out of the main chunk. Never
+  export a value from `TourHost.tsx`.
+- **The tour never scrolls**: an off-screen element gets a centred step, and
+  one that never appears is skipped. After `missesBeforeEnd` misses in a row
+  the tour ends and calls `onEndedEarly`.
+- **Anchors** are `data-tour` names. `createTourAnchors(map, { liftSelector,
+  searchInside })` types the helpers to the app's map. Pass the same options
+  as `anchorOptions`.
+- A nav step with `needsSidebar` expands a collapsed sidebar through its
+  `data-sidebar-toggle` button and folds it back at the end.
+- `host` sets the tooltip `labels`, `classNames` and `fixedAnchors` (header
+  marks).
+
 ## Occasions (since 4.17.0)
 
 20/10 (Women's Day) and 20/11 (Teachers' Day), whole day in ICT, redraw the
