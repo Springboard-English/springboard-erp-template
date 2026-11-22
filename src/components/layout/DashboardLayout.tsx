@@ -7,11 +7,13 @@ import {
   type ReactNode,
 } from "react";
 import { animated, easings, useSpring } from "@react-spring/web";
-import { ChevronsLeft, ChevronsRight, RefreshCw } from "lucide-react";
+import { ArrowLeft, ChevronsLeft, ChevronsRight, Menu, RefreshCw } from "lucide-react";
 import { Outlet, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { headerIconButton } from "@/lib/headerControl";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import useIsMobile from "@/hooks/useIsMobile";
 import { useI18n } from "@/context/I18nContext";
 import AppTheme from "@/theme/AppTheme";
 import LazyViewFallback from "@/components/LazyViewFallback";
@@ -62,6 +64,17 @@ export interface DashboardNavItem {
   mobileLabel?: string;
   /** Put on the tab itself wherever it is drawn, e.g. a tour anchor. */
   dataAttributes?: SidebarDataAttributes;
+  /** A heading the side nav prints above the first item of each run with the same group. */
+  group?: string;
+  /** Drawn at the foot of the side nav, above the account panel, instead of in order. */
+  pinned?: boolean;
+}
+
+/** The page the menu-mode header links back to, e.g. the dashboard. */
+export interface DashboardHome {
+  /** The nav id passed to onTabSelect; the link hides while it is the active tab. */
+  id: string;
+  label: string;
 }
 
 /** The brand row at the top of the side nav: a mark in the icon column, two lines beside it. */
@@ -138,6 +151,16 @@ export interface DashboardLayoutProps {
    * override keeps it. The app gates who sees it with `enabled`.
    */
   reportProblem?: ReportProblemConfig;
+  /**
+   * `sidebar` (default) is the side rail and the phone bottom bar. `menu` drops
+   * both: a menu button at the top left opens the same nav and account panel in
+   * a drawer (the bottom sheet on a phone).
+   */
+  navMode?: "sidebar" | "menu";
+  /** In `menu` mode, a back link beside the menu button on every other page. */
+  home?: DashboardHome;
+  /** Put on the menu button, e.g. a tour anchor. */
+  menuButtonAttributes?: SidebarDataAttributes;
 }
 
 
@@ -255,13 +278,23 @@ function SideNavList({
           top: 0,
         }}
       />
-      {navItems.map((item) => {
+      {navItems.map((item, index) => {
         const isActive = activeTab === item.id;
         const Icon = item.icon;
+        // A new run of a group gets its heading; the rail has no room for one, so it draws a rule instead.
+        const startsGroup = Boolean(item.group) && item.group !== navItems[index - 1]?.group;
+        const heading = !startsGroup ? null : collapsed ? (
+          index > 0 ? <div aria-hidden className="mx-3 my-1 h-px bg-border/60" /> : null
+        ) : (
+          <p className="px-3 pt-3 pb-1 text-xs font-medium tracking-wide text-muted-foreground uppercase">
+            {item.group}
+          </p>
+        );
         // Two columns whatever the state, so the icon never moves; the rail's width clips the label.
         return (
+          <div key={item.id} className="contents">
+          {heading}
           <Button
-            key={item.id}
             type="button"
             variant="ghost"
             title={collapsed ? item.label : undefined}
@@ -281,9 +314,35 @@ function SideNavList({
             <SidebarIconCell>{Icon ? <Icon className="size-5" /> : null}</SidebarIconCell>
             <SidebarText collapsed={collapsed}>{item.label}</SidebarText>
           </Button>
+          </div>
         );
       })}
     </nav>
+  );
+}
+
+/**
+ * The side nav in two parts: the items in order at the top, and the pinned
+ * ones at the foot of the scroll area, so a catch-all group such as "More"
+ * sits just above the account panel however long the list is.
+ */
+function SideNav(props: {
+  navItems: DashboardNavItem[];
+  activeTab: string;
+  collapsed: boolean;
+  onTabSelect: (id: string) => void;
+  classNames?: DashboardLayoutClassNames;
+}) {
+  const top = props.navItems.filter((item) => !item.pinned);
+  const pinned = props.navItems.filter((item) => item.pinned);
+  if (pinned.length === 0) return <SideNavList {...props} />;
+  return (
+    <>
+      <SideNavList {...props} navItems={top} />
+      <div className="mt-auto pt-4">
+        <SideNavList {...props} navItems={pinned} />
+      </div>
+    </>
   );
 }
 
@@ -303,7 +362,13 @@ function DashboardLayoutInner({
   classNames,
   pageHeading = false,
   maxContentClassName = "max-w-[1700px]",
+  navMode = "sidebar",
+  home,
+  menuButtonAttributes,
 }: Omit<DashboardLayoutProps, "disableCustomTheme" | "pullToRefresh" | "reportProblem">) {
+  const menuMode = navMode === "menu";
+  const isMobile = useIsMobile();
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const { t } = useI18n();
   const location = useLocation();
   const mainScrollRef = useRef<HTMLElement | null>(null);
@@ -339,11 +404,11 @@ function DashboardLayoutInner({
   // Fixed overlays (PendingChangesBar) start at the side nav's edge; a peek overlays, so it doesn't count.
   useEffect(() => {
     const root = document.documentElement;
-    root.style.setProperty("--sb-sidebar-width", collapsed ? "5rem" : "18rem");
+    root.style.setProperty("--sb-sidebar-width", menuMode ? "0rem" : collapsed ? "5rem" : "18rem");
     return () => {
       root.style.removeProperty("--sb-sidebar-width");
     };
-  }, [collapsed]);
+  }, [collapsed, menuMode]);
 
   // A mouse resting on the collapsed rail pops the full menu out over the page.
   const [peek, setPeek] = useState(false);
@@ -433,7 +498,94 @@ function DashboardLayoutInner({
         </div>
       ) : null}
 
+      {menuMode ? (
+        <div
+          className={cn(
+            "fixed top-0 left-0 z-50 flex h-14 items-center gap-1 pl-[max(0.75rem,env(safe-area-inset-left))] md:h-12 md:pl-4",
+            entering && "sb-enter-fade",
+          )}
+        >
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className={cn(headerIconButton, "bg-background/80 backdrop-blur")}
+            aria-label={t("mobileBottomBar.menu", "Menu")}
+            title={t("mobileBottomBar.menu", "Menu")}
+            aria-expanded={isMobile ? menuOpen : drawerOpen}
+            {...menuButtonAttributes}
+            onClick={() => (isMobile ? setMenuOpen(true) : setDrawerOpen(true))}
+          >
+            <Menu className="size-5" />
+          </Button>
+          {home && activeTab !== home.id ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="gap-1.5 bg-background/80 text-muted-foreground backdrop-blur hover:text-foreground"
+              onClick={() => onTabSelect(home.id)}
+            >
+              <ArrowLeft className="size-4" />
+              {home.label}
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
+
+      {menuMode ? (
+        <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
+          <SheetContent side="left" className="flex w-72 flex-col gap-0 border-border/70 bg-card p-0 sm:max-w-72">
+            <SheetHeader className="sr-only">
+              <SheetTitle>{t("mobileBottomBar.menu", "Menu")}</SheetTitle>
+            </SheetHeader>
+            {brand ? (
+              <button
+                type="button"
+                className={cn(sidebarRowGrid, "overflow-hidden border-b border-border/60 px-4 py-5 text-left", classNames?.sidebarHeader)}
+                onClick={() => {
+                  setDrawerOpen(false);
+                  if (home) onTabSelect(home.id);
+                }}
+              >
+                <SidebarIconCell>{brand.mark ?? <SpringboardMark />}</SidebarIconCell>
+                <SidebarText collapsed={false} className="pl-1">
+                  <span className="block truncate text-sm font-semibold text-foreground">
+                    {brand.title ?? "Springboard English"}
+                  </span>
+                  {brand.subtitle ? (
+                    <span className="block truncate text-xs text-muted-foreground">{brand.subtitle}</span>
+                  ) : null}
+                </SidebarText>
+              </button>
+            ) : null}
+            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden px-4 py-4">
+              {sidebarContent ? (
+                sidebarContent(false)
+              ) : (
+                <SideNav
+                  navItems={navItems}
+                  activeTab={activeTab}
+                  collapsed={false}
+                  onTabSelect={(id) => {
+                    setDrawerOpen(false);
+                    onTabSelect(id);
+                  }}
+                  classNames={classNames}
+                />
+              )}
+            </div>
+            {account ? (
+              <div className="border-t border-border/60 px-4 py-3">
+                <AccountPanel {...account} collapsed={false} />
+              </div>
+            ) : null}
+          </SheetContent>
+        </Sheet>
+      ) : null}
+
       <div className={cn("flex min-h-screen bg-background", classNames?.root)}>
+        {menuMode ? null : (
         <aside
           className={cn(
             "sticky top-0 z-20 hidden h-screen shrink-0 border-r border-border/70 bg-card/95 transition-[width] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] md:block",
@@ -510,7 +662,7 @@ function DashboardLayoutInner({
               {sidebarContent ? (
                 sidebarContent(railCollapsed)
               ) : (
-                <SideNavList
+                <SideNav
                   navItems={navItems}
                   activeTab={activeTab}
                   collapsed={railCollapsed}
@@ -530,6 +682,7 @@ function DashboardLayoutInner({
             ) : null}
           </div>
         </aside>
+        )}
 
         <div className={cn("relative isolate flex min-w-0 flex-1 flex-col", entering && "sb-enter-content")}>
           <OccasionBackdrop />
@@ -547,7 +700,11 @@ function DashboardLayoutInner({
             <div
               className={cn(
                 // pb clears the fixed bottom bar and its safe-area padding.
-                "mx-auto flex w-full flex-col items-center gap-2 px-4 pb-[calc(5rem+env(safe-area-inset-bottom))] pt-4 md:px-6 md:pb-5 md:pt-12",
+                "mx-auto flex w-full flex-col items-center gap-2 px-4 md:px-6 md:pb-5 md:pt-12",
+                // Menu mode has no bottom bar to clear, but a menu button above the page.
+                menuMode
+                  ? "pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-14"
+                  : "pb-[calc(5rem+env(safe-area-inset-bottom))] pt-4",
                 maxContentClassName,
                 classNames?.content,
               )}
@@ -567,16 +724,19 @@ function DashboardLayoutInner({
 
       {mobileItems.length > 0 || account ? (
         <>
-          <MobileBottomBar
-            activeTab={activeTab}
-            items={mobileItems}
-            onTabSelect={onTabSelect}
-            onMenuOpen={() => setMenuOpen(true)}
-          />
+          {menuMode ? null : (
+            <MobileBottomBar
+              activeTab={activeTab}
+              items={mobileItems}
+              onTabSelect={onTabSelect}
+              onMenuOpen={() => setMenuOpen(true)}
+            />
+          )}
           <MobileMenuSheet
             open={menuOpen}
             onOpenChange={setMenuOpen}
-            overflowItems={overflowItems}
+            // With no bottom bar, every tab lives in the sheet.
+            overflowItems={menuMode ? navItems : overflowItems}
             activeTab={activeTab}
             onTabSelect={onTabSelect}
           >
@@ -600,7 +760,7 @@ function DashboardLayoutInner({
   );
 }
 
-/** The app shell: side nav and floating header on desktop, bottom bar and menu sheet on a phone. */
+/** The app shell: side nav (or a menu drawer) and floating header on desktop, bottom bar and menu sheet on a phone. */
 export default function DashboardLayout({
   disableCustomTheme,
   pullToRefresh = true,

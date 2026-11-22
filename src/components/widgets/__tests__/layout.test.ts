@@ -9,6 +9,7 @@ import {
     unstack,
     widgetMinRows,
     widgetRowSpan,
+    boardMinRows,
 } from "../layout";
 import type { WidgetDefinition, WidgetLayoutEntry, WidgetRegistry } from "../types";
 
@@ -151,8 +152,8 @@ describe("widgetMinRows", () => {
     it("uses the size's minimum unless the widget sets its own rows", () => {
         expect(widgetMinRows({ id: "1", widget: "plain", size: "XL" }, registry)).toBe(1);
         expect(widgetMinRows({ id: "1", widget: "short", size: "XL" }, registry)).toBe(3);
-        // Never below the size's minimum: L stays five tall.
-        expect(widgetMinRows({ id: "1", widget: "tall", size: "L" }, registry)).toBe(5);
+        // Never below the size's minimum: L stays three tall.
+        expect(widgetMinRows({ id: "1", widget: "tall", size: "L" }, registry)).toBe(3);
     });
 
     it("gives a stack the most rows any of its tabs asks for", () => {
@@ -166,5 +167,14 @@ describe("widgetMinRows", () => {
             ],
         };
         expect(widgetMinRows(stack, registry)).toBe(4);
+    });
+});
+
+describe("boardMinRows", () => {
+    // 8px rows; a cell is 136px and each card keeps its gap below it.
+    it("counts the cells, the gaps between them and the gap below", () => {
+        expect(boardMinRows(1, 16)).toBe(19);
+        expect(boardMinRows(3, 16)).toBe(57);
+        expect(boardMinRows(1, 12)).toBe(19);
     });
 });

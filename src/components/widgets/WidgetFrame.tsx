@@ -28,7 +28,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "../ui/tabs";
 import { useI18n } from "../../context/I18nContext";
 import type { UserInfo } from "../../api_calls/UserData";
-import { findWidget, stackSizes, widgetMinRows, widgetRowSpan } from "./layout";
+import { BOARD_CELL_PX, BOARD_ROW_PX, boardMinRows, findWidget, stackSizes, widgetMinRows, widgetRowSpan } from "./layout";
 import { WidgetError, WidgetSkeleton } from "./WidgetBodies";
 import { WidgetFooterContext } from "./WidgetFooter";
 import { WidgetBodyContext } from "./useFitRows";
@@ -70,11 +70,13 @@ export interface WidgetRowSpan {
 }
 
 /**
- * The rows a frame spans on the board's fixed row grid: its header, content
- * and footer at their natural height, rounded up to whole rows, never below
- * `minRows`. Re-measured whenever any of them or the board resizes.
+ * The fine rows a frame spans on the board: its header, content, footer and
+ * the gap below it at their natural height, rounded up to whole rows, never
+ * below `minCells` cells. Re-measured whenever any of them or the board resizes.
  */
-function useWidgetRowSpan(minRows: number, widgetId: string | null): WidgetRowSpan {
+function useWidgetRowSpan(minCells: number, widgetId: string | null): WidgetRowSpan {
+    // Before the first measure, the desktop gap is the best guess.
+    const minRows = boardMinRows(minCells, 16);
     const itemRef = useRef<HTMLDivElement | null>(null);
     const cardRef = useRef<HTMLDivElement | null>(null);
     const headerRef = useRef<HTMLDivElement | null>(null);
@@ -108,12 +110,14 @@ function useWidgetRowSpan(minRows: number, widgetId: string | null): WidgetRowSp
             const footerHeight = footer?.offsetHeight ?? 0;
             const footerSpace = footerHeight > 0 ? footerHeight + px(cardStyle.rowGap) : 0;
             const fixed = header.offsetHeight + footerSpace + chrome;
-            const rowPx = px(gridStyle.gridAutoRows);
-            const gapPx = px(gridStyle.rowGap);
-            setSpan(widgetRowSpan(fixed + content.offsetHeight, rowPx, gapPx, minRows));
+            const rowPx = px(gridStyle.gridAutoRows) || BOARD_ROW_PX;
+            // The board has no row gap; each item keeps its gap as bottom padding, so cards end where their content does.
+            const gapPx = px(getComputedStyle(item).paddingBottom);
+            const floor = boardMinRows(minCells, gapPx);
+            setSpan(widgetRowSpan(fixed + content.offsetHeight + gapPx, rowPx, 0, floor));
             // The content height the minimum box holds. Fitting to this, not to the card's current
             // height, keeps a fitted list from chasing a card that grew because the list did.
-            setBodyBudget(Math.max(0, minRows * rowPx + (minRows - 1) * gapPx - fixed));
+            setBodyBudget(Math.max(0, minCells * BOARD_CELL_PX + (minCells - 1) * gapPx - fixed));
         };
         measure();
         const observer = new ResizeObserver(measure);
@@ -245,7 +249,7 @@ export default function WidgetFrame({
                 sortable?.setNodeRef(node);
             }}
             style={{ ...sortable?.style, gridRow: `span ${rows.span} / span ${rows.span}` }}
-            className={cn(WIDGET_SIZE_CLASS[entry.size], "min-w-0", sortable?.isDragging && "z-10 opacity-60")}
+            className={cn(WIDGET_SIZE_CLASS[entry.size], "min-w-0 pb-3 md:pb-4", sortable?.isDragging && "z-10 opacity-60")}
             data-widget={def.id}
             {...frameAttributes?.(def.id)}
         >
