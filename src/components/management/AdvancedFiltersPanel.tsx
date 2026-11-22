@@ -17,7 +17,6 @@ export interface AdvancedFiltersPanelProps {
   onOpenChange: (open: boolean) => void;
   trigger: ReactNode;
   onClear?: () => void;
-  onApply?: () => void;
   children: ReactNode;
   className?: string;
   gridClassName?: string;
@@ -26,7 +25,8 @@ export interface AdvancedFiltersPanelProps {
 /**
  * A list page's filter fields behind its Filters toggle: a popover under the
  * toggle on desktop, a full-screen dialog with the actions pinned to the
- * bottom on a phone.
+ * bottom on a phone. There is no Apply step: every field applies the moment it
+ * is picked, so the page wires each control straight to its filter.
  */
 export default function AdvancedFiltersPanel(props: AdvancedFiltersPanelProps) {
   const isMobile = useIsMobile();
@@ -39,7 +39,6 @@ function FiltersPopover({
   onOpenChange,
   trigger,
   onClear,
-  onApply,
   children,
   className,
   gridClassName,
@@ -81,18 +80,11 @@ function FiltersPopover({
             >
               {children}
             </div>
-            {(onClear || onApply) && (
+            {onClear && (
               <div className="mt-4 flex items-center justify-end gap-2 border-t border-border/30 pt-3">
-                {onClear && (
-                  <Button type="button" size="sm" variant="ghost" onClick={onClear}>
-                    {t("common.clearAll")}
-                  </Button>
-                )}
-                {onApply && (
-                  <Button type="button" size="sm" onClick={onApply}>
-                    {t("common.applyFilters")}
-                  </Button>
-                )}
+                <Button type="button" size="sm" variant="ghost" onClick={onClear}>
+                  {t("common.clearAll")}
+                </Button>
               </div>
             )}
           </div>
@@ -108,7 +100,6 @@ function FiltersDialog({
   onOpenChange,
   trigger,
   onClear,
-  onApply,
   children,
   className,
 }: AdvancedFiltersPanelProps) {
@@ -137,15 +128,10 @@ function FiltersDialog({
               {t("common.clearAll")}
             </Button>
           )}
-          {onApply ? (
-            <Button type="button" className="flex-1" onClick={onApply}>
-              {t("common.applyFilters")}
-            </Button>
-          ) : (
-            <Button type="button" className="flex-1" onClick={() => onOpenChange(false)}>
-              {t("common.close")}
-            </Button>
-          )}
+          {/* Picks already applied, so the list behind is current; this only closes. */}
+          <Button type="button" className="flex-1" onClick={() => onOpenChange(false)}>
+            {t("common.close")}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
