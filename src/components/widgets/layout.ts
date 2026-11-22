@@ -19,10 +19,27 @@ import {
  */
 
 /**
- * The fewest rows each size takes, whatever its content. L is five cells tall,
- * so two L widgets side by side end on one line with their pagers level.
+ * The fewest cells each size takes, whatever its content. L is three cells
+ * tall, so two L widgets side by side end on one line with their pagers level.
  */
-export const WIDGET_MIN_ROWS: Record<WidgetSize, number> = { S: 1, M: 1, L: 5, XL: 1 };
+export const WIDGET_MIN_ROWS: Record<WidgetSize, number> = { S: 1, M: 1, L: 3, XL: 1 };
+
+/** One cell's height in px (8.5rem): an S tile is one cell, square-ish. */
+export const BOARD_CELL_PX = 136;
+
+/**
+ * The board's fine row in px. Minimums are counted in cells, but a card grows
+ * by fine rows, so it ends within a few pixels of its content.
+ */
+export const BOARD_ROW_PX = 8;
+
+/**
+ * Fine rows for a card at least `cells` cells tall: the cells, the gaps
+ * between them, and the gap the card keeps below itself.
+ */
+export function boardMinRows(cells: number, gapPx: number): number {
+    return Math.ceil((cells * BOARD_CELL_PX + cells * gapPx) / BOARD_ROW_PX);
+}
 
 /**
  * The rows an entry's card takes at its size: the widget's own `rows`, else the

@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import { useI18n } from "../../context/I18nContext";
 import type { WidgetSize } from "./types";
-import { WidgetFooter } from "./WidgetFooter";
+import { WidgetAllLink, WidgetFooter } from "./WidgetFooter";
 import { useFitRows } from "./useFitRows";
 
 /**
@@ -116,25 +116,34 @@ export interface WidgetListRow {
     onClick?: () => void;
 }
 
+/** The most rows a list with an "All" link shows: a glance, not a page. */
+const CAPPED_LIST_ROWS = 5;
+
 /**
  * Rows a page at a time (1 / 3 at S / M, as many as fit the card at L, 12 at
- * XL), with back and next on the card's bottom edge. `moreHref` is accepted for older callers and ignored:
- * the frame's Open arrow already links to the full page.
+ * XL), with back and next on the card's bottom edge. With `allHref` there is
+ * no pager: the first rows only (at most five, fewer if the card has no room)
+ * and an "All" button to the full page. `moreHref` is accepted for older
+ * callers and ignored.
  */
 export function WidgetList({
     rows,
     size,
     emptyMessage,
+    allHref,
 }: {
     rows: WidgetListRow[];
     size: WidgetSize;
     moreHref?: string;
     emptyMessage?: ReactNode;
+    allHref?: string;
 }) {
     const { t } = useI18n();
     const [requested, setPage] = useState(0);
     // L has a fixed height to fill; the other sizes grow with their rows.
-    const fitted = useFitRows({ enabled: size === "L", fallback: LIST_ROWS[size] });
+    // Capped at five; S still has room for one, and L for what fits its box.
+    const cap = allHref ? (size === "S" ? LIST_ROWS.S : CAPPED_LIST_ROWS) : undefined;
+    const fitted = useFitRows({ enabled: size === "L", fallback: cap ?? LIST_ROWS[size], max: cap });
     const perPage = fitted.count;
     if (rows.length === 0) return <WidgetEmpty message={emptyMessage} />;
 
@@ -172,7 +181,9 @@ export function WidgetList({
                     );
                 })}
             </ul>
-            {pageCount > 1 ? (
+            {allHref ? (
+                <WidgetAllLink to={allHref} />
+            ) : pageCount > 1 ? (
                 <WidgetFooter>
                     <div className="flex items-center justify-end gap-1">
                         <Button

@@ -109,6 +109,7 @@ export type {
 export { default as DashboardLayout } from "./components/layout/DashboardLayout";
 export type {
   DashboardBrand,
+  DashboardHome,
   DashboardLayoutProps,
   DashboardNavItem,
   DashboardLayoutClassNames,
@@ -516,7 +517,7 @@ export {
   WidgetStat,
 } from "./components/widgets/WidgetBodies";
 export type { WidgetListRow, WidgetQueryLike } from "./components/widgets/WidgetBodies";
-export { WidgetFooter } from "./components/widgets/WidgetFooter";
+export { WidgetAllLink, WidgetFooter } from "./components/widgets/WidgetFooter";
 export { useFitRows } from "./components/widgets/useFitRows";
 export type { FitRows, FitRowsOptions } from "./components/widgets/useFitRows";
 export {
