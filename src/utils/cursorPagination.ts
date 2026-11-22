@@ -41,6 +41,9 @@ export const MAX_PAGE_SIZE = MAX_PAGE_SIZE_VALUE as PageSize;
 /** What a table opens on when nothing has been remembered for it. */
 export const DEFAULT_PAGE_SIZE = 25 as PageSize;
 
+/** The page sizes a list's size picker offers: pass as `SimpleDataTable`'s `pageSizeOptions`. */
+export const DEFAULT_PAGE_SIZES: readonly number[] = Object.freeze([10, 25, 50, 100]);
+
 /**
  * A page size, or a `RangeError` naming what was wrong with it.
  *

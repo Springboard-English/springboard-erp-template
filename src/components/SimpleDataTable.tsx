@@ -149,7 +149,7 @@ export interface SimpleDataTableProps<T> {
   emptyAction?: ReactNode;
   page: number;
   pageSize: number;
-  pageSizeOptions?: number[];
+  pageSizeOptions?: readonly number[];
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
   onRowClick?: (row: T) => void;
