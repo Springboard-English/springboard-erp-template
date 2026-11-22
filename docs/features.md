@@ -160,6 +160,23 @@ rows). One bar, so a page never shows two floating strips.
   ones last under a divider). `overflow: true` puts an action there on desktop
   too.
 
+## Editing a record (`useDetailEditor`)
+
+A detail view's inline edits go through `useDetailEditor({ query, toForm,
+buildPatch, patch })`, not hand-kept form, original and conflict state.
+
+- **`toForm`** seeds the form from `query.data`; **`buildPatch(form, original)`**
+  returns only the changed fields; **`patch(body, record)`** sends them with
+  `edited_at` from the record the form was seeded from.
+- **Spread `pendingBarProps` onto `PendingChangesBar`** and
+  `outdatedDialogProps` onto `OutdatedDataDialog`. A section's badge is
+  `pendingCount`; `isFieldPending(field)` tints an input.
+- **A refetch never wipes typing**: it re-seeds only a clean form. A dirty
+  form keeps its record, so its save meets the conflict and the dialog offers
+  Refresh, which re-seeds from the server.
+- `submit(body)` sends a status move or similar with the same lock and dialog.
+  A dialog saves with its own button and never stages onto the bar.
+
 ## A record's Details in cards (`ResourceLayout`, since 6.8.0)
 
 A record's Details section groups its fields into titled cards, as the LMS
