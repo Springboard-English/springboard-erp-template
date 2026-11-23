@@ -729,6 +729,22 @@ registers, removes and tests the device (`api_calls/pushNotifications.ts`,
   the app has more than one locale), so `LocaleSelect` belongs in the desktop
   header only.
 
+## Managing notices (`api_calls/managementNotifications.ts`)
+
+- **Helpers only.** The types, calls and pure helpers behind the staff-side
+  notification pages: `managementNotificationsPage` / `fetchAllManagementNotifications`,
+  `createNotification` (`POST /v2/notifications`), `patchNotification`,
+  `deleteNotification`, `notificationReadersPage`, plus `toNotificationRow`,
+  `deriveManagementNotification`, `changedNotificationFields` and
+  `buildNotificationPatch`. The table, detail view and send dialog stay in each
+  app (LMS, HRM), however alike they are.
+- **Each app builds its own `NotificationPostRequest`.** The audience and
+  channel rules differ (LMS sends in-app to a class with `recipients: "all"`;
+  HRM narrows a centre notice to `account_type: "employee"` and reads the
+  channel catalogue), so the request builder is the app's.
+- **A notice rebuilt from its readers has no `edited_at`**, so the detail view
+  must ask for it to be opened from the list before a PATCH.
+
 ## Live status (`LiveEventsProvider`, `useLiveTopic`, `useLiveEvent`, since 6.18.0)
 
 - **Mount `LiveEventsProvider` once, inside the `QueryClientProvider`.** It

@@ -190,6 +190,11 @@ export function getTextareaRows(value?: string | null, minRows = 2, maxRows = 8)
   return Math.min(maxRows, Math.max(minRows, newlineCount, wrappedLineEstimate));
 }
 
+/** A `datetime-local` value (`YYYY-MM-DDTHH:mm`) as ISO 8601 with the browser's own offset. */
+export function toISOWithOffset(datetimeLocal: string): string {
+  return `${datetimeLocal.slice(0, 16)}:00${getClientTimezoneOffset()}`;
+}
+
 /** The browser's UTC offset as `+07:00`. */
 export function getClientTimezoneOffset() {
   const offsetMinutes = -new Date().getTimezoneOffset();
