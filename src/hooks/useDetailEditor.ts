@@ -4,6 +4,7 @@ import { isOutdatedEditedAtConflictError } from "../utils/conflictErrors";
 // Relative: these types reach the published .d.ts, where `@/` does not resolve.
 import type { OutdatedDataDialogProps } from "../components/dialogs/OutdatedDataDialog";
 import type { PendingChangeItem } from "../components/PendingChangesBar";
+import type { PendingChangesSource } from "../context/PendingChangesContext";
 
 /** The slice of a react-query `useQuery` result the editor reads. */
 export interface DetailEditorQuery<TRecord> {
@@ -73,6 +74,8 @@ export interface DetailEditor<TRecord, TForm, TPatch extends object> {
     /** The last save's failure other than a conflict; the status bar shows it too. */
     error: unknown;
     pendingBarProps: DetailEditorPendingBarProps;
+    /** The same edits as a source for `usePendingChangesSource`, for a view on the shared bar. */
+    pendingSource: PendingChangesSource;
     /** Props for `OutdatedDataDialog`, open after an `edited_at` conflict. */
     outdatedDialogProps: OutdatedDataDialogProps;
 }
@@ -248,6 +251,15 @@ export function useDetailEditor<TRecord, TForm, TPatch extends object>(
                 await save();
             },
             onCancel: reset,
+        },
+        pendingSource: {
+            section,
+            items: pendingItems,
+            saving,
+            save: async () => {
+                await save();
+            },
+            discard: reset,
         },
         outdatedDialogProps: {
             open: outdatedOpen,
