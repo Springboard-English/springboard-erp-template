@@ -225,4 +225,19 @@ describe("useDetailEditor", () => {
         expect(result.current.outdatedDialogProps.open).toBe(false);
         expect(result.current.isDirty).toBe(true);
     });
+    it("offers the same edits as a pending-changes source", async () => {
+        const patch = vi.fn(async (body: PostPatch & { edited_at: string }) => post({ title: body.title }));
+        const { result } = setup(post(), patch);
+        act(() => result.current.setField("title", "Memo"));
+        const source = result.current.pendingSource;
+        expect(source.section).toBe("Post");
+        expect(source.items).toEqual(result.current.pendingItems);
+        await act(async () => {
+            await source.save?.();
+        });
+        expect(patch).toHaveBeenCalledWith({ title: "Memo", edited_at: "2026-01-01T00:00:00Z" }, expect.anything());
+        act(() => result.current.setField("title", "Other"));
+        act(() => result.current.pendingSource.discard?.());
+        expect(result.current.pendingSource.items).toEqual([]);
+    });
 });

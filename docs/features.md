@@ -160,6 +160,33 @@ rows). One bar, so a page never shows two floating strips.
   ones last under a divider). `overflow: true` puts an action there on desktop
   too.
 
+## One bar per window (`PendingChangesProvider`)
+
+When several forms on one screen can hold unsaved work, each registers with
+the provider instead of drawing its own bar, and `GlobalPendingChangesBar`
+(rendered once, inside the provider) draws the merged one.
+
+- **Register per form with `usePendingChangesSource(source)`.** Each call is
+  its own entry, so two forms in one section never collide; `section` only
+  groups Review rows and adds to `sectionPendingCounts[section]`. Call it every
+  render with the current state, or null; a source with no `items` is dropped.
+  Callbacks are read from the latest render.
+- **Save saves all.** Every source with edits saves in registration order, one
+  after another. A `save` reports its own failure; a throw is caught and that
+  form's rows stay on the bar. Cancel discards every form. `saveAll()` and
+  `discardAll()` are on `usePendingChanges()` too.
+- **`blocked` is a message, not a flag.** Save stays enabled; a press shows the
+  first source's `blocked` in the bar and saves nothing, while Cancel still
+  works. `PendingChangesBar` takes `blocked` directly as well.
+- **Selection actions mode.** A source with `actions` (ticked rows) shows its
+  buttons, `countLabel` and "Clear Selection" only while no source has edits.
+  Keep ticks disabled while the page has edits.
+- A lone source's `saveLabel`/`cancelLabel`/`keyLabel`/`valueLabel` beat the
+  bar's props. `useDetailEditor` returns `pendingSource` to register directly.
+- **`registerSection` still works** and keeps its per-section keys: one
+  registration per name, the last one wins. Its sections join the merged bar;
+  `globalPending*` and `activeSection*` still count sections only.
+
 ## Editing a record (`useDetailEditor`)
 
 A detail view's inline edits go through `useDetailEditor({ query, toForm,

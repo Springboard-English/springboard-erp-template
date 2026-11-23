@@ -57,9 +57,12 @@ export type { TemplateI18nKey } from "./i18n/messages";
 export {
   PendingChangesProvider,
   usePendingChanges,
+  usePendingChangesSource,
 } from "./context/PendingChangesContext";
 export type {
   PendingChangesContextValue,
+  PendingChangesMode,
+  PendingChangesSource,
   PendingSectionRegistration,
   PendingChangeItem as PendingChangesContextItem,
 } from "./context/PendingChangesContext";
@@ -119,6 +122,8 @@ export type { PreloadableComponent } from "./utils/lazyWithPreload";
 export { default as PatchRecordDialog } from "./components/PatchRecordDialog";
 export type { PatchFieldType, PatchFieldOption, PatchFieldConfig } from "./components/PatchRecordDialog";
 export { default as PendingChangesBar } from "./components/PendingChangesBar";
+export { default as GlobalPendingChangesBar } from "./components/GlobalPendingChangesBar";
+export type { GlobalPendingChangesBarProps } from "./components/GlobalPendingChangesBar";
 export type {
   PendingChangesBarProps,
   PendingChangeItem,
