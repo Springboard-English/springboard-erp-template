@@ -697,12 +697,14 @@ function DashboardLayoutInner({
           >
             <div
               className={cn(
-                // pb clears the fixed bottom bar and its safe-area padding.
-                "mx-auto flex w-full flex-col items-center gap-2 px-4 md:px-6 md:pb-5 md:pt-12",
-                // Menu mode has no bottom bar to clear, but a menu button above the page.
+                // The pads are custom properties so PageFrame can size a view to
+                // the window without repeating them. Desktop is the same in both nav modes.
+                "mx-auto flex w-full flex-col items-center gap-2 px-4 pt-(--page-pad-top) pb-(--page-pad-bottom) md:px-6 md:[--page-pad-top:3rem] md:[--page-pad-bottom:1.25rem]",
+                // Phone: pb clears the fixed bottom bar and its safe-area padding;
+                // menu mode has no bottom bar to clear, but a menu button above the page.
                 menuMode
-                  ? "pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-14"
-                  : "pb-[calc(5rem+env(safe-area-inset-bottom))] pt-4",
+                  ? "[--page-pad-top:3.5rem] [--page-pad-bottom:calc(1.25rem+env(safe-area-inset-bottom))]"
+                  : "[--page-pad-top:1rem] [--page-pad-bottom:calc(5rem+env(safe-area-inset-bottom))]",
                 maxContentClassName,
                 classNames?.content,
               )}

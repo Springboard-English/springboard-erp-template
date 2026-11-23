@@ -1,6 +1,14 @@
 import "./index.css";
 
-export { configureApi, API_CONFIG } from "./config/api";
+export {
+  configureApi,
+  API_CONFIG,
+  DEV_API_BASE_URL,
+  PRODUCTION_API_BASE_URL,
+  resolveApiBaseUrl,
+} from "./config/api";
+export type { ApiBaseUrlEnv } from "./config/api";
+export { clearCachesOnReload, isReloadNavigation } from "./boot/reloadCache";
 
 // Signing in through Ory Hydra — authorization code + PKCE. **There is no
 // `SignIn` view**: the API hosts the one login page, as the
@@ -117,6 +125,15 @@ export type {
 export type { SidebarAction, SidebarDataAttributes, SidebarIcon } from "./components/layout/SidebarRow";
 export { default as PageHeader } from "./components/layout/PageHeader";
 export type { PageHeaderProps, PageHeaderBackItem } from "./components/layout/PageHeader";
+// A routed view's outer frame: it fills the window on desktop so only inner
+// regions scroll. `DetailView` already renders in the detail frame.
+export { PageFrame, pageFrameClassName } from "./components/layout/PageFrame";
+export type {
+  PageFrameOptions,
+  PageFrameProps,
+  PageFrameScroll,
+  PageFrameVariant,
+} from "./components/layout/PageFrame";
 export { default as PageActionBar } from "./components/layout/PageActionBar";
 export type { PageAction } from "./components/layout/PageActionBar";
 export { default as AppHeader } from "./components/layout/AppHeader";
@@ -302,6 +319,11 @@ export * from "./utils/queryCache";
 // beginning.
 export * from "./utils/cursorPagination";
 export * from "./utils/cursorTrail";
+// Reading the v2 envelope (`{ attributes, objects }`), and one cursor-paged GET
+// built on it, which `toLoadOptions` and `fetchEveryPage` both take.
+export * from "./utils/apiEnvelope";
+export { createApiPageFetcher } from "./api_calls/apiPageFetcher";
+export type { ApiPageFetcher, ApiPageFetcherOptions } from "./api_calls/apiPageFetcher";
 // CSV export. `csvText` wraps an identifier as `="…"` so Excel keeps the
 // leading zero on a CITAD bank code or an account number.
 export * from "./utils/csvExport";
@@ -317,6 +339,9 @@ export {
   stripDetailViewModeFromPath,
   toDetailReturnUrl,
   getDetailReturnLocation,
+  withReturnUrl,
+  readReturnUrl,
+  getDetailClosePath,
   useResolvedDetailViewMode,
   useDetailViewMode,
 } from "./utils/detailViewMode";
@@ -565,6 +590,7 @@ export {
 // explanation following the status.
 export {
   ApiError,
+  errorMessage,
   NetworkError,
   throwIfNotOk,
   toApiError,

@@ -235,6 +235,49 @@ export function getDetailReturnLocation(
     };
 }
 
+/**
+ * `path` with `returnUrl` set in its query, keeping its other parameters and
+ * its hash; `path` unchanged when `returnUrl` is empty. For a list's link to
+ * a record, so closing the record lands back on the list as it was.
+ */
+export function withReturnUrl(path: string, returnUrl?: string | null): string {
+    const target = returnUrl?.trim();
+    if (!target) {
+        return path;
+    }
+
+    const hashAt = path.indexOf("#");
+    const hash = hashAt >= 0 ? path.slice(hashAt) : "";
+    const beforeHash = hashAt >= 0 ? path.slice(0, hashAt) : path;
+    const queryAt = beforeHash.indexOf("?");
+    const pathname = queryAt >= 0 ? beforeHash.slice(0, queryAt) : beforeHash;
+    const params = new URLSearchParams(queryAt >= 0 ? beforeHash.slice(queryAt + 1) : "");
+    params.set(RETURN_URL_QUERY_KEY, target);
+    return `${pathname}?${params.toString()}${hash}`;
+}
+
+/** The trimmed `returnUrl` of a location's search, or null when it has none. */
+export function readReturnUrl(search: string): string | null {
+    return new URLSearchParams(search).get(RETURN_URL_QUERY_KEY)?.trim() || null;
+}
+
+/**
+ * Where closing a record goes: its `returnUrl` without the detail view mode,
+ * else `fallbackPath` (the record's list). Navigate there with
+ * `{ replace: true }`, so Back does not reopen the record.
+ */
+export function getDetailClosePath(search: string, fallbackPath: string): string {
+    const returnUrl = readReturnUrl(search);
+    if (!returnUrl) {
+        return fallbackPath;
+    }
+
+    const location = getDetailReturnLocation(returnUrl);
+    return location
+        ? `${location.pathname}${location.search}${location.hash}`
+        : stripDetailViewModeFromPath(returnUrl);
+}
+
 export function useResolvedDetailViewMode(
     options: DetailViewModeHookOptions = {},
 ): DetailViewModeState {

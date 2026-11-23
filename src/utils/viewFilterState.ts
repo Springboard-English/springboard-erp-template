@@ -257,3 +257,81 @@ export function usePersistentOptionFilter(
 
   return [value, setValue, option, setOption];
 }
+
+export interface PersistentSearchOptions {
+  /** Runs whenever the applied search changes, e.g. a list's `resetPage`. */
+  onSearch?: () => void;
+}
+
+/** A list's search box and the search it has applied; see `usePersistentSearch`. */
+export interface PersistentSearch {
+  /** What the box shows. */
+  draft: string;
+  /** What the list is filtered by: the draft as last submitted, trimmed. */
+  query: string;
+  /** The draft differs from the applied search. */
+  pending: boolean;
+  /** Types into the box; emptying it clears the applied search too. */
+  setDraft: (value: string) => void;
+  /** Applies the draft, as Enter does. */
+  submit: () => void;
+  /** Empties the box and the applied search. */
+  clear: () => void;
+  /** `value`, `onChange` and `onSubmit` for `SearchField`. */
+  fieldProps: { value: string; onChange: (value: string) => void; onSubmit: () => void };
+}
+
+/**
+ * The search box of a list, persisted per `scope` like its filters: the
+ * draft (key `qd`) and the applied search (key `q`), so leaving and coming
+ * back restores both. The search applies on Enter, and at once when the box
+ * is emptied; `onSearch` runs each time it applies. Spread `fieldProps` onto
+ * `SearchField`; filter the list by `query`.
+ */
+export function usePersistentSearch(
+  scope: string,
+  { onSearch }: PersistentSearchOptions = {},
+): PersistentSearch {
+  const [query, setQuery] = usePersistentFilter(scope, "q", "");
+  const [draft, setDraftValue] = usePersistentFilter(scope, "qd", "");
+  // Read at call time, so a caller passing a fresh arrow each render costs nothing.
+  const onSearchRef = useRef(onSearch);
+  onSearchRef.current = onSearch;
+
+  const apply = useCallback(
+    (next: string) => {
+      setQuery(next);
+      onSearchRef.current?.();
+    },
+    [setQuery],
+  );
+
+  const setDraft = useCallback(
+    (value: string) => {
+      setDraftValue(value);
+      if (value === "") {
+        apply("");
+      }
+    },
+    [apply, setDraftValue],
+  );
+
+  const draftRef = useRef(draft);
+  draftRef.current = draft;
+  const submit = useCallback(() => apply(draftRef.current.trim()), [apply]);
+
+  const clear = useCallback(() => {
+    setDraftValue("");
+    apply("");
+  }, [apply, setDraftValue]);
+
+  return {
+    draft,
+    query,
+    pending: draft.trim() !== query,
+    setDraft,
+    submit,
+    clear,
+    fieldProps: { value: draft, onChange: setDraft, onSubmit: submit },
+  };
+}

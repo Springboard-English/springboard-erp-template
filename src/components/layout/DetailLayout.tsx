@@ -40,6 +40,7 @@ import {
     type DetailSectionGroup,
     type DetailSectionItem,
 } from "./DetailSectionShell";
+import { pageFrameClassName, type PageFrameScroll, type PageFrameVariant } from "./PageFrame";
 import useIsMobile from "@/hooks/useIsMobile";
 import {
     DETAIL_HIDDEN_COLLAPSED_VALUE,
@@ -47,35 +48,9 @@ import {
     type DetailViewCollapsedState,
 } from "@/utils/detailViewMode";
 
-export const DETAIL_LAYOUT_MOTION_DEFAULTS = {
-    tabPillSpring: {
-        tension: 300,
-        friction: 26,
-    },
-    tabContentFadeOutMs: 100,
-    tabContentFadeInMs: 200,
-} as const;
+// The active tab's underline spring.
+const TAB_PILL_SPRING = { tension: 300, friction: 26 } as const;
 
-export type DetailLayoutMotionConfig = {
-    tabPillSpring: {
-        tension: number;
-        friction: number;
-    };
-    tabContentFadeOutMs: number;
-    tabContentFadeInMs: number;
-};
-
-export type DetailLayoutMotionConfigInput = Partial<{
-    tabPillSpring: Partial<DetailLayoutMotionConfig["tabPillSpring"]>;
-    tabContentFadeOutMs: number;
-    tabContentFadeInMs: number;
-}>;
-
-let detailLayoutMotionConfig: DetailLayoutMotionConfig = {
-    tabPillSpring: { ...DETAIL_LAYOUT_MOTION_DEFAULTS.tabPillSpring },
-    tabContentFadeOutMs: DETAIL_LAYOUT_MOTION_DEFAULTS.tabContentFadeOutMs,
-    tabContentFadeInMs: DETAIL_LAYOUT_MOTION_DEFAULTS.tabContentFadeInMs,
-};
 let detailTabsDebugInstanceCounter = 0;
 
 function shouldDebugDetailTabs(): boolean {
@@ -109,47 +84,6 @@ function logDetailTabsDebug(
                 : `${window.location.pathname}${window.location.search}`,
         ...payload,
     });
-}
-
-export function getDetailLayoutMotionConfig(): DetailLayoutMotionConfig {
-    return {
-        tabPillSpring: { ...detailLayoutMotionConfig.tabPillSpring },
-        tabContentFadeOutMs: detailLayoutMotionConfig.tabContentFadeOutMs,
-        tabContentFadeInMs: detailLayoutMotionConfig.tabContentFadeInMs,
-    };
-}
-
-export function setDetailLayoutMotionConfig(
-    nextConfig: DetailLayoutMotionConfigInput,
-): DetailLayoutMotionConfig {
-    detailLayoutMotionConfig = {
-        tabPillSpring: {
-            tension:
-                nextConfig.tabPillSpring?.tension ??
-                detailLayoutMotionConfig.tabPillSpring.tension,
-            friction:
-                nextConfig.tabPillSpring?.friction ??
-                detailLayoutMotionConfig.tabPillSpring.friction,
-        },
-        tabContentFadeOutMs:
-            nextConfig.tabContentFadeOutMs ??
-            detailLayoutMotionConfig.tabContentFadeOutMs,
-        tabContentFadeInMs:
-            nextConfig.tabContentFadeInMs ??
-            detailLayoutMotionConfig.tabContentFadeInMs,
-    };
-
-    return getDetailLayoutMotionConfig();
-}
-
-export function resetDetailLayoutMotionConfig(): DetailLayoutMotionConfig {
-    detailLayoutMotionConfig = {
-        tabPillSpring: { ...DETAIL_LAYOUT_MOTION_DEFAULTS.tabPillSpring },
-        tabContentFadeOutMs: DETAIL_LAYOUT_MOTION_DEFAULTS.tabContentFadeOutMs,
-        tabContentFadeInMs: DETAIL_LAYOUT_MOTION_DEFAULTS.tabContentFadeInMs,
-    };
-
-    return getDetailLayoutMotionConfig();
 }
 
 export type BreadcrumbItem = {
@@ -209,16 +143,35 @@ function menuSignature(actions: DetailMenuAction[] | null | undefined): string {
 
 export const BackgroundDetailViewContext = createContext<boolean>(false);
 
+/** What `DetailView` draws when its `frame` is `false` and no `className` is given. */
+const UNFRAMED_DETAIL_CLASS = "w-full max-w-[1700px] space-y-4";
+
+/**
+ * A record page: the floating and collapsed panel modes, the header slot and
+ * the section menus. By default it renders in the detail `PageFrame`, so on
+ * desktop it fills the window and only its sections scroll; `className` adds
+ * to that frame. `frame="list"` is the list frame (a list drawn behind a
+ * floating record); `frame={false}` draws no frame and `className` then
+ * replaces the plain default, for a DetailView embedded in a tab or dialog.
+ * `scroll="content"` lets the frame itself scroll on desktop.
+ */
 export function DetailView({
     children,
-    className = "w-full max-w-[1700px] space-y-4",
+    className,
+    frame = "detail",
     isBackground: isBackgroundProp,
     contentScrollable = false,
+    scroll = contentScrollable ? "content" : "none",
     onCloseFloating,
 }: {
     children: ReactNode;
     className?: string;
+    /** The window frame it renders in; `false` for none. Defaults to `"detail"`. */
+    frame?: PageFrameVariant | false;
+    /** Whether the frame itself scrolls on desktop; `"content"` when `contentScrollable`. */
+    scroll?: PageFrameScroll;
     isBackground?: boolean;
+    /** Lets the page itself scroll inside its frame, for content that cannot fill. */
     contentScrollable?: boolean;
     onCloseFloating?: () => void;
 }) {
@@ -366,7 +319,15 @@ export function DetailView({
                         floating && collapsed ? "true" : "false"
                     }
                     className={cn(
-                        className,
+                        frame
+                            ? cn(
+                                  pageFrameClassName({
+                                      variant: frame,
+                                      scroll,
+                                  }),
+                                  className,
+                              )
+                            : (className ?? UNFRAMED_DETAIL_CLASS),
                         contentScrollable && "overflow-y-auto overflow-x-hidden pr-1",
                         floating
                             ? collapsed
@@ -1044,25 +1005,6 @@ export function DetailClassHeaderLabel({
     );
 }
 
-export function DetailActionPanel({
-    title,
-    children,
-}: {
-    title: string;
-    children: ReactNode;
-}) {
-    return (
-        <aside className="rounded-3xl border border-border/70 bg-card p-5 shadow-md">
-            <div className="text-sm font-medium text-muted-foreground">
-                {title}
-            </div>
-            <div className="mt-3 flex flex-col gap-2">
-                {children}
-            </div>
-        </aside>
-    );
-}
-
 export interface DetailTabItem<T extends string> {
     value: T;
     label: ReactNode;
@@ -1147,7 +1089,6 @@ export function DetailTabs<T extends string>({
                 });
                 return false;
             }
-            const motionConfig = getDetailLayoutMotionConfig();
             logDetailTabsDebug(debugInstanceRef.current, "updatePill:start", {
                 activeTab,
                 resolvedActiveTab,
@@ -1162,8 +1103,8 @@ export function DetailTabs<T extends string>({
                 width,
                 immediate: !animate,
                 config: {
-                    tension: motionConfig.tabPillSpring.tension,
-                    friction: motionConfig.tabPillSpring.friction,
+                    tension: TAB_PILL_SPRING.tension,
+                    friction: TAB_PILL_SPRING.friction,
                     clamp: true,
                 },
             });
@@ -1482,6 +1423,8 @@ export function DetailPendingView<T extends string>({
     sections,
     message,
     className,
+    frame,
+    scroll,
     onCloseFloating,
 }: {
     breadcrumbs: BreadcrumbItem[];
@@ -1501,6 +1444,10 @@ export function DetailPendingView<T extends string>({
     };
     message?: ReactNode;
     className?: string;
+    /** As on `DetailView`: the loaded page's frame, so nothing jumps when the record arrives. */
+    frame?: PageFrameVariant | false;
+    /** As on `DetailView`. */
+    scroll?: PageFrameScroll;
     onCloseFloating?: () => void;
 }) {
     const body = message ? (
@@ -1515,7 +1462,7 @@ export function DetailPendingView<T extends string>({
     );
 
     return (
-        <DetailView className={className} onCloseFloating={onCloseFloating}>
+        <DetailView className={className} frame={frame} scroll={scroll} onCloseFloating={onCloseFloating}>
             <DetailHeader
                 breadcrumbs={
                     <DetailBreadcrumbs
