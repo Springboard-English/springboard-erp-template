@@ -532,6 +532,26 @@ place, and `DashboardLayout` lifts it away as the side nav slides in.
   reads, and CardShell takes the screen down as it mounts on the same pixels.
   Measure both cards after changing either: they must sit on the same pixels.
 
+## Per-user builds (`sb-stamp-bootstrap`, `createVariantReconciler`)
+
+Each app's live root `index.html` is a bootstrap, not a build: it reads the
+stored `/me`, picks the archived build `info.<app>_variant` names (control
+otherwise) and adopts `releases/<sha>/index.html`. The kit lives here; the app
+keeps only `bootstrap/variants.json` and a `springboardBootstrap` block in its
+package.json (`app`, `name`, optional `failureName`, `base`, `description`,
+and `bucket`; see `bin/lib/bootstrap-config.mjs`).
+
+- **`sb-stamp-bootstrap`** fills `bootstrap/index.html` (shipped in the package)
+  with the app's names and the release map; `--boot` copies the build's boot
+  screen, `--from` re-stamps a live root for a rollback.
+- **`sb-rollback [<sha>]`** lists archived releases or re-stamps the live root
+  with another control, keeping the variants. Needs gcloud.
+- **`sb-generate-changelog`** writes `src/content/changelog.ts` from git or the
+  CI's `changelog.raw`, adding to the committed history.
+- **`createVariantReconciler(app, { name })`** is the `OidcCallback`
+  `onSignedIn` hook: after sign-in it reloads once into the build live `/me`
+  wants, and never loops.
+
 ## Occasions (since 4.17.0)
 
 20/10 (Women's Day) and 20/11 (Teachers' Day), whole day in ICT, redraw the

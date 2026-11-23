@@ -15,10 +15,15 @@
     ],
     "files": [
         "dist",
-        "bin"
+        "bin",
+        "!bin/__tests__",
+        "bootstrap"
     ],
     "bin": {
-        "sb-register-oidc-scopes": "bin/register-oidc-scopes.mjs"
+        "sb-register-oidc-scopes": "bin/register-oidc-scopes.mjs",
+        "sb-stamp-bootstrap": "bin/stamp-bootstrap.mjs",
+        "sb-rollback": "bin/rollback.sh",
+        "sb-generate-changelog": "bin/generate-changelog.mjs"
     },
     "main": "./dist/index.js",
     "module": "./dist/index.js",
