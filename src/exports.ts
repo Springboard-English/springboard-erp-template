@@ -73,6 +73,39 @@ export { default as EmptyState } from "./components/EmptyState";
 export type { EmptyStateProps } from "./components/EmptyState";
 export { default as OutdatedDataDialog } from "./components/dialogs/OutdatedDataDialog";
 export type { OutdatedDataDialogProps } from "./components/dialogs/OutdatedDataDialog";
+// Guided tour. Only TYPES come from TourHost: a value export would pull
+// react-joyride into the main chunk, and TourProvider loads it lazily.
+export { TourProvider, useProductTour } from "./components/tour/TourProvider";
+export type { ProductTour, TourEndContext, TourProviderProps } from "./components/tour/TourProvider";
+export type {
+    TourHostOptions,
+    TourLabels,
+    TourTooltipClassNames,
+} from "./components/tour/TourHost";
+export {
+    TOUR_ANCHOR_LIFT_SELECTOR,
+    TOUR_SCREEN,
+    createTourAnchors,
+    isAnchorVisible,
+    isRectInViewport,
+    pickAnchor,
+    tourAnchorSelector,
+    tourTarget,
+} from "./components/tour/tourAnchor";
+export type { TourAnchorCandidate, TourAnchorOptions, TourAnchors } from "./components/tour/tourAnchor";
+export {
+    clampStepIndex,
+    hasSeenTour,
+    isScreenStep,
+    isTourSuppressed,
+    locationKey,
+    navigationForStep,
+    shouldAutoStartTour,
+    stepAfterFailure,
+    tourAutoStartSettled,
+    tourHoldsTheScreen,
+} from "./components/tour/tourSteps";
+export type { TourAutoStartInput, TourPlacement, TourStep } from "./components/tour/tourSteps";
 export { default as SearchField } from "./components/management/SearchField";
 export type { SearchFieldProps } from "./components/management/SearchField";
 export { default as PermissionLevelSwitch } from "./components/PermissionLevelSwitch";
