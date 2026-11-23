@@ -478,6 +478,37 @@ export {
   safeNotificationLink,
   shouldMarkNotificationReadOnView,
 } from "./api_calls/notifications";
+// Staff-side notification management (`/v2/notifications`): types, calls and
+// pure helpers. The table, detail view and send dialog stay in each app.
+export type {
+  EditableNotificationField,
+  ManagementNotification,
+  ManagementNotificationRow,
+  NotificationAffectedArea,
+  NotificationAudience,
+  NotificationChannel,
+  NotificationConfig,
+  NotificationPatchRequest,
+  NotificationPostRequest,
+  NotificationReader,
+  NotificationRecipientGroup,
+  NotificationTransport,
+} from "./api_calls/managementNotifications";
+export {
+  EDITABLE_NOTIFICATION_FIELDS,
+  buildNotificationPatch,
+  changedNotificationFields,
+  createNotification,
+  deleteNotification,
+  deriveManagementNotification,
+  fetchAllManagementNotifications,
+  managementNotificationsPage,
+  notificationReadersPage,
+  patchNotification,
+  readManagementNotification,
+  readNotificationReader,
+  toNotificationRow,
+} from "./api_calls/managementNotifications";
 export { default as NotificationBell } from "./components/notifications/NotificationBell";
 export { default as PushNotificationsToggle } from "./components/notifications/PushNotificationsToggle";
 export type { PushNotificationsToggleProps } from "./components/notifications/PushNotificationsToggle";
