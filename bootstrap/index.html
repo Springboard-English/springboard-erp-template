@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1, width=device-width, viewport-fit=cover" />
+    <title>%NAME% · Springboard English</title>
+    <!-- %HEAD% -->
+    <!--
+      The live root index.html, served at %BASE%/. It picks which archived build
+      to run for the signed-in user and adopts that build's
+      %BASE%/releases/<sha>/index.html. `sb-stamp-bootstrap` (from
+      springboard-erp-template) fills in the app's names and the slot below and
+      swaps the two boot markers for control's boot screen; nothing else changes.
+    -->
+    <!-- __BOOT_HEAD__ -->
+    <script type="application/json" id="%APP%-releases">__RELEASES__</script>
+    <script>
+      {
+        // The path this app is served under, as in VITE_ROUTER_BASE_URL.
+        const BASE = "%BASE%";
+        const releases = JSON.parse(
+          document.getElementById("%APP%-releases").textContent,
+        );
+
+        // The build a `/me` record asks for, when this page offers it.
+        const pick = (user) => {
+          const name = user && user.info && user.info.%APP%_variant;
+          return typeof name === "string" &&
+            Object.prototype.hasOwnProperty.call(releases.variants, name)
+            ? name
+            : "control";
+        };
+
+        // The template's stored `/me`, from the last sign-in on this browser.
+        // Signed-out visitors (public links) have none: control.
+        const storedUser = () => {
+          try {
+            return JSON.parse(localStorage.getItem("auth.user"));
+          } catch {
+            return null;
+          }
+        };
+
+        const shaFor = (variant) =>
+          variant === "control" ? releases.control : releases.variants[variant];
+
+        // Copies a build's head into this page. Only `${BASE}/assets/` module
+        // scripts are recreated: Cloudflare injects an inline script into every
+        // HTML response, and that one must not run twice.
+        const adopt = (html) => {
+          const head = new DOMParser().parseFromString(html, "text/html").head;
+          const links = [];
+          const scripts = [];
+          const have = new Set(
+            [...document.head.querySelectorAll("link")].map((l) => l.getAttribute("href")),
+          );
+          for (const el of head.children) {
+            const src = el.getAttribute("src") || "";
+            if (el.tagName === "LINK") {
+              // The stamped boot stylesheet is already here.
+              if (have.has(el.getAttribute("href"))) continue;
+              links.push(document.importNode(el, true));
+            } else if (
+              el.tagName === "SCRIPT" &&
+              el.type === "module" &&
+              src.startsWith(`${BASE}/assets/`)
+            ) {
+              const script = document.createElement("script");
+              script.type = "module";
+              script.src = src;
+              if (el.hasAttribute("crossorigin")) {
+                script.setAttribute("crossorigin", el.getAttribute("crossorigin"));
+              }
+              scripts.push(script);
+            }
+          }
+          if (scripts.length === 0) throw new Error("release has no entry script");
+          // Preloads and stylesheets first, so the entry finds them in flight.
+          document.head.append(...links, ...scripts);
+        };
+
+        const fetchRelease = async (sha) => {
+          const response = await fetch(`${BASE}/releases/${sha}/index.html`);
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          return response.text();
+        };
+
+        const showFailure = () => {
+          const root = document.getElementById("root");
+          root.style.cssText = "padding:3rem;text-align:center;font-family:sans-serif";
+          root.textContent = "%FAILURE_NAME% could not load. Check your connection and ";
+          const button = document.createElement("button");
+          button.type = "button";
+          button.textContent = "reload";
+          button.onclick = () => location.reload();
+          root.append(button);
+        };
+
+        window.__%APP%Variant = { running: null, pick };
+
+        (async () => {
+          const wanted = pick(storedUser());
+          // A variant that will not load falls back to control; control gets
+          // one retry before the page gives up.
+          const attempts =
+            wanted === "control" ? ["control", "control"] : [wanted, "control", "control"];
+          for (const variant of attempts) {
+            try {
+              adopt(await fetchRelease(shaFor(variant)));
+              window.__%APP%Variant.running = variant;
+              return;
+            } catch (error) {
+              console.warn(`%NAME% build "${variant}" did not load`, error);
+            }
+          }
+          showFailure();
+        })();
+      }
+    </script>
+  </head>
+  <body>
+    <!-- __BOOT_BODY__ -->
+    <div id="root"></div>
+  </body>
+</html>
