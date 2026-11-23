@@ -174,6 +174,14 @@ export type {
   BatchJob,
   UseBatchJobOptions,
 } from "./hooks/useBatchJob";
+export { useDetailEditor } from "./hooks/useDetailEditor";
+export type {
+    DetailEditor,
+    DetailEditorPatchBody,
+    DetailEditorPendingBarProps,
+    DetailEditorQuery,
+    UseDetailEditorOptions,
+} from "./hooks/useDetailEditor";
 export { default as useServerList } from "./hooks/useServerList";
 export type { UseServerListOptions, ServerList } from "./hooks/useServerList";
 export { default as useInfiniteList } from "./hooks/useInfiniteList";
