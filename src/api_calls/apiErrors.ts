@@ -291,3 +291,22 @@ export async function throwIfNotOk(
 
     throw await toApiError(response, context);
 }
+
+/**
+ * A user-facing line for anything a `catch` or a mutation's `onError` caught:
+ * an `ApiError`'s server explanation (`detail`), else its status line; a
+ * `NetworkError`'s or any other `Error`'s message; a thrown non-empty string;
+ * else `fallback`. Use it in place of `err instanceof Error ? err.message : …`.
+ */
+export function errorMessage(error: unknown, fallback: string): string {
+    if (error instanceof ApiError) {
+        return error.detail?.trim() || error.message;
+    }
+    if (error instanceof Error) {
+        return error.message.trim() || fallback;
+    }
+    if (typeof error === "string" && error.trim()) {
+        return error.trim();
+    }
+    return fallback;
+}

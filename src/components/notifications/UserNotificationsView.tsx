@@ -8,6 +8,7 @@ import {
   shouldMarkNotificationReadOnView,
   type UserNotification,
 } from "@/api_calls/notifications";
+import PageFrame from "@/components/layout/PageFrame";
 import PageHeader from "@/components/layout/PageHeader";
 import MobileCardList, { CardField } from "@/components/MobileCardList";
 import SimpleDataTable, { type SimpleDataTableColumn } from "@/components/SimpleDataTable";
@@ -166,7 +167,7 @@ export default function UserNotificationsView() {
   );
 
   return (
-    <section className="w-full max-w-[1700px] space-y-4 md:flex md:h-[calc(100dvh-7rem)] md:min-h-0 md:flex-col md:overflow-hidden">
+    <PageFrame variant="list">
       <PageHeader
         title={t("notifications.title")}
         status={
@@ -259,6 +260,6 @@ export default function UserNotificationsView() {
           }}
         />
       </div>
-    </section>
+    </PageFrame>
   );
 }

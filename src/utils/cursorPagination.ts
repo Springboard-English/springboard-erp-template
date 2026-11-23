@@ -41,6 +41,9 @@ export const MAX_PAGE_SIZE = MAX_PAGE_SIZE_VALUE as PageSize;
 /** What a table opens on when nothing has been remembered for it. */
 export const DEFAULT_PAGE_SIZE = 25 as PageSize;
 
+/** The page sizes a list's size picker offers: pass as `SimpleDataTable`'s `pageSizeOptions`. */
+export const DEFAULT_PAGE_SIZES: readonly number[] = Object.freeze([10, 25, 50, 100]);
+
 /**
  * A page size, or a `RangeError` naming what was wrong with it.
  *
@@ -96,12 +99,7 @@ export type FetchCursorPage<T> = (
   signal?: AbortSignal,
 ) => Promise<CursorPage<T>>;
 
-/**
- * The shape the list endpoints' envelopes parse into. Each app parses its own
- * envelope — the parsers differ over legacy keys, bare arrays and container
- * unwrapping, and each is welded to that app's error handling — so this package
- * deliberately starts at an already-parsed page and names the shape once.
- */
+/** The shape a list endpoint's envelope parses into; `parseCursorPage` reads one. */
 export interface CursorPaginatedResult<T> extends CursorPage<T> {
   pageSize: number;
   cursor: string | null;

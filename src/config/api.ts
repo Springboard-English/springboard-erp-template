@@ -8,17 +8,36 @@
  * add it there.
  */
 
-let _baseURL: string = (() => {
-    if (typeof import.meta !== "undefined" && import.meta.env) {
-        if (import.meta.env.VITE_BASE_URL) {
-            return import.meta.env.VITE_BASE_URL;
-        }
-        if (import.meta.env.DEV) {
-            return "https://api.springboard.vn/dev";
-        }
+/** The production API; `${PRODUCTION_API_BASE_URL}/dev` is the dev API. */
+export const PRODUCTION_API_BASE_URL = "https://api.springboard.vn";
+/** The dev API, which a dev server talks to when no base URL is set. */
+export const DEV_API_BASE_URL = `${PRODUCTION_API_BASE_URL}/dev`;
+
+/** The two `import.meta.env` fields `resolveApiBaseUrl` reads. */
+export interface ApiBaseUrlEnv {
+    VITE_BASE_URL?: string;
+    DEV?: boolean;
+}
+
+/**
+ * An app's API base URL from its own `import.meta.env`: `VITE_BASE_URL`
+ * (trimmed, without a trailing slash) when set; else the dev API under a
+ * dev server and the production API in a build. Pass the result to
+ * `configureApi`. A release build always sets `VITE_BASE_URL`.
+ */
+export function resolveApiBaseUrl(env: ApiBaseUrlEnv): string {
+    const configured = env.VITE_BASE_URL?.trim().replace(/\/+$/, "");
+    if (configured) {
+        return configured;
     }
-    return "https://api.springboard.vn";
-})();
+    return env.DEV ? DEV_API_BASE_URL : PRODUCTION_API_BASE_URL;
+}
+
+// The package's own env is frozen at its build, so this is only a default
+// until the app calls `configureApi`.
+let _baseURL: string = resolveApiBaseUrl(
+    typeof import.meta !== "undefined" && import.meta.env ? import.meta.env : {},
+);
 
 export function configureApi(options: { baseUrl: string }): void {
     _baseURL = options.baseUrl;

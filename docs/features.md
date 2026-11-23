@@ -172,6 +172,62 @@ which hid the form schema's `FormField` type) and `FormLayoutGroup` puts short f
 by side. Card titles are Title Case and name the category; cards never nest.
 Narrow containers and phones stack the side column under the main one.
 
+## Pages fill the window (`PageFrame`, the `DetailView` frame)
+
+On desktop every routed view fills the window and the page never scrolls;
+inner regions do. No view writes a `100dvh` calc.
+
+- **`DashboardLayout` publishes its pads** as `--page-pad-top` and
+  `--page-pad-bottom` on the content column: 3rem and 1.25rem on desktop in
+  both nav modes; on a phone 1rem and 5rem plus the safe-area inset (3.5rem and
+  1.25rem plus the inset in menu mode).
+- **A list page is `<PageFrame>`** (`variant="list"`, the default): the
+  window's height less both pads, so every list's table ends at the same
+  bottom edge. Put the `PageHeader` first and give the table `fill`.
+- **A record page is `DetailView`**, which renders in the detail frame by
+  default: the window's height less the top pad, with the bottom pad pulled
+  back in, since its section pane pads its own foot. `className` adds to the
+  frame. `frame="list"` is the list frame, for a list drawn as a background
+  `DetailView`; `frame={false}` draws none (a `DetailView` in a tab or dialog),
+  and `className` then replaces the plain default. `DetailPendingView` takes
+  the same `frame` and `scroll`.
+- **`scroll="content"`** (on `PageFrame`, `DetailView` and
+  `DetailPendingView`) lets the frame itself scroll, for a page that cannot be
+  split into filling regions. The window still doesn't. `contentScrollable`
+  implies it, and also makes `DetailTabbedSection` content scroll.
+- **`pageFrameClassName({ variant, scroll })`** returns the same classes for
+  a shell that draws its own element.
+- Phones are unaffected: the frame is `md:` only, and a phone page scrolls.
+
+## Shared app helpers
+
+Generic pieces every app used to copy. An app's own endpoints, routes and
+types stay in the app.
+
+- **Envelope**: `getArrayPayload(data, legacyKey?)`, `getObjectPayload`,
+  `getSingleObjectPayload` (`objects[0]`), `getNumericValue` and
+  `parseCursorPage(data, legacyKey?)` read `{ attributes, objects }`. None of
+  them unwraps a `{ data }` wrapper; no v2 route answers one.
+- **Option lookups**: `createApiPageFetcher(url, read, { legacyKey })` is one
+  cursor-paged GET per search. Pass it with `readInlineOption` and
+  `inlineSelectOption` to `toLoadOptions` for a `SearchableSelect`, or call
+  it with `""` for `fetchEveryPage`.
+- **Scopes**: `getUserScopes` reads the user's space-separated `roles`.
+  `hasScopedUserPermission`, `hasPatchUserPermission`, `hasFieldScope`,
+  `hasPatchFieldScope`, `getMissingPatchFieldScopes` and
+  `assertCanPatchPayload` check patch scopes.
+- **Errors**: `errorMessage(err, fallback)` is an `ApiError`'s detail, else
+  any error's message, else the fallback.
+- **Search**: `usePersistentSearch(scope, { onSearch })` is a list's search
+  draft and applied search, persisted like its filters; `DEFAULT_PAGE_SIZES`
+  is the size picker's `[10, 25, 50, 100]`.
+- **Return links**: `withReturnUrl(path, returnUrl)`, `readReturnUrl(search)`
+  and `getDetailClosePath(search, fallbackPath)` sit beside
+  `getDetailReturnLocation`.
+- **Boot**: `resolveApiBaseUrl(import.meta.env)` is `VITE_BASE_URL`, else the
+  dev API under a dev server, else production. `clearCachesOnReload(queryClient)`
+  drops the tab cache, the query cache and Cache Storage on a reload.
+
 ## Record sections (`DetailSectionShell`, since 6.5.0)
 
 A detail view with several sections wraps its content in `DetailSectionShell`
