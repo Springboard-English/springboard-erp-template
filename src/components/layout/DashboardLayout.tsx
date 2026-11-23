@@ -613,6 +613,8 @@ function DashboardLayoutInner({
               variant="outline"
               size="icon"
               className="absolute -right-4 top-6 z-10 hidden size-9 rounded-full border-border/70 bg-background shadow-sm md:flex"
+              // The guided tour expands a collapsed sidebar through this button.
+              data-sidebar-toggle=""
               onClick={() => {
                 endPeek();
                 setCollapsed((current) => !current);
