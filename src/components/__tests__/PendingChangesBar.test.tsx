@@ -95,6 +95,32 @@ describe("PendingChangesBar", () => {
   });
 });
 
+describe("PendingChangesBar blocked", () => {
+  it("shows the reason on Save instead of saving, and clears when the reason goes", async () => {
+    const onSave = vi.fn();
+    const onCancel = vi.fn();
+    const { rerender } = render(
+      <I18nProvider>
+        <PendingChangesBar pendingCount={1} onSave={onSave} onCancel={onCancel} blocked="Pick an answer first" />
+      </I18nProvider>,
+    );
+    expect(screen.getByText("1 unsaved change")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    expect(screen.getByRole("alert")).toHaveTextContent("Pick an answer first");
+    expect(onSave).not.toHaveBeenCalled();
+    await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(onCancel).toHaveBeenCalledTimes(1);
+    rerender(
+      <I18nProvider>
+        <PendingChangesBar pendingCount={1} onSave={onSave} onCancel={onCancel} blocked={null} />
+      </I18nProvider>,
+    );
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    expect(onSave).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe("SimpleDataTable selection", () => {
   it("ticks a row and the page from the header", async () => {
     const rows = [{ id: "a" }, { id: "b" }];

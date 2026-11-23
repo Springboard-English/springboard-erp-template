@@ -103,6 +103,12 @@ export interface PendingChangesBarProps {
   pendingValueLabel?: string;
   dimmed?: boolean;
   disabled?: boolean;
+  /**
+   * Why Save cannot run yet (a mark over the maximum). Save stays enabled; a
+   * press shows this message in the bar instead of saving. Cancel still works,
+   * which `disabled` would not allow.
+   */
+  blocked?: string | null;
   expandMaxHeight?: number;
   expandSpringConfig?: SpringConfig;
   barTransitionMs?: number;
@@ -132,6 +138,7 @@ export default function PendingChangesBar({
   pendingValueLabel = PENDING_CHANGES_BAR_DEFAULT_PENDING_VALUE_LABEL,
   dimmed = false,
   disabled = false,
+  blocked = null,
   expandMaxHeight = PENDING_CHANGES_BAR_DEFAULT_EXPAND_MAX_HEIGHT,
   expandSpringConfig = PENDING_CHANGES_BAR_DEFAULT_SPRING_CONFIG,
   barTransitionMs = PENDING_CHANGES_BAR_DEFAULT_BAR_TRANSITION_MS,
@@ -145,6 +152,8 @@ export default function PendingChangesBar({
   // `key` remounts the dialog on every open, so no state leaks between runs.
   const [dialog, setDialog] = useState<{ key: number; id: string; open: boolean } | null>(null);
   const show = pendingCount > 0;
+  // The blocked message shown after a Save press; it clears when the reason does.
+  const [shownBlocked, setShownBlocked] = useState<string | null>(null);
   const actionsMode = actions !== undefined;
   const busy = saving || disabled || runningId !== null;
 
@@ -181,6 +190,11 @@ export default function PendingChangesBar({
       setIsUnsavedOpen(false);
     }
   }, [show]);
+
+  // A new reason, or none, waits for the next Save press before it shows.
+  useEffect(() => {
+    setShownBlocked(null);
+  }, [show, blocked]);
 
   useEffect(() => {
     const isOpen = isUnsavedOpen && hasUnsavedItems;
@@ -221,6 +235,19 @@ export default function PendingChangesBar({
 
   const openDialog = (id: string) =>
     setDialog((current) => ({ key: (current?.key ?? 0) + 1, id, open: true }));
+
+  // A blocked Save says why and saves nothing; the event still reaches a click-typed `onSave`.
+  const pressSave = (event: unknown) => {
+    if (blocked) {
+      setShownBlocked(blocked);
+      return;
+    }
+    if (saveConfirm) {
+      openDialog(SAVE_ACTION_ID);
+      return;
+    }
+    void onSave?.(event);
+  };
 
   const runAction = async (action: AnyPendingBarAction) => {
     if (busy || action.disabled) return;
@@ -344,9 +371,15 @@ export default function PendingChangesBar({
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-warning opacity-60" />
               <span className="relative inline-flex size-2.5 rounded-full bg-warning" />
             </span>
-            <span className="truncate font-medium text-foreground">
-              {countLabel}
-            </span>
+            {shownBlocked ? (
+              <span role="alert" className="truncate font-medium text-destructive" title={shownBlocked}>
+                {shownBlocked}
+              </span>
+            ) : (
+              <span className="truncate font-medium text-foreground">
+                {countLabel}
+              </span>
+            )}
           </div>
 
           <div
@@ -427,7 +460,7 @@ export default function PendingChangesBar({
               <Button
                 type="button"
                 size="sm"
-                onClick={saveConfirm ? () => openDialog(SAVE_ACTION_ID) : onSave}
+                onClick={pressSave}
                 disabled={saving || disabled}
               >
                 {saving ? (
