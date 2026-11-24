@@ -612,8 +612,10 @@ export type {
 } from "./components/charts/ScoreDistributionChart";
 export { default as ChartLegend } from "./components/charts/ChartLegend";
 export type { ChartLegendItem } from "./components/charts/ChartLegend";
-export { getChartPalette, useChartPalette } from "./components/charts/palette";
-export type { ChartColorMode, ChartPalette } from "./components/charts/palette";
+export { getChartPalette, skillColor, useChartPalette } from "./components/charts/palette";
+export type { ChartColorMode, ChartPalette, ChartSkill } from "./components/charts/palette";
+export { default as LineChart } from "./components/charts/LineChart";
+export type { LineChartBand, LineChartProps, LineChartSeries } from "./components/charts/LineChart";
 
 // The widget home: a board of user-arranged widgets saved in the user's own
 // `info`. The template draws the board, gallery and edit mode; an app supplies

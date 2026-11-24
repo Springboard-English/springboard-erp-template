@@ -66,6 +66,37 @@ const OUTCOME_DARK = {
   declined: '#d03b3b',
 } as const;
 
+/** A skill tag, as the API and the exercise schema spell it. */
+export type ChartSkill = 'reading' | 'listening' | 'vocab-grammar' | 'writing' | 'speaking';
+
+/**
+ * One colour per skill, the same in every app: the hues Leap's skill pills use
+ * (reading rose, listening sky, vocabulary & grammar lavender, writing mint,
+ * speaking peach), at the weight of Leap's `-500`/`-600` tokens so a 2px line
+ * reads on the card. Use it for any line, swatch or name that stands for a skill.
+ */
+const SKILL_LIGHT: Record<ChartSkill, string> = {
+  reading: '#c0355c',
+  listening: '#2c66a8',
+  'vocab-grammar': '#7a5fd0',
+  writing: '#217a53',
+  speaking: '#c76a2c',
+};
+
+const SKILL_DARK: Record<ChartSkill, string> = {
+  reading: '#dd6285',
+  listening: '#62a6e6',
+  'vocab-grammar': '#9d88e0',
+  writing: '#4cc08c',
+  speaking: '#e89a62',
+};
+
+/** A skill's colour in a mode, without the hook; an unknown skill takes "Other". */
+export function skillColor(skill: string, mode: ChartColorMode = 'light'): string {
+  const colors = mode === 'dark' ? SKILL_DARK : SKILL_LIGHT;
+  return colors[skill as ChartSkill] ?? OTHER[mode];
+}
+
 /** Recessive chrome: grid, axis, and the surface colour gaps are cut in. */
 const CHROME_LIGHT = {
   surface: '#ffffff',
@@ -89,6 +120,8 @@ export interface ChartPalette {
   axis: string;
   /** Slot `index`, folding everything past the last slot into "Other". */
   series: (index: number) => string;
+  /** A skill's fixed colour (`skillColor`), the same on every chart and app. */
+  skill: (skill: string) => string;
 }
 
 export function getChartPalette(mode: ChartColorMode): ChartPalette {
@@ -103,6 +136,7 @@ export function getChartPalette(mode: ChartColorMode): ChartPalette {
     ...chrome,
     series: (index: number) =>
       index >= 0 && index < categorical.length ? categorical[index] : other,
+    skill: (skill: string) => skillColor(skill, mode),
   };
 }
 
