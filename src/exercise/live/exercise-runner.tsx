@@ -393,11 +393,14 @@ export function ExerciseRunner({
   // so they count as saved.
   useEffect(() => {
     if (!join || restoredForRef.current === join.participant_key) return;
-    restoredForRef.current = join.participant_key;
     let cancelled = false;
     listParticipantAnswers(join.live_session_key, join.participant_key)
       .then((saved) => {
-        if (cancelled || saved.length === 0) return;
+        // Marked done only once it lands: a cleanup before then (StrictMode's
+        // double effect, a re-join's new object) must leave it to the next run.
+        if (cancelled) return;
+        restoredForRef.current = join.participant_key;
+        if (saved.length === 0) return;
         setAnswers((current) => {
           const restored: Record<string, ExerciseAnswer> = {};
           for (const item of saved) restored[item.exercise_key] = item.answer;
