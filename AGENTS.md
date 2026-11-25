@@ -26,7 +26,9 @@ releasing is in `docs/releasing.md`.
 - **Keep the package domain-free.** It holds UI, the shell, theming, i18n, its
   own sign-in and generic utilities. An app's resource calls, endpoint map,
   routes and domain types stay in the app. Test: would a fifth app with a
-  different domain want this?
+  different domain want this? One exception: the live runner
+  (`src/exercise/live/`) carries the live-session calls it makes, because two
+  apps (Leap, app.springboard.vn) sit runs through it.
 - **Code shape.** A function whose return type nests two levels gets a named
   `interface` or `type`. The rule is for return types only; arguments and local
   values may stay bare. Every function and component has a doc comment of 100

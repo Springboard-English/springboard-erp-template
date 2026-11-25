@@ -40,6 +40,9 @@ export default defineConfig({
         // The exercise model's schemas: an app composes them with its own `z`,
         // so both must be the same copy. Only `/exercise` imports it.
         'zod',
+        // The live runner's toasts: the app's own <Toaster> must read the same
+        // store. Only `/exercise` imports it.
+        'sonner',
         // The app's own test runner, which `test-setup` must share with it.
         'vitest',
         /^@testing-library\//,

@@ -852,3 +852,22 @@ a row card inside a group.
   groups its own rows (by ICT day, by week) and formats its own labels.
 - Each piece takes `attributes` for `data-*` hooks, such as a guided tour's
   anchor.
+
+## Live runner (`/exercise`, `src/exercise/live/`)
+
+Leap's student side of a run, moved here so every app that sits a run uses the
+same screens: `StudentJoin` (join by code), `ExerciseRunner` (fullscreen
+gate, clock, timed parts, recordings, proctoring, answer outbox, review,
+hand-in), `AttemptResultView` and the gates and hooks they use. Mount both
+inside `LiveStudentProvider`, with `LiveEventsProvider`,
+`ExerciseTourAnchorsProvider` and a `sonner` `<Toaster>` above them; `sonner`
+is an optional peer for this reason.
+
+- `configureLiveRunner({ playBase, homeHref, productName })` at boot: where
+  the join screen and runner live (`<playBase>/<code>` and `/run`), where Home
+  goes, and the product a sitting names in its tab title and AI notice.
+- It calls the API through `configureApi`'s base URL (`./live/api.ts`), and
+  keeps Leap's query keys (`participants`, `run-parts`, `current-user`,
+  `recordings`), so an app's own invalidations reach its reads.
+- Strings are `exercise.live.*`, with Vietnamese in `EXERCISE_VIETNAMESE_MESSAGES`.
+

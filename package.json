@@ -1,7 +1,7 @@
 {
     "name": "@springboard-english/springboard-erp-template",
     "private": false,
-    "version": "8.3.0",
+    "version": "8.4.0",
     "type": "module",
     "repository": {
         "type": "git",
@@ -91,10 +91,14 @@
         "react": "^19.2.4",
         "react-dom": "^19.2.4",
         "react-router-dom": "^7.18.2",
+        "sonner": "^2.0.7",
         "zod": "^4.4.3"
     },
     "peerDependenciesMeta": {
         "zod": {
+            "optional": true
+        },
+        "sonner": {
             "optional": true
         }
     },
@@ -113,6 +117,7 @@
         "react-dom": "^19.2.4",
         "react-router-dom": "^7.18.2",
         "shadcn": "^4.1.2",
+        "sonner": "^2.0.8",
         "tailwindcss": "^4.2.2",
         "typescript": "^5.9.3",
         "vite": "^7.3.2",
