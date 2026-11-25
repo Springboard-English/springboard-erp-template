@@ -866,6 +866,10 @@ is an optional peer for this reason.
 - `configureLiveRunner({ playBase, homeHref, productName })` at boot: where
   the join screen and runner live (`<playBase>/<code>` and `/run`), where Home
   goes, and the product a sitting names in its tab title and AI notice.
+- `ExerciseRunner` takes `joinRun` for a run with no public code: the app's own
+  join (a test set's paper route), used for the first open, a reload's re-join,
+  Take it again (`{ retake: true }`) and the status checks. `leaveTo` is where
+  Exit and a failed re-join go instead of the join screen.
 - It calls the API through `configureApi`'s base URL (`./live/api.ts`), and
   keeps Leap's query keys (`participants`, `run-parts`, `current-user`,
   `recordings`), so an app's own invalidations reach its reads.
