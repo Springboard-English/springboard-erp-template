@@ -3,7 +3,15 @@
 // are the app's own; the runner only needs to build them.
 
 import { useAuth } from "../../context/AuthContext";
+import type { LiveSessionJoin } from "./api";
 import { isGuestAccountType } from "./roles";
+
+/**
+ * Joins a run, or re-joins it (the same attempt), or with `retake` starts the
+ * next attempt. The default is join-by-code; an app whose runs have no public
+ * code passes its own to `ExerciseRunner`.
+ */
+export type RunJoiner = (options?: { retake?: boolean; cohortKey?: string }) => Promise<LiveSessionJoin>;
 
 export interface LiveRunnerOptions {
   /** Where the play routes live; the join screen is `<base>/<code>`, the runner `<base>/<code>/run`. */

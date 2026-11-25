@@ -95,7 +95,7 @@ import { useFullscreenExempt } from "./use-fullscreen-exempt";
 import { useLiveStudent } from "./live-student";
 import { useProctoring } from "./use-proctoring";
 import { useFeedbackSuppressed, useRunSubmittedFeedback } from "./feedback";
-import { playJoinRoute } from "./config";
+import { playJoinRoute, type RunJoiner } from "./config";
 import { useHomeHref } from "./config";
 import { useRunAnswerFiles, withEssayDocs } from "./use-answer-files";
 
@@ -122,9 +122,25 @@ const ROOM_REFUSED_STATUSES = new Set([400, 403, 404]);
 // never sees correctness), so each answer is POSTed and the run ends at a
 // submission confirmation. Node ids are the exercise_key, which is exactly
 // what the answers endpoint expects.
-export function ExerciseRunner({ code }: { code: string }) {
+export function ExerciseRunner({
+  code,
+  joinRun,
+  leaveTo,
+}: {
+  /** The run's code, or another stable id for a run joined through `joinRun`. */
+  code: string;
+  /** Join (or re-join) the run another way than by code, e.g. a test set's paper route. */
+  joinRun?: RunJoiner;
+  /** Where Exit and a failed re-join go; the join screen by default. */
+  leaveTo?: string;
+}) {
   const { t } = useStableI18n();
   const navigate = useNavigate();
+  const rejoin = useMemo<RunJoiner>(
+    () => joinRun ?? ((options) => joinLiveSession(code, options)),
+    [joinRun, code],
+  );
+  const leaveRoute = leaveTo ?? playJoinRoute(code);
   // Null for a guest on a public link: they hold a disposable account with no
   // role, so "/" would land them on access-denied. Falling back to the join
   // screen keeps them somewhere that exists.
@@ -324,7 +340,7 @@ export function ExerciseRunner({ code }: { code: string }) {
   useEffect(() => {
     if (join || rejoinFailed) return;
     let cancelled = false;
-    joinLiveSession(code)
+    rejoin()
       .then((next) => {
         if (cancelled) return;
         setJoin(next);
@@ -347,7 +363,7 @@ export function ExerciseRunner({ code }: { code: string }) {
     return () => {
       cancelled = true;
     };
-  }, [join, rejoinFailed, code, setJoin]);
+  }, [join, rejoinFailed, rejoin, setJoin]);
 
   // The other half of opening a handed-in attempt on "submitted": if its score
   // is already released, show it, exactly as the runner's own submit does. Keyed
@@ -548,9 +564,9 @@ export function ExerciseRunner({ code }: { code: string }) {
         candidate: candidateName,
         attemptNo: join?.attempt_no,
         date: new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }),
-        joinCode: code,
+        joinCode: join?.join_code || code,
       }),
-    [join?.test_name, join?.class_name, join?.attempt_no, candidateName, code],
+    [join?.test_name, join?.class_name, join?.attempt_no, join?.join_code, candidateName, code],
   );
   const paperOpen = shouldReportProctoring(phase);
   // No feedback survey may show while the paper or the waiting room is up, from
@@ -600,12 +616,12 @@ export function ExerciseRunner({ code }: { code: string }) {
     streamConnects.current = 0;
   }, [liveTopic]);
   const catchUp = useCallback(() => {
-    joinLiveSession(code)
+    rejoin()
       .then((next) => setLiveStatus(next.status))
       .catch((err) => {
         if (err instanceof ApiError && ROOM_REFUSED_STATUSES.has(err.status)) setClosed(true);
       });
-  }, [code]);
+  }, [rejoin]);
   useLiveEvent(liveTopic, (event: LiveEventMessage) => {
     const first = event.type === "ready" && streamConnects.current++ === 0;
     const action = liveEventAction(event, first);
@@ -624,12 +640,12 @@ export function ExerciseRunner({ code }: { code: string }) {
   useEffect(() => {
     if (!join || phase !== "waiting") return;
     const id = window.setInterval(() => {
-      joinLiveSession(code)
+      rejoin()
         .then((next) => setLiveStatus(next.status))
         .catch(() => undefined);
     }, WAITING_POLL_MS);
     return () => window.clearInterval(id);
-  }, [join, phase, code]);
+  }, [join, phase, rejoin]);
 
   // Forced timer. Two possible deadlines and the taker's own wins: a public
   // self-paced link gives each person their own, handed back by join, while a
@@ -825,7 +841,7 @@ export function ExerciseRunner({ code }: { code: string }) {
   // still have on screen. Only when that re-join fails do we send them there.
   if (!join) {
     return rejoinFailed ? (
-      <Navigate to={playJoinRoute(code)} replace />
+      <Navigate to={leaveRoute} replace />
     ) : (
       <StudentPageShell>
         <p className="text-center text-sm font-bold text-muted-foreground">
@@ -852,7 +868,7 @@ export function ExerciseRunner({ code }: { code: string }) {
   if (phase === "expired") return <AttemptExpired />;
 
   if (isLoading || (!sessionExercises && !isError)) {
-    return <PendingPaper onExit={() => navigate(homeHref ?? playJoinRoute(code))} />;
+    return <PendingPaper onExit={() => navigate(homeHref ?? leaveRoute)} />;
   }
 
   // Loaded, but nothing a student can answer — say so rather than spin.
@@ -904,7 +920,7 @@ export function ExerciseRunner({ code }: { code: string }) {
   // run closes the screen; anything else is a retry the queue will make.
   async function checkRoom() {
     try {
-      const current = await joinLiveSession(code);
+      const current = await rejoin();
       setLiveStatus(current.status);
       if (current.status === "ended") setClosed(true);
       // A public self-paced room is `live` forever, so "ended" can never be
@@ -1097,8 +1113,8 @@ export function ExerciseRunner({ code }: { code: string }) {
     return (
       <SubmissionConfirmation
         canSeeResults={false}
-        onSeeResults={() => navigate(homeHref ?? playJoinRoute(code))}
-        retake={<RetakeButton code={code} join={join} onJoined={setJoin} />}
+        onSeeResults={() => navigate(homeHref ?? leaveRoute)}
+        retake={<RetakeButton rejoin={rejoin} join={join} onJoined={setJoin} />}
       >
         {receipt}
       </SubmissionConfirmation>
@@ -1139,7 +1155,7 @@ export function ExerciseRunner({ code }: { code: string }) {
                   <Link to={homeHref}>{t("exercise.live.runner.finish", "Finish")}</Link>
                 </Button>
               ) : null}
-              <RetakeButton code={code} join={join} onJoined={setJoin} />
+              <RetakeButton rejoin={rejoin} join={join} onJoined={setJoin} />
             </div>
           }
         />
@@ -1205,7 +1221,7 @@ export function ExerciseRunner({ code }: { code: string }) {
         open={exitOpen}
         onOpenChange={setExitOpen}
         timed={timer.remainingMs !== null}
-        onExit={() => navigate(homeHref ?? playJoinRoute(code))}
+        onExit={() => navigate(homeHref ?? leaveRoute)}
       />
       <SubmitConfirmDialog
         open={confirmOpen && step === "review"}

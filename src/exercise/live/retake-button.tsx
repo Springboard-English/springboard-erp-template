@@ -3,9 +3,9 @@ import { RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button, errorMessage } from "../../exports";
+import type { RunJoiner } from "./config";
 import { useStableI18n } from "./i18n";
 import {
-  joinLiveSession,
   type LiveSessionJoin,
 } from "./api";
 
@@ -28,11 +28,12 @@ import {
 // step carried over from the attempt just finished.
 
 export function RetakeButton({
-  code,
+  rejoin,
   join,
   onJoined,
 }: {
-  code: string;
+  /** How the runner joins its run; asked for a new attempt here. */
+  rejoin: RunJoiner;
   join: LiveSessionJoin | null;
   onJoined: (next: LiveSessionJoin) => void;
 }) {
@@ -54,7 +55,7 @@ export function RetakeButton({
       disabled={pending}
       onClick={() => {
         setPending(true);
-        joinLiveSession(code, { retake: true })
+        rejoin({ retake: true })
           .then(onJoined)
           .catch((err: unknown) => {
             toast.error(errorMessage(err, t("exercise.live.retake.failed", "Couldn’t start another attempt.")));
