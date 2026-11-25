@@ -12,6 +12,17 @@ export interface LineChartSeries {
   values: Array<number | null>;
   /** The headline line is drawn thicker. */
   emphasis?: boolean;
+  /** Each dot's size, 0 (smallest) to 1 (largest), aligned with `values`; without it every dot is one size. */
+  sizes?: Array<number | null>;
+}
+
+/** A dot's radius: the line's fixed size, or 2 to 5 px by its `sizes` entry, one larger on a headline line. */
+export function dotRadius(line: Pick<LineChartSeries, 'emphasis' | 'sizes'>, index: number): number {
+  const base = line.emphasis ? 1 : 0;
+  const size = line.sizes?.[index];
+  if (size === undefined || size === null) return 3 + base;
+  // Clamped so a caller's stray value cannot balloon a dot past the chart's padding.
+  return 2 + 3 * Math.min(1, Math.max(0, size)) + base;
 }
 
 /** A shaded band, low to high per point, such as a class's middle half. */
@@ -247,7 +258,7 @@ export default function LineChart({
                     key={index}
                     cx={lineX(index, count, width)}
                     cy={lineY(value, height, max)}
-                    r={(line.emphasis ? 4 : 3) + (index === hovered ? 2 : 0)}
+                    r={dotRadius(line, index) + (index === hovered ? 2 : 0)}
                     fill={line.color}
                   >
                     <title>{`${line.label} · ${labels[index]}: ${formatValue(value)}`}</title>

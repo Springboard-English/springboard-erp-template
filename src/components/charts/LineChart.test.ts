@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { linePath, linePointFigures, nearestIndex } from "./LineChart";
+import { dotRadius, linePath, linePointFigures, nearestIndex } from "./LineChart";
 import { getChartPalette, skillColor } from "./palette";
 
 describe("LineChart helpers", () => {
@@ -28,6 +28,17 @@ describe("LineChart helpers", () => {
       ["a", "10%"],
       ["band", "5%–15%"],
     ]);
+  });
+});
+
+describe("dot sizes", () => {
+  it("keeps one size without sizes, and scales 2 to 5 px with them", () => {
+    expect(dotRadius({}, 0)).toBe(3);
+    expect(dotRadius({ emphasis: true }, 0)).toBe(4);
+    expect(dotRadius({ sizes: [0, 1, null, 7] }, 0)).toBe(2);
+    expect(dotRadius({ sizes: [0, 1, null, 7] }, 1)).toBe(5);
+    expect(dotRadius({ sizes: [0, 1, null, 7] }, 2)).toBe(3);
+    expect(dotRadius({ sizes: [0, 1, null, 7] }, 3)).toBe(5);
   });
 });
 
