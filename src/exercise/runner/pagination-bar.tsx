@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
 
 import { Button } from "../../components/ui/button";
 import { useI18n } from "../../context/I18nContext";
@@ -17,14 +17,20 @@ import { useExerciseTourAnchor } from "../lib/tour-anchors";
 //
 // Below `sm` the slots stop being fixed-width and the labels shrink. Two 11rem
 // slots plus the question toggle and Notes are wider than a 390px phone, so on an
-// iPhone Next would sit past the right edge of the screen. Previous is an icon
+// iPhone Next would sit past the right edge of the screen.
+//
+// `loading` says more pages are on their way (the live runner fetches a paper
+// part by part). The last page loaded is then not the last page of the paper,
+// so Next holds its label, disabled with a spinner, rather than reading
+// "Review answers" until the part lands and flipping back. Previous is an icon
 // there, with its name
 // kept in `aria-label` — text hidden by `display: none` is not part of a
 // button's accessible name.
-export function PaginationBar({ index, total, onPrev, onNext, nextLabel, center }: { index: number; total: number; onPrev: () => void; onNext: () => void; nextLabel?: string; center?: ReactNode }) {
+export function PaginationBar({ index, total, onPrev, onNext, nextLabel, center, loading = false }: { index: number; total: number; onPrev: () => void; onNext: () => void; nextLabel?: string; center?: ReactNode; loading?: boolean }) {
   const { t } = useI18n();
   const anchor = useExerciseTourAnchor("next");
   const isLast = index === total - 1;
+  const waiting = isLast && loading;
   const width = String(total).length;
   const pad = (n: number) => String(n).padStart(width, "0");
   return (
@@ -43,9 +49,11 @@ export function PaginationBar({ index, total, onPrev, onNext, nextLabel, center 
         <Button
           onClick={onNext}
           onKeyDown={ignoreSpaceActivation}
+          disabled={waiting}
+          aria-busy={waiting || undefined}
           {...anchor}
         >
-          {isLast ? (
+          {isLast && !waiting ? (
             nextLabel ?? (
               <>
                 <span className="sm:hidden">{t("exercise.pagination.review", "Review")}</span>
@@ -55,7 +63,7 @@ export function PaginationBar({ index, total, onPrev, onNext, nextLabel, center 
           ) : (
             t("exercise.pagination.next", "Next")
           )}
-          <ArrowRight className="size-4 max-sm:hidden" />
+          {waiting ? <Loader2 className="size-4 animate-spin max-sm:hidden" /> : <ArrowRight className="size-4 max-sm:hidden" />}
         </Button>
       </div>
     </div>

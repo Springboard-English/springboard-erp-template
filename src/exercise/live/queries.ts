@@ -74,6 +74,8 @@ export interface LivePaper {
   /** Open a timed part at the student's word, starting its clock. */
   openPart: (partKey: string) => void;
   openingPart: string | null;
+  /** Whether a part after the loaded ones is on its way (preloading, or a timed part opening). */
+  loadingMore: boolean;
 }
 
 /**
@@ -127,6 +129,7 @@ export function useLivePaper(
     isError: map.isError || opens.some((result) => result.isError && !result.data),
     openPart: (partKey) => setAskedFor((prev) => new Set([...prev, partKey])),
     openingPart: opening,
+    loadingMore: state.more || opening !== null,
   };
 }
 
