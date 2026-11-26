@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
+import { Leaf } from "lucide-react";
 import { liveRunnerProductName, useHomeHref } from "./config";
-import { LeapMark } from "./leap-mark";
 
 // Minimal centered layout for the student's entry / terminal screens (join,
 // confirmation, score, closed) — no per-question progress chrome.
@@ -16,7 +16,7 @@ export function StudentPageShell({ children, headerActions }: { children: ReactN
   const homeHref = useHomeHref();
   const brand = (
     <span className="inline-flex items-center gap-2 text-sm font-extrabold text-foreground">
-      <LeapMark />
+      <span className="grid size-9 place-items-center rounded-xl bg-primary text-white"><Leaf className="size-5" /></span>
       {liveRunnerProductName()}
     </span>
   );

@@ -38,7 +38,9 @@ export function useTopicPool(): TopicPool | null {
 export function DrawnTopic({ prompt }: { prompt: string }) {
   const { t } = useI18n();
   return (
-    <div className="rounded-2xl border-2 border-primary/30 bg-primary/5 px-5 py-4">
+    // `clear-both`: on a question with no title the marks float at the card's
+    // top right, and a box (unlike text) would run under them.
+    <div className="clear-both rounded-2xl border-2 border-primary/30 bg-primary/5 px-5 py-4">
       <p className="text-xs font-extrabold text-primary">{t("exercise.topicPool.yourTopic", "Your topic")}</p>
       <p className={cn(promptTextClass(promptDensity(prompt)), "mt-1 text-foreground")}>{prompt}</p>
     </div>
@@ -55,7 +57,8 @@ export function TopicPoolPrompts({ sectionKey }: { sectionKey: string }) {
   const editor = useExerciseEditor();
   const pool = editor?.topicPrompts?.(sectionKey) ?? null;
   return (
-    <div className="rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 px-5 py-4">
+    // `clear-both`: as `DrawnTopic`, below the floated marks rather than under them.
+    <div className="clear-both rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 px-5 py-4">
       <p className="text-xs font-extrabold text-primary">
         {t("exercise.topicPool.topics", "Topics")}
         <span className="ml-1.5 font-semibold text-muted-foreground">
