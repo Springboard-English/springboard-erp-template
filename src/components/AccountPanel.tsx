@@ -12,7 +12,7 @@ import {
   type SidebarAction,
 } from "./layout/SidebarRow";
 import { Separator } from "@/components/ui/separator";
-import { ACCOUNTS_PROFILE_URL } from "@/config/accounts";
+import { accountsProfileUrl } from "@/config/accounts";
 import { useAuth } from "@/context/AuthContext";
 import { useI18n } from "@/context/I18nContext";
 import { cn } from "@/lib/utils";
@@ -126,7 +126,7 @@ export default function AccountPanel({
           icon={UserCog}
           label={t("account.manage", "Manage account")}
           collapsed={collapsed}
-          href={ACCOUNTS_PROFILE_URL}
+          href={accountsProfileUrl()}
           className={rowClassName}
         />
       ) : null}

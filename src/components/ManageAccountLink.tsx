@@ -1,6 +1,6 @@
 import { UserCog } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ACCOUNTS_PROFILE_URL } from "@/config/accounts";
+import { accountsProfileUrl } from "@/config/accounts";
 import { useAuth } from "@/context/AuthContext";
 import { useI18n } from "@/context/I18nContext";
 import { cn } from "@/lib/utils";
@@ -38,7 +38,7 @@ export default function ManageAccountLink({
       )}
     >
       <a
-        href={ACCOUNTS_PROFILE_URL}
+        href={accountsProfileUrl()}
         target="_blank"
         rel="noopener noreferrer"
         title={collapsed ? label : undefined}
