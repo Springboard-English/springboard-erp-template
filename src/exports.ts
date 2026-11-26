@@ -141,7 +141,16 @@ export { default as AccountPanel, AccountExtras } from "./components/AccountPane
 export type { AccountConfig, AccountPanelProps } from "./components/AccountPanel";
 export { default as ManageAccountLink } from "./components/ManageAccountLink";
 export type { ManageAccountLinkProps } from "./components/ManageAccountLink";
-export { ACCOUNTS_PROFILE_URL } from "./config/accounts";
+export { ACCOUNTS_PROFILE_URL, accountsProfileUrl } from "./config/accounts";
+export {
+    appUrl,
+    configureAppUrls,
+    resolveAppUrls,
+    PRODUCTION_APP_URLS,
+    DEV_APP_URLS,
+    APP_URL_ENV_KEYS,
+} from "./config/apps";
+export type { SpringboardApp, AppUrls, AppUrlEnv } from "./config/apps";
 // The changelog. `BuildTag` already wires all of it together — pass it the
 // generated commit list and, optionally, a what's-new note — so an app only
 // reaches for these directly to render the history somewhere else, or to test

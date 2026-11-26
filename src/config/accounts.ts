@@ -1,3 +1,9 @@
-// The accounts site's panel: profile, password and connected apps. There is one,
-// in production, so dev builds link to it too.
-export const ACCOUNTS_PROFILE_URL = "https://accounts.springboard.vn/profile";
+import { appUrl, PRODUCTION_APP_URLS } from "./apps";
+
+/** The production accounts panel. Kept for apps that import it; links use `accountsProfileUrl()`. */
+export const ACCOUNTS_PROFILE_URL = `${PRODUCTION_APP_URLS.accounts}/profile`;
+
+/** The accounts site's panel (profile, password, connected apps), at the configured accounts URL. */
+export function accountsProfileUrl(): string {
+    return appUrl("accounts", "/profile");
+}
