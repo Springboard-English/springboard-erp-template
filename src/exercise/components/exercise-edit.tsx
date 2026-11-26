@@ -659,12 +659,18 @@ export function QuestionMenu({
   align?: "start" | "end";
 }) {
   const editor = useExerciseEditor();
-  const ref = useRef<HTMLDivElement>(null);
+  // Set by a press anywhere in the menu's React tree. The type list and the
+  // skill select draw their options in a portal outside this box, and a press
+  // there must not count as "outside": React bubbles it through the portal to
+  // the menu before the document listener runs.
+  const pressedInside = useRef(false);
   useEffect(() => {
-    const onDown = (event: PointerEvent) => {
-      if (!ref.current?.contains(event.target as Node)) onClose();
+    const onDown = () => {
+      if (!pressedInside.current) onClose();
+      pressedInside.current = false;
     };
-    const onKey = (event: KeyboardEvent) => (event.key === "Escape" ? onClose() : undefined);
+    // An open select or list closes on Escape first and marks the event handled.
+    const onKey = (event: KeyboardEvent) => (event.key === "Escape" && !event.defaultPrevented ? onClose() : undefined);
     document.addEventListener("pointerdown", onDown);
     window.addEventListener("keydown", onKey);
     return () => {
@@ -675,8 +681,10 @@ export function QuestionMenu({
   if (!editor) return null;
   return (
     <div
-      ref={ref}
       role="dialog"
+      onPointerDownCapture={() => {
+        pressedInside.current = true;
+      }}
       onClick={(event) => event.stopPropagation()}
       className={cn(
         "absolute top-full z-30 mt-2 flex w-60 flex-col gap-2 rounded-2xl border bg-card p-3 text-left text-sm leading-normal shadow-xl",
