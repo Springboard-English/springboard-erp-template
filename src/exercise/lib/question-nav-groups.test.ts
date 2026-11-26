@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { moveSection, navGroups, navPartBlocks, placeInOrder } from "./question-nav-groups";
+import { collectionDrop, moveSection, navGroups, navPartBlocks, navPartUnits, placeInOrder } from "./question-nav-groups";
 import type { ExerciseNode } from "./exercises";
 import type { CollectionStub } from "../types";
 
@@ -59,5 +59,35 @@ describe("placeInOrder", () => {
 
   it("is the same list for the same order", () => {
     expect(placeInOrder(["a", "b"], ["a", "b"])).toEqual(["a", "b"]);
+  });
+});
+
+describe("collectionDrop", () => {
+  const p2 = { ...part, appsheet_key: "p2", title: "Part 2" } as CollectionStub;
+  const s3 = { ...s1, appsheet_key: "s3", instruction: "Write", parent: p2 } as CollectionStub;
+  const nodes = [node("a"), node("b"), node("c"), node("d")];
+  const map = new Map([["a", s1], ["b", s2], ["c", s3], ["d", p2]]);
+  const units = navPartUnits(navPartBlocks(navGroups(nodes, map)));
+
+  it("gathers a part's blocks into one unit", () => {
+    expect(units.map((u) => [u.partKey, u.sections.map((g) => g.key)])).toEqual([
+      ["p1", ["s1", "s2"]],
+      ["p2", ["s3"]],
+    ]);
+  });
+
+  it("moves a part to the dropped-on part's place", () => {
+    expect(collectionDrop(units, "part:p2", "part:p1")).toEqual({ kind: "part", key: "p2", index: 0 });
+    expect(collectionDrop(units, "part:p1", "part:p1")).toBeNull();
+  });
+
+  it("moves a section within its part or into another", () => {
+    expect(collectionDrop(units, "section:s1:0", "section:s2:1")).toEqual({ kind: "section", key: "s1", toPartKey: "p1", index: 1 });
+    expect(collectionDrop(units, "section:s1:0", "section:s3:2")).toEqual({ kind: "section", key: "s1", toPartKey: "p2", index: 0 });
+  });
+
+  it("puts a section dropped on a part's card at that part's end", () => {
+    expect(collectionDrop(units, "section:s1:0", "part:p2")).toEqual({ kind: "section", key: "s1", toPartKey: "p2", index: 1 });
+    expect(collectionDrop(units, "section:s2:1", "part:p1")).toBeNull();
   });
 });

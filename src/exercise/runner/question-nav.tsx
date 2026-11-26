@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { GripVertical, LayoutGrid, PanelLeftClose } from "lucide-react";
 import {
@@ -7,8 +7,10 @@ import {
   MouseSensor,
   TouchSensor,
   closestCenter,
+  pointerWithin,
   useSensor,
   useSensors,
+  type CollisionDetection,
   type DragEndEvent,
 } from "@dnd-kit/core";
 import {
@@ -29,7 +31,18 @@ import { cn } from "../../lib/utils";
 import type { ExerciseAnswer, SpringboardTest } from "../lib/exercises";
 import { unansweredNodeIds } from "../lib/grading";
 import { useExerciseTourAnchor } from "../lib/tour-anchors";
-import { moveSection, navGroups, navPartBlocks, type NavGroup } from "../lib/question-nav-groups";
+import {
+  collectionDrop,
+  moveSection,
+  navGroups,
+  navPartBlocks,
+  navPartUnits,
+  partDragId,
+  sectionDragId,
+  type CollectionMove,
+  type NavGroup,
+  type NavPartUnit,
+} from "../lib/question-nav-groups";
 import type { CollectionStub } from "../types";
 import { collectionHeading } from "../components/collection-context";
 
@@ -58,6 +71,12 @@ export interface QuestionNavPanelProps {
    * section) and the run's node ids in their new order.
    */
   onReorder?: (collectionKey: string | null, orderedNodeIds: string[]) => void;
+  /**
+   * With `onReorder`, also lets parts be dragged into a new order and a
+   * section into another part. Section and part drags then call this instead
+   * of `onReorder`; the host moves the collection and passes the new paper.
+   */
+  onMoveCollection?: (move: CollectionMove) => void;
   /** Shows a Hide button in the docked column's header. */
   onHide?: () => void;
   /** A column in the layout from `md` up (hidden below it) instead of overlay content. */
@@ -285,6 +304,139 @@ function SectionCards({
   );
 }
 
+/** A part's card in the movable list: its heading with a grip, its own questions and its section cards. */
+function MovablePart({ unit, run, target }: { unit: NavPartUnit; run: RunProps; target: boolean }) {
+  const { t } = useI18n();
+  const drag = useSortable({ id: partDragId(unit.partKey ?? "") });
+  const first = unit.blocks[0].loose[0] ?? unit.blocks[0].sections[0];
+  return (
+    <div
+      ref={drag.setNodeRef}
+      style={{ transform: CSS.Transform.toString(drag.transform), transition: drag.transition }}
+      className={cn(
+        "space-y-2 rounded-2xl border-2 border-dashed border-transparent p-1.5",
+        target && "border-rose-300 bg-rose-50/60",
+        drag.isDragging && "relative z-20 border-rose-300 bg-card shadow-lg",
+      )}
+    >
+      <div className="flex items-center gap-1.5">
+        <button
+          type="button"
+          className={cn(
+            buttonTarget,
+            "grid shrink-0 cursor-grab touch-none place-items-center rounded-md text-muted-foreground hover:bg-muted active:cursor-grabbing",
+          )}
+          aria-label={t("exercise.questionNav.dragPart", "Drag to move this part")}
+          {...drag.attributes}
+          {...drag.listeners}
+        >
+          <GripVertical className="size-4" />
+        </button>
+        <p className="min-w-0 flex-1 truncate text-[11px] font-extrabold text-rose-700">
+          {collectionHeading(first.part, t).part || t("exercise.questionNav.untitledPart", "Part")}
+        </p>
+      </div>
+      <SortableContext items={unit.sections.map(sectionDragId)} strategy={verticalListSortingStrategy}>
+        {unit.blocks.map((block) => (
+          <div key={`${block.partKey}:${(block.loose[0] ?? block.sections[0]).indices[0]}`} className="space-y-2">
+            {block.loose.map((group) => (
+              <NavRun key={`${group.key}:${group.indices[0]}`} group={group} {...run} />
+            ))}
+            {block.sections.map((group) => (
+              <SectionCard key={sectionDragId(group)} id={sectionDragId(group)} group={group} run={run} />
+            ))}
+          </div>
+        ))}
+      </SortableContext>
+    </div>
+  );
+}
+
+/**
+ * The editor's list with parts and sections that move: parts drag into a new
+ * order by their grip, and a section drags within its part or onto another
+ * part (its card, or a section in it). Questions outside any part stay where
+ * they are. A drop hands the move to `onMove`.
+ */
+function MovableCollections({
+  groups,
+  run,
+  onMove,
+}: {
+  groups: NavGroup[];
+  run: RunProps;
+  onMove: (move: CollectionMove) => void;
+}) {
+  const { t } = useI18n();
+  const units = useMemo(() => navPartUnits(navPartBlocks(groups)), [groups]);
+  const [overPart, setOverPart] = useState<string | null>(null);
+  const sensors = useSensors(
+    useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+  // A part only meets parts. A section meets the section under the pointer,
+  // else the part under it (its end), else the nearest section (the keyboard).
+  const collisions: CollisionDetection = (args) => {
+    const active = String(args.active.id);
+    const of = (prefix: string) => args.droppableContainers.filter((c) => String(c.id).startsWith(prefix));
+    if (active.startsWith("part:")) return closestCenter({ ...args, droppableContainers: of("part:") });
+    const sections = of("section:");
+    const onSection = pointerWithin({ ...args, droppableContainers: sections });
+    if (onSection.length) return onSection;
+    const onPart = pointerWithin({ ...args, droppableContainers: of("part:") });
+    if (onPart.length) return onPart;
+    return closestCenter({ ...args, droppableContainers: sections });
+  };
+  // The part a dragged section would land in, outlined while it is over it.
+  const partOf = (id: string | null) => {
+    if (!id) return null;
+    if (id.startsWith("part:")) return id.slice("part:".length);
+    return units.find((unit) => unit.sections.some((group) => sectionDragId(group) === id))?.partKey ?? null;
+  };
+  const movable = units.filter((unit) => unit.partKey !== null);
+  return (
+    <DndContext
+      sensors={sensors}
+      collisionDetection={collisions}
+      onDragOver={({ active, over }) =>
+        setOverPart(String(active.id).startsWith("section:") ? partOf(over ? String(over.id) : null) : null)
+      }
+      onDragCancel={() => setOverPart(null)}
+      onDragEnd={({ active, over }) => {
+        setOverPart(null);
+        const move = over ? collectionDrop(units, String(active.id), String(over.id)) : null;
+        if (move) onMove(move);
+      }}
+      accessibility={{
+        screenReaderInstructions: {
+          draggable: t(
+            "exercise.questionNav.moveHint",
+            "To move a part or section, press Space or Enter on its handle, use the arrow keys, then press it again to drop it.",
+          ),
+        },
+      }}
+    >
+      <SortableContext items={movable.map((unit) => partDragId(unit.partKey!))} strategy={verticalListSortingStrategy}>
+        <div className="space-y-3">
+          {units.map((unit) =>
+            unit.partKey === null ? (
+              // Questions outside any part: no card, nothing to drag.
+              <div key={`loose:${unit.blocks[0].loose[0]?.indices[0]}`} className="space-y-2">
+                {unit.blocks.flatMap((block) => block.loose).map((group) => (
+                  <NavRun key={`${group.key}:${group.indices[0]}`} group={group} {...run} />
+                ))}
+              </div>
+            ) : (
+              <MovablePart key={partDragId(unit.partKey)} unit={unit} run={run} target={overPart === unit.partKey} />
+            ),
+          )}
+        </div>
+      </SortableContext>
+    </DndContext>
+  );
+}
+
 /**
  * The paper's question numbers under their part and section, each marked
  * current, done or blank (answers or keys, per `states`), with a legend and
@@ -301,6 +453,7 @@ export function QuestionNavPanel({
   actions,
   states = "answers",
   onReorder,
+  onMoveCollection,
   onHide,
   docked = false,
   untitled = false,
@@ -323,7 +476,17 @@ export function QuestionNavPanel({
 
   const run: RunProps = { test, unanswered, currentIndex, states, grid, onJump, onReorder };
   // Editing: each section is a card that moves within its part, under a note on how.
-  const editList = onReorder ? (
+  const editList = onReorder && onMoveCollection ? (
+    <div className="space-y-4">
+      <p className="rounded-lg bg-muted px-3 py-2 text-xs font-semibold text-muted-foreground">
+        {t(
+          "exercise.questionNav.moveNote",
+          "Drag a part by its handle to reorder the parts. Drag a section card by its handle within its part or onto another part. Drag a question number to move it within its section.",
+        )}
+      </p>
+      <MovableCollections groups={groups} run={run} onMove={onMoveCollection} />
+    </div>
+  ) : onReorder ? (
     <div className="space-y-4">
       <p className="rounded-lg bg-muted px-3 py-2 text-xs font-semibold text-muted-foreground">
         {t(
@@ -439,6 +602,7 @@ export function QuestionNav({
   actions,
   states = "answers",
   onReorder,
+  onMoveCollection,
   dock,
 }: {
   /** Each question's part/section, so the numbers sit under their headings. */
@@ -454,6 +618,8 @@ export function QuestionNav({
   states?: QuestionNavStates;
   /** As on `QuestionNavPanel`, for the overlay panel and the sheet. */
   onReorder?: QuestionNavPanelProps["onReorder"];
+  /** As on `QuestionNavPanel`. */
+  onMoveCollection?: QuestionNavPanelProps["onMoveCollection"];
   /**
    * The docked column's visibility from `md` up. Without `onShownChange` the
    * column can't be hidden and the toggle only reports the position there.
@@ -526,6 +692,7 @@ export function QuestionNav({
                   actions={actions}
                   states={states}
                   onReorder={onReorder}
+                  onMoveCollection={onMoveCollection}
                 />
               </div>
             </>,

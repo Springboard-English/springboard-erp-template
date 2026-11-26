@@ -26,6 +26,7 @@ interface QuestionListDialogProps {
   actions?: ReactNode;
   states?: QuestionNavPanelProps["states"];
   onReorder?: QuestionNavPanelProps["onReorder"];
+  onMoveCollection?: QuestionNavPanelProps["onMoveCollection"];
   /** Leaves the count off the button (the AI import shows it in its steps). */
   hideCount?: boolean;
 }
@@ -46,6 +47,7 @@ export function QuestionListDialog({
   actions,
   states = "answers",
   onReorder,
+  onMoveCollection,
   hideCount = false,
 }: QuestionListDialogProps) {
   const { t } = useStableI18n();
@@ -104,6 +106,7 @@ export function QuestionListDialog({
             actions={actions}
             states={states}
             onReorder={onReorder}
+            onMoveCollection={onMoveCollection}
           />
         </DialogContent>
       </Dialog>

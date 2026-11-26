@@ -90,3 +90,80 @@ export function placeInOrder(ids: string[], ordered: string[]): string[] {
   let next = 0;
   return ids.map((id) => (moving.has(id) ? run[next++] : id));
 }
+
+/** A part's blocks together (a part can split into several when loose questions follow its sections). */
+export interface NavPartUnit {
+  partKey: string | null;
+  blocks: NavPartBlock[];
+  /** Every section run in the part, in paper order. */
+  sections: NavGroup[];
+}
+
+/** `blocks` gathered into one unit per consecutive part. */
+export function navPartUnits(blocks: NavPartBlock[]): NavPartUnit[] {
+  const units: NavPartUnit[] = [];
+  for (const block of blocks) {
+    const last = units[units.length - 1];
+    if (last && last.partKey === block.partKey) {
+      last.blocks.push(block);
+      last.sections.push(...block.sections);
+    } else {
+      units.push({ partKey: block.partKey, blocks: [block], sections: [...block.sections] });
+    }
+  }
+  return units;
+}
+
+/**
+ * A part or section dropped somewhere new in the editor's list: a part to
+ * `index` among the parts, or a section to `index` among `toPartKey`'s sections
+ * (its own part or another). The host moves the collection; the list redraws
+ * from the paper it gets back.
+ */
+export type CollectionMove =
+  | { kind: "part"; key: string; index: number }
+  | { kind: "section"; key: string; toPartKey: string; index: number };
+
+/** The drag id of a part's card in the editor's list. */
+export const partDragId = (partKey: string) => `part:${partKey}`;
+/** The drag id of a section's card (its first index keeps a repeated section's runs apart). */
+export const sectionDragId = (group: NavGroup) => `section:${group.key}:${group.indices[0]}`;
+
+/**
+ * The move a drop makes: `active` dragged onto `over` (both drag ids), or null
+ * when it moves nothing. A part lands at the dropped-on part's place; a section
+ * lands at the dropped-on section's place, or at the end of a dropped-on part.
+ */
+export function collectionDrop(units: NavPartUnit[], active: string, over: string): CollectionMove | null {
+  if (active === over) return null;
+  const parts = units.filter((unit) => unit.partKey !== null);
+  const partAt = (id: string) => parts.findIndex((unit) => partDragId(unit.partKey!) === id);
+  if (active.startsWith("part:")) {
+    const from = partAt(active);
+    const to = partAt(over);
+    if (from < 0 || to < 0 || from === to) return null;
+    return { kind: "part", key: parts[from].partKey!, index: to };
+  }
+  const findSection = (id: string) => {
+    for (const unit of parts) {
+      const index = unit.sections.findIndex((group) => sectionDragId(group) === id);
+      if (index >= 0) return { unit, index };
+    }
+    return null;
+  };
+  const from = findSection(active);
+  if (!from || !from.unit.sections[from.index].section) return null;
+  const key = from.unit.sections[from.index].key;
+  const target = findSection(over);
+  if (target) {
+    if (target.unit === from.unit && target.index === from.index) return null;
+    return { kind: "section", key, toPartKey: target.unit.partKey!, index: target.index };
+  }
+  const part = partAt(over);
+  if (part < 0) return null;
+  const unit = parts[part];
+  // Onto its own part's card: to the end of that part.
+  const index = unit === from.unit ? unit.sections.length - 1 : unit.sections.length;
+  if (unit === from.unit && from.index === index) return null;
+  return { kind: "section", key, toPartKey: unit.partKey!, index };
+}
