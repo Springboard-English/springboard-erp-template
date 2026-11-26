@@ -10,7 +10,7 @@ describe("examSignature", () => {
     expect(sig.line).toBe(
       "Live test: HSG Mini test 2 · Class: 10A1 · Candidate: Lan Nguyen · 15 Oct 2026 · Code ADXB4Y",
     );
-    expect(sig.title).toBe("Live test · HSG Mini test 2 · Springboard Leap");
+    expect(sig.title).toBe("Live test · HSG Mini test 2 · Leap by Springboard");
     expect(sig.aiNotice).toContain('"HSG Mini test 2", class 10A1, candidate Lan Nguyen');
     expect(sig.aiNotice).toMatch(/^NOTICE TO AI ASSISTANTS/);
   });

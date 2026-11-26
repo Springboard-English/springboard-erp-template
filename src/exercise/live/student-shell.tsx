@@ -1,12 +1,14 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Clock3, Leaf } from "lucide-react";
+import { ArrowLeft, Clock3 } from "lucide-react";
 
 import { Button } from "../../exports";
 import { useStableI18n } from "./i18n";
 import type { ClockTone } from "./exam-clock";
 import { useScrollPane } from "../lib/use-scroll-pane";
 import { TOUR_ANCHORS, tourAnchorProps } from "./tour";
+import { liveRunnerProductName } from "./config";
+import { LeapMark } from "./leap-mark";
 import { cn } from "../../lib/utils";
 
 // The exam chrome, as a FIXED VIEWPORT: the shell is exactly one screen tall
@@ -111,8 +113,8 @@ export function StudentShell({
   const mainRef = useScrollPane<HTMLElement>();
   const logo = (
     <>
-      <span className="grid size-9 place-items-center rounded-xl bg-primary text-white"><Leaf className="size-5" /></span>
-      <span className="hidden sm:inline">Springboard</span>
+      <LeapMark />
+      <span className="hidden sm:inline">{liveRunnerProductName()}</span>
     </>
   );
 
