@@ -29,7 +29,7 @@ import { WaitingRoom } from "./waiting-room";
 import { FullscreenGate } from "./fullscreen-gate";
 import { RetakeButton } from "./retake-button";
 import { PendingPaper } from "./pending-paper";
-import { TimedPartGates } from "./timed-part-gates";
+import { PartClock, TimedPartGates } from "./timed-part-gates";
 import { RunnerHeading } from "./runner-heading";
 import { AttemptResultView } from "./attempt-result-view";
 import { RunFacts } from "./run-facts";
@@ -874,18 +874,40 @@ export function ExerciseRunner({
     return <PendingPaper onExit={() => navigate(homeHref ?? leaveRoute)} />;
   }
 
+  // Every question so far sits in a timed part not yet opened: its gate shows
+  // inside the runner's own frame (top bar, clock, Exit), as it does after the
+  // last page when an untimed part comes first, not on a page of its own.
+  if (!isError && !test && closedParts.length) {
+    return (
+      <>
+        <ExitConfirmDialog
+          open={exitOpen}
+          onOpenChange={setExitOpen}
+          timed={timer.remainingMs !== null}
+          onExit={() => navigate(homeHref ?? leaveRoute)}
+        />
+        <StudentShell
+          current={0}
+          total={paper.parts.reduce((sum, part) => sum + part.questions.length, 0)}
+          timeLeft={timeLeftLabel(timer.remainingMs, deadlineIso, join?.closes_at, formatRemaining, t)}
+          timeTone={clockTone(timer.remainingMs)}
+          exam
+          signature={signature}
+          onExit={() => setExitOpen(true)}
+        >
+          <TimedPartGates parts={closedParts} opening={paper.openingPart} onOpen={openTimedPart} />
+        </StudentShell>
+      </>
+    );
+  }
+
   // Loaded, but nothing a student can answer — say so rather than spin.
   if (!isError && !test) {
     return (
       <StudentPageShell>
-        {closedParts.length ? (
-          // Every question so far sits in a timed part not yet opened.
-          <TimedPartGates parts={closedParts} opening={paper.openingPart} onOpen={openTimedPart} />
-        ) : (
-          <p className="text-center text-sm font-bold text-muted-foreground">
-            {t("exercise.live.runner.noQuestions", "This challenge has no questions yet. Ask your teacher.")}
-          </p>
-        )}
+        <p className="text-center text-sm font-bold text-muted-foreground">
+          {t("exercise.live.runner.noQuestions", "This challenge has no questions yet. Ask your teacher.")}
+        </p>
       </StudentPageShell>
     );
   }
@@ -904,9 +926,14 @@ export function ExerciseRunner({
   const activeJoin = join;
   const activeTest = test;
   const activePages = pages.length ? pages : [{ stub: null, nodeIndices: [0] }];
-  const clampedPage = Math.min(pageIndex, activePages.length - 1);
-  const page = activePages[clampedPage];
-  const isLastPage = clampedPage === activePages.length - 1;
+  // A timed part waiting to be opened is a page of its own after the questions
+  // loaded so far: its card, the timers and Open Part, nothing else.
+  const pageCount = activePages.length + (closedParts.length ? 1 : 0);
+  const clampedPage = Math.min(pageIndex, pageCount - 1);
+  const onGatePage = clampedPage === activePages.length;
+  // The question page drawn, or on the gate page the last one before it, for the bars' context.
+  const page = activePages[Math.min(clampedPage, activePages.length - 1)];
+  const isLastPage = clampedPage === pageCount - 1;
   // Report where the student is by first question on the page.
   indexRef.current = page.nodeIndices[0];
 
@@ -1175,12 +1202,18 @@ export function ExerciseRunner({
   // How this page draws, and whether it needs the wide two-column shell. Shared
   // with the teacher preview so both screens page and lay out identically —
   // see components/exercise/exercise-page.tsx.
-  const hasPassage = step === "answer" && pageLayout(page, test.nodes).hasPassage;
+  const hasPassage = step === "answer" && !onGatePage && pageLayout(page, test.nodes).hasPassage;
+  // The timed part this page sits in, once opened: its clock shows above the questions.
+  const pageNodeId = test.nodes[page.nodeIndices[0]]?.id;
+  const pagePartKey = sessionExercises?.find((item) => item.exercise_key === pageNodeId)?.part_key;
+  // A speaking question's recorder already counts the part down, so a page with one shows no second clock.
+  const pageSpeaks = page.nodeIndices.some((i) => test.nodes[i]?.type === "speaking");
+  const pagePart = pagePartKey && !pageSpeaks ? paper.parts.find((part) => part.part_key === pagePartKey) : undefined;
 
   // The part/section title moves into the top bar (the in-content header is
   // suppressed). It's a compact two-liner that expands to the full instruction
   // on click (RunnerHeading), so nothing is lost to truncation.
-  const heading = step === "answer" ? <RunnerHeading stub={stub} /> : undefined;
+  const heading = step === "answer" && !onGatePage ? <RunnerHeading stub={stub} /> : undefined;
 
   // The exam is locked to fullscreen. This return path is only ever the
   // answer/review steps (submitted/score/closed return earlier), so the gate is
@@ -1275,9 +1308,13 @@ export function ExerciseRunner({
         step === "answer" ? (
           <PaginationBar
             index={clampedPage}
-            total={activePages.length}
+            total={pageCount}
             onPrev={() => goToPage(clampedPage - 1)}
+            // The next part is still on its way: Next waits for it rather
+            // than offering the review of a paper that isn't all here.
+            loading={paper.loadingMore}
             onNext={() => {
+              if (isLastPage && paper.loadingMore) return;
               if (isLastPage) {
                 void saveAnswers();
                 setStep("review");
@@ -1384,17 +1421,20 @@ export function ExerciseRunner({
       ) : null}
       {step === "answer" ? (
         <AnswerFilesProvider value={answerFiles}>
-          <ExercisePage
-            page={page}
-            nodes={test.nodes}
-            answers={answers}
-            onChange={setAnswerFor}
-            enableAnnotations
-          />
-          {/* Timed parts not opened yet follow the last page of the paper. */}
-          {isLastPage ? (
+          {onGatePage ? (
             <TimedPartGates parts={closedParts} opening={paper.openingPart} onOpen={openTimedPart} />
-          ) : null}
+          ) : (
+            <>
+              {pagePart ? <PartClock part={pagePart} serverNow={serverNow} /> : null}
+              <ExercisePage
+                page={page}
+                nodes={test.nodes}
+                answers={answers}
+                onChange={setAnswerFor}
+                enableAnnotations
+              />
+            </>
+          )}
         </AnswerFilesProvider>
       ) : (
         <ReviewSubmit

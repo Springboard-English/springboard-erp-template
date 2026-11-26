@@ -873,5 +873,12 @@ is an optional peer for this reason.
 - It calls the API through `configureApi`'s base URL (`./live/api.ts`), and
   keeps Leap's query keys (`participants`, `run-parts`, `current-user`,
   `recordings`), so an app's own invalidations reach its reads.
+- Timed parts stay inside the runner's frame. An unopened one is a page of its
+  own after the last page loaded (its card, timers and Open Part), or the only
+  page when it comes first; an opened one
+  shows `PartClock` (preparation, time left, time up) above its questions,
+  except on a speaking page, whose recorder counts down itself. While the next
+  part is preloading or opening, `PaginationBar`'s `loading` holds Next,
+  disabled with a spinner, instead of offering "Review answers".
 - Strings are `exercise.live.*`, with Vietnamese in `EXERCISE_VIETNAMESE_MESSAGES`.
 
