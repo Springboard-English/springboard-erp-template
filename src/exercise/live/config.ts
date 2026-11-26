@@ -22,7 +22,7 @@ export interface LiveRunnerOptions {
   productName: string;
 }
 
-const options: LiveRunnerOptions = { playBase: "/play", homeHref: "/", productName: "Springboard Leap" };
+const options: LiveRunnerOptions = { playBase: "/play", homeHref: "/", productName: "Leap by Springboard" };
 
 /** The product name a sitting is signed with. */
 export function liveRunnerProductName(): string {
