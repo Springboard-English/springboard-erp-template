@@ -5,6 +5,7 @@ import { Button } from "../../components/ui/button";
 import { Textarea } from "../../components/ui/textarea";
 import { useI18n } from "../../context/I18nContext";
 import { fieldHeight } from "../../lib/touchTarget";
+import { useCloseOnOutsidePress } from "../lib/use-close-on-outside-press";
 import { cn } from "../../lib/utils";
 import {
   QUESTION_TYPE_DESCRIPTIONS,
@@ -659,32 +660,12 @@ export function QuestionMenu({
   align?: "start" | "end";
 }) {
   const editor = useExerciseEditor();
-  // Set by a press anywhere in the menu's React tree. The type list and the
-  // skill select draw their options in a portal outside this box, and a press
-  // there must not count as "outside": React bubbles it through the portal to
-  // the menu before the document listener runs.
-  const pressedInside = useRef(false);
-  useEffect(() => {
-    const onDown = () => {
-      if (!pressedInside.current) onClose();
-      pressedInside.current = false;
-    };
-    // An open select or list closes on Escape first and marks the event handled.
-    const onKey = (event: KeyboardEvent) => (event.key === "Escape" && !event.defaultPrevented ? onClose() : undefined);
-    document.addEventListener("pointerdown", onDown);
-    window.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("pointerdown", onDown);
-      window.removeEventListener("keydown", onKey);
-    };
-  }, [onClose]);
+  const onPointerDownCapture = useCloseOnOutsidePress(true, onClose);
   if (!editor) return null;
   return (
     <div
       role="dialog"
-      onPointerDownCapture={() => {
-        pressedInside.current = true;
-      }}
+      onPointerDownCapture={onPointerDownCapture}
       onClick={(event) => event.stopPropagation()}
       className={cn(
         "absolute top-full z-30 mt-2 flex w-60 flex-col gap-2 rounded-2xl border bg-card p-3 text-left text-sm leading-normal shadow-xl",
