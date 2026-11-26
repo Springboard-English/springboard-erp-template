@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { LogOut, Monitor, Moon, Sun, UserCog, type LucideIcon } from "lucide-react";
-import { ACCOUNTS_PROFILE_URL } from "@/config/accounts";
+import { accountsProfileUrl } from "@/config/accounts";
 import { cn } from "@/lib/utils";
 import { touchHitArea } from "@/lib/touchTarget";
 import { Separator } from "@/components/ui/separator";
@@ -262,7 +262,7 @@ export default function MobileMenuSheet({
         <div className="sticky bottom-0 z-10 flex gap-2 border-t border-border/70 bg-card px-5 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
           {user && user.account_type !== "guest" ? (
             <a
-              href={ACCOUNTS_PROFILE_URL}
+              href={accountsProfileUrl()}
               target="_blank"
               rel="noopener noreferrer"
               className="flex min-h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors hover:bg-muted"
