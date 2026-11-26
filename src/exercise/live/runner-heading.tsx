@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useState, type ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
 
 import { EditableText } from "../components/exercise-edit";
@@ -6,6 +6,7 @@ import { collectionHeading } from "../components/collection-context";
 import type { CollectionStub } from "./api";
 import { useStableI18n } from "./i18n";
 import { cn } from "../../lib/utils";
+import { useCloseOnOutsidePress } from "../lib/use-close-on-outside-press";
 
 // The part/section title shown in the runner's top bar. The bar is a fixed
 // height, so the section instruction is truncated to one line — but the full
@@ -15,15 +16,17 @@ import { cn } from "../../lib/utils";
 // In the question editor (`edit`), the panel is where the part's title and
 // instruction and the section's instruction are edited, typed in place.
 //
-// The panel closes on a press anywhere outside it, or Escape. A press inside a
-// dialog the panel opened (the host's settings) is not outside it: dialogs
-// portal to the body, so they are told apart by their role.
+// The panel closes on a press anywhere outside it, or Escape. A press in a list
+// or dialog the panel opened is not outside it (`useCloseOnOutsidePress`).
 /** How the editor changes a part's or section's heading text. */
 export interface HeadingEdit {
   onChange: (collectionKey: string, patch: { title?: string; instruction?: string }) => void;
   /** The host's further settings for the section (task, word bank). */
   extra?: ReactNode;
 }
+
+/** A press in an open dialog or alert dialog, which portal to the body. */
+const keepDialogs = (target: Element | null) => Boolean(target?.closest?.('[role="dialog"], [role="alertdialog"]'));
 
 /** The runner's part/section heading, which drops the full instructions down. */
 export function RunnerHeading({
@@ -38,24 +41,11 @@ export function RunnerHeading({
 }) {
   const { t } = useStableI18n();
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const close = useCallback(() => setOpen(false), []);
   const { part, section } = collectionHeading(stub, t);
 
-  useEffect(() => {
-    if (!open) return;
-    const onDown = (event: PointerEvent) => {
-      const target = event.target as Element | null;
-      if (ref.current?.contains(target) || target?.closest?.('[role="dialog"], [role="alertdialog"]')) return;
-      setOpen(false);
-    };
-    const onKey = (event: KeyboardEvent) => (event.key === "Escape" ? setOpen(false) : undefined);
-    document.addEventListener("pointerdown", onDown);
-    window.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("pointerdown", onDown);
-      window.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
+  // A dialog the panel opened (the host's settings) may render outside its tree.
+  const onPointerDownCapture = useCloseOnOutsidePress(open, close, keepDialogs);
 
   const partObj = stub?.kind === "part" ? stub : stub?.parent;
   const sectionObj = stub?.kind === "section" ? stub : null;
@@ -70,7 +60,7 @@ export function RunnerHeading({
   const hasMore = Boolean(partInstruction || section || (edit && (partObj || sectionObj)));
 
   return (
-    <div ref={ref} className={cn("relative flex max-w-full", compact ? "min-w-0" : "mx-auto justify-center")}>
+    <div onPointerDownCapture={onPointerDownCapture} className={cn("relative flex max-w-full", compact ? "min-w-0" : "mx-auto justify-center")}>
       <button
         type="button"
         onClick={() => hasMore && setOpen((v) => !v)}
