@@ -179,6 +179,88 @@ function correctAnswer(row: ResultRow) {
   return formatted.kind === "none" ? null : formatted;
 }
 
+/** A question's points as "got/out of", or what there is of that. */
+function pointsLine(item: AnswerResultItem | undefined): string {
+  // `max_points` is absent on an older API; without it there is nothing
+  // honest to print the points out of.
+  if (item?.max_points !== undefined && item?.max_points !== null) {
+    return `${formatMarks(item.points)}/${formatMarks(item.max_points)}`;
+  }
+  return item?.points !== undefined && item?.points !== null ? formatMarks(item.points) : "—";
+}
+
+/**
+ * The marks for some questions of a graded paper, one card each: verdict and
+ * points, their answer, the released key and the explanation. The review
+ * paper draws it under each page; the rows are the results table's, so the
+ * two screens name every answer in the same words.
+ */
+export function QuestionMarks({
+  nodes,
+  numbers,
+  result,
+  collectionByNode,
+}: {
+  nodes: ExerciseNode[];
+  /** Each node's 1-based number on the paper. */
+  numbers: number[];
+  result: ParticipantResult;
+  collectionByNode?: Map<string, CollectionStub | null>;
+}) {
+  const { t } = useStableI18n();
+  const showKey = result.answer_key_released === true;
+  const itemByKey = new Map((result.items ?? []).map((item) => [item.exercise_key, item]));
+  return (
+    <div className="space-y-3">
+      {nodes.map((node, k) => {
+        const row: ResultRow = {
+          index: numbers[k] - 1,
+          node,
+          item: itemByKey.get(node.id),
+          huntText: huntParagraph(collectionByNode?.get(node.id)),
+        };
+        const given = givenAnswer(row);
+        const key = showKey ? correctAnswer(row) : null;
+        return (
+          <section key={node.id} className="rounded-2xl border bg-card p-4 shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+              <span className="font-extrabold text-foreground">
+                {t("exercise.renderer.questionNo", "Question {n}", { n: numbers[k] })}
+              </span>
+              <span className="flex items-center gap-3">
+                <Verdict item={row.item} />
+                <span className="font-mono text-xs font-semibold tabular-nums text-muted-foreground">
+                  {pointsLine(row.item)}
+                </span>
+              </span>
+            </div>
+            <dl className="mt-3 grid gap-3 text-xs sm:grid-cols-2">
+              <div className="min-w-0">
+                <dt className="mb-1 font-bold text-muted-foreground">
+                  {t("exercise.live.attemptResult.yourAnswer", "Your Answer")}
+                </dt>
+                <dd>{given ? <AnswerValue formatted={given} /> : <span className="font-semibold text-muted-foreground">—</span>}</dd>
+              </div>
+              {key ? (
+                <div className="min-w-0">
+                  <dt className="mb-1 font-bold text-muted-foreground">
+                    {t("exercise.live.attemptResult.correctAnswer", "Correct Answer")}
+                  </dt>
+                  <dd><AnswerValue formatted={key} /></dd>
+                </div>
+              ) : null}
+            </dl>
+            <Explanation text={row.item?.explanation ?? undefined} mode="result" className="mt-3" />
+            {row.item?.feedback ? (
+              <p className="mt-3 rounded-xl bg-lav-bg p-3 text-sm font-semibold text-lav-700">{row.item.feedback}</p>
+            ) : null}
+          </section>
+        );
+      })}
+    </div>
+  );
+}
+
 function ResultTable({ rows, showKey }: { rows: ResultRow[]; showKey: boolean }) {
   const { t } = useStableI18n();
   const [page, setPage] = useState(0);
@@ -266,14 +348,7 @@ function ResultTable({ rows, showKey }: { rows: ResultRow[]; showKey: boolean })
       header: t("exercise.live.attemptResult.points", "Points"),
       className: "text-right w-24",
       cellClassName: "text-right align-top text-xs font-semibold tabular-nums text-muted-foreground",
-      // `max_points` is absent on an older API; without it there is nothing
-      // honest to print the points out of.
-      render: (row) =>
-        row.item?.max_points !== undefined && row.item?.max_points !== null
-          ? `${formatMarks(row.item.points)}/${formatMarks(row.item.max_points)}`
-          : row.item?.points !== undefined && row.item?.points !== null
-            ? formatMarks(row.item.points)
-            : "—",
+      render: (row) => pointsLine(row.item),
     },
   ];
 

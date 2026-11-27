@@ -1099,6 +1099,8 @@ export interface RecordingUrl {
   ends_at: string;
   /** The server's clock when it signed, so the player can seek without a skew. */
   server_now: string;
+  /** A released run's replay: no window, play and seek at will. Absent on an older API. */
+  review?: boolean;
 }
 
 /** A window a participant can see: the room's (`room`) or their own. */
