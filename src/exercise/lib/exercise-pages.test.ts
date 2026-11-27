@@ -287,17 +287,26 @@ describe("pageLayout", () => {
     expect(pageLayout(page, nodes).kind).toBe("jumbled-paragraph");
   });
 
-  it("keeps the shell narrow for the drag layouts, even under a part passage", () => {
-    // They draw their own text inline (the passage with its gaps, or the
-    // paragraphs themselves) beside their pool, so no passage column sits
-    // beside them: the part's would squeeze the task into select mode.
+  it("keeps the shell narrow for jumbled paragraphs, even under a part passage", () => {
+    // The pieces sit beside their pool with no passage card, and the part's
+    // passage is not drawn beside them.
     const nodes = [mcq("a"), mcq("b")];
     const parent = stub({ kind: "part", appsheet_key: "p1", passage: ["Reading."] });
-    for (const layout of ["gapped-text", "jumbled-paragraph"] as const) {
-      const section = stub({ info: { layout }, passage: ["A {gap} passage {gap}."], parent });
-      const [page] = pagesOf(nodes, { a: section, b: section });
-      expect(pageLayout(page, nodes).hasPassage).toBe(false);
-    }
+    const section = stub({ info: { layout: "jumbled-paragraph" }, passage: ["Opening."], parent });
+    const [page] = pagesOf(nodes, { a: section, b: section });
+    expect(pageLayout(page, nodes).hasPassage).toBe(false);
+  });
+
+  it("goes wide for a gapped text, as for any shared passage", () => {
+    // Its passage draws in the same titled card as a reading passage, so the
+    // page is as wide as every other shared-passage page.
+    const nodes = [mcq("a"), mcq("b")];
+    const section = stub({ info: { layout: "gapped-text" }, passage: ["A {gap} passage {gap}."] });
+    const [page] = pagesOf(nodes, { a: section, b: section });
+    expect(pageLayout(page, nodes).hasPassage).toBe(true);
+    const bare = stub({ info: { layout: "gapped-text" } });
+    const [empty] = pagesOf(nodes, { a: bare, b: bare });
+    expect(pageLayout(empty, nodes).hasPassage).toBe(false);
   });
 
   it("draws an error-correction section over a passage as the hunt", () => {
