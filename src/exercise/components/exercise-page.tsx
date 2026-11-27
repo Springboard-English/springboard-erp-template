@@ -41,6 +41,9 @@ import { cn } from "../../lib/utils";
 // In the editor a section's own text reads as the student sees it until "Edit
 // text"; this says whether it is being typed into.
 const TextEditing = createContext(false);
+// Flips `TextEditing`, for a layout that draws its own "Edit passage" in its
+// passage card's header instead of the page's "Edit text" above it.
+const ToggleTextEditing = createContext<(() => void) | null>(null);
 import { answerFromKey, keyFromAnswer } from "../lib/answer-key-bridge";
 import { joinPassage, typedParagraphs } from "../lib/passage";
 
@@ -264,7 +267,9 @@ function EditPageBody(props: ExercisePageProps) {
     // it, and its "Add option" sits at the end of that list.
     <PoolEditProvider nodes={pooledLayout ? pageNodes : []}>
       <TextEditing.Provider value={ownText && textEditing}>
-        {ownText ? (
+      <ToggleTextEditing.Provider value={ownText ? () => setTextEditing((value) => !value) : null}>
+        {/* A gapped text's passage card carries its own toggle. */}
+        {ownText && layout.kind !== "gapped-text" ? (
           <div className="mb-3 flex justify-end">
             <Button
               type="button"
@@ -277,6 +282,7 @@ function EditPageBody(props: ExercisePageProps) {
           </div>
         ) : null}
         <AnswerPageBody {...props} answers={answers} onChange={onChange} enableAnnotations={false} />
+      </ToggleTextEditing.Provider>
       </TextEditing.Provider>
     </PoolEditProvider>
   );
@@ -291,7 +297,9 @@ function AnswerPageBody({ page, nodes, answers, onChange, enableAnnotations }: E
   // In the editor, the section's key. The cloze has its own Edit passage
   // toggle; the hunt and gapped text are typed into only after "Edit text".
   const editKey = editor && page.stub?.kind === "section" ? page.stub.appsheet_key : undefined;
-  const textKey = useContext(TextEditing) ? editKey : undefined;
+  const textEditing = useContext(TextEditing);
+  const toggleTextEditing = useContext(ToggleTextEditing);
+  const textKey = textEditing ? editKey : undefined;
   // The questions column is highlightable too — instructions, labels, prompts.
   // Its highlights are saved per page, named by the page's first question: React
   // reuses text nodes across pages of the same layout, so a range kept across
@@ -366,8 +374,21 @@ function AnswerPageBody({ page, nodes, answers, onChange, enableAnnotations }: E
       <CollectionContext stub={page.stub} hideHeader hidePassage enableAnnotations={enableAnnotations}>
         {scoped(
           <>
-            <SectionLead stub={page.stub} ownsText />
+            {/* The passage title is in the passage card's own header. */}
             <GappedTextSection
+              title={page.stub?.kind === "section" ? page.stub.passage_title : null}
+              headerAction={
+                toggleTextEditing ? (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={textEditing ? "default" : "outline"}
+                    onClick={toggleTextEditing}
+                  >
+                    {textEditing ? t("exercise.edit.done", "Done") : t("exercise.edit.editPassage", "Edit passage")}
+                  </Button>
+                ) : null
+              }
               onTextChange={
                 editor && textKey ? (text) => editor.onPassageChange(textKey, typedParagraphs(text)) : undefined
               }

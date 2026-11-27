@@ -10,6 +10,7 @@ import { useScrollPane } from "../lib/use-scroll-pane";
 import type { CollectionStub } from "../types";
 import { AnnotatablePassage } from "./annotatable-passage";
 import { EditableText, useExerciseEditor } from "./exercise-edit";
+import { PassageCardHeader } from "./passage-card-header";
 import { PassageText } from "./passage-text";
 
 // The part/section title lines for a stub, for surfaces that show the heading
@@ -223,12 +224,7 @@ export function CollectionContext({
     <div {...passageAnchor} className="runner-passage-column">
       {/* A card, so the passage reads as its own panel beside the questions. */}
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border bg-card shadow-sm">
-        <div className="flex shrink-0 items-center justify-between gap-2 border-b bg-muted/30 px-4 py-2.5">
-          <p className="flex min-w-0 items-center gap-2 text-sm font-bold text-foreground">
-            <BookOpen className="size-4 shrink-0" />
-            <span className="truncate">{passageHolder.passage_title || t("exercise.renderer.passage", "Passage")}</span>
-          </p>
-          <div className="flex shrink-0 items-center gap-1">
+        <PassageCardHeader title={passageHolder.passage_title}>
             {editor ? (
               <Button
                 type="button"
@@ -248,8 +244,7 @@ export function CollectionContext({
               {showPassage ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
               {showPassage ? t("exercise.renderer.hide", "Hide") : t("exercise.renderer.show", "Show")}
             </Button>
-          </div>
-        </div>
+        </PassageCardHeader>
         <div
           className={cn(
             "min-h-0 flex-1 overflow-y-auto p-5",

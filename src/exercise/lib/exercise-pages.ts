@@ -274,11 +274,15 @@ export function pageLayout(page: RunPage, nodes: ExerciseNode[]): PageLayout {
           : "questions",
     // An error hunt owns its passage (it renders it itself, clickable), so the
     // shell must not ALSO put it in a side column; only the part's can go there.
-    // The drag layouts draw their own two columns (text, then the pool) and
-    // take the page's full width, so no passage column sits beside them.
-    hasPassage: isGappedText || isJumbled
-      ? false
-      : isErrorHunt
+    // The drag layouts draw their own two columns (text, then the pool), so
+    // no passage column sits beside them. A gapped text's text is a shared
+    // passage in the same card as a reading passage, so it gets the same wide
+    // shell; jumbled pieces have no passage and stay narrow.
+    hasPassage: isGappedText
+      ? hasOwnPassage
+      : isJumbled
+        ? false
+        : isErrorHunt
         ? Boolean(stub.parent?.passage?.length)
         : hasPassage,
   };

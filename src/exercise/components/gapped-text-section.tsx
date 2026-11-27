@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import {
   ParagraphDrop,
   SlotContent,
@@ -8,6 +9,7 @@ import { joinGapMarkerSplit, splitPassageOnGapMarkers } from "../lib/gap-token";
 import type { ExerciseAnswer, ExerciseNode } from "../lib/exercises";
 import { optionLetters } from "../lib/option-letters";
 import { EditableText } from "./exercise-edit";
+import { PassageCardHeader } from "./passage-card-header";
 
 // A gapped-text section: a passage with whole paragraphs removed, refilled from
 // a lettered pool by DRAGGING each paragraph into its gap.
@@ -31,7 +33,13 @@ export function GappedTextSection({
   onChange,
   mode = "practice",
   onTextChange,
+  title,
+  headerAction,
 }: {
+  /** The passage's title, in the card's header like every shared passage's. */
+  title?: string | null;
+  /** Controls for the card's header, such as the editor's "Edit passage". */
+  headerAction?: ReactNode;
   /**
    * Edit mode: the text between the gaps is typed in place, and the whole
    * passage, its gap markers kept, comes back here.
@@ -133,7 +141,11 @@ export function GappedTextSection({
             ? t("exercise.renderer.choosePlaceholder", "choose…")
             : t("exercise.renderer.dropParagraph", "drop a paragraph");
         return (
-          <div className="rounded-2xl border bg-card p-5 text-base leading-8 text-foreground shadow-sm sm:p-6">
+          // The same titled card as a side-by-side reading passage: this text is
+          // the section's shared passage, only with its gaps in it.
+          <div className="overflow-hidden rounded-2xl border bg-card shadow-sm">
+            <PassageCardHeader title={title}>{headerAction}</PassageCardHeader>
+            <div className="p-5 text-base leading-8 text-foreground sm:p-6">
             {chunks ? (
               chunks.map((chunk, index) => (
                 <span key={index}>
@@ -157,6 +169,7 @@ export function GappedTextSection({
                 ))}
               </div>
             )}
+            </div>
           </div>
         );
       }}
