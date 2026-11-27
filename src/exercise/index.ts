@@ -140,3 +140,9 @@ export * from "./live/use-proctoring";
 export * from "./live/use-session-timer";
 export * from "./live/use-window-away";
 export * from "./live/waiting-room";
+
+// The AI import: read a paper with the AI, review what came back, save it as
+// a test (or, in Leap, as library questions). The app sets its routes and save
+// target with `configureImport` and mounts `AiExtract` on its own route.
+export { AiExtract } from "./import/ai-extract";
+export { configureImport, importOptions, type ImportMode, type ImportOptions } from "./import/config";
