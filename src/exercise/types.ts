@@ -66,6 +66,15 @@ export interface MediaRef {
   duration_s: number;
 }
 
+/** One line of a recording's transcript, timed in seconds from the clip's start. */
+export interface TranscriptCue {
+  start_s: number;
+  end_s: number;
+  text: string;
+  /** Who says it, when the paper names its speakers. */
+  speaker?: string | null;
+}
+
 /** A listening recording as `/v2/recordings` returns it. */
 export interface ListeningRecording {
   appsheet_key: string;
@@ -76,6 +85,8 @@ export interface ListeningRecording {
   title: string;
   media: MediaRef;
   transcript: string | null;
+  /** The transcript line by line with timings; absent on an older API. */
+  transcript_cues?: TranscriptCue[] | null;
   order: number;
 }
 
@@ -91,4 +102,7 @@ export interface SessionRecording {
   duration_s: number;
   owner_kind: RecordingOwnerKind;
   covers: string[];
+  /** Null until the run releases its answer key: a transcript reads the answers out. */
+  transcript?: string | null;
+  transcript_cues?: TranscriptCue[] | null;
 }
