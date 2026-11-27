@@ -2,13 +2,16 @@
 
 React + TypeScript component library (`@springboard-english/springboard-erp-template`,
 Vite library mode + Tailwind v4) shared by lms, leap, erp-hrm, erp-crm, erp-ops and
-accounts. Short working rules. How each feature behaves is in `docs/features.md`;
-releasing is in `docs/releasing.md`.
+accounts. Short working rules. What each export needs around it (providers,
+pairings, phone vs desktop) is in `docs/exports.md`; read its TL;DR before using
+a component. How each feature behaves is in `docs/features.md`; releasing is in
+`docs/releasing.md`.
 
 ## Layout
 
 - `src/exports.ts` is the public surface and build entry. A component not
-  re-exported there is invisible to consumers.
+  re-exported there is invisible to consumers. A new export, or a changed
+  pairing, updates `docs/exports.md` in the same commit.
 - `src/core/` is the code-only `/core` entry: no React, DOM or auth imports, and
   the build fails if one appears. `src/components/` holds the shared components (`ui/`
   primitives, `layout/` detail scaffolds, `charts/`, `widgets/`, `changelog/`, …).
