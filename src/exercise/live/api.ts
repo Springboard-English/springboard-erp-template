@@ -567,6 +567,11 @@ export interface ParticipantResult {
   /** The same totals split by skill; rows sum to the fields above. Absent on a
    * older API — draw nothing rather than group the items yourself. */
   by_skill?: SkillScore[];
+  /** The same per (skill, question type), and per (skill, type, section task);
+   * a skill's type rows and a type's task rows each sum to their parent row.
+   * Absent on an older API. */
+  by_type?: ExerciseTypeScore[];
+  by_layout?: ExerciseLayoutScore[];
   /** Where this attempt sits in the room, overall and per skill. Null and
    * empty on an attempt that is not the one counted for its student, and
    * absent on an older API. */
@@ -613,6 +618,20 @@ export interface SkillScore {
   max_points: number;
   marked_points: number;
   pending: number;
+}
+
+/** One participant's score on one question type within one skill: `SkillScore` keyed by the pair. */
+export interface ExerciseTypeScore extends SkillScore {
+  /** The question's own type (mcq, gap-filling, ...). */
+  type: string;
+}
+
+/**
+ * `ExerciseTypeScore` keyed by (skill, type, section task): `layout` is the
+ * section's task, "" for a plain section and null for questions in no section.
+ */
+export interface ExerciseLayoutScore extends ExerciseTypeScore {
+  layout: string | null;
 }
 
 /**

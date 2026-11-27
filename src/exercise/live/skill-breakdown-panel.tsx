@@ -48,7 +48,7 @@ export function SkillBreakdown({
         {rows.map((row) => {
           const fill = `var(--${SKILL_ACCENTS[row.skill]}-500)`;
           return (
-            <li key={row.skill}>
+            <li key={row.key ?? row.skill}>
               <div className="mb-1.5 flex items-center justify-between gap-3 text-xs font-bold">
                 <span className="flex min-w-0 items-center gap-2 text-foreground">
                   <span

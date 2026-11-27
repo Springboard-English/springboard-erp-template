@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { CheckCircle2, XCircle } from "lucide-react";
 import {
+  FilterPills,
   SimpleDataTable,
   type SimpleDataTableColumn,
 } from "../../exports";
@@ -23,7 +24,12 @@ import { useStableI18n } from "./i18n";
 import { gradedFromResult } from "./grading";
 import { releasedAnswerKey } from "./released-key";
 import { formatMarks } from "./results";
-import { participantSkillRows } from "./skill-breakdown";
+import {
+  participantLayoutRows,
+  participantSkillRows,
+  participantTypeRows,
+  type SkillBarRow,
+} from "./skill-breakdown";
 import { TOUR_ANCHORS, tourAnchorProps } from "./tour";
 
 // A student's graded paper: a top section — the score beside its split by
@@ -75,6 +81,11 @@ export function AttemptResultView({
     huntText: huntParagraph(collectionByNode?.get(node.id)),
   }));
   const skillRows = participantSkillRows(result.by_skill, t);
+  const typeRows = participantTypeRows(result.by_type, t);
+  // Tasks are only worth a view when some section names one beyond its type.
+  const layoutRows = (result.by_layout ?? []).some((row) => row.layout)
+    ? participantLayoutRows(result.by_layout, t)
+    : [];
 
   return (
     <div className="@container space-y-6">
@@ -87,11 +98,7 @@ export function AttemptResultView({
         }
       >
         <ScoreSummary result={graded} studentName={studentName} />
-        <SkillBreakdown
-          title={t("exercise.live.attemptResult.bySkill", "By skill")}
-          rows={skillRows}
-          className="rounded-3xl border bg-card p-6 shadow-sm"
-        />
+        <BreakdownPanel skillRows={skillRows} typeRows={typeRows} layoutRows={layoutRows} />
       </section>
       <StandingPanel
         standing={result.standing}
@@ -101,6 +108,53 @@ export function AttemptResultView({
       />
       <ResultTable rows={rows} showKey={result.answer_key_released === true} />
       {footer}
+    </div>
+  );
+}
+
+type BreakdownView = "skill" | "type" | "layout";
+
+/**
+ * The score split three ways, one at a time: by skill, by question type within
+ * a skill, and by section task. A view with no rows (an older API, or a paper
+ * with no section task) is not offered.
+ */
+function BreakdownPanel({
+  skillRows,
+  typeRows,
+  layoutRows,
+}: {
+  skillRows: SkillBarRow[];
+  typeRows: SkillBarRow[];
+  layoutRows: SkillBarRow[];
+}) {
+  const { t } = useStableI18n();
+  const [view, setView] = useState<BreakdownView>("skill");
+  if (skillRows.length === 0) return null;
+  const views: Array<{ value: BreakdownView; label: string; rows: SkillBarRow[] }> = [
+    { value: "skill", label: t("exercise.live.attemptResult.bySkill", "By skill"), rows: skillRows },
+    ...(typeRows.length > 0
+      ? [{ value: "type" as const, label: t("exercise.live.attemptResult.byType", "By question type"), rows: typeRows }]
+      : []),
+    ...(layoutRows.length > 0
+      ? [{ value: "layout" as const, label: t("exercise.live.attemptResult.byLayout", "By task"), rows: layoutRows }]
+      : []),
+  ];
+  const current = views.find((option) => option.value === view) ?? views[0];
+  return (
+    // `min-w-0`: a grid item takes its content's width, and the pill row, which scrolls, must not set it.
+    <div className="min-w-0 space-y-4 rounded-3xl border bg-card p-6 shadow-sm">
+      {views.length > 1 ? (
+        <FilterPills
+          value={current.value}
+          options={views.map(({ value, label }) => ({ value, label }))}
+          onValueChange={setView}
+          label={t("exercise.live.attemptResult.breakdown", "Breakdown")}
+        />
+      ) : (
+        <h2 className="text-sm font-bold text-foreground">{current.label}</h2>
+      )}
+      <SkillBreakdown rows={current.rows} />
     </div>
   );
 }
