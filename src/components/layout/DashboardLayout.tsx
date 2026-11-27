@@ -469,7 +469,8 @@ function DashboardLayoutInner({
   // identity and sign-out itself, so it would show the name, the email and a
   // Logout button twice. An app that wants more in the sheet passes `mobileMenu`.
   const pageRefresh = usePageRefresh();
-  const report = useReportProblem();
+  // Only when the app lets the shell draw its own entry points.
+  const report = useReportProblem()?.entryPoints ?? false;
 
   const defaultMenuBody = headerContent ? (
     <div className="space-y-3">{headerContent}</div>
@@ -779,6 +780,7 @@ export default function DashboardLayout({
           app={reportProblem?.app ?? ""}
           defaultCategory={reportProblem?.defaultCategory}
           queue={reportProblem?.queue}
+          entryPoints={reportProblem?.entryPoints}
           enabled={Boolean(reportProblem) && reportProblem?.enabled !== false}
         >
           <DashboardLayoutInner {...props} />

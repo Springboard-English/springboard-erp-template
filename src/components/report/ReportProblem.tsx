@@ -29,6 +29,12 @@ export interface ReportProblemConfig {
   enabled?: boolean;
   /** The triage team its reports go to ("practice" for app.springboard.vn). Omitted, the API's `platform`. */
   queue?: FeedbackTicketQueue;
+  /**
+   * False keeps the flow but draws none of the shell's entry points: no header
+   * icon, no phone-menu row, no refresh nudge. The app opens it itself with
+   * `useReportProblem().open` (app.springboard.vn's floating icon). Defaults to true.
+   */
+  entryPoints?: boolean;
 }
 
 /** What `useReportProblem` hands an entry point. */
@@ -36,6 +42,8 @@ export interface ReportProblemContextValue {
   app: string;
   /** Opens the report form. */
   open: () => void;
+  /** Whether the shell draws its own entry points (`ReportProblemConfig.entryPoints`). */
+  entryPoints: boolean;
 }
 
 /**
@@ -72,6 +80,7 @@ export function ReportProblemProvider({
   defaultCategory,
   enabled = true,
   queue,
+  entryPoints = true,
   children,
 }: ReportProblemProviderProps) {
   const location = useLocation();
@@ -87,8 +96,8 @@ export function ReportProblemProvider({
   }, []);
 
   const value = useMemo<ReportProblemContextValue | null>(
-    () => (enabled ? { app, open } : null),
-    [app, enabled, open],
+    () => (enabled ? { app, open, entryPoints } : null),
+    [app, enabled, entryPoints, open],
   );
 
   return (
@@ -96,7 +105,7 @@ export function ReportProblemProvider({
       {children}
       {enabled ? (
         <>
-          <RefreshNudge onReport={open} allowed={phase === "idle"} />
+          {entryPoints ? <RefreshNudge onReport={open} allowed={phase === "idle"} /> : null}
 
           {phase === "capturing" ? (
             <CaptureBar
@@ -160,7 +169,7 @@ export function ReportProblemButton({
 }: ReportProblemButtonProps) {
   const { t } = useI18n();
   const report = useReportProblem();
-  if (!report) return null;
+  if (!report?.entryPoints) return null;
   const label = t("report.open");
   return (
     <Button
@@ -195,7 +204,7 @@ export function ReportProblemMenuButton({
 }: ReportProblemMenuButtonProps) {
   const { t } = useI18n();
   const report = useReportProblem();
-  if (!report) return null;
+  if (!report?.entryPoints) return null;
   return (
     <Button
       type="button"

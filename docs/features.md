@@ -793,6 +793,9 @@ it. There is no floating launcher.
 - **The queue** (`queue`, optional) names the triage team the ticket goes to:
   app.springboard.vn passes `"practice"`; left out, the API files on
   `platform`. Each queue's access group alone sees and is pushed its tickets.
+- **`entryPoints: false`** keeps the flow but draws none of the shell's entry
+  points (header icon, phone-menu row, refresh nudge); the app opens it with
+  `useReportProblem().open`. app.springboard.vn does this for its floating icon.
 - **A shell that is not `DashboardLayout`** mounts `ReportProblemProvider`
   (same config) under its router and places `ReportProblemButton` (header) and
   `ReportProblemMenuButton` (menu); `useReportProblem()?.open()` opens it from
