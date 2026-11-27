@@ -889,6 +889,10 @@ inside `LiveStudentProvider`, with `LiveEventsProvider`,
 `ExerciseTourAnchorsProvider` and a `sonner` `<Toaster>` above them; `sonner`
 is an optional peer for this reason.
 
+- `AttemptResultView` (since 8.13.0) splits the score by skill, by question
+  type and by section task, one at a time behind pills, from the result's
+  `by_skill`, `by_type` and `by_layout`. A view whose rows are missing is not
+  offered. The task view shows only when some section has a task.
 - `configureLiveRunner({ playBase, homeHref, productName })` at boot: where
   the join screen and runner live (`<playBase>/<code>` and `/run`), where Home
   goes, and the product a sitting names in its tab title and AI notice.

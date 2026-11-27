@@ -7,7 +7,9 @@ import type {
 import type { Translate } from "./i18n";
 import {
   classSkillRows as classSkillRowsIn,
+  participantLayoutRows,
   participantSkillRows as participantSkillRowsIn,
+  participantTypeRows,
 } from "./skill-breakdown";
 
 const t: Translate = (_k, f = "", v = {}) => f.replace(/\{(\w+)\}/g, (_, n) => String(v[n]));
@@ -130,5 +132,43 @@ describe("classSkillRows", () => {
 
   it("draws nothing for an API that does not send the breakdown", () => {
     expect(classSkillRows(undefined)).toEqual([]);
+  });
+});
+
+describe("participantTypeRows and participantLayoutRows", () => {
+  it("names a row by skill and type, keyed so two skills' types never collide", () => {
+    const rows = participantTypeRows(
+      [
+        { ...score({ skill: "reading" }), type: "mcq" },
+        { ...score({ skill: "listening" }), type: "mcq" },
+      ],
+      t,
+    );
+    expect(rows.map((row) => [row.key, row.label, row.percentage])).toEqual([
+      ["reading|mcq", "Reading · Multiple choice", 50],
+      ["listening|mcq", "Listening · Multiple choice", 50],
+    ]);
+  });
+
+  it("names a task row by its task, and a row with none by its type", () => {
+    const rows = participantLayoutRows(
+      [
+        { ...score({ skill: "reading" }), type: "mcq", layout: "gapped-text" },
+        { ...score({ skill: "reading" }), type: "mcq", layout: "" },
+        { ...score({ skill: "reading" }), type: "mcq", layout: null },
+      ],
+      t,
+    );
+    expect(rows.map((row) => row.label)).toEqual([
+      "Reading · Gapped text",
+      "Reading · Multiple choice",
+      "Reading · Multiple choice",
+    ]);
+    expect(new Set(rows.map((row) => row.key)).size).toBe(3);
+  });
+
+  it("draws nothing for an API that does not send them", () => {
+    expect(participantTypeRows(undefined, t)).toEqual([]);
+    expect(participantLayoutRows(undefined, t)).toEqual([]);
   });
 });

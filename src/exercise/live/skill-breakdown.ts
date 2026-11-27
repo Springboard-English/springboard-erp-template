@@ -1,9 +1,13 @@
 import type {
+  ExerciseLayoutScore,
+  ExerciseTypeScore,
   SessionSkillAccuracy,
   SkillScore,
 } from "./api";
 import { valueLabel, type Translate } from "./i18n";
 import { SKILL_LABELS, type SkillTag } from "../lib/exercises";
+import { questionTypeLabel } from "../lib/section-type";
+import type { CollectionLayout } from "../types";
 import { formatMarks, provisionalScore } from "./results";
 
 // The per-skill bars, as rows to draw.
@@ -22,6 +26,8 @@ import { formatMarks, provisionalScore } from "./results";
 // breakdown should draw nothing rather than crash the score screen.
 
 export type SkillBarRow = {
+  /** Unique among the rows; the skill when absent, as one row per skill needs nothing more. */
+  key?: string;
   skill: SkillTag;
   label: string;
   /** The figure printed beside the bar: "8/10 points", "12/15 correct". */
@@ -101,6 +107,40 @@ export function participantSkillRows(
   return (bySkill ?? []).map((row) => ({
     skill: row.skill,
     label: skillLabel(row.skill, t),
+    ...scoreCell(row, t),
+  }));
+}
+
+/**
+ * One participant's rows per question type within each skill ("Reading ·
+ * Multiple choice"), each a `scoreCell`, in the API's order.
+ */
+export function participantTypeRows(
+  byType: ExerciseTypeScore[] | undefined,
+  t: Translate,
+): SkillBarRow[] {
+  return (byType ?? []).map((row) => ({
+    key: `${row.skill}|${row.type}`,
+    skill: row.skill,
+    label: `${skillLabel(row.skill, t)} · ${valueLabel(t, questionTypeLabel(row.type))}`,
+    ...scoreCell(row, t),
+  }));
+}
+
+/**
+ * One participant's rows per section task ("Reading · Gapped text"). A row with
+ * no task (a plain section, or questions straight in a part) is named by its
+ * question type, as everywhere a section's task is named.
+ */
+export function participantLayoutRows(
+  byLayout: ExerciseLayoutScore[] | undefined,
+  t: Translate,
+): SkillBarRow[] {
+  return (byLayout ?? []).map((row) => ({
+    // "" (a plain section) and null (no section) are separate rows.
+    key: `${row.skill}|${row.type}|${row.layout === null ? "-" : row.layout}`,
+    skill: row.skill,
+    label: `${skillLabel(row.skill, t)} · ${valueLabel(t, questionTypeLabel(row.type, (row.layout || null) as CollectionLayout | null))}`,
     ...scoreCell(row, t),
   }));
 }
