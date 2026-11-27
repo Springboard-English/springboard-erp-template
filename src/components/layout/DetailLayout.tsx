@@ -98,6 +98,8 @@ type DetailStat = {
 
 const DetailViewContext = createContext<{
     floating: boolean;
+    /** False when the page offers no floating view (`DetailView floatable={false}`). */
+    floatable: boolean;
     collapsed: boolean;
     hiddenCollapsed: boolean;
     isBackground?: boolean;
@@ -154,11 +156,14 @@ const UNFRAMED_DETAIL_CLASS = "w-full max-w-[1700px] space-y-4";
  * floating record); `frame={false}` draws no frame and `className` then
  * replaces the plain default, for a DetailView embedded in a tab or dialog.
  * `scroll="content"` lets the frame itself scroll on desktop.
+ * `floatable={false}` is for a record with no list behind it: no Floating
+ * View toggle, and a floating mode carried in the URL is ignored.
  */
 export function DetailView({
     children,
     className,
     frame = "detail",
+    floatable = true,
     isBackground: isBackgroundProp,
     contentScrollable = false,
     scroll = contentScrollable ? "content" : "none",
@@ -174,6 +179,8 @@ export function DetailView({
     /** Lets the page itself scroll inside its frame, for content that cannot fill. */
     contentScrollable?: boolean;
     onCloseFloating?: () => void;
+    /** Whether the page may float over a list; false for a record with none behind it. */
+    floatable?: boolean;
 }) {
     const { t } = useI18n();
     const isBackgroundFromContext = useContext(BackgroundDetailViewContext);
@@ -185,7 +192,7 @@ export function DetailView({
     // phone straight in it. Suppress the mode rather than clear it — the stored
     // preference survives, and a rotate or a resize brings the panel back.
     const isMobile = useIsMobile();
-    const floating = isBackground || isMobile ? false : detailViewMode.floating;
+    const floating = isBackground || isMobile || !floatable ? false : detailViewMode.floating;
     const [headerSlot, setHeaderSlot] = useState<HTMLElement | null>(null);
     // Kept in a ref so a section re-rendering with fresh callbacks costs no update; the version moves on a visible change.
     const sectionMenusRef = useRef(new Map<string, DetailMenuAction[]>());
@@ -207,8 +214,9 @@ export function DetailView({
         setMenuHosts((count) => count + 1);
         return () => setMenuHosts((count) => count - 1);
     }, []);
-    const collapsed = isBackground ? false : detailViewMode.isCollapsed;
-    const hiddenCollapsed = isBackground
+    // Collapsing is a floating panel's; a page that cannot float never collapses.
+    const collapsed = isBackground || !floatable ? false : detailViewMode.isCollapsed;
+    const hiddenCollapsed = isBackground || !floatable
         ? false
         : detailViewMode.hiddenCollapsed;
     const applyMode = (
@@ -268,6 +276,7 @@ export function DetailView({
         <DetailViewContext.Provider
             value={{
                 floating,
+                floatable,
                 collapsed,
                 hiddenCollapsed,
                 isBackground,
@@ -624,7 +633,10 @@ export function DetailHeader({
     const showExpandAction =
         !isMobile && detailViewContext?.floating && !detailViewContext.collapsed;
     const showFloatingAction =
-        !isMobile && detailViewContext && !detailViewContext.floating;
+        !isMobile &&
+        detailViewContext &&
+        detailViewContext.floatable &&
+        !detailViewContext.floating;
     // Section controls only move up on desktop; a phone keeps them above the section.
     const showSlot = !isMobile && Boolean(detailViewContext);
     const setHeaderSlot = detailViewContext?.setHeaderSlot;
@@ -1426,6 +1438,7 @@ export function DetailPendingView<T extends string>({
     frame,
     scroll,
     onCloseFloating,
+    floatable,
 }: {
     breadcrumbs: BreadcrumbItem[];
     /** Omitted while the record's name is unknown: a pulse bar stands in. */
@@ -1449,6 +1462,8 @@ export function DetailPendingView<T extends string>({
     /** As on `DetailView`. */
     scroll?: PageFrameScroll;
     onCloseFloating?: () => void;
+    /** As on `DetailView`. */
+    floatable?: boolean;
 }) {
     const body = message ? (
         <div
@@ -1462,7 +1477,7 @@ export function DetailPendingView<T extends string>({
     );
 
     return (
-        <DetailView className={className} frame={frame} scroll={scroll} onCloseFloating={onCloseFloating}>
+        <DetailView className={className} frame={frame} scroll={scroll} onCloseFloating={onCloseFloating} floatable={floatable}>
             <DetailHeader
                 breadcrumbs={
                     <DetailBreadcrumbs
