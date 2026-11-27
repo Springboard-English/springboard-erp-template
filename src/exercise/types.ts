@@ -25,6 +25,8 @@ export type CollectionLayout =
   | "jumbled-paragraph"
   | "multi-select"
   | "multiple-matching"
+  // Mistakes hidden in the section's passage; the student clicks each one.
+  | "error-hunt"
   // A speaking task of alternative prompts; each attempt is given one.
   | "topic-pool";
 

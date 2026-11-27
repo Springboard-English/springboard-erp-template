@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { EXERCISE_VIETNAMESE_MESSAGES } from "./messages";
 import { QUESTION_TYPE_LABELS, SKILL_LABELS } from "./lib/exercises";
-import { ERROR_HUNT, SECTION_LAYOUTS, sectionTaskLabel } from "./lib/section-type";
+import { SECTION_LAYOUTS, sectionTaskLabel } from "./lib/section-type";
 import { HIGHLIGHT_COLOURS } from "./components/highlighter";
 
 // Every source file under `src/exercise` as text, through Vite's raw import, so
@@ -29,7 +29,6 @@ describe("EXERCISE_VIETNAMESE_MESSAGES", () => {
       ...Object.values(SKILL_LABELS),
       ...Object.values(QUESTION_TYPE_LABELS),
       ...SECTION_LAYOUTS.map((layout) => sectionTaskLabel(layout)),
-      sectionTaskLabel(ERROR_HUNT),
       ...HIGHLIGHT_COLOURS.map((colour) => `Highlight ${colour}`),
       // The answer parts `AnswerValue` labels.
       ...[...SOURCES["./lib/attempt-answer.ts"].matchAll(/label: "([^"]+)"/g)].map((match) => match[1]),

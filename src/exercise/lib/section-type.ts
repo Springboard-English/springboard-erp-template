@@ -30,6 +30,7 @@ const LAYOUT_LABELS: Record<CollectionLayout, string> = {
   "jumbled-paragraph": "Jumbled paragraphs",
   "multi-select": "Choose several",
   "multiple-matching": "Multiple matching",
+  "error-hunt": "Error correction in a passage",
   "topic-pool": "Speaking topic pool",
 };
 
@@ -37,14 +38,13 @@ const LAYOUT_LABELS: Record<CollectionLayout, string> = {
 export const SECTION_LAYOUTS = Object.keys(LAYOUT_LABELS) as CollectionLayout[];
 
 /**
- * An error hunt over a passage ("the passage contains FIVE mistakes…") is a task
- * the API models WITHOUT a layout: a section with a passage whose questions are
- * all error-correction (extraction.py's TASKS, "`layout` stays empty"). So it is
- * never stored — a picker offers it, and it is read back from the questions.
+ * An error hunt over a passage ("the passage contains FIVE mistakes…"). Stored as
+ * a layout now; sections saved before it were stored with none, so a section of
+ * only error-correction questions still reads back as one.
  */
-export const ERROR_HUNT = "error-hunt";
-export type SectionTask = CollectionLayout | typeof ERROR_HUNT;
-export const ERROR_HUNT_LABEL = "Error correction in a passage";
+export const ERROR_HUNT = "error-hunt" satisfies CollectionLayout;
+export type SectionTask = CollectionLayout;
+export const ERROR_HUNT_LABEL = LAYOUT_LABELS[ERROR_HUNT];
 
 /** The section's task: its layout, else a hunt when every question is one. */
 export function sectionTask(
@@ -59,7 +59,7 @@ export function sectionTask(
 
 /** A task's name as a teacher reads it. */
 export function sectionTaskLabel(task: SectionTask): string {
-  return task === ERROR_HUNT ? ERROR_HUNT_LABEL : LAYOUT_LABELS[task];
+  return LAYOUT_LABELS[task];
 }
 
 /** Whether the task's passage carries `{gap}` blanks the answers are placed in. */
@@ -75,7 +75,7 @@ export function usesBlanks(task: SectionTask | null | undefined): boolean {
 
 /** The question type a task pins, as `layoutRequiredType`, hunt included. */
 export function taskRequiredType(task: SectionTask | null | undefined): QuestionType | null {
-  return task === ERROR_HUNT ? "error-correction" : layoutRequiredType(task);
+  return layoutRequiredType(task);
 }
 
 /**
@@ -141,5 +141,6 @@ export function layoutRequiredType(
 ): QuestionType | null {
   if (!layout) return null;
   if (layout === "topic-pool") return "speaking";
+  if (layout === "error-hunt") return "error-correction";
   return GAP_LAYOUTS.has(layout) ? "gap-filling" : "mcq";
 }
