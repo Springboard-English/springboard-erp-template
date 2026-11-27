@@ -778,6 +778,7 @@ export default function DashboardLayout({
         <ReportProblemProvider
           app={reportProblem?.app ?? ""}
           defaultCategory={reportProblem?.defaultCategory}
+          queue={reportProblem?.queue}
           enabled={Boolean(reportProblem) && reportProblem?.enabled !== false}
         >
           <DashboardLayoutInner {...props} />

@@ -790,6 +790,9 @@ it. There is no floating launcher.
 - **The context** appended to the description is `"<app> · <path>"`, read from
   react-router. The Area starts on `defaultCategory`, else `lms` for the LMS
   and `process` elsewhere. A feature request is a report type, not an Area.
+- **The queue** (`queue`, optional) names the triage team the ticket goes to:
+  app.springboard.vn passes `"practice"`; left out, the API files on
+  `platform`. Each queue's access group alone sees and is pushed its tickets.
 - **A shell that is not `DashboardLayout`** mounts `ReportProblemProvider`
   (same config) under its router and places `ReportProblemButton` (header) and
   `ReportProblemMenuButton` (menu); `useReportProblem()?.open()` opens it from

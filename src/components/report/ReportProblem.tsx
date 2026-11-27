@@ -16,6 +16,7 @@ import { useI18n } from "@/context/I18nContext";
 import AnnotationEditor from "./AnnotationEditor";
 import CaptureBar from "./CaptureBar";
 import RefreshNudge from "./RefreshNudge";
+import type { FeedbackTicketQueue } from "../../api_calls/feedbackTickets";
 import ReportDialog, { MAX_REPORT_EVIDENCE, type ReportProblemCategory } from "./ReportDialog";
 
 /** Turns on "Report a problem" for an app. The app decides who may report through `enabled`. */
@@ -26,6 +27,8 @@ export interface ReportProblemConfig {
   defaultCategory?: ReportProblemCategory;
   /** False hides every entry point (for example, for anyone but employees). Defaults to true. */
   enabled?: boolean;
+  /** The triage team its reports go to ("practice" for app.springboard.vn). Omitted, the API's `platform`. */
+  queue?: FeedbackTicketQueue;
 }
 
 /** What `useReportProblem` hands an entry point. */
@@ -68,6 +71,7 @@ export function ReportProblemProvider({
   app,
   defaultCategory,
   enabled = true,
+  queue,
   children,
 }: ReportProblemProviderProps) {
   const location = useLocation();
@@ -126,6 +130,7 @@ export function ReportProblemProvider({
             onClose={closeAll}
             contextLabel={reportContextLabel(app, location.pathname)}
             defaultCategory={defaultCategory ?? defaultReportCategory(app)}
+            queue={queue}
             evidence={evidence}
             onEvidenceChange={setEvidence}
             onRequestCapture={() => setPhase("capturing")}

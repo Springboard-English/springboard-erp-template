@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useI18n } from "@/context/I18nContext";
-import type { FeedbackTicketReportType as ReportType } from "../../api_calls/feedbackTickets";
+import type { FeedbackTicketQueue, FeedbackTicketReportType as ReportType } from "../../api_calls/feedbackTickets";
 import type { FormSchema, FormValues } from "../forms/schema";
 import { SchemaFormDialog } from "../forms/SchemaFormDialog";
 import { useSchemaForm } from "../forms/useSchemaForm";
@@ -76,6 +76,8 @@ export interface ReportDialogProps {
   contextLabel: string;
   /** The Area preselected each time the form opens. */
   defaultCategory?: ReportProblemCategory;
+  /** The triage team the report is filed with; omitted, the API's default. */
+  queue?: FeedbackTicketQueue;
   evidence: string[];
   onEvidenceChange: (next: string[]) => void;
   /** Hides the dialog for screenshot mode; the caller draws the capture bar. */
@@ -93,6 +95,7 @@ export default function ReportDialog({
   onClose,
   contextLabel,
   defaultCategory = "process",
+  queue,
   evidence,
   onEvidenceChange,
   onRequestCapture,
@@ -205,6 +208,7 @@ export default function ReportDialog({
           category: values.category as ReportProblemCategory,
           contextLabel,
           evidence,
+          queue,
         });
         reset();
         setSubmittedRef(result.id);
@@ -214,7 +218,7 @@ export default function ReportDialog({
         setSubmitting(false);
       }
     },
-    [contextLabel, evidence, reset, t],
+    [contextLabel, evidence, queue, reset, t],
   );
 
   if (submittedRef) {
