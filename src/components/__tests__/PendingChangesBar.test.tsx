@@ -153,8 +153,8 @@ describe("PendingChangesBar scroll clearance", () => {
     const rect = (top: number, bottom: number) =>
       ({ top, bottom, height: bottom - top, left: 0, right: 0, width: 0, x: 0, y: top, toJSON: () => ({}) }) as DOMRect;
     const spy = vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (this: Element) {
-      if (this.id === "scroller") return rect(100, 800);
-      if (this.closest("[data-pending-bar]")) return rect(700, 760);
+      if (this.id === "scroller") return rect(100, 740);
+      if (this.closest("[data-pending-bar]")) return rect(700, 750);
       return rect(0, 0);
     });
     const page = (count: number) => (
@@ -170,8 +170,8 @@ describe("PendingChangesBar scroll clearance", () => {
     await userEvent.click(screen.getByRole("textbox", { name: "Remarks" }));
     expect(scroller.style.scrollPaddingBottom).toBe("");
     rerender(page(1));
-    // 800 - 700 covered, plus the 12px gap.
-    expect(scroller.style.scrollPaddingBottom).toBe("112px");
+    // 740 - 700 covered, plus the 12px gap.
+    expect(scroller.style.scrollPaddingBottom).toBe("52px");
     rerender(page(0));
     expect(scroller.style.scrollPaddingBottom).toBe("");
     spy.mockRestore();
