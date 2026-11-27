@@ -107,3 +107,25 @@ describe("SimpleDataTable row groups", () => {
         expect(screen.getByText("first (2)")).toHaveAttribute("colspan", "2");
     });
 });
+
+describe("SimpleDataTable row detail", () => {
+    it("draws the detail under its row across every column, and nothing for null", () => {
+        render(
+            <I18nProvider>
+                <SimpleDataTable
+                    columns={[plain("a"), plain("b"), plain("c")]}
+                    rows={[{ key: "x" }, { key: "y" }]}
+                    rowKey={(row) => row.key}
+                    rowDetail={(row) => (row.key === "x" ? "note-x" : null)}
+                    page={0}
+                    pageSize={10}
+                    onPageChange={() => undefined}
+                    onPageSizeChange={() => undefined}
+                />
+            </I18nProvider>,
+        );
+        const bodyRows = within(screen.getByRole("table")).getAllByRole("row").slice(1);
+        expect(bodyRows.map((row) => row.textContent)).toEqual(["a-xb-xc-x", "note-x", "a-yb-yc-y"]);
+        expect(screen.getByText("note-x").closest("td")).toHaveAttribute("colspan", "3");
+    });
+});

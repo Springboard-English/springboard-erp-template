@@ -374,6 +374,10 @@ server paging a group can carry on to the next page; `compare` orders the
 groups, otherwise they come in the order they first appear. `groupTableRows`
 is the same split for a caller's own use.
 
+`rowDetail` (since 8.12.0) draws a second row under a row, one cell across
+every column, for a note too long for one column, such as a question's
+explanation on a student's result. Return null and no row is drawn.
+
 `FilterPills` is a one-line row of pills that sets one filter value. Use it for
 a short list of choices under a page's own tabs (a class's homework topics),
 where a second tab bar would read as two levels of navigation. It scrolls

@@ -110,6 +110,8 @@ export interface SimpleDataTableClassNames {
   emptyCell?: string;
   /** Each group header cell, with `rowGroups`. */
   groupCell?: string;
+  /** Each full-width detail cell, with `rowDetail`. */
+  detailCell?: string;
   /** Footer / pagination bar. */
   footer?: string;
   /** "Showing x–y of z" label. */
@@ -170,6 +172,11 @@ export interface SimpleDataTableProps<T> {
   selection?: RowSelection<T>;
   /** Groups the rows on each page under a header row per group. */
   rowGroups?: SimpleDataTableRowGroups<T>;
+  /**
+   * Content drawn in a second row under a row, spanning every column, such as
+   * a long note that would squeeze into one column. Return null for none.
+   */
+  rowDetail?: (row: T) => ReactNode;
 }
 
 // One row height whatever a cell holds: room for a 44px touch control plus 6px
@@ -271,6 +278,7 @@ export default function SimpleDataTable<T>({
   onHoveredRowChange,
   selection,
   rowGroups,
+  rowDetail,
 }: SimpleDataTableProps<T>) {
   const isMobileViewport = useIsMobile();
   const { t } = useI18n();
@@ -381,17 +389,22 @@ export default function SimpleDataTable<T>({
   const tableColumns = selectionColumn ? [selectionColumn, ...columns] : columns;
   const handleRowClick = onRowClick ?? (selection ? toggleRow : undefined);
 
-  const renderTableRow = (row: T) => (
+  const renderTableRow = (row: T) => {
+    const detail = rowDetail?.(row) ?? null;
+    const hasDetail = detail !== null && detail !== undefined && detail !== false;
+    const rowClassName = cn(
+      // Hairlines separate rows; a tint marks only the row under the pointer.
+      'hover:bg-muted/40',
+      handleRowClick && 'cursor-pointer',
+      hoveredRowKey === rowKey(row) && 'bg-muted/40',
+      classNames?.row,
+    );
+    const mainRow = (
     <TableRow
       key={rowKey(row)}
       data-state={selection && selectedKeys.has(rowKey(row)) ? 'selected' : undefined}
-      className={cn(
-        // Hairlines separate rows; a tint marks only the row under the pointer.
-        'hover:bg-muted/40',
-        handleRowClick && 'cursor-pointer',
-        hoveredRowKey === rowKey(row) && 'bg-muted/40',
-        classNames?.row,
-      )}
+      // The detail row below carries the hairline, so the pair reads as one row.
+      className={cn(rowClassName, hasDetail && 'border-b-0')}
       onClick={handleRowClick ? () => handleRowClick(row) : undefined}
       onMouseEnter={onHoveredRowChange ? () => onHoveredRowChange(row) : undefined}
       onFocus={onHoveredRowChange ? () => onHoveredRowChange(row) : undefined}
@@ -412,7 +425,24 @@ export default function SimpleDataTable<T>({
         </TableCell>
       ))}
     </TableRow>
-  );
+    );
+    if (!hasDetail) return mainRow;
+    return (
+      <Fragment key={rowKey(row)}>
+        {mainRow}
+        <TableRow
+          className={rowClassName}
+          onClick={handleRowClick ? () => handleRowClick(row) : undefined}
+          onMouseEnter={onHoveredRowChange ? () => onHoveredRowChange(row) : undefined}
+        >
+          <TableCell colSpan={tableColumns.length} className={cn('px-4 pt-0 pb-4 whitespace-normal', classNames?.detailCell)}>
+            {/* A table wider than its card scrolls sideways; the detail stays pinned to the visible width. */}
+            <div className="sticky left-4 max-w-[calc(100cqw-2rem)]">{detail}</div>
+          </TableCell>
+        </TableRow>
+      </Fragment>
+    );
+  };
 
   const hasGroups = tableColumns.some((column) => column.group);
 
@@ -565,7 +595,8 @@ export default function SimpleDataTable<T>({
       )}
     >
       <div
-        className={cn("min-h-0 overflow-auto", fill && "md:flex-1", classNames?.scroll)}
+        // With `rowDetail`, a size container, so a detail can size itself to the visible width.
+        className={cn("min-h-0 overflow-auto", fill && "md:flex-1", rowDetail && "@container", classNames?.scroll)}
         // A filled card takes its height from the parent, so the measured cap only applies otherwise.
         style={tableBodyMaxHeight && !fill ? { maxHeight: `${tableBodyMaxHeight}px` } : undefined}
       >
