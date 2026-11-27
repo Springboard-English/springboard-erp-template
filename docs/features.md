@@ -132,6 +132,21 @@ rules that keep it that way; a per-app copy of any of them is the bug.
   icon in its header that runs the same refresh as the pull (`usePageRefresh`).
   Pages don't draw their own; `RefreshButton` is deprecated.
 
+## The pending-changes pill (`PendingChangesBar`)
+
+A compact pill at the bottom right: "N changes", Review (when `pendingItems`
+are given), Discard and Save. It is only as wide as its contents, so the page
+beside it stays clickable, and Review opens a card above it.
+
+- **Nothing is padded while it is hidden.** While it shows,
+  `useScrollClearance` gives each scroll container around the focused field a
+  `scroll-padding-bottom` equal to how much the pill covers it (the page itself
+  on a phone, a `fill` table's body on desktop). The browser then scrolls a
+  focused field, and the caret of a growing textarea, to sit above the pill.
+  Inline values are restored when it hides.
+- **On a phone Review and Discard are icons** with screen-reader labels; Save,
+  or the first action, keeps its label. Keep `saveLabel` short ("Save").
+
 ## Pending actions on the bar (`PendingChangesBar`, since 4.30.0)
 
 The bar that holds unsaved edits also holds *pending actions*: rows a user
@@ -302,8 +317,9 @@ instead of `DetailTabbedSection`. Each `DetailSectionItem` has a `value`,
   (`SimpleDataTable`, `DetailFieldsTable`, `DetailCard`). That card grows to
   the bottom and scrolls inside; cards above it keep their height. The sidebar
   doesn't stretch.
-- **The pending-changes bar gets room.** While it shows, the pinned rows and
-  the content pane pad their foot so the bar never covers them.
+- **The pending-changes pill floats; fields scroll clear of it.** Pages are
+  not padded for it. While it shows, the scrollers around the focused field get
+  `scroll-padding-bottom` (see the pill section).
 - **A section's controls sit in the header** (since 6.9.0). Wrap the open
   section's view select, Create, Filters and similar in
   `DetailHeaderActions`. On desktop they render in `DetailHeader` ahead of

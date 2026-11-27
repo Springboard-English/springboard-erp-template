@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { animated, useSpring } from "@react-spring/web";
 import type { SpringConfig } from "@react-spring/web";
@@ -15,6 +15,7 @@ import PendingBarConfirmDialog from "@/components/PendingBarConfirmDialog";
 // Relative: this type reaches the published .d.ts, where `@/` does not resolve.
 import type { PendingBarConfirm } from "./PendingBarConfirmDialog";
 import useIsMobile from "@/hooks/useIsMobile";
+import useScrollClearance from "@/hooks/useScrollClearance";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/context/I18nContext";
 
@@ -61,8 +62,8 @@ export interface PendingChangeItem {
   value: string;
 }
 
-export const PENDING_CHANGES_BAR_DEFAULT_SAVE_LABEL = "Save changes";
-export const PENDING_CHANGES_BAR_DEFAULT_CANCEL_LABEL = "Cancel";
+export const PENDING_CHANGES_BAR_DEFAULT_SAVE_LABEL = "Save";
+export const PENDING_CHANGES_BAR_DEFAULT_CANCEL_LABEL = "Discard";
 export const PENDING_CHANGES_BAR_DEFAULT_VIEW_UNSAVED_LABEL = "Review";
 export const PENDING_CHANGES_BAR_DEFAULT_PENDING_KEY_LABEL = "OBJECT";
 export const PENDING_CHANGES_BAR_DEFAULT_PENDING_VALUE_LABEL = "Changed";
@@ -116,8 +117,10 @@ export interface PendingChangesBarProps {
 }
 
 /**
- * The floating bar at the bottom of the page that holds unsaved edits: a
- * count, an optional Review list (`pendingItems`), Cancel and Save. Given
+ * The floating pill at the bottom right of the page that holds unsaved edits:
+ * a count, an optional Review list (`pendingItems`), Discard and Save. While
+ * it shows, the scrollers around a focused field get `scroll-padding-bottom`
+ * so the field and its caret scroll clear of it. Given
  * `actions` it holds pending actions instead (ticked rows waiting for a send
  * or a delete), each with an optional confirmation dialog; extra actions sit
  * in a "⋯" menu. Shown while `pendingCount` is above zero.
@@ -156,6 +159,8 @@ export default function PendingChangesBar({
   const [shownBlocked, setShownBlocked] = useState<string | null>(null);
   const actionsMode = actions !== undefined;
   const busy = saving || disabled || runningId !== null;
+  const pillRef = useRef<HTMLDivElement>(null);
+  useScrollClearance(pillRef, show, barTransitionMs);
 
   const hasUnsavedItems = useMemo(
     () => Array.isArray(pendingItems) && pendingItems.length > 0,
@@ -264,9 +269,9 @@ export default function PendingChangesBar({
   };
 
 
-  // Hidden labels keep the phone bar on one line; the icon and the
-  // screen-reader text stay. Only in actions mode, so edit pages are unchanged.
-  const compactLabel = actionsMode ? "max-md:sr-only" : undefined;
+  // Hidden labels keep the phone pill on one line; the icon and the
+  // screen-reader text stay, and Save or the first action keeps its label.
+  const compactLabel = "max-md:sr-only";
 
   return createPortal(
     <div
@@ -275,7 +280,10 @@ export default function PendingChangesBar({
         // sheets 60, this bar 65, popovers and menus 70, the bar's own confirm 75.
         // The bar clears dialogs because the edits it saves are often made inside
         // one (a week overview, a tables dialog); under the overlay it is unreachable.
-        "fixed bottom-[calc(4rem+0.75rem)] left-3 right-3 z-[65] transform-gpu transition-all md:bottom-6 md:left-[calc(var(--sb-sidebar-width,18rem)+1.5rem)] md:right-6",
+        "fixed bottom-[calc(4rem+0.75rem)] right-3 z-[65] max-w-[calc(100vw-1.5rem)] transform-gpu transition-all md:bottom-6 md:right-6 md:max-w-[calc(100vw-var(--sb-sidebar-width,18rem)-3rem)]",
+        // Only the right edge is pinned, so the box is as wide as the pill and
+        // leaves the page beside it clickable. A phone's actions-mode bar fills the row.
+        actionsMode && "max-md:left-3",
         show
           ? "translate-y-0 opacity-100 pointer-events-auto"
           : "translate-y-6 opacity-0 pointer-events-none",
@@ -292,12 +300,12 @@ export default function PendingChangesBar({
             maxHeight: expandSpring.maxHeight,
             opacity: expandSpring.opacity,
           }}
-          className="overflow-hidden"
+          className="absolute bottom-full right-0 mb-2 overflow-hidden"
         >
           <div
             className={cn(
               // No `pointer-events-auto` here — see the pill below.
-              "mx-auto w-[calc(100%-7rem)] overflow-auto rounded-t-[28px] border border-b-0 border-border/70 shadow-[0_20px_48px_-28px_rgba(15,23,42,0.5)] backdrop-blur",
+              "w-[min(32rem,calc(100vw-1.5rem))] overflow-auto rounded-2xl border border-border/70 shadow-[0_20px_48px_-28px_rgba(15,23,42,0.5)] backdrop-blur",
               dimmed ? "bg-muted/80 opacity-80 shadow-none" : "bg-card/95",
             )}
             // The list scrolls only if this element has a limit of its own; the
@@ -350,6 +358,7 @@ export default function PendingChangesBar({
         </animated.div>
 
         <div
+          ref={pillRef}
           className={cn(
             // Deliberately NOT `pointer-events-auto`. The wrapper above owns
             // that decision and sets `pointer-events-none` while the bar is
@@ -359,10 +368,10 @@ export default function PendingChangesBar({
             // swallowing clicks on whatever sits under it, such as the data
             // tables' pager. Inheriting is what makes "hidden" mean
             // untouchable.
-            "relative flex min-h-[3.75rem] items-center justify-between gap-3 rounded-[999px] border border-border/70 px-4 py-2 shadow-[0_18px_40px_-20px_rgba(15,23,42,0.4)] backdrop-blur-md",
+            "relative flex items-center justify-between gap-3 rounded-[999px] border border-border/70 py-1.5 pl-4 pr-1.5 shadow-[0_18px_40px_-20px_rgba(15,23,42,0.4)] backdrop-blur-md",
             // A phone's action buttons fill the row, so the count takes a line of its own.
             actionsMode &&
-              "max-md:flex-col max-md:items-stretch max-md:gap-2 max-md:rounded-[28px] max-md:py-3",
+              "max-md:flex-col max-md:items-stretch max-md:gap-2 max-md:rounded-[28px] max-md:px-4 max-md:py-3",
             dimmed ? "bg-muted/80 opacity-80 shadow-none" : "bg-card/96",
           )}
         >
@@ -383,10 +392,7 @@ export default function PendingChangesBar({
           </div>
 
           <div
-            className={cn(
-              "flex shrink-0 items-center justify-end gap-1.5",
-              actionsMode ? "flex-nowrap" : "flex-wrap",
-            )}
+            className="flex shrink-0 flex-nowrap items-center justify-end gap-1.5"
           >
             {hasUnsavedItems ? (
               <Button
@@ -397,11 +403,11 @@ export default function PendingChangesBar({
                 onClick={() => setIsUnsavedOpen((current) => !current)}
               >
                 <ClipboardList className="size-4" />
-                {actionsMode ? <span className={compactLabel}>{viewUnsavedLabel}</span> : viewUnsavedLabel}
+                <span className={compactLabel}>{viewUnsavedLabel}</span>
                 <ChevronUp
                   className={cn(
                     "size-4 transition-transform",
-                    actionsMode && "max-md:hidden",
+                    "max-md:hidden",
                     isUnsavedOpen ? "rotate-0" : "rotate-180",
                   )}
                   style={{ transitionDuration: `${chevronTransitionMs}ms` }}
@@ -417,7 +423,7 @@ export default function PendingChangesBar({
                 disabled={busy}
               >
                 <X className="size-4" />
-                {actionsMode ? <span className={compactLabel}>{cancelLabel}</span> : cancelLabel}
+                <span className={compactLabel}>{cancelLabel}</span>
               </Button>
             ) : null}
             {actionsMode ? (
