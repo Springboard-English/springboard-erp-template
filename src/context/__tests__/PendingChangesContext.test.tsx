@@ -89,7 +89,7 @@ describe("usePendingChangesSource (Leap's provider behaviour)", () => {
     expect(bar()).toHaveAttribute("data-pending-bar", "closed");
     await userEvent.type(screen.getByLabelText("Title"), "x");
     expect(bar()).toHaveAttribute("data-pending-bar", "open");
-    expect(within(bar()).getByText("1 unsaved change")).toBeInTheDocument();
+    expect(within(bar()).getByText("1 change")).toBeInTheDocument();
     await userEvent.clear(screen.getByLabelText("Title"));
     expect(bar()).toHaveAttribute("data-pending-bar", "closed");
   });
@@ -103,7 +103,7 @@ describe("usePendingChangesSource (Leap's provider behaviour)", () => {
     );
     await userEvent.type(screen.getByLabelText("Time limit"), "30");
     await userEvent.type(screen.getByLabelText("Essay 1"), "7");
-    expect(within(bar()).getByText("2 unsaved changes")).toBeInTheDocument();
+    expect(within(bar()).getByText("2 changes")).toBeInTheDocument();
     await userEvent.click(within(bar()).getByRole("button", { name: /Review/ }));
     expect(within(bar()).getByText("Delivery")).toBeInTheDocument();
     expect(within(bar()).getByText("Marks")).toBeInTheDocument();
@@ -158,7 +158,7 @@ describe("usePendingChangesSource (Leap's provider behaviour)", () => {
         <Reader />
       </Host>,
     );
-    await waitFor(() => expect(within(bar()).getByText("1 unsaved change")).toBeInTheDocument());
+    await waitFor(() => expect(within(bar()).getByText("1 change")).toBeInTheDocument());
     expect(renders).toBeLessThan(10);
   });
 });
@@ -176,9 +176,9 @@ describe("per-form keys", () => {
     );
     await userEvent.type(screen.getByLabelText("Name"), "a");
     await userEvent.type(screen.getByLabelText("Email"), "b");
-    expect(within(bar()).getByText("2 unsaved changes")).toBeInTheDocument();
+    expect(within(bar()).getByText("2 changes")).toBeInTheDocument();
     expect(value?.sectionPendingCounts.Details).toBe(2);
-    await userEvent.click(within(bar()).getByRole("button", { name: "Save changes" }));
+    await userEvent.click(within(bar()).getByRole("button", { name: "Save" }));
     await waitFor(() => expect(bar()).toHaveAttribute("data-pending-bar", "closed"));
     expect(saved).toEqual(["Name", "Email"]);
   });
@@ -217,8 +217,8 @@ describe("Save all", () => {
     for (const label of ["One", "Two", "Three"]) {
       await userEvent.type(screen.getByLabelText(label), "x");
     }
-    await userEvent.click(within(bar()).getByRole("button", { name: "Save changes" }));
-    await waitFor(() => expect(within(bar()).getByText("1 unsaved change")).toBeInTheDocument());
+    await userEvent.click(within(bar()).getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(within(bar()).getByText("1 change")).toBeInTheDocument());
     expect(saved).toEqual(["One", "Three"]);
     expect(screen.getByLabelText("Two")).toHaveValue("x");
   });
@@ -253,7 +253,7 @@ describe("Save all", () => {
     );
     await userEvent.type(screen.getByLabelText("One"), "x");
     await userEvent.type(screen.getByLabelText("Two"), "y");
-    await userEvent.click(within(bar()).getByRole("button", { name: "Cancel" }));
+    await userEvent.click(within(bar()).getByRole("button", { name: "Discard" }));
     expect(screen.getByLabelText("One")).toHaveValue("");
     expect(screen.getByLabelText("Two")).toHaveValue("");
   });
@@ -271,10 +271,10 @@ describe("blocked", () => {
     await userEvent.type(screen.getByLabelText("Mark"), "12");
     await userEvent.type(screen.getByLabelText("Note"), "ok");
     expect(within(bar()).queryByRole("alert")).not.toBeInTheDocument();
-    await userEvent.click(within(bar()).getByRole("button", { name: "Save changes" }));
+    await userEvent.click(within(bar()).getByRole("button", { name: "Save" }));
     expect(within(bar()).getByRole("alert")).toHaveTextContent("Mark is over the maximum");
     expect(saved).toEqual([]);
-    await userEvent.click(within(bar()).getByRole("button", { name: "Cancel" }));
+    await userEvent.click(within(bar()).getByRole("button", { name: "Discard" }));
     expect(screen.getByLabelText("Mark")).toHaveValue("");
   });
 
@@ -321,7 +321,7 @@ describe("selection actions mode", () => {
     );
     expect(within(bar()).getByText("2 people selected")).toBeInTheDocument();
     expect(within(bar()).getByRole("button", { name: "Clear Selection" })).toBeInTheDocument();
-    expect(within(bar()).queryByRole("button", { name: "Save changes" })).not.toBeInTheDocument();
+    expect(within(bar()).queryByRole("button", { name: "Save" })).not.toBeInTheDocument();
     await userEvent.click(within(bar()).getByRole("button", { name: "Delete" }));
     expect(onDelete).toHaveBeenCalledWith(["ann", "bao"]);
   });
@@ -336,7 +336,7 @@ describe("selection actions mode", () => {
     expect(within(bar()).getByText("1 people selected")).toBeInTheDocument();
     await userEvent.type(screen.getByLabelText("Name"), "x");
     expect(within(bar()).queryByRole("button", { name: "Delete" })).not.toBeInTheDocument();
-    expect(within(bar()).getByRole("button", { name: "Save changes" })).toBeInTheDocument();
+    expect(within(bar()).getByRole("button", { name: "Save" })).toBeInTheDocument();
     await userEvent.clear(screen.getByLabelText("Name"));
     expect(within(bar()).getByRole("button", { name: "Delete" })).toBeInTheDocument();
   });
@@ -397,9 +397,9 @@ describe("registerSection (unchanged)", () => {
       await value!.handleSaveActiveSection();
     });
     expect(onSave).toHaveBeenCalledTimes(1);
-    await userEvent.click(within(bar()).getByRole("button", { name: "Save changes" }));
+    await userEvent.click(within(bar()).getByRole("button", { name: "Save" }));
     expect(onSave).toHaveBeenCalledTimes(2);
-    await userEvent.click(within(bar()).getByRole("button", { name: "Cancel" }));
+    await userEvent.click(within(bar()).getByRole("button", { name: "Discard" }));
     expect(onCancel).toHaveBeenCalledTimes(1);
   });
 });

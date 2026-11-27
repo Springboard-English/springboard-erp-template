@@ -21,8 +21,8 @@ describe("PendingChangesBar", () => {
         <PendingChangesBar pendingCount={2} onSave={onSave} onCancel={() => undefined} />
       </I18nProvider>,
     );
-    expect(screen.getByText("2 unsaved changes")).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    expect(screen.getByText("2 changes")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
     expect(onSave).toHaveBeenCalledTimes(1);
   });
 
@@ -52,7 +52,7 @@ describe("PendingChangesBar", () => {
       </I18nProvider>,
     );
     expect(screen.getByText("3 assessments selected")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Save changes" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Save" })).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Send to parents" }));
     expect(await screen.findByText("3 parents will get it.")).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Send 3" }));
@@ -104,11 +104,11 @@ describe("PendingChangesBar blocked", () => {
         <PendingChangesBar pendingCount={1} onSave={onSave} onCancel={onCancel} blocked="Pick an answer first" />
       </I18nProvider>,
     );
-    expect(screen.getByText("1 unsaved change")).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    expect(screen.getByText("1 change")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
     expect(screen.getByRole("alert")).toHaveTextContent("Pick an answer first");
     expect(onSave).not.toHaveBeenCalled();
-    await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    await userEvent.click(screen.getByRole("button", { name: "Discard" }));
     expect(onCancel).toHaveBeenCalledTimes(1);
     rerender(
       <I18nProvider>
@@ -116,7 +116,7 @@ describe("PendingChangesBar blocked", () => {
       </I18nProvider>,
     );
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
     expect(onSave).toHaveBeenCalledTimes(1);
   });
 });
@@ -145,5 +145,35 @@ describe("SimpleDataTable selection", () => {
     expect(onChange).toHaveBeenLastCalledWith(rows);
     await userEvent.click(screen.getAllByRole("checkbox", { name: "Select row" })[0]);
     expect(onChange).toHaveBeenLastCalledWith([]);
+  });
+});
+
+describe("PendingChangesBar scroll clearance", () => {
+  it("pads the focused field's scroller by what the bar covers, only while it shows", async () => {
+    const rect = (top: number, bottom: number) =>
+      ({ top, bottom, height: bottom - top, left: 0, right: 0, width: 0, x: 0, y: top, toJSON: () => ({}) }) as DOMRect;
+    const spy = vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (this: Element) {
+      if (this.id === "scroller") return rect(100, 800);
+      if (this.closest("[data-pending-bar]")) return rect(700, 760);
+      return rect(0, 0);
+    });
+    const page = (count: number) => (
+      <I18nProvider>
+        <div id="scroller" style={{ overflowY: "auto" }}>
+          <textarea aria-label="Remarks" />
+        </div>
+        <PendingChangesBar pendingCount={count} onSave={() => undefined} onCancel={() => undefined} />
+      </I18nProvider>
+    );
+    const { rerender } = render(page(0));
+    const scroller = document.getElementById("scroller")!;
+    await userEvent.click(screen.getByRole("textbox", { name: "Remarks" }));
+    expect(scroller.style.scrollPaddingBottom).toBe("");
+    rerender(page(1));
+    // 800 - 700 covered, plus the 12px gap.
+    expect(scroller.style.scrollPaddingBottom).toBe("112px");
+    rerender(page(0));
+    expect(scroller.style.scrollPaddingBottom).toBe("");
+    spy.mockRestore();
   });
 });
