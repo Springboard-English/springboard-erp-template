@@ -64,6 +64,14 @@ describe("submitReport", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
+  it("files on the app's queue when it names one", async () => {
+    fetchWithRefreshMock.mockResolvedValueOnce(envelope({ appsheet_key: TICKET_KEY, summary: "Save fails" }, 201));
+
+    await submitReport({ ...submission, queue: "practice" });
+
+    expect(bodyOf(0)).toMatchObject({ queue: "practice" });
+  });
+
   it("uploads each screenshot to its signed URL with a plain PUT, then names the keys on the create", async () => {
     const upload = {
       upload_url: "https://storage.test/signed?sig=1",

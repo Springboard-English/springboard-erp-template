@@ -19,6 +19,9 @@ export interface FeedbackTicket {
 }
 
 /** The body of `POST /v2/feedback-tickets` (`FeedbackTicketPostRequest`). */
+/** Which triage team files a ticket: `platform` (staff apps) or `practice` (app.springboard.vn). */
+export type FeedbackTicketQueue = "platform" | "practice";
+
 export interface FeedbackTicketCreate {
     summary: string;
     description: string;
@@ -26,6 +29,8 @@ export interface FeedbackTicketCreate {
     priority?: FeedbackTicketPriority | null;
     report_type?: FeedbackTicketReportType | null;
     suggested_owner_key?: string | null;
+    /** The triage team; the API files on `platform` when it is left out. */
+    queue?: FeedbackTicketQueue;
     attachments: FeedbackTicketAttachmentRef[];
 }
 

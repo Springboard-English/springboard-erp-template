@@ -602,6 +602,7 @@ export type {
   FeedbackTicketCategory,
   FeedbackTicketCreate,
   FeedbackTicketPriority,
+  FeedbackTicketQueue,
   FeedbackTicketReportType,
   FeedbackTicketUploadTicket,
 } from "./api_calls/feedbackTickets";

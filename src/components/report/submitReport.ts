@@ -3,6 +3,7 @@ import {
   uploadFeedbackTicketFile,
   type FeedbackTicketAttachmentRef,
   type FeedbackTicketCategory,
+  type FeedbackTicketQueue,
   type FeedbackTicketReportType,
 } from "../../api_calls/feedbackTickets";
 
@@ -15,6 +16,8 @@ export interface ReportSubmission {
   contextLabel: string;
   /** Screenshots and attached images, as data URLs. */
   evidence: string[];
+  /** The triage team; omitted, the API files on `platform`. */
+  queue?: FeedbackTicketQueue;
 }
 
 /** What a filed report hands back. */
@@ -55,6 +58,7 @@ export async function submitReport(submission: ReportSubmission): Promise<Submit
     description: `${submission.description}\n\n[${submission.contextLabel}]`,
     category: submission.category,
     report_type: submission.reportType,
+    ...(submission.queue ? { queue: submission.queue } : {}),
     attachments,
   });
   return { id: ticket.appsheet_key };
