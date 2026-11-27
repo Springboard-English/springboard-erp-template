@@ -179,6 +179,27 @@ function correctAnswer(row: ResultRow) {
   return formatted.kind === "none" ? null : formatted;
 }
 
+/**
+ * The teacher's explanation and comment under a question, across the whole row:
+ * in the Question column a paragraph of explanation runs a few words a line.
+ * Null when the question has neither.
+ */
+function RowNotes({ row }: { row: ResultRow }) {
+  const explanation = row.item?.explanation ?? undefined;
+  const feedback = row.item?.feedback;
+  if (!explanation && !feedback) return null;
+  return (
+    <div className="space-y-2">
+      {/* The explanation is the whole point of releasing results; a score alone teaches nothing. */}
+      <Explanation text={explanation} mode="result" className="mt-0" />
+      {/* Their comment, released on the same gate; the only place a student reads it. */}
+      {feedback ? (
+        <p className="rounded-xl bg-lav-bg p-3 text-sm font-semibold text-lav-700">{feedback}</p>
+      ) : null}
+    </div>
+  );
+}
+
 function ResultTable({ rows, showKey }: { rows: ResultRow[]; showKey: boolean }) {
   const { t } = useStableI18n();
   const [page, setPage] = useState(0);
@@ -200,26 +221,14 @@ function ResultTable({ rows, showKey }: { rows: ResultRow[]; showKey: boolean })
       className: "text-left",
       cellClassName: "text-left align-top",
       render: (row) => (
-        <div className="space-y-2">
-          <p className="font-bold text-foreground">
-            {questionLabel(
-              row.node.type,
-              row.node.content as Record<string, unknown>,
-              t,
-              row.node.title,
-            )}
-          </p>
-          {/* The teacher's explanation, which is the whole point of releasing
-              results — a score alone teaches nothing. */}
-          <Explanation text={row.item?.explanation ?? undefined} mode="result" />
-          {/* And their comment, released on the same gate. This is the only
-              place a student ever reads it. */}
-          {row.item?.feedback ? (
-            <p className="rounded-xl bg-lav-bg p-3 text-sm font-semibold text-lav-700">
-              {row.item.feedback}
-            </p>
-          ) : null}
-        </div>
+        <p className="font-bold text-foreground">
+          {questionLabel(
+            row.node.type,
+            row.node.content as Record<string, unknown>,
+            t,
+            row.node.title,
+          )}
+        </p>
       ),
     },
     {
@@ -282,6 +291,9 @@ function ResultTable({ rows, showKey }: { rows: ResultRow[]; showKey: boolean })
       columns={columns}
       rows={rows}
       rowKey={(row) => row.node.id}
+      rowDetail={(row) =>
+        row.item?.explanation || row.item?.feedback ? <RowNotes row={row} /> : null
+      }
       page={page}
       pageSize={pageSize}
       pageSizeOptions={[25, 50, 100]}
