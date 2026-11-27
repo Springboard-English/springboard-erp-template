@@ -12,6 +12,7 @@ vi.mock("@/context/AuthContext", () => ({
 
 import { I18nProvider } from "@/context/I18nContext";
 import DashboardLayout, { type DashboardLayoutProps } from "../DashboardLayout";
+import { useReportProblem } from "../../report/ReportProblem";
 
 // jsdom lacks the scroll and pointer-capture APIs the layout and Radix call on mount and click.
 beforeAll(() => {
@@ -85,6 +86,41 @@ describe("DashboardLayout reportProblem", () => {
 
     renderLayout();
     expect(screen.queryByRole("button", { name: "Report a Problem" })).not.toBeInTheDocument();
+  });
+
+  it("draws no shell entry point but still opens from the app's own button when entryPoints is false", async () => {
+    const user = userEvent.setup();
+    function AppButton() {
+      const report = useReportProblem();
+      return (
+        <button type="button" onClick={() => report?.open()}>
+          App report
+        </button>
+      );
+    }
+    render(
+      <I18nProvider locale="en">
+        <MemoryRouter initialEntries={["/people"]}>
+          <DashboardLayout
+            navItems={NAV}
+            activeTab="home"
+            onTabSelect={() => {}}
+            reportProblem={{ app: "practice", entryPoints: false }}
+          >
+            <AppButton />
+          </DashboardLayout>
+        </MemoryRouter>
+      </I18nProvider>,
+    );
+    expect(screen.queryByRole("button", { name: "Report a Problem" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Open menu" }));
+    const sheet = await screen.findByRole("dialog");
+    expect(within(sheet).queryByRole("button", { name: "Report a Problem" })).not.toBeInTheDocument();
+    await user.keyboard("{Escape}");
+
+    await user.click(screen.getByRole("button", { name: "App report" }));
+    const form = await screen.findByRole("dialog");
+    expect(within(form).getByText("Reported from practice · /people")).toBeInTheDocument();
   });
 
   it("never draws a floating launcher", () => {
